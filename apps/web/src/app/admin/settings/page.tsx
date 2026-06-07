@@ -136,6 +136,7 @@ export default function SettingsPage() {
 
   // ===== 安全设置 =====
   const [antiScrapingEnabled, setAntiScrapingEnabled] = useState(true)
+  const [contentReviewEnabled, setContentReviewEnabled] = useState(false)
 
   const { data: backupSettingsData } = useQuery({
     queryKey: ['backup-settings'],
@@ -305,6 +306,7 @@ export default function SettingsPage() {
       setPoweredBy(s.powered_by || '')
       setAnalyticsCode(s.analytics_code || '')
       setAntiScrapingEnabled(s.anti_scraping_enabled !== 'false')
+      setContentReviewEnabled(s.content_review_enabled === 'true')
     }
   }, [settingsData])
 
@@ -511,6 +513,7 @@ export default function SettingsPage() {
       powered_by: poweredBy,
       analytics_code: analyticsCode,
       anti_scraping_enabled: antiScrapingEnabled.toString(),
+      content_review_enabled: contentReviewEnabled.toString(),
     })
   }
 
@@ -1586,6 +1589,32 @@ export default function SettingsPage() {
                 <span
                   className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
                     antiScrapingEnabled ? 'translate-x-8' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 内容审核开关 */}
+            <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg mt-4">
+              <div className="flex items-center gap-3">
+                <div>
+                  <span className="font-medium">{adminLocale === 'zh' ? '内容审核' : 'Content Review'}</span>
+                  <p className="text-xs text-t-text-secondary mt-1">
+                    {adminLocale === 'zh'
+                      ? '启用后，发布文章需经过 AI 审核通过后才能公开显示'
+                      : 'When enabled, articles need to pass AI review before being publicly visible'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setContentReviewEnabled(!contentReviewEnabled)}
+                className={`relative w-14 h-7 rounded-full transition-colors ${
+                  contentReviewEnabled ? 'bg-t-accent-blue' : 'bg-t-border'
+                }`}
+              >
+                <span
+                  className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    contentReviewEnabled ? 'translate-x-8' : 'translate-x-1'
                   }`}
                 />
               </button>

@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { db } from '../db/index.js'
-import { articles, articleTags, tags, categories, sections, users } from '../db/schema.js'
+import { articles, articleTags, tags, categories, sections, users, siteSettings } from '../db/schema.js'
 import { eq, and, desc, sql, like, inArray } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { generateSlug, extractExcerpt } from '@tokenpress/shared'
@@ -285,7 +285,15 @@ router.put('/:id', async (req: AuthRequest, res) => {
     if (req.body.sectionId !== undefined) updates.sectionId = req.body.sectionId
     if (req.body.categoryId !== undefined) updates.categoryId = req.body.categoryId
     if (req.body.status !== undefined) {
-      const effectiveStatus = req.body.status === 'published' ? 'pending_review' : req.body.status
+      // Check if content review is enabled
+      const reviewSetting = await db.select().from(siteSettings).where(eq(siteSettings.key, 'content_review_enabled')).get()
+      const contentReviewEnabled = reviewSetting?.value === 'true'
+
+      // If content review is disabled, publish directly without pending_review
+      let effectiveStatus = req.body.status
+      if (req.body.status === 'published') {
+        effectiveStatus = contentReviewEnabled ? 'pending_review' : 'published'
+      }
       updates.status = effectiveStatus
       if (req.body.status === 'published' && !existing.publishedAt) {
         updates.publishedAt = new Date().toISOString()

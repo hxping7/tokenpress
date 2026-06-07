@@ -24,6 +24,7 @@ import { migrate as migrateMediaReviewFields } from './db/migrations/0017_media_
 import { migrate as migrateAds } from './db/migrations/0018_ads.js'
 import { migrate as migrateArticleStatus } from './db/migrations/0019_article_status_scheduled.js'
 import { migrate as migratePendingReview } from './db/migrations/0020_article_status_pending_review.js'
+import { migrate as migrateContentReviewSetting } from './db/migrations/0021_content_review_setting.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -225,6 +226,7 @@ async function start() {
   await migrateAds()
   await migrateArticleStatus()
   await migratePendingReview()
+  await migrateContentReviewSetting()
   logger.info('✅ Database ready')
 
   // Initialize content review provider
