@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { db } from '../db/index.js'
 import { articles, articleTags, tags, users, categories, sections } from '../db/schema.js'
 import { eq, and, desc, sql, like } from 'drizzle-orm'
-import type { ContentStatus } from '@token00/shared'
+import type { ContentStatus } from '@tokenpress/shared'
 
 const router = Router()
 

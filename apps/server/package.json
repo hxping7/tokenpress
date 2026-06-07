@@ -1,5 +1,5 @@
 {
-  "name": "@token00/server",
+  "name": "@tokenpress/server",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
-    "@token00/shared": "workspace:*",
+    "@tokenpress/shared": "workspace:*",
     "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

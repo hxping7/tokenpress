@@ -51,7 +51,7 @@ importers:
       '@libsql/client':
         specifier: ^0.14.0
         version: 0.14.0
-      '@token00/shared':
+      '@tokenpress/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       archiver:
@@ -148,7 +148,7 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.62.0
         version: 5.96.1(react@18.3.1)
-      '@token00/shared':
+      '@tokenpress/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       class-variance-authority:

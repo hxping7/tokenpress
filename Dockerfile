@@ -14,8 +14,8 @@ RUN echo "registry=https://registry.npmmirror.com" > .npmrc && \
 
 RUN pnpm install --frozen-lockfile
 RUN rm -rf apps/server/dist packages/shared/dist .turbo
-RUN pnpm --filter @token00/shared build
-RUN pnpm --filter @token00/server build
+RUN pnpm --filter @tokenpress/shared build
+RUN pnpm --filter @tokenpress/server build
 
 # Backend production
 FROM node:20-alpine AS backend
@@ -75,7 +75,7 @@ ENV BACKEND_URL=http://backend:4001
 # 清理 Next.js 缓存确保每次构建都是最新的
 RUN rm -rf apps/web/.next
 
-RUN pnpm --filter @token00/web build
+RUN pnpm --filter @tokenpress/web build
 
 # Frontend production
 FROM node:20-alpine AS frontend

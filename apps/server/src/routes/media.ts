@@ -7,7 +7,7 @@ import { db } from '../db/index.js'
 import { media } from '../db/schema.js'
 import { authMiddleware, adminOrAbove, type AuthRequest } from '../middleware/auth.js'
 import { apiTokenAuth, requirePermission, type ApiAuthRequest } from '../middleware/apiToken.js'
-import { sanitizeFilename, isAllowedMimeType, formatFileSize } from '@token00/shared'
+import { sanitizeFilename, isAllowedMimeType, formatFileSize } from '@tokenpress/shared'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
 import { scheduleReview } from '../lib/contentReview/index.js'
@@ -22,10 +22,10 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 
 // Allowed types from constants
 const ALL_ALLOWED_TYPES = [
-  ...(await import('@token00/shared')).UPLOAD_LIMITS.allowedImageTypes,
-  ...(await import('@token00/shared')).UPLOAD_LIMITS.allowedVideoTypes,
-  ...(await import('@token00/shared')).UPLOAD_LIMITS.allowedAudioTypes,
-  ...(await import('@token00/shared')).UPLOAD_LIMITS.allowedDocumentTypes,
+  ...(await import('@tokenpress/shared')).UPLOAD_LIMITS.allowedImageTypes,
+  ...(await import('@tokenpress/shared')).UPLOAD_LIMITS.allowedVideoTypes,
+  ...(await import('@tokenpress/shared')).UPLOAD_LIMITS.allowedAudioTypes,
+  ...(await import('@tokenpress/shared')).UPLOAD_LIMITS.allowedDocumentTypes,
 ]
 
 // ===== Static file serving =====
@@ -96,7 +96,7 @@ async function handleUpload(req: any, res: any, userId: number) {
       return res.status(400).json({ success: false, error: `File type ${mimeType} is not allowed` })
     }
 
-    const { UPLOAD_LIMITS } = await import('@token00/shared')
+    const { UPLOAD_LIMITS } = await import('@tokenpress/shared')
     let maxSize = UPLOAD_LIMITS.documentSize
     if (UPLOAD_LIMITS.allowedImageTypes.includes(mimeType)) {
       maxSize = UPLOAD_LIMITS.imageSize

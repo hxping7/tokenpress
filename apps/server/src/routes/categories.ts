@@ -3,7 +3,7 @@ import { db } from '../db/index.js'
 import { articles, categories, sections } from '../db/schema.js'
 import { eq, asc, and, sql } from 'drizzle-orm'
 import { authMiddleware, adminOnly, type AuthRequest } from '../middleware/auth.js'
-import { generateSlug } from '@token00/shared'
+import { generateSlug } from '@tokenpress/shared'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
 

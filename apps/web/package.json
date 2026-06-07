@@ -1,5 +1,5 @@
 {
-  "name": "@token00/web",
+  "name": "@tokenpress/web",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
-    "@token00/shared": "workspace:*",
+    "@tokenpress/shared": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.15.0",

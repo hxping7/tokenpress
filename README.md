@@ -131,7 +131,7 @@ cd tokenpress
 pnpm install
 
 # 初始化数据库
-pnpm --filter @token00/server dev
+pnpm --filter @tokenpress/server dev
 
 # 启动开发服务器
 pnpm dev

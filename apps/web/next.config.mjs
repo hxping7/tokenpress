@@ -28,7 +28,7 @@ const nextConfig = {
       },
     ],
   },
-  transpilePackages: ['@token00/shared', 'tailwindcss', '@tailwindcss/typography'],
+  transpilePackages: ['@tokenpress/shared', 'tailwindcss', '@tailwindcss/typography'],
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api/v1'
     // Only proxy when using relative path
