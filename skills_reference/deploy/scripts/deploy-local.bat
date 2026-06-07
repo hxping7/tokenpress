@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00: Deploy to Local Docker (Windows)
+REM TokenPress: Deploy to Local Docker (Windows)
 REM Usage: deploy-local.bat <project-dir>
 REM
 REM Dependencies: Docker Desktop, PowerShell 5.1+
@@ -28,7 +28,7 @@ set STATE_DIR=%PROJECT_DIR%\.deploy-state
 if not exist "%STATE_DIR%" mkdir "%STATE_DIR%"
 
 echo [DEPLOY] ========================================
-echo [DEPLOY]  Token00 Local Docker Deployment
+echo [DEPLOY]  TokenPress Local Docker Deployment
 echo [DEPLOY]  Time: %DATE% %TIME%
 echo.
 
@@ -48,14 +48,14 @@ echo [DEPLOY]   Docker OK
 
 REM Step 2: Load pre-built images
 echo [DEPLOY] Step 2/5: Loading images from archives...
-if exist "%PROJECT_DIR%\token00-backend.tar" (
+if exist "%PROJECT_DIR%\yourdomain-backend.tar" (
     echo [DEPLOY]   Loading backend...
-    docker load -i "%PROJECT_DIR%\token00-backend.tar" >nul 2>&1
+    docker load -i "%PROJECT_DIR%\yourdomain-backend.tar" >nul 2>&1
     if errorlevel 1 echo [DEPLOY]   [WARN] Backend load failed, will build
 )
-if exist "%PROJECT_DIR%\token00-frontend.tar" (
+if exist "%PROJECT_DIR%\yourdomain-frontend.tar" (
     echo [DEPLOY]   Loading frontend...
-    docker load -i "%PROJECT_DIR%\token00-frontend.tar" >nul 2>&1
+    docker load -i "%PROJECT_DIR%\yourdomain-frontend.tar" >nul 2>&1
     if errorlevel 1 echo [DEPLOY]   [WARN] Frontend load failed, will build
 )
 echo.
@@ -78,7 +78,7 @@ echo [DEPLOY] Step 4/5: Starting services...
 cd /d "%PROJECT_DIR%"
 docker compose down --remove-orphans >nul 2>&1
 
-if exist "%PROJECT_DIR%\token00-backend.tar" (
+if exist "%PROJECT_DIR%\yourdomain-backend.tar" (
     docker compose up -d
 ) else (
     docker compose up --build -d
@@ -96,7 +96,7 @@ set WAITED=0
 :health_wait
 if !WAITED! geq %MAX_WAIT% goto health_timeout
 
-for /f "tokens=*" %%s in ('docker inspect --format="{{.State.Health.Status}}" token00-backend 2^>nul') do set HEALTH=%%s
+for /f "tokens=*" %%s in ('docker inspect --format="{{.State.Health.Status}}" yourdomain-backend 2^>nul') do set HEALTH=%%s
 if "!HEALTH!"=="healthy" (
     echo [DEPLOY]   Backend healthy after !WAITED!s
     goto deploy_done
@@ -112,8 +112,8 @@ goto health_wait
 
 :health_timeout
 echo [DEPLOY] [WARN] Backend not healthy after %MAX_WAIT%s
-docker ps -a --filter "name=token00-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-docker logs token00-backend --tail 30 2>nul
+docker ps -a --filter "name=yourdomain-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+docker logs yourdomain-backend --tail 30 2>nul
 
 :deploy_done
 echo [DEPLOY] ========================================

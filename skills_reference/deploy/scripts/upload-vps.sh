@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Upload to VPS with chunked resume + integrity verification
+# TokenPress: Upload to VPS with chunked resume + integrity verification
 # Usage: upload-vps.sh <project-dir>
 # Features:
 #   - Chunked upload with configurable chunk size
@@ -23,13 +23,13 @@ if [ -f "$HOST_FILE" ]; then source "$HOST_FILE"; fi
 : ${SSH_KEY:?[ERROR] SSH_KEY not defined in host.conf}
 : ${VPS_USER:=root}
 : ${VPS_PORT:=22}
-: ${SITE_PATH:=/root/token00}
+: ${SITE_PATH:=/root/yourdomain}
 : ${CHUNK_MB:=50}
 
 SSH_CMD="ssh -i \"$SSH_KEY\" -p $VPS_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ServerAliveInterval=30"
 SCP_CMD="scp -i \"$SSH_KEY\" -P $VPS_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=30"
 
-REMOTE_UPLOAD_DIR="/root/token00-upload"
+REMOTE_UPLOAD_DIR="/root/yourdomain-upload"
 CHUNK_SIZE="${CHUNK_MB}m"
 MAX_RETRIES=3
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
@@ -38,7 +38,7 @@ UPLOAD_LOG="$PROJECT_DIR/.deploy-state/upload-$TIMESTAMP.log"
 mkdir -p "$STATE_DIR"
 
 echo "[UPLOAD] ========================================"
-echo "[UPLOAD]  Token00 VPS Uploader (Full Resume)"
+echo "[UPLOAD]  TokenPress VPS Uploader (Full Resume)"
 echo "[UPLOAD]  Target: $VPS_USER@$VPS_HOST:$VPS_PORT"
 echo "[UPLOAD]  Chunk:  ${CHUNK_MB}MB | Retries: $MAX_RETRIES"
 echo "[UPLOAD]  Time:   $(date '+%Y-%m-%d %H:%M:%S')"
@@ -46,8 +46,8 @@ echo ""
 
 # Files to upload
 FILES=(
-    "$PROJECT_DIR/token00-backend.tar.gz"
-    "$PROJECT_DIR/token00-frontend.tar.gz"
+    "$PROJECT_DIR/yourdomain-backend.tar.gz"
+    "$PROJECT_DIR/yourdomain-frontend.tar.gz"
 )
 
 # Check files exist

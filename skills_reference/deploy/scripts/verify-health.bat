@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00: Verify Deployment Health (Windows)
+REM TokenPress: Verify Deployment Health (Windows)
 REM Usage: verify-health.bat <project-dir> local|vps
 REM
 REM Exit codes: 0=healthy, 1=degraded, 2=failed
@@ -38,7 +38,7 @@ set VERDICT=pass
 set REPORT_FILE=%STATE_DIR%\verify-%MODE%-report.txt
 
 echo [VERIFY] ========================================
-echo [VERIFY]  Token00 Deployment Health
+echo [VERIFY]  TokenPress Deployment Health
 echo [VERIFY]  Mode: %MODE%
 echo [VERIFY]  Time: %DATE% %TIME%
 echo.
@@ -47,7 +47,7 @@ if /i "%MODE%"=="local" (
     REM === Local health check ===
     echo [VERIFY] [1/5] Containers...
     set ALL_OK=true
-    for %%c in (token00-backend token00-frontend token00-nginx) do (
+    for %%c in (yourdomain-backend yourdomain-frontend yourdomain-nginx) do (
         docker ps --filter "name=%%c" --filter "status=running" --format "{{.Names}}" | findstr "%%c" >nul 2>&1
         if errorlevel 1 (
             echo [VERIFY]   [WARN] %%c NOT RUNNING
@@ -79,7 +79,7 @@ if /i "%MODE%"=="local" (
 
     echo [VERIFY] [1/5] VPS containers...
     set ALL_OK=true
-    for %%c in (token00-backend token00-frontend token00-nginx) do (
+    for %%c in (yourdomain-backend yourdomain-frontend yourdomain-nginx) do (
         for /f "tokens=*" %%s in ('ssh %SSH_OPTS% %VPS_USER%@%VPS_HOST% "docker ps --filter name=%%c --filter status=running --format '{{.Names}}' 2>/dev/null"') do (
             if "%%s"=="%%c" ( echo [VERIFY]   [OK] %%c running ) else ( echo [VERIFY]   [WARN] %%c NOT RUNNING & set ALL_OK=false )
         )
@@ -104,7 +104,7 @@ if /i "%MODE%"=="local" (
 
 echo [VERIFY] [5/5] Overall: %VERDICT%
 if "%VERDICT%"=="fail" (
-    echo [VERIFY]   Check logs: docker logs token00-backend --tail 50
+    echo [VERIFY]   Check logs: docker logs yourdomain-backend --tail 50
 )
 echo [VERIFY] ========================================
 echo [VERIFY]  Done (%VERDICT%)

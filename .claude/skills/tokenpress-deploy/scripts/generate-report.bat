@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00: Generate Deployment Report (Windows)
+REM TokenPress: Generate Deployment Report (Windows)
 REM Usage: generate-report.bat <project-dir> <mode> <build> <backup> <upload> <deploy> <verify>
 REM
 REM Parameters:
@@ -63,15 +63,15 @@ if exist "%PROJECT_DIR%\.git" (
 REM Image sizes
 set BACKEND_SIZE=N/A
 set FRONTEND_SIZE=N/A
-if exist "%PROJECT_DIR%\token00-backend.tar.gz" (
-    for %%A in ("%PROJECT_DIR%\token00-backend.tar.gz") do set BACKEND_SIZE=%%~zA bytes
-) else if exist "%PROJECT_DIR%\token00-backend.tar" (
-    for %%A in ("%PROJECT_DIR%\token00-backend.tar") do set BACKEND_SIZE=%%~zA bytes (uncompressed^)
+if exist "%PROJECT_DIR%\yourdomain-backend.tar.gz" (
+    for %%A in ("%PROJECT_DIR%\yourdomain-backend.tar.gz") do set BACKEND_SIZE=%%~zA bytes
+) else if exist "%PROJECT_DIR%\yourdomain-backend.tar" (
+    for %%A in ("%PROJECT_DIR%\yourdomain-backend.tar") do set BACKEND_SIZE=%%~zA bytes (uncompressed^)
 )
-if exist "%PROJECT_DIR%\token00-frontend.tar.gz" (
-    for %%A in ("%PROJECT_DIR%\token00-frontend.tar") do set FRONTEND_SIZE=%%~zA bytes
-) else if exist "%PROJECT_DIR%\token00-frontend.tar" (
-    for %%A in ("%PROJECT_DIR%\token00-frontend.tar") do set FRONTEND_SIZE=%%~zA bytes (uncompressed^)
+if exist "%PROJECT_DIR%\yourdomain-frontend.tar.gz" (
+    for %%A in ("%PROJECT_DIR%\yourdomain-frontend.tar") do set FRONTEND_SIZE=%%~zA bytes
+) else if exist "%PROJECT_DIR%\yourdomain-frontend.tar" (
+    for %%A in ("%PROJECT_DIR%\yourdomain-frontend.tar") do set FRONTEND_SIZE=%%~zA bytes (uncompressed^)
 )
 
 REM Determine overall
@@ -93,7 +93,7 @@ REM Write report
 set REPORT_FILE=%STATE_DIR%\deploy-report-%MODE%-%TIMESTAMP%.md
 
 (
-echo # Token00 Deployment Report
+echo # TokenPress Deployment Report
 echo.
 echo ^| Field ^| Value ^|
 echo ^|------^|-------^|
@@ -131,8 +131,8 @@ echo ## Artifacts
 echo.
 echo ^| Image ^| Size ^|
 echo ^|------^|------^|
-echo ^| token00-backend ^| %BACKEND_SIZE% ^|
-echo ^| token00-frontend ^| %FRONTEND_SIZE% ^|
+echo ^| yourdomain-backend ^| %BACKEND_SIZE% ^|
+echo ^| yourdomain-frontend ^| %FRONTEND_SIZE% ^|
 ) >> "%REPORT_FILE%"
 
 echo [REPORT] ========================================

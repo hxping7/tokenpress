@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Deploy on remote VPS
+# TokenPress: Deploy on remote VPS
 # Usage: deploy-vps.sh <project-dir>
 set -euo pipefail
 
@@ -15,7 +15,7 @@ if [ -f "$HOST_FILE" ]; then source "$HOST_FILE"; fi
 : ${SSH_KEY:?[ERROR] SSH_KEY not defined}
 : ${VPS_USER:=root}
 : ${VPS_PORT:=22}
-: ${SITE_PATH:=/root/token00}
+: ${SITE_PATH:=/root/yourdomain}
 : ${HTTP_PORT:=8080}
 
 SSH_CMD="ssh -i \"$SSH_KEY\" -p $VPS_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10"
@@ -23,7 +23,7 @@ SSH_CMD="ssh -i \"$SSH_KEY\" -p $VPS_PORT -o StrictHostKeyChecking=no -o Connect
 mkdir -p "$STATE_DIR"
 
 echo "[DEPLOY] ========================================"
-echo "[DEPLOY]  Token00 VPS Deployment"
+echo "[DEPLOY]  TokenPress VPS Deployment"
 echo "[DEPLOY]  Target: $VPS_USER@$VPS_HOST"
 echo "[DEPLOY]  Path:   $SITE_PATH"
 echo "[DEPLOY]  Time:   $(date '+%Y-%m-%d %H:%M:%S')"
@@ -55,7 +55,7 @@ WAITED=0
 HEALTHY=false
 
 while [ $WAITED -lt $MAX_WAIT ]; do
-    HEALTH=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker inspect --format='{{.State.Health.Status}}' token00-backend 2>/dev/null || echo 'starting'\"" 2>/dev/null || echo "unknown")
+    HEALTH=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker inspect --format='{{.State.Health.Status}}' yourdomain-backend 2>/dev/null || echo 'starting'\"" 2>/dev/null || echo "unknown")
     
     if [ "$HEALTH" = "healthy" ]; then
         HEALTHY=true
@@ -64,7 +64,7 @@ while [ $WAITED -lt $MAX_WAIT ]; do
     fi
     
     # Also check running containers
-    ALL_RUNNING=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker ps --filter 'name=token00-' --format '{{.Names}} {{.Status}}' 2>/dev/null\"" || echo "")
+    ALL_RUNNING=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker ps --filter 'name=yourdomain-' --format '{{.Names}} {{.Status}}' 2>/dev/null\"" || echo "")
     echo "[DEPLOY]   [${WAITED}s] Backend: $HEALTH"
     
     sleep 5
@@ -73,8 +73,8 @@ done
 
 if [ "$HEALTHY" != true ]; then
     echo "[DEPLOY] [WARN] Backend not healthy within ${MAX_WAIT}s, checking status..."
-    eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker ps -a --filter 'name=token00-' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'\"" 2>/dev/null || true
-    eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker logs token00-backend --tail 30 2>/dev/null\"" || true
+    eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker ps -a --filter 'name=yourdomain-' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'\"" 2>/dev/null || true
+    eval "$SSH_CMD $VPS_USER@$VPS_HOST \"docker logs yourdomain-backend --tail 30 2>/dev/null\"" || true
 fi
 echo ""
 

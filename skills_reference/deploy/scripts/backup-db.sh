@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Backup database
+# TokenPress: Backup database
 # Usage:
 #   backup-db.sh <project-dir> local    - Backup from local Docker container
 #   backup-db.sh <project-dir> vps      - Backup from remote VPS via SSH
@@ -28,11 +28,11 @@ fi
 
 mkdir -p "$BACKUP_DIR"
 
-BACKUP_FILE="$BACKUP_DIR/token00-db-backup-$TIMESTAMP.db"
+BACKUP_FILE="$BACKUP_DIR/yourdomain-db-backup-$TIMESTAMP.db"
 BACKUP_LOG="$BACKUP_DIR/backup-$TIMESTAMP.log"
 
 echo "[BACKUP] ========================================"
-echo "[BACKUP]  Token00 Database Backup"
+echo "[BACKUP]  TokenPress Database Backup"
 echo "[BACKUP]  Mode: $MODE"
 echo "[BACKUP]  Time: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
@@ -42,18 +42,18 @@ if [ "$MODE" = "local" ]; then
     echo "[BACKUP] Step 1/3: Checking local container..."
 
     # Check via docker cp or volume path
-    CONTAINER="token00-backend"
+    CONTAINER="yourdomain-backend"
     if docker ps --format '{{.Names}}' | grep -q "^$CONTAINER$"; then
         echo "[BACKUP]   Container '$CONTAINER' is running"
         echo "[BACKUP] Step 2/3: Copying database from container..."
-        docker cp "$CONTAINER:/app/apps/server/data/token00.db" "$BACKUP_FILE"
+        docker cp "$CONTAINER:/app/apps/server/data/yourdomain.db" "$BACKUP_FILE"
         echo "[BACKUP]   Copied to: $BACKUP_FILE"
     else
         echo "[BACKUP]   [WARN] Container '$CONTAINER' not running, checking Docker volume..."
         # Try to get from Docker volume
-        docker run --rm -v token00-data:/data alpine ls /data/token00.db >/dev/null 2>&1 || true
+        docker run --rm -v yourdomain-data:/data alpine ls /data/yourdomain.db >/dev/null 2>&1 || true
         if [ $? -eq 0 ]; then
-            docker run --rm -v token00-data:/data -v "$BACKUP_DIR:/backup" alpine cp /data/token00.db "/backup/$(basename "$BACKUP_FILE")"
+            docker run --rm -v yourdomain-data:/data -v "$BACKUP_DIR:/backup" alpine cp /data/yourdomain.db "/backup/$(basename "$BACKUP_FILE")"
             echo "[BACKUP]   Copied from volume to: $BACKUP_FILE"
         else
             echo "[BACKUP]   [WARN] No database found in container or volume"
@@ -75,8 +75,8 @@ elif [ "$MODE" = "vps" ]; then
 
     echo "[BACKUP] Step 2/3: Backing up database on VPS..."
     # Create backup on VPS, then copy back
-    eval "$SSH_CMD $VPS_USER@$VPS_HOST\" docker exec token00-backend sh -c 'cat /app/apps/server/data/token00.db'\" > \"$BACKUP_FILE\" 2>/dev/null" || \
-    eval "$SSH_CMD $VPS_USER@$VPS_HOST\" docker run --rm -v token00-data:/data alpine cat /data/token00.db\" > \"$BACKUP_FILE\" 2>/dev/null" || \
+    eval "$SSH_CMD $VPS_USER@$VPS_HOST\" docker exec yourdomain-backend sh -c 'cat /app/apps/server/data/yourdomain.db'\" > \"$BACKUP_FILE\" 2>/dev/null" || \
+    eval "$SSH_CMD $VPS_USER@$VPS_HOST\" docker run --rm -v yourdomain-data:/data alpine cat /data/yourdomain.db\" > \"$BACKUP_FILE\" 2>/dev/null" || \
     echo "[BACKUP]   [WARN] Could not copy database from VPS"
 
     if [ -s "$BACKUP_FILE" ]; then
@@ -107,7 +107,7 @@ fi
 
 # Cleanup: keep last 10 backups
 echo "[BACKUP] Cleaning old backups (keep last 10)..."
-ls -t "$BACKUP_DIR"/token00-db-backup-*.db 2>/dev/null | tail -n +11 | while read old; do
+ls -t "$BACKUP_DIR"/yourdomain-db-backup-*.db 2>/dev/null | tail -n +11 | while read old; do
     rm -f "$old" "${old}.sha256"
     echo "[BACKUP]   Removed old backup: $(basename "$old")"
 done

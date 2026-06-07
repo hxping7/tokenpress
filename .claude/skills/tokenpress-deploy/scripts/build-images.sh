@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Build Docker images
+# TokenPress: Build Docker images
 # Usage: build-images.sh [project-dir]
 #   project-dir defaults to the current directory
 set -euo pipefail
@@ -13,7 +13,7 @@ TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 mkdir -p "$STATE_DIR"
 
 echo "[BUILD] ========================================"
-echo "[BUILD]  Token00 Docker Image Builder"
+echo "[BUILD]  TokenPress Docker Image Builder"
 echo "[BUILD] ========================================"
 echo "[BUILD] Project: $PROJECT_DIR"
 echo "[BUILD] Time:    $(date '+%Y-%m-%d %H:%M:%S')"
@@ -33,9 +33,9 @@ fi
 
 # 3. Build backend
 echo "[BUILD] Step 1/4: Building backend image..."
-echo "[BUILD]   docker build --target backend -t token00-backend:latest"
+echo "[BUILD]   docker build --target backend -t yourdomain-backend:latest"
 cd "$PROJECT_DIR"
-if docker build --target backend -t token00-backend:latest . 2>&1; then
+if docker build --target backend -t yourdomain-backend:latest . 2>&1; then
     echo "[BUILD]   Backend image built successfully"
 else
     echo "[BUILD] [ERROR] Backend build FAILED - compile errors detected"
@@ -45,8 +45,8 @@ echo ""
 
 # 4. Build frontend
 echo "[BUILD] Step 2/4: Building frontend image..."
-echo "[BUILD]   docker build --target frontend -t token00-frontend:latest"
-if docker build --target frontend -t token00-frontend:latest . 2>&1; then
+echo "[BUILD]   docker build --target frontend -t yourdomain-frontend:latest"
+if docker build --target frontend -t yourdomain-frontend:latest . 2>&1; then
     echo "[BUILD]   Frontend image built successfully"
 else
     echo "[BUILD] [ERROR] Frontend build FAILED - compile errors detected"
@@ -57,14 +57,14 @@ echo ""
 # 5. Export images (gzip compressed)
 echo "[BUILD] Step 3/4: Exporting images (gzip)..."
 echo "[BUILD]   Exporting backend..."
-docker save token00-backend:latest | gzip > "$PROJECT_DIR/token00-backend.tar.gz"
-BACKEND_SIZE=$(stat -c%s "$PROJECT_DIR/token00-backend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/token00-backend.tar.gz" 2>/dev/null)
-echo "[BUILD]   token00-backend.tar.gz: $(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes)"
+docker save yourdomain-backend:latest | gzip > "$PROJECT_DIR/yourdomain-backend.tar.gz"
+BACKEND_SIZE=$(stat -c%s "$PROJECT_DIR/yourdomain-backend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/yourdomain-backend.tar.gz" 2>/dev/null)
+echo "[BUILD]   yourdomain-backend.tar.gz: $(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes)"
 
 echo "[BUILD]   Exporting frontend..."
-docker save token00-frontend:latest | gzip > "$PROJECT_DIR/token00-frontend.tar.gz"
-FRONTEND_SIZE=$(stat -c%s "$PROJECT_DIR/token00-frontend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/token00-frontend.tar.gz" 2>/dev/null)
-echo "[BUILD]   token00-frontend.tar.gz: $(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes)"
+docker save yourdomain-frontend:latest | gzip > "$PROJECT_DIR/yourdomain-frontend.tar.gz"
+FRONTEND_SIZE=$(stat -c%s "$PROJECT_DIR/yourdomain-frontend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/yourdomain-frontend.tar.gz" 2>/dev/null)
+echo "[BUILD]   yourdomain-frontend.tar.gz: $(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes)"
 echo ""
 
 # 6. Generate checksums for integrity verification
@@ -76,18 +76,18 @@ if ! command -v "$SHACMD" &>/dev/null; then
     SHACMD="shasum -a 256"
 fi
 
-$SHACMD "$PROJECT_DIR/token00-backend.tar.gz" > "$PROJECT_DIR/token00-backend.tar.gz.sha256"
-$SHACMD "$PROJECT_DIR/token00-frontend.tar.gz" > "$PROJECT_DIR/token00-frontend.tar.gz.sha256"
+$SHACMD "$PROJECT_DIR/yourdomain-backend.tar.gz" > "$PROJECT_DIR/yourdomain-backend.tar.gz.sha256"
+$SHACMD "$PROJECT_DIR/yourdomain-frontend.tar.gz" > "$PROJECT_DIR/yourdomain-frontend.tar.gz.sha256"
 echo "[BUILD]   Checksums saved to .sha256 files"
 
 # Remove intermediate tar files if they exist
-rm -f "$PROJECT_DIR/token00-backend.tar" "$PROJECT_DIR/token00-frontend.tar"
+rm -f "$PROJECT_DIR/yourdomain-backend.tar" "$PROJECT_DIR/yourdomain-frontend.tar"
 
 echo ""
 echo "[BUILD] ========================================"
 echo "[BUILD]  Build Complete!"
 echo "[BUILD] ========================================"
-echo "[BUILD]   Backend:  token00-backend.tar.gz ($(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes))"
-echo "[BUILD]   Frontend: token00-frontend.tar.gz ($(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes))"
+echo "[BUILD]   Backend:  yourdomain-backend.tar.gz ($(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes))"
+echo "[BUILD]   Frontend: yourdomain-frontend.tar.gz ($(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes))"
 echo "[BUILD]   Checksum: SHA256"
 echo ""

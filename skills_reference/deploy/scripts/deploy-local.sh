@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Deploy to local Docker
+# TokenPress: Deploy to local Docker
 # Usage: deploy-local.sh <project-dir>
 set -euo pipefail
 
@@ -16,7 +16,7 @@ if [ -f "$CONFIG_FILE" ]; then source "$CONFIG_FILE"; fi
 mkdir -p "$STATE_DIR"
 
 echo "[DEPLOY] ========================================"
-echo "[DEPLOY]  Token00 Local Docker Deployment"
+echo "[DEPLOY]  TokenPress Local Docker Deployment"
 echo "[DEPLOY]  Time: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 
@@ -35,14 +35,14 @@ echo ""
 
 # 2. Check built images exist
 echo "[DEPLOY] Step 2/5: Checking built images..."
-if [ ! -f "$PROJECT_DIR/token00-backend.tar.gz" ] || [ ! -f "$PROJECT_DIR/token00-frontend.tar.gz" ]; then
+if [ ! -f "$PROJECT_DIR/yourdomain-backend.tar.gz" ] || [ ! -f "$PROJECT_DIR/yourdomain-frontend.tar.gz" ]; then
     echo "[DEPLOY]   [INFO] Local images not found, using docker-compose build"
 else
     echo "[DEPLOY]   Found local image archives"
     echo "[DEPLOY]   Loading backend..."
-    gunzip -c "$PROJECT_DIR/token00-backend.tar.gz" | docker load
+    gunzip -c "$PROJECT_DIR/yourdomain-backend.tar.gz" | docker load
     echo "[DEPLOY]   Loading frontend..."
-    gunzip -c "$PROJECT_DIR/token00-frontend.tar.gz" | docker load
+    gunzip -c "$PROJECT_DIR/yourdomain-frontend.tar.gz" | docker load
 fi
 echo ""
 
@@ -68,7 +68,7 @@ cd "$PROJECT_DIR"
 docker compose down --remove-orphans 2>/dev/null || true
 
 # Start with build if images are fresh, otherwise just up
-if [ -f "$PROJECT_DIR/token00-backend.tar.gz" ]; then
+if [ -f "$PROJECT_DIR/yourdomain-backend.tar.gz" ]; then
     docker compose up -d
 else
     docker compose up --build -d
@@ -82,7 +82,7 @@ WAITED=0
 HEALTHY=false
 
 while [ $WAITED -lt $MAX_WAIT ]; do
-    HEALTH=$(docker inspect --format='{{.State.Health.Status}}' token00-backend 2>/dev/null || echo "starting")
+    HEALTH=$(docker inspect --format='{{.State.Health.Status}}' yourdomain-backend 2>/dev/null || echo "starting")
     
     if [ "$HEALTH" = "healthy" ]; then
         HEALTHY=true
@@ -100,8 +100,8 @@ done
 
 if [ "$HEALTHY" != true ]; then
     echo "[DEPLOY] [WARN] Backend not healthy after ${MAX_WAIT}s"
-    docker ps -a --filter "name=token00-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-    docker logs token00-backend --tail 30 2>/dev/null || true
+    docker ps -a --filter "name=yourdomain-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+    docker logs yourdomain-backend --tail 30 2>/dev/null || true
 fi
 
 echo ""

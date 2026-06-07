@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00: Backup Database (Windows)
+REM TokenPress: Backup Database (Windows)
 REM Usage: backup-db.bat <project-dir> local|vps
 REM
 REM Dependencies: Docker Desktop (local mode), OpenSSH Client (vps mode), PowerShell 5.1+
@@ -30,17 +30,17 @@ if exist %HOST_FILE% (
         if not "%%b"=="" set "%%a=%%b"
     )
 )
-if "%SITE_PATH%"=="" set SITE_PATH=/root/token00
+if "%SITE_PATH%"=="" set SITE_PATH=/root/yourdomain
 
 if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
 
 REM ISO-like timestamp via PowerShell
 for /f "usebackq delims=" %%t in (`powershell -NoProfile -Command "Get-Date -Format 'yyyyMMdd_HHmmss'"`) do set TIMESTAMP=%%t
 
-set BACKUP_FILE=%PROJECT_DIR%\data\backups\token00-db-backup-%TIMESTAMP%.db
+set BACKUP_FILE=%PROJECT_DIR%\data\backups\yourdomain-db-backup-%TIMESTAMP%.db
 
 echo [BACKUP] ========================================
-echo [BACKUP]  Token00 Database Backup
+echo [BACKUP]  TokenPress Database Backup
 echo [BACKUP]  Mode: %MODE%
 echo [BACKUP]  Time: %DATE% %TIME%
 echo.
@@ -48,12 +48,12 @@ echo.
 if /i "%MODE%"=="local" (
     REM === Local Docker backup ===
     echo [BACKUP] Step 1/3: Checking local containers...
-    docker ps --format "{{.Names}}" | findstr "token00-backend" >nul 2>&1
+    docker ps --format "{{.Names}}" | findstr "yourdomain-backend" >nul 2>&1
     if errorlevel 1 (
-        echo [BACKUP] [WARN] token00-backend container not running
-        if exist "%PROJECT_DIR%\data\token00.db" (
+        echo [BACKUP] [WARN] yourdomain-backend container not running
+        if exist "%PROJECT_DIR%\data\yourdomain.db" (
             echo [BACKUP]   Found local database file
-            copy /Y "%PROJECT_DIR%\data\token00.db" "%BACKUP_FILE%" >nul
+            copy /Y "%PROJECT_DIR%\data\yourdomain.db" "%BACKUP_FILE%" >nul
             goto backup_done
         )
         echo [BACKUP] [WARN] No database found to backup
@@ -61,9 +61,9 @@ if /i "%MODE%"=="local" (
     )
 
     echo [BACKUP] Step 2/3: Copying database from container...
-    docker cp token00-backend:/app/data/token00.db "%BACKUP_FILE%" 2>nul
+    docker cp yourdomain-backend:/app/data/yourdomain.db "%BACKUP_FILE%" 2>nul
     if errorlevel 1 (
-        docker cp token00-backend:/usr/src/app/data/token00.db "%BACKUP_FILE%" 2>nul
+        docker cp yourdomain-backend:/usr/src/app/data/yourdomain.db "%BACKUP_FILE%" 2>nul
     )
     if errorlevel 1 (
         echo [BACKUP] [ERROR] Failed to copy database from container
@@ -95,15 +95,15 @@ if /i "%MODE%"=="local" (
 
     echo [BACKUP] Step 2/3: Copying database from VPS...
     ssh %SSH_OPTS% %VPS_USER%@%VPS_HOST% ^
-        "docker cp token00-backend:/app/data/token00.db /tmp/token00-db-temp.db 2>/dev/null || docker cp token00-backend:/usr/src/app/data/token00.db /tmp/token00-db-temp.db 2>/dev/null || (test -f %SITE_PATH%/data/token00.db && cp %SITE_PATH%/data/token00.db /tmp/token00-db-temp.db)" >nul 2>&1
+        "docker cp yourdomain-backend:/app/data/yourdomain.db /tmp/yourdomain-db-temp.db 2>/dev/null || docker cp yourdomain-backend:/usr/src/app/data/yourdomain.db /tmp/yourdomain-db-temp.db 2>/dev/null || (test -f %SITE_PATH%/data/yourdomain.db && cp %SITE_PATH%/data/yourdomain.db /tmp/yourdomain-db-temp.db)" >nul 2>&1
 
-    scp %SSH_OPTS% %VPS_USER%@%VPS_HOST%:/tmp/token00-db-temp.db "%BACKUP_FILE%" >nul 2>&1
+    scp %SSH_OPTS% %VPS_USER%@%VPS_HOST%:/tmp/yourdomain-db-temp.db "%BACKUP_FILE%" >nul 2>&1
     if errorlevel 1 (
         echo [BACKUP] [WARN] No database found on VPS
         if exist "%BACKUP_FILE%" del "%BACKUP_FILE%" 2>nul
         exit /b 0
     )
-    ssh %SSH_OPTS% %VPS_USER%@%VPS_HOST% "rm -f /tmp/token00-db-temp.db" >nul 2>&1
+    ssh %SSH_OPTS% %VPS_USER%@%VPS_HOST% "rm -f /tmp/yourdomain-db-temp.db" >nul 2>&1
     echo [BACKUP]   Database downloaded from VPS
 )
 
@@ -111,7 +111,7 @@ if /i "%MODE%"=="local" (
 REM Step 3: Generate SHA256 checksum
 echo [BACKUP] Step 3/3: Generating checksum...
 for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%BACKUP_FILE%' -Algorithm SHA256).Hash.ToLower()"`) do (
-    echo %%s  token00-db-backup-%TIMESTAMP%.db > "%BACKUP_FILE%.sha256"
+    echo %%s  yourdomain-db-backup-%TIMESTAMP%.db > "%BACKUP_FILE%.sha256"
 )
 for %%A in ("%BACKUP_FILE%") do echo [BACKUP]   Size: %%~zA bytes
 echo [BACKUP]   SHA256 saved
@@ -120,7 +120,7 @@ REM Cleanup old backups (keep 10 newest)
 echo [BACKUP] Cleaning old backups...
 pushd "%PROJECT_DIR%\data\backups"
 set COUNT=0
-for /f "delims=" %%f in ('dir /b /o-d token00-db-backup-*.db 2^>nul') do (
+for /f "delims=" %%f in ('dir /b /o-d yourdomain-db-backup-*.db 2^>nul') do (
     set /a COUNT+=1
     if !COUNT! gtr 10 (
         if exist "%%f" del "%%f" >nul 2>&1

@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00 Deploy (Windows Main Entry)
+REM TokenPress Deploy (Windows Main Entry)
 REM Usage: deploy.bat <local|vps> [skip-build]
 REM
 REM Orchestrates full deployment workflow:
@@ -18,7 +18,7 @@ set "MODE=%~1"
 set "SKIP_BUILD=%~2"
 if "%MODE%"=="" (
     echo ========================================
-    echo  Token00 Deployment Tool
+    echo  TokenPress Deployment Tool
     echo ========================================
     echo.
     echo Usage:  deploy.bat ^<mode^> [skip-build]
@@ -47,7 +47,7 @@ set "START_TIME=%DATE% %TIME%"
 if not exist "%RESULT_DIR%" mkdir "%RESULT_DIR%"
 
 echo ========================================
-echo  Token00 Deployment
+echo  TokenPress Deployment
 echo  Mode: %MODE%
 echo  Start: %START_TIME%
 echo ========================================

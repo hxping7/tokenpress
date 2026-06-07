@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Generate deployment report
+# TokenPress: Generate deployment report
 # Usage: generate-report.sh <project-dir> <mode> <build-result> <backup-result> <upload-result> <deploy-result> <verify-result>
 set -euo pipefail
 
@@ -45,13 +45,13 @@ else
 fi
 
 # Get image sizes
-BACKEND_SIZE=$(stat -c%s "$PROJECT_DIR/token00-backend.tar.gz" 2>/dev/null || echo "0")
-FRONTEND_SIZE=$(stat -c%s "$PROJECT_DIR/token00-frontend.tar.gz" 2>/dev/null || echo "0")
+BACKEND_SIZE=$(stat -c%s "$PROJECT_DIR/yourdomain-backend.tar.gz" 2>/dev/null || echo "0")
+FRONTEND_SIZE=$(stat -c%s "$PROJECT_DIR/yourdomain-frontend.tar.gz" 2>/dev/null || echo "0")
 BACKEND_SIZE_HR=$(numfmt --to=iec "$BACKEND_SIZE" 2>/dev/null || echo "${BACKEND_SIZE}B")
 FRONTEND_SIZE_HR=$(numfmt --to=iec "$FRONTEND_SIZE" 2>/dev/null || echo "${FRONTEND_SIZE}B")
 
 cat > "$REPORT_FILE" << REPORTEOF
-# Token00 部署报告
+# TokenPress 部署报告
 
 ## 基本信息
 
@@ -78,8 +78,8 @@ cat > "$REPORT_FILE" << REPORTEOF
 
 | 镜像 | 大小 |
 |------|------|
-| token00-backend | $BACKEND_SIZE_HR |
-| token00-frontend | $FRONTEND_SIZE_HR |
+| yourdomain-backend | $BACKEND_SIZE_HR |
+| yourdomain-frontend | $FRONTEND_SIZE_HR |
 
 $( [ "$MODE" = "vps" ] && echo "## 目标服务器
 | 项目 | 值 |
@@ -100,7 +100,7 @@ $( [ "$MODE" = "vps" ] && echo "## 目标服务器
 | nginx.conf | Nginx反向代理配置 |
 
 ---
-*报告由 Token00 Deploy Skill 自动生成*
+*报告由 TokenPress Deploy Skill 自动生成*
 REPORTEOF
 
 echo "[REPORT] Report generated: $REPORT_FILE"

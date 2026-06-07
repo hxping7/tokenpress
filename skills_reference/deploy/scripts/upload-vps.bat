@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00: Upload to VPS with resume (Windows)
+REM TokenPress: Upload to VPS with resume (Windows)
 REM Usage: upload-vps.bat <project-dir>
 REM
 REM Features:
@@ -45,10 +45,10 @@ if "%SSH_KEY%"=="" (
 )
 if "%VPS_USER%"=="" set VPS_USER=root
 if "%VPS_PORT%"=="" set VPS_PORT=22
-if "%SITE_PATH%"=="" set SITE_PATH=/root/token00
+if "%SITE_PATH%"=="" set SITE_PATH=/root/yourdomain
 if "%CHUNK_MB%"=="" set CHUNK_MB=50
 
-set REMOTE_UPLOAD_DIR=/root/token00-upload
+set REMOTE_UPLOAD_DIR=/root/yourdomain-upload
 set MAX_RETRIES=3
 set TIMESTAMP=%DATE:/=-%_%TIME::=-%
 set TIMESTAMP=%TIMESTAMP: =%
@@ -56,7 +56,7 @@ set TIMESTAMP=%TIMESTAMP: =%
 if not exist "%STATE_DIR%" mkdir "%STATE_DIR%"
 
 echo [UPLOAD] ========================================
-echo [UPLOAD]  Token00 VPS Uploader (Full Resume)
+echo [UPLOAD]  TokenPress VPS Uploader (Full Resume)
 echo [UPLOAD]  Target: %VPS_USER%@%VPS_HOST%:%VPS_PORT%
 echo [UPLOAD]  Chunk:  %CHUNK_MB%MB ^| Retries: %MAX_RETRIES%
 echo [UPLOAD]  SSH Key: %SSH_KEY%
@@ -76,12 +76,12 @@ if errorlevel 1 (
 )
 
 REM Check source files
-if not exist "%PROJECT_DIR%\token00-backend.tar.gz" if not exist "%PROJECT_DIR%\token00-backend.tar" (
-    echo [UPLOAD] [ERROR] token00-backend.tar.gz/tar not found. Run build first.
+if not exist "%PROJECT_DIR%\yourdomain-backend.tar.gz" if not exist "%PROJECT_DIR%\yourdomain-backend.tar" (
+    echo [UPLOAD] [ERROR] yourdomain-backend.tar.gz/tar not found. Run build first.
     exit /b 4
 )
-if not exist "%PROJECT_DIR%\token00-frontend.tar.gz" if not exist "%PROJECT_DIR%\token00-frontend.tar" (
-    echo [UPLOAD] [ERROR] token00-frontend.tar.gz/tar not found. Run build first.
+if not exist "%PROJECT_DIR%\yourdomain-frontend.tar.gz" if not exist "%PROJECT_DIR%\yourdomain-frontend.tar" (
+    echo [UPLOAD] [ERROR] yourdomain-frontend.tar.gz/tar not found. Run build first.
     exit /b 4
 )
 
@@ -94,7 +94,7 @@ echo [UPLOAD]   Remote temp: %REMOTE_UPLOAD_DIR%
 echo.
 
 REM Step 2-3: Upload each file
-set FILE_LIST=token00-backend token00-frontend
+set FILE_LIST=yourdomain-backend yourdomain-frontend
 for %%f in (%FILE_LIST%) do (
     set PREFIX=%%f
 

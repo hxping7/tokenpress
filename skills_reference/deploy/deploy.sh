@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00 Deploy (Linux/Git Bash Main Entry)
+# TokenPress Deploy (Linux/Git Bash Main Entry)
 # Usage: ./deploy.sh <local|vps> [skip-build]
 #
 # Orchestrates full deployment workflow:
@@ -16,7 +16,7 @@ SKIP_BUILD="${2:-}"
 
 if [ -z "$MODE" ]; then
     echo "========================================"
-    echo " Token00 Deployment Tool"
+    echo " TokenPress Deployment Tool"
     echo "========================================"
     echo ""
     echo "Usage:  $0 <mode> [skip-build]"
@@ -39,7 +39,7 @@ START_TIME=$(date '+%Y-%m-%d %H:%M:%S')
 mkdir -p "$RESULT_DIR"
 
 echo "========================================"
-echo " Token00 Deployment"
+echo " TokenPress Deployment"
 echo " Mode: $MODE"
 echo " Start: $START_TIME"
 echo "========================================"

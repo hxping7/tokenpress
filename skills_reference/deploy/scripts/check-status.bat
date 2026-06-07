@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00: Check Deployment Status (Windows)
+REM TokenPress: Check Deployment Status (Windows)
 REM Usage: check-status.bat <project-dir> local|vps
 REM
 REM Dependencies: Docker Desktop (local mode), OpenSSH Client (vps mode), PowerShell 5.1+
@@ -30,10 +30,10 @@ if exist %HOST_FILE% (
     )
 )
 if "%HTTP_PORT%"=="" set HTTP_PORT=8080
-if "%SITE_PATH%"=="" set SITE_PATH=/root/token00
+if "%SITE_PATH%"=="" set SITE_PATH=/root/yourdomain
 
 echo [STATUS] ========================================
-echo [STATUS]  Token00 Deployment Status
+echo [STATUS]  TokenPress Deployment Status
 echo [STATUS]  Mode: %MODE%
 echo [STATUS]  Time: %DATE% %TIME%
 echo.
@@ -54,13 +54,13 @@ if /i "%MODE%"=="local" (
     echo.
 
     echo [STATUS] [IMAGES]---
-    for %%i in (token00-backend:latest token00-frontend:latest) do (
+    for %%i in (yourdomain-backend:latest yourdomain-frontend:latest) do (
         for /f "tokens=*" %%s in ('docker images %%i --format "{{.Size}}" 2^>nul') do echo [STATUS]   %%i: %%s
     )
     echo.
 
     echo [STATUS] [CONTAINERS]---
-    for %%c in (token00-backend token00-frontend token00-nginx) do (
+    for %%c in (yourdomain-backend yourdomain-frontend yourdomain-nginx) do (
         for /f "tokens=*" %%s in ('docker ps -a --filter "name=%%c" --format "{{.Status}}" 2^>nul') do echo [STATUS]   %%c: %%s
     )
     echo.
@@ -95,13 +95,13 @@ if /i "%MODE%"=="local" (
     echo.
 
     echo [STATUS] [IMAGES]---
-    for %%i in (token00-backend:latest token00-frontend:latest) do (
+    for %%i in (yourdomain-backend:latest yourdomain-frontend:latest) do (
         for /f "tokens=*" %%s in ('ssh %SSH_OPTS% %VPS_USER%@%VPS_HOST% "docker images %%i --format '{{.Size}}' 2>/dev/null || echo N/A"') do echo [STATUS]   %%i: %%s
     )
     echo.
 
     echo [STATUS] [CONTAINERS]---
-    for %%c in (token00-backend token00-frontend token00-nginx) do (
+    for %%c in (yourdomain-backend yourdomain-frontend yourdomain-nginx) do (
         for /f "tokens=*" %%s in ('ssh %SSH_OPTS% %VPS_USER%@%VPS_HOST% "docker ps -a --filter name=%%c --format '{{.Status}}' 2>/dev/null || echo N/A"') do echo [STATUS]   %%c: %%s
     )
     echo.

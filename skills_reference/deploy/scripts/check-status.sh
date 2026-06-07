@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Check current deployment status (local or VPS)
+# TokenPress: Check current deployment status (local or VPS)
 # Usage:
 #   check-status.sh <project-dir> local
 #   check-status.sh <project-dir> vps
@@ -19,10 +19,10 @@ if [ -f "$HOST_FILE" ]; then
 fi
 
 : ${HTTP_PORT:=8080}
-: ${SITE_PATH:=/root/token00}
+: ${SITE_PATH:=/root/yourdomain}
 
 echo "[STATUS] ========================================"
-echo "[STATUS]  Token00 Deployment Status Check"
+echo "[STATUS]  TokenPress Deployment Status Check"
 echo "[STATUS]  Mode: $MODE"
 echo "[STATUS]  Time: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
@@ -62,7 +62,7 @@ if [ "$MODE" = "local" ]; then
     echo ""
 
     # Images
-    for img in token00-backend:latest token00-frontend:latest; do
+    for img in yourdomain-backend:latest yourdomain-frontend:latest; do
         if docker images -q "$img" >/dev/null 2>&1; then
             SIZE=$(docker images "$img" --format '{{.Size}}')
             report "IMAGES" "$img" "$SIZE"
@@ -73,7 +73,7 @@ if [ "$MODE" = "local" ]; then
     echo ""
 
     # Containers
-    for svc in token00-backend token00-frontend token00-nginx; do
+    for svc in yourdomain-backend yourdomain-frontend yourdomain-nginx; do
         STATUS=$(docker ps -a --filter "name=$svc" --format '{{.Status}}' 2>/dev/null | head -1)
         if [ -z "$STATUS" ]; then
             report "CONTAINERS" "$svc" "Not deployed"
@@ -126,14 +126,14 @@ elif [ "$MODE" = "vps" ]; then
     echo ""
 
     # Images on VPS
-    for img in token00-backend:latest token00-frontend:latest; do
+    for img in yourdomain-backend:latest yourdomain-frontend:latest; do
         IMG_INFO=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST 'docker images $img --format \"{{.Size}}\"'" 2>/dev/null || echo "NOT FOUND")
         report "IMAGES" "$img" "$IMG_INFO"
     done
     echo ""
 
     # Containers on VPS
-    for svc in token00-backend token00-frontend token00-nginx; do
+    for svc in yourdomain-backend yourdomain-frontend yourdomain-nginx; do
         CSTATUS=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST 'docker ps -a --filter name=$svc --format \"{{.Status}}\"'" 2>/dev/null || echo "N/A")
         if [ -z "$CSTATUS" ] || [ "$CSTATUS" = "N/A" ]; then
             report "CONTAINERS" "$svc" "Not deployed"

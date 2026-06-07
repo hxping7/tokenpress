@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00: Deploy on Remote VPS (Windows)
+REM TokenPress: Deploy on Remote VPS (Windows)
 REM Usage: deploy-vps.bat <project-dir>
 REM
 REM Executes deploy.sh on VPS via SSH.
@@ -39,12 +39,12 @@ if "%SSH_KEY%"=="" (
 )
 if "%VPS_USER%"=="" set VPS_USER=root
 if "%VPS_PORT%"=="" set VPS_PORT=22
-if "%SITE_PATH%"=="" set SITE_PATH=/root/token00
+if "%SITE_PATH%"=="" set SITE_PATH=/root/yourdomain
 
 set SSH_OPTS=-i "%SSH_KEY%" -p %VPS_PORT% -o StrictHostKeyChecking=no -o ConnectTimeout=10
 
 echo [DEPLOY] ========================================
-echo [DEPLOY]  Token00 VPS Deploy
+echo [DEPLOY]  TokenPress VPS Deploy
 echo [DEPLOY]  Target: %VPS_USER%@%VPS_HOST%:%VPS_PORT%
 echo [DEPLOY]  Path:   %SITE_PATH%
 echo [DEPLOY]  Time:   %DATE% %TIME%
@@ -88,7 +88,7 @@ echo [DEPLOY]   deploy.sh completed
 REM Step 4: Check containers
 echo [DEPLOY] Step 4/4: Checking deployed containers...
 ssh %SSH_OPTS% %VPS_USER%@%VPS_HOST% ^
-    "docker ps --filter 'name=token00-' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+    "docker ps --filter 'name=yourdomain-' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
 
 echo [DEPLOY] ========================================
 echo [DEPLOY]  VPS Deploy Complete!

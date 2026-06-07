@@ -1,5 +1,5 @@
 #!/bin/bash
-# Token00: Verify deployment health
+# TokenPress: Verify deployment health
 # Usage:
 #   verify-health.sh <project-dir> local
 #   verify-health.sh <project-dir> vps
@@ -20,7 +20,7 @@ ALL_PASS=true
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
 echo "[VERIFY] ========================================"
-echo "[VERIFY]  Token00 Deployment Verification"
+echo "[VERIFY]  TokenPress Deployment Verification"
 echo "[VERIFY]  Mode: $MODE | Time: $TIMESTAMP"
 echo ""
 
@@ -39,9 +39,9 @@ fi
 # === 1. Docker Container Status ===
 echo "[VERIFY] --- Container Status ---"
 if [ "$MODE" = "local" ]; then
-    docker ps -a --filter "name=token00-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true
+    docker ps -a --filter "name=yourdomain-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true
 else
-    eval "$SSH_CHECK \"docker ps -a --filter 'name=token00-' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'\""
+    eval "$SSH_CHECK \"docker ps -a --filter 'name=yourdomain-' --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'\""
 fi
 echo ""
 
