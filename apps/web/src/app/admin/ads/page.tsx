@@ -34,17 +34,17 @@ interface Ad {
 }
 
 const AD_POSITIONS = [
-  { value: 'header_banner', label: 'Header Banner' },
-  { value: 'home_hero_below', label: 'Home Hero Below' },
-  { value: 'home_list_inline', label: 'Home List Inline' },
-  { value: 'section_sidebar', label: 'Section Sidebar' },
-  { value: 'section_list_inline', label: 'Section List Inline' },
-  { value: 'article_top', label: 'Article Top' },
-  { value: 'article_mid', label: 'Article Mid' },
-  { value: 'article_bottom', label: 'Article Bottom' },
-  { value: 'article_sidebar', label: 'Article Sidebar' },
-  { value: 'footer_top', label: 'Footer Top' },
-  { value: 'footer_bottom', label: 'Footer Bottom' },
+  { value: 'header_banner', labelKey: 'ads.positionHeaderBanner' },
+  { value: 'home_hero_below', labelKey: 'ads.positionHomeHeroBelow' },
+  { value: 'home_list_inline', labelKey: 'ads.positionHomeListInline' },
+  { value: 'section_sidebar', labelKey: 'ads.positionSectionSidebar' },
+  { value: 'section_list_inline', labelKey: 'ads.positionSectionListInline' },
+  { value: 'article_top', labelKey: 'ads.positionArticleTop' },
+  { value: 'article_mid', labelKey: 'ads.positionArticleMid' },
+  { value: 'article_bottom', labelKey: 'ads.positionArticleBottom' },
+  { value: 'article_sidebar', labelKey: 'ads.positionArticleSidebar' },
+  { value: 'footer_top', labelKey: 'ads.positionFooterTop' },
+  { value: 'footer_bottom', labelKey: 'ads.positionFooterBottom' },
 ]
 
 const statusColors: Record<string, string> = {
@@ -55,12 +55,12 @@ const statusColors: Record<string, string> = {
   inactive: 'bg-red-500/20 text-red-400',
 }
 
-const statusLabels: Record<string, string> = {
-  pending_review: 'Pending Review',
-  draft: 'Draft',
-  active: 'Active',
-  expired: 'Expired',
-  inactive: 'Inactive',
+const statusKeyMap: Record<string, string> = {
+  pending_review: 'ads.statusPendingReview',
+  draft: 'ads.statusDraft',
+  active: 'ads.statusActive',
+  expired: 'ads.statusExpired',
+  inactive: 'ads.statusInactive',
 }
 
 export default function AdsPage() {
@@ -104,7 +104,11 @@ export default function AdsPage() {
   const ads: Ad[] = adsData?.data || []
   const pagination = adsData?.pagination || { page: 1, limit: 20, total: 0 }
 
-  const positionLabel = (pos: string) => AD_POSITIONS.find(p => p.value === pos)?.label || pos
+  const positionLabel = (pos: string) => {
+    const entry = AD_POSITIONS.find(p => p.value === pos)
+    return entry ? t(entry.labelKey, backendLocale) : pos
+  }
+  const statusLabel = (s: string) => statusKeyMap[s] ? t(statusKeyMap[s], backendLocale) : s
 
   return (
     <div className="space-y-6">
@@ -118,7 +122,7 @@ export default function AdsPage() {
           className="px-4 py-2 bg-t-accent-blue text-white rounded-lg hover:opacity-90 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Create Ad
+          {t('ads.createAd', backendLocale)}
         </button>
       </div>
 
@@ -131,9 +135,9 @@ export default function AdsPage() {
             onChange={e => { setFilterStatus(e.target.value); setPage(1) }}
             className="bg-t-bg-primary border border-t-border rounded-lg px-3 py-2 text-sm text-t-text-primary"
           >
-            <option value="">All Status</option>
-            {Object.entries(statusLabels).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
+            <option value="">{t('ads.allStatus', backendLocale)}</option>
+            {Object.entries(statusKeyMap).map(([k, v]) => (
+              <option key={k} value={k}>{t(v, backendLocale)}</option>
             ))}
           </select>
         </div>
@@ -142,9 +146,9 @@ export default function AdsPage() {
           onChange={e => { setFilterPosition(e.target.value); setPage(1) }}
           className="bg-t-bg-primary border border-t-border rounded-lg px-3 py-2 text-sm text-t-text-primary"
         >
-          <option value="">All Positions</option>
+          <option value="">{t('ads.allPositions', backendLocale)}</option>
           {AD_POSITIONS.map(p => (
-            <option key={p.value} value={p.value}>{p.label}</option>
+            <option key={p.value} value={p.value}>{t(p.labelKey, backendLocale)}</option>
           ))}
         </select>
       </div>
@@ -159,15 +163,15 @@ export default function AdsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-t-border text-t-text-secondary text-sm">
-                <th className="px-4 py-3 text-left">ID</th>
-                <th className="px-4 py-3 text-left">Title</th>
-                <th className="px-4 py-3 text-left">Position</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Impressions</th>
-                <th className="px-4 py-3 text-left">Clicks</th>
-                <th className="px-4 py-3 text-left">CTR</th>
-                <th className="px-4 py-3 text-left">Schedule</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left">{t('ads.id', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.title2', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.position', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.status', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.impressions', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.clicks', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.ctr', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.schedule', backendLocale)}</th>
+                <th className="px-4 py-3 text-left">{t('ads.actions', backendLocale)}</th>
               </tr>
             </thead>
             <tbody>
@@ -178,23 +182,23 @@ export default function AdsPage() {
                   <td className="px-4 py-3 text-t-text-secondary text-sm">{positionLabel(ad.position)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs ${statusColors[ad.status] || 'bg-gray-500/20 text-gray-400'}`}>
-                      {statusLabels[ad.status] || ad.status}
+                      {statusLabel(ad.status)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-t-text-secondary text-sm">{ad.impressions?.toLocaleString() || 0}</td>
                   <td className="px-4 py-3 text-t-text-secondary text-sm">{ad.clicks?.toLocaleString() || 0}</td>
                   <td className="px-4 py-3 text-t-text-secondary text-sm">{ad.ctr || '0.00'}%</td>
                   <td className="px-4 py-3 text-t-text-secondary text-xs">
-                    {ad.startAt ? new Date(ad.startAt).toLocaleDateString() : 'Now'}
+                    {ad.startAt ? new Date(ad.startAt).toLocaleDateString() : t('ads.immediate', backendLocale)}
                     {' → '}
-                    {ad.endAt ? new Date(ad.endAt).toLocaleDateString() : '∞'}
+                    {ad.endAt ? new Date(ad.endAt).toLocaleDateString() : t('ads.permanent', backendLocale)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
                       <button
                         onClick={() => setShowDetail(ad)}
                         className="p-1.5 rounded hover:bg-t-bg-secondary text-t-text-secondary hover:text-t-accent-blue"
-                        title="View"
+                        title={t('ads.view', backendLocale)}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -203,14 +207,14 @@ export default function AdsPage() {
                           <button
                             onClick={() => approveMutation.mutate(ad.id)}
                             className="p-1.5 rounded hover:bg-green-500/10 text-green-400"
-                            title="Approve"
+                            title={t('ads.approve', backendLocale)}
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => rejectMutation.mutate({ id: ad.id })}
                             className="p-1.5 rounded hover:bg-red-500/10 text-red-400"
-                            title="Reject"
+                            title={t('ads.reject', backendLocale)}
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -220,7 +224,7 @@ export default function AdsPage() {
                         <button
                           onClick={() => toggleMutation.mutate({ id: ad.id, isActive: false })}
                           className="p-1.5 rounded hover:bg-yellow-500/10 text-yellow-400"
-                          title="Pause"
+                          title={t('ads.pause', backendLocale)}
                         >
                           <Pause className="w-4 h-4" />
                         </button>
@@ -229,7 +233,7 @@ export default function AdsPage() {
                         <button
                           onClick={() => toggleMutation.mutate({ id: ad.id, isActive: true })}
                           className="p-1.5 rounded hover:bg-green-500/10 text-green-400"
-                          title="Resume"
+                          title={t('ads.resume', backendLocale)}
                         >
                           <Play className="w-4 h-4" />
                         </button>
@@ -251,15 +255,15 @@ export default function AdsPage() {
             disabled={page === 1}
             className="px-3 py-1.5 rounded bg-t-bg-primary border border-t-border text-t-text-primary disabled:opacity-50"
           >
-            Prev
+            {t('ads.prev', backendLocale)}
           </button>
-          <span className="px-3 py-1.5 text-t-text-secondary">Page {page}</span>
+          <span className="px-3 py-1.5 text-t-text-secondary">{t('ads.page', backendLocale).replace('{page}', String(page))}</span>
           <button
             onClick={() => setPage(p => p + 1)}
             disabled={ads.length < 20}
             className="px-3 py-1.5 rounded bg-t-bg-primary border border-t-border text-t-text-primary disabled:opacity-50"
           >
-            Next
+            {t('ads.next', backendLocale)}
           </button>
         </div>
       )}
@@ -269,27 +273,27 @@ export default function AdsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowDetail(null)}>
           <div className="bg-t-bg-primary rounded-xl border border-t-border p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-t-text-primary">Ad #{showDetail.id}</h2>
+              <h2 className="text-lg font-bold text-t-text-primary">{t('ads.detail', backendLocale)} #{showDetail.id}</h2>
               <button onClick={() => setShowDetail(null)} className="text-t-text-secondary hover:text-t-text-primary">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Title:</span><span className="text-t-text-primary">{showDetail.title}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Position:</span><span className="text-t-text-primary">{positionLabel(showDetail.position)}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Status:</span><span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[showDetail.status]}`}>{statusLabels[showDetail.status]}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Priority:</span><span className="text-t-text-primary">{showDetail.priority}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Start:</span><span className="text-t-text-primary">{showDetail.startAt || 'Immediate'}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">End:</span><span className="text-t-text-primary">{showDetail.endAt || 'Permanent'}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Target Sections:</span><span className="text-t-text-primary">{showDetail.targetSections?.join(', ') || 'All'}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Max Impressions:</span><span className="text-t-text-primary">{showDetail.maxImpressions?.toLocaleString() || 'Unlimited'}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Max Clicks:</span><span className="text-t-text-primary">{showDetail.maxClicks?.toLocaleString() || 'Unlimited'}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Impressions:</span><span className="text-t-text-primary">{showDetail.impressions?.toLocaleString()}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Clicks:</span><span className="text-t-text-primary">{showDetail.clicks?.toLocaleString()}</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">CTR:</span><span className="text-t-text-primary">{showDetail.ctr || '0.00'}%</span></div>
-              <div className="flex gap-2"><span className="text-t-text-secondary w-28">Created:</span><span className="text-t-text-primary">{new Date(showDetail.createdAt).toLocaleString()}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailTitle', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.title}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailPosition', backendLocale)}:</span><span className="text-t-text-primary">{positionLabel(showDetail.position)}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailStatus', backendLocale)}:</span><span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[showDetail.status]}`}>{statusLabel(showDetail.status)}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailPriority', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.priority}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailStart', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.startAt || t('ads.immediate', backendLocale)}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailEnd', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.endAt || t('ads.permanent', backendLocale)}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailTargetSections', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.targetSections?.join(', ') || t('ads.all', backendLocale)}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailMaxImpressions', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.maxImpressions?.toLocaleString() || t('ads.unlimited', backendLocale)}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailMaxClicks', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.maxClicks?.toLocaleString() || t('ads.unlimited', backendLocale)}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.impressions', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.impressions?.toLocaleString()}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.clicks', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.clicks?.toLocaleString()}</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.ctr', backendLocale)}:</span><span className="text-t-text-primary">{showDetail.ctr || '0.00'}%</span></div>
+              <div className="flex gap-2"><span className="text-t-text-secondary w-28">{t('ads.detailCreated', backendLocale)}:</span><span className="text-t-text-primary">{new Date(showDetail.createdAt).toLocaleString()}</span></div>
               <div>
-                <span className="text-t-text-secondary">Ad Code:</span>
+                <span className="text-t-text-secondary">{t('ads.adCode', backendLocale)}:</span>
                 <pre className="mt-1 p-3 bg-t-bg-secondary rounded-lg text-xs text-t-text-primary overflow-x-auto max-h-48">
                   {showDetail.code}
                 </pre>
@@ -308,13 +312,14 @@ export default function AdsPage() {
             setShowCreate(false)
             queryClient.invalidateQueries({ queryKey: ['admin-ads'] })
           }}
+          locale={backendLocale}
         />
       )}
     </div>
   )
 }
 
-function CreateAdModal({ token, onClose, onSuccess }: { token: string; onClose: () => void; onSuccess: () => void }) {
+function CreateAdModal({ token, onClose, onSuccess, locale }: { token: string; onClose: () => void; onSuccess: () => void; locale: string }) {
   const [form, setForm] = useState({
     position: 'article_sidebar',
     title: '',
@@ -355,24 +360,24 @@ function CreateAdModal({ token, onClose, onSuccess }: { token: string; onClose: 
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-t-bg-primary rounded-xl border border-t-border p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-t-text-primary">Create Ad</h2>
+          <h2 className="text-lg font-bold text-t-text-primary">{t('ads.createTitle', locale)}</h2>
           <button onClick={onClose} className="text-t-text-secondary hover:text-t-text-primary">
             <X className="w-5 h-5" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-t-text-secondary mb-1">Position *</label>
+            <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createPosition', locale)}</label>
             <select
               value={form.position}
               onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
               className="w-full bg-t-bg-secondary border border-t-border rounded-lg px-3 py-2 text-sm text-t-text-primary"
             >
-              {AD_POSITIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+              {AD_POSITIONS.map(p => <option key={p.value} value={p.value}>{t(p.labelKey, locale)}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm text-t-text-secondary mb-1">Title *</label>
+            <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createTitle2', locale)}</label>
             <input
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
@@ -381,7 +386,7 @@ function CreateAdModal({ token, onClose, onSuccess }: { token: string; onClose: 
             />
           </div>
           <div>
-            <label className="block text-sm text-t-text-secondary mb-1">Ad Code (HTML/JS) *</label>
+            <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createCode', locale)}</label>
             <textarea
               value={form.code}
               onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
@@ -391,7 +396,7 @@ function CreateAdModal({ token, onClose, onSuccess }: { token: string; onClose: 
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-t-text-secondary mb-1">Priority</label>
+              <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createPriority', locale)}</label>
               <input
                 type="number"
                 value={form.priority}
@@ -400,18 +405,18 @@ function CreateAdModal({ token, onClose, onSuccess }: { token: string; onClose: 
               />
             </div>
             <div>
-              <label className="block text-sm text-t-text-secondary mb-1">Target Sections</label>
+              <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createTargetSections', locale)}</label>
               <input
                 value={form.targetSections}
                 onChange={e => setForm(f => ({ ...f, targetSections: e.target.value }))}
-                placeholder="blog, ai_coding"
+                placeholder={t('ads.createTargetSectionsPlaceholder', locale)}
                 className="w-full bg-t-bg-secondary border border-t-border rounded-lg px-3 py-2 text-sm text-t-text-primary"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-t-text-secondary mb-1">Start At</label>
+              <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createStartAt', locale)}</label>
               <input
                 type="datetime-local"
                 value={form.startAt}
@@ -420,7 +425,7 @@ function CreateAdModal({ token, onClose, onSuccess }: { token: string; onClose: 
               />
             </div>
             <div>
-              <label className="block text-sm text-t-text-secondary mb-1">End At</label>
+              <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createEndAt', locale)}</label>
               <input
                 type="datetime-local"
                 value={form.endAt}
@@ -431,36 +436,36 @@ function CreateAdModal({ token, onClose, onSuccess }: { token: string; onClose: 
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-t-text-secondary mb-1">Max Impressions</label>
+              <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createMaxImpressions', locale)}</label>
               <input
                 type="number"
                 value={form.maxImpressions}
                 onChange={e => setForm(f => ({ ...f, maxImpressions: e.target.value }))}
-                placeholder="Unlimited"
+                placeholder={t('ads.createMaxImpressionsPlaceholder', locale)}
                 className="w-full bg-t-bg-secondary border border-t-border rounded-lg px-3 py-2 text-sm text-t-text-primary"
               />
             </div>
             <div>
-              <label className="block text-sm text-t-text-secondary mb-1">Max Clicks</label>
+              <label className="block text-sm text-t-text-secondary mb-1">{t('ads.createMaxClicks', locale)}</label>
               <input
                 type="number"
                 value={form.maxClicks}
                 onChange={e => setForm(f => ({ ...f, maxClicks: e.target.value }))}
-                placeholder="Unlimited"
+                placeholder={t('ads.createMaxClicksPlaceholder', locale)}
                 className="w-full bg-t-bg-secondary border border-t-border rounded-lg px-3 py-2 text-sm text-t-text-primary"
               />
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-t-text-secondary hover:text-t-text-primary">
-              Cancel
+              {t('ads.cancel', locale)}
             </button>
             <button
               type="submit"
               disabled={loading || !form.title || !form.code}
               className="px-4 py-2 bg-t-accent-blue text-white rounded-lg hover:opacity-90 disabled:opacity-50"
             >
-              {loading ? 'Creating...' : 'Create Ad'}
+              {loading ? t('ads.creating', locale) : t('ads.createSubmit', locale)}
             </button>
           </div>
         </form>

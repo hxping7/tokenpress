@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Check, Copy } from 'lucide-react'
 
 function generateHeadingId(text: string): string {
@@ -18,26 +18,33 @@ interface MarkdownContentProps {
   content: string
 }
 
+function extractTextFromChildren(children: React.ReactNode): string {
+  if (typeof children === 'string') return children
+  if (typeof children === 'number') return String(children)
+  if (Array.isArray(children)) return children.map(extractTextFromChildren).join('')
+  if (children && typeof children === 'object' && 'props' in children) {
+    return extractTextFromChildren((children as React.ReactElement).props.children)
+  }
+  return ''
+}
+
 function CodeBlock({ className, children }: { className?: string; children: React.ReactNode }) {
   const [copied, setCopied] = useState(false)
   const match = /language-(\w+)/.exec(className || '')
   const language = match ? match[1] : ''
-  const code = String(children).replace(/\n$/, '')
+  const plainText = extractTextFromChildren(children).replace(/\n$/, '')
 
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(code)
+    await navigator.clipboard.writeText(plainText)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }, [code])
+  }, [plainText])
 
-  // 获取文件名（从代码块第一行 // file: xxx 提取）
-  const lines = code.split('\n')
+  const lines = plainText.split('\n')
   let filename = ''
-  let codeContent = code
   const fileMatch = lines[0]?.match(/^\/\/\s*file:\s*(.+)$/i)
   if (fileMatch) {
     filename = fileMatch[1].trim()
-    codeContent = lines.slice(1).join('\n')
   }
 
   return (
@@ -75,7 +82,7 @@ function CodeBlock({ className, children }: { className?: string; children: Reac
       <div className="overflow-x-auto">
         <pre className="!m-0 !p-4 !bg-transparent !border-0 !rounded-none">
           <code className={className}>
-            {codeContent}
+            {children}
           </code>
         </pre>
       </div>

@@ -32,12 +32,12 @@ interface ContentReview {
   updated_at: string
 }
 
-const targetTypeLabels: Record<string, string> = {
-  article: 'Article',
-  media: 'Media',
-  ad: 'Ad',
-  friend_link: 'Friend Link',
-  site_setting: 'Site Setting',
+const typeKeyMap: Record<string, string> = {
+  article: 'reviews.typeArticle',
+  media: 'reviews.typeMedia',
+  ad: 'reviews.typeAd',
+  friend_link: 'reviews.typeFriendLink',
+  site_setting: 'reviews.typeSiteSetting',
 }
 
 const verdictColors: Record<string, string> = {
@@ -51,6 +51,7 @@ export default function ReviewsPage() {
   const queryClient = useQueryClient()
   const { token } = useAuthStore()
   const { backendLocale } = useLocaleStore()
+  const locale = backendLocale
   const [filterVerdict, setFilterVerdict] = useState<string>('pending')
   const [filterType, setFilterType] = useState<string>('')
   const [page, setPage] = useState(1)
@@ -113,26 +114,26 @@ export default function ReviewsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-t-text-primary flex items-center gap-2">
           <Shield className="w-6 h-6" />
-          Content Review
+          {t('reviews.title', locale)}
         </h1>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-t-bg-secondary rounded-lg p-4 border border-t-border">
-          <div className="text-sm text-t-text-secondary">Pending</div>
+          <div className="text-sm text-t-text-secondary">{t('reviews.pending', locale)}</div>
           <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
         </div>
         <div className="bg-t-bg-secondary rounded-lg p-4 border border-t-border">
-          <div className="text-sm text-t-text-secondary">Approved Today</div>
+          <div className="text-sm text-t-text-secondary">{t('reviews.approvedToday', locale)}</div>
           <div className="text-2xl font-bold text-green-400">{stats.approvedToday}</div>
         </div>
         <div className="bg-t-bg-secondary rounded-lg p-4 border border-t-border">
-          <div className="text-sm text-t-text-secondary">Rejected Today</div>
+          <div className="text-sm text-t-text-secondary">{t('reviews.rejectedToday', locale)}</div>
           <div className="text-2xl font-bold text-red-400">{stats.rejectedToday}</div>
         </div>
         <div className="bg-t-bg-secondary rounded-lg p-4 border border-t-border">
-          <div className="text-sm text-t-text-secondary">Total</div>
+          <div className="text-sm text-t-text-secondary">{t('reviews.total', locale)}</div>
           <div className="text-2xl font-bold text-t-text-primary">{stats.total}</div>
         </div>
       </div>
@@ -145,29 +146,29 @@ export default function ReviewsPage() {
           onChange={e => { setFilterVerdict(e.target.value); setPage(1) }}
           className="bg-t-bg-secondary border border-t-border rounded px-3 py-1.5 text-sm text-t-text-primary"
         >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="pass">Passed</option>
-          <option value="reject">Rejected</option>
+          <option value="">{t('reviews.allStatus', locale)}</option>
+          <option value="pending">{t('reviews.pending', locale)}</option>
+          <option value="pass">{t('reviews.passed', locale)}</option>
+          <option value="reject">{t('reviews.rejected', locale)}</option>
         </select>
         <select
           value={filterType}
           onChange={e => { setFilterType(e.target.value); setPage(1) }}
           className="bg-t-bg-secondary border border-t-border rounded px-3 py-1.5 text-sm text-t-text-primary"
         >
-          <option value="">All Types</option>
-          <option value="article">Article</option>
-          <option value="media">Media</option>
-          <option value="ad">Ad</option>
-          <option value="friend_link">Friend Link</option>
+          <option value="">{t('reviews.allTypes', locale)}</option>
+          <option value="article">{t('reviews.typeArticle', locale)}</option>
+          <option value="media">{t('reviews.typeMedia', locale)}</option>
+          <option value="ad">{t('reviews.typeAd', locale)}</option>
+          <option value="friend_link">{t('reviews.typeFriendLink', locale)}</option>
         </select>
       </div>
 
       {/* Review List */}
       {isLoading ? (
-        <div className="text-center py-12 text-t-text-secondary">Loading...</div>
+        <div className="text-center py-12 text-t-text-secondary">{t('reviews.loading', locale)}</div>
       ) : reviews.length === 0 ? (
-        <div className="text-center py-12 text-t-text-secondary">No reviews found</div>
+        <div className="text-center py-12 text-t-text-secondary">{t('reviews.noReviews', locale)}</div>
       ) : (
         <div className="space-y-3">
           {reviews.map(review => {
@@ -178,11 +179,11 @@ export default function ReviewsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs px-2 py-0.5 rounded bg-t-accent-blue/20 text-t-accent-blue font-medium">
-                        {targetTypeLabels[review.target_type] || review.target_type}
+                        {t(typeKeyMap[review.target_type] || review.target_type, locale)}
                       </span>
                       <span className="text-xs text-t-text-secondary">#{review.target_id}</span>
                       <span className={`text-xs px-2 py-0.5 rounded ${verdictColors[review.final_verdict] || ''}`}>
-                        {review.final_verdict}
+                        {t(`reviews.${review.final_verdict === 'pass' ? 'passed' : review.final_verdict === 'reject' ? 'rejected' : 'pending'}`, locale)}
                       </span>
                       {review.cloud_provider && (
                         <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400">
@@ -195,17 +196,17 @@ export default function ReviewsPage() {
                     <div className="flex items-center gap-4 text-sm text-t-text-secondary mb-1">
                       <span className="flex items-center gap-1">
                         <Eye className="w-3 h-3" />
-                        Local: {review.local_scan_status}
+                        {t('reviews.local', locale)}: {review.local_scan_status}
                       </span>
-                      <span>Text: {review.cloud_text_status}</span>
-                      <span>Image: {review.cloud_image_status}</span>
+                      <span>{t('reviews.text', locale)}: {review.cloud_text_status}</span>
+                      <span>{t('reviews.image', locale)}: {review.cloud_image_status}</span>
                     </div>
 
                     {/* Matched keywords */}
                     {matchedWords.length > 0 && (
                       <div className="flex items-center gap-1 mt-1">
                         <AlertTriangle className="w-3 h-3 text-yellow-400" />
-                        <span className="text-xs text-yellow-400">Keywords:</span>
+                        <span className="text-xs text-yellow-400">{t('reviews.keywords', locale)}:</span>
                         {matchedWords.map((w, i) => (
                           <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300">
                             {w}
@@ -217,8 +218,8 @@ export default function ReviewsPage() {
                     {/* Cloud result */}
                     {review.cloud_label && (
                       <div className="text-xs text-t-text-secondary mt-1">
-                        Cloud: {review.cloud_label}
-                        {review.cloud_score != null && ` (score: ${review.cloud_score})`}
+                        {t('reviews.cloud', locale)}: {review.cloud_label}
+                        {review.cloud_score != null && ` (${t('reviews.score', locale)}: ${review.cloud_score})`}
                       </div>
                     )}
 
@@ -234,10 +235,10 @@ export default function ReviewsPage() {
                       <Clock className="w-3 h-3" />
                       {formatTime(review.created_at)}
                       {review.manual_reviewed_at && (
-                        <span className="ml-2">Reviewed: {formatTime(review.manual_reviewed_at)}</span>
+                        <span className="ml-2">{t('reviews.reviewed', locale)}: {formatTime(review.manual_reviewed_at)}</span>
                       )}
                       {review.manual_note && (
-                        <span className="ml-2 text-t-text-primary">Note: {review.manual_note}</span>
+                        <span className="ml-2 text-t-text-primary">{t('reviews.note', locale)}: {review.manual_note}</span>
                       )}
                     </div>
                   </div>
@@ -251,7 +252,7 @@ export default function ReviewsPage() {
                         className="flex items-center gap-1 px-3 py-1.5 rounded bg-green-600 hover:bg-green-700 text-white text-sm disabled:opacity-50"
                       >
                         <Check className="w-3 h-3" />
-                        Approve
+                        {t('reviews.approve', locale)}
                       </button>
                       <button
                         onClick={() => {
@@ -262,7 +263,7 @@ export default function ReviewsPage() {
                         className="flex items-center gap-1 px-3 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white text-sm disabled:opacity-50"
                       >
                         <X className="w-3 h-3" />
-                        Reject
+                        {t('reviews.reject', locale)}
                       </button>
                       <button
                         onClick={() => retryMutation.mutate(review.id)}
@@ -270,7 +271,7 @@ export default function ReviewsPage() {
                         className="flex items-center gap-1 px-3 py-1.5 rounded bg-t-bg-primary border border-t-border hover:bg-t-bg-primary/80 text-t-text-secondary text-sm disabled:opacity-50"
                       >
                         <RefreshCw className="w-3 h-3" />
-                        Retry
+                        {t('reviews.retry', locale)}
                       </button>
                     </div>
                   )}
@@ -281,7 +282,7 @@ export default function ReviewsPage() {
                   <div className="mt-2">
                     <input
                       type="text"
-                      placeholder="Rejection note (optional)"
+                      placeholder={t('reviews.rejectionNote', locale)}
                       value={rejectNote[review.id] || ''}
                       onChange={e => setRejectNote(prev => ({ ...prev, [review.id]: e.target.value }))}
                       className="w-full bg-t-bg-primary border border-t-border rounded px-3 py-1.5 text-sm text-t-text-primary placeholder:text-t-text-secondary/50"
@@ -302,17 +303,17 @@ export default function ReviewsPage() {
             disabled={page <= 1}
             className="px-3 py-1.5 rounded bg-t-bg-secondary border border-t-border text-sm disabled:opacity-50"
           >
-            Previous
+            {t('reviews.previous', locale)}
           </button>
           <span className="text-sm text-t-text-secondary">
-            Page {pagination.page} / {Math.ceil(pagination.total / pagination.limit)}
+            {t('reviews.page', locale).replace('{page}', String(pagination.page)).replace('{total}', String(Math.ceil(pagination.total / pagination.limit)))}
           </span>
           <button
             onClick={() => setPage(p => p + 1)}
             disabled={page >= Math.ceil(pagination.total / pagination.limit)}
             className="px-3 py-1.5 rounded bg-t-bg-secondary border border-t-border text-sm disabled:opacity-50"
           >
-            Next
+            {t('reviews.next', locale)}
           </button>
         </div>
       )}
