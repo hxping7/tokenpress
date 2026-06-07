@@ -1,0 +1,15 @@
+node_modules
+.next
+dist
+.turbo
+*.log
+*.md
+!README.md
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+data
+logodesign
+.workbuddy

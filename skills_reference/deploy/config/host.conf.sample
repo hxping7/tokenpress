@@ -1,0 +1,14 @@
+# Token00 VPS SSH Config
+# Copy to host.conf and edit
+
+# VPS host IP or domain (REQUIRED)
+VPS_HOST=your-vps-ip
+
+# SSH user (default: root)
+VPS_USER=root
+
+# SSH port (default: 22)
+VPS_PORT=22
+
+# SSH private key path (REQUIRED - absolute path to your .pem or key file)
+SSH_KEY=C:/Users/your-username/.ssh/your-key.pem

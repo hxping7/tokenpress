@@ -1,0 +1,6 @@
+# VPS SSH 连接信息
+
+VPS_HOST=your-vps-ip
+VPS_USER=root
+VPS_PORT=22
+SSH_KEY=C:/Users/your-username/.ssh/your-key.pem

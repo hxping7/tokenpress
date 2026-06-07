@@ -1,0 +1,26 @@
+# ===== Simple Production Image =====
+# Use pre-built artifacts from local machine
+FROM alpine:3.19
+
+WORKDIR /app
+
+# Install Node.js
+RUN apk add --no-cache nodejs npm
+
+# Copy pre-built server
+COPY apps/server/dist ./apps/server/dist
+COPY apps/server/package.json ./apps/server/
+COPY node_modules ./node_modules
+COPY packages/shared ./packages/shared
+
+WORKDIR /app/apps/server
+
+# Create data directory
+RUN mkdir -p data/uploads
+
+ENV NODE_ENV=production
+ENV PORT=4001
+
+EXPOSE 4001
+
+CMD ["node", "dist/index.js"]

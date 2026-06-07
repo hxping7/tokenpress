@@ -1,0 +1,15 @@
+# Token00 Deployment Config
+
+# Site domain
+DOMAIN=www.yourdomain.com
+SITE_PATH=/root/yourpath
+
+# Ports
+HTTP_PORT=8080
+HTTPS_PORT=8443
+
+# Security
+JWT_SECRET=your-jwt-secret-change-me
+
+# Optional
+SITE_URL=

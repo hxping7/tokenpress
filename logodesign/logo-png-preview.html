@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token∞ Logo PNG Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020810;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e0e8ff;
+    }
+
+    header {
+      text-align: center;
+      padding: 56px 20px 32px;
+    }
+    header .site { font-size: 11px; letter-spacing: 6px; color: #1a4060; text-transform: uppercase; margin-bottom: 12px; }
+    header h1 { font-size: 13px; letter-spacing: 4px; color: #3a7aaa; text-transform: uppercase; }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.2), rgba(124,58,237,0.2), transparent);
+      margin: 0 60px;
+    }
+
+    .variant { padding: 64px 60px; border-bottom: 1px solid rgba(0,180,255,0.05); }
+    .variant:last-of-type { border-bottom: none; }
+
+    .variant-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .variant-num  { font-size: 11px; letter-spacing: 4px; color: #00d4ff; text-transform: uppercase; opacity: 0.6; }
+    .variant-name { font-size: 11px; letter-spacing: 3px; color: #2a4a6a; text-transform: uppercase; }
+    .variant-desc { font-size: 11px; color: #1a3a5a; letter-spacing: 1px; margin-left: auto; }
+
+    /* 主展示区 */
+    .logo-display {
+      background: #050a14;
+      border: 1px solid rgba(0,180,255,0.1);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 52px 40px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .logo-display::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.35), rgba(124,58,237,0.35), transparent);
+    }
+    .logo-display::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .logo-display:hover {
+      border-color: rgba(0,212,255,0.25);
+      box-shadow: 0 0 50px rgba(0,160,255,0.07);
+    }
+    .logo-display img {
+      position: relative; z-index: 1;
+      max-width: 100%; height: auto;
+    }
+
+    /* 对比行 */
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 2px;
+    }
+    .logo-display.light {
+      background: #eef5ff;
+      border-color: rgba(0,100,200,0.1);
+    }
+    .logo-display.light::after {
+      background-image:
+        linear-gradient(rgba(0,80,180,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,80,180,0.04) 1px, transparent 1px);
+    }
+    .logo-display.compact {
+      background: #0a1628;
+      padding: 28px 32px;
+    }
+
+    /* 标签 */
+    .corner-tag {
+      position: absolute; top: 14px; right: 18px; z-index: 2;
+      font-size: 10px; letter-spacing: 2.5px; color: #0d2840; text-transform: uppercase;
+    }
+    .corner-tag.light { color: #9ab8d8; }
+
+    /* 使用场景 */
+    .usage-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+    .usage-tag {
+      font-size: 10px; letter-spacing: 2px; color: #1a4060;
+      border: 1px solid rgba(0,180,255,0.1);
+      padding: 5px 12px; border-radius: 4px; text-transform: uppercase;
+    }
+
+    /* PNG 下载提示 */
+    .dl-row {
+      display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; align-items: center;
+    }
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 10px; letter-spacing: 2px; color: #2a6090;
+      border: 1px solid rgba(0,150,255,0.15);
+      padding: 6px 14px; border-radius: 5px; text-transform: uppercase;
+      text-decoration: none; transition: color 0.2s, border-color 0.2s;
+    }
+    .dl-btn:hover { color: #60b8ff; border-color: rgba(0,180,255,0.35); }
+    .dl-btn svg { width: 12px; height: 12px; fill: currentColor; }
+
+    footer {
+      text-align: center; padding: 48px;
+      font-size: 10px; letter-spacing: 4px; color: #0d1e30; text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="site">token00.com</div>
+  <h1>Token∞ · Logo PNG Export · 3× Resolution</h1>
+</header>
+<div class="divider"></div>
+
+<!-- ===== V1 Minimal ===== -->
+<div class="variant">
+  <div class="variant-header">
+    <span class="variant-num">01 /</span>
+    <span class="variant-name">Minimal Glow</span>
+    <span class="variant-desc">极简发光横版 · 1680 × 432 px</span>
+  </div>
+
+  <div class="logo-display">
+    <span class="corner-tag">Dark · 3×</span>
+    <img src="logo-v1-minimal.png" alt="Token∞ Logo V1 Minimal" style="max-height:180px;">
+  </div>
+
+  <div class="compare-row">
+    <div class="logo-display light" style="min-height:110px;">
+      <span class="corner-tag light">Light BG</span>
+      <img src="logo-v1-minimal.png" alt="V1 light preview"
+        style="max-height:100px; filter: invert(1) hue-rotate(185deg) brightness(0.7) contrast(1.2);">
+    </div>
+    <div class="logo-display compact" style="min-height:110px;">
+      <span class="corner-tag">Small Scale</span>
+      <img src="logo-v1-minimal.png" alt="V1 small" style="max-height:52px;">
+    </div>
+  </div>
+
+  <div class="dl-row">
+    <a class="dl-btn" href="logo-v1-minimal.png" download>
+      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
+      PNG 下载
+    </a>
+    <a class="dl-btn" href="logo-v1-minimal.svg" download>
+      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
+      SVG 下载
+    </a>
+  </div>
+  <div class="usage-row">
+    <span class="usage-tag">官网 Hero Banner</span>
+    <span class="usage-tag">邮件签名</span>
+    <span class="usage-tag">文档封面</span>
+    <span class="usage-tag">社交媒体封面</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== V2 Hexicon ===== -->
+<div class="variant">
+  <div class="variant-header">
+    <span class="variant-num">02 /</span>
+    <span class="variant-name">Hex Icon + Text</span>
+    <span class="variant-desc">六边形图标横排 · 1440 × 420 px</span>
+  </div>
+
+  <div class="logo-display">
+    <span class="corner-tag">Dark · 3×</span>
+    <img src="logo-v2-hexicon.png" alt="Token∞ Logo V2 Hexicon" style="max-height:180px;">
+  </div>
+
+  <div class="compare-row">
+    <div class="logo-display light" style="min-height:110px;">
+      <span class="corner-tag light">Light BG</span>
+      <img src="logo-v2-hexicon.png" alt="V2 light"
+        style="max-height:100px; filter: invert(1) hue-rotate(185deg) brightness(0.65) contrast(1.3);">
+    </div>
+    <div class="logo-display compact" style="min-height:110px;">
+      <span class="corner-tag">Icon Only</span>
+      <!-- 图标区域裁剪模拟 -->
+      <img src="logo-v2-hexicon.png" alt="V2 icon" style="max-height:80px; object-fit:none; object-position:left center; width:80px; overflow:hidden;">
+    </div>
+  </div>
+
+  <div class="dl-row">
+    <a class="dl-btn" href="logo-v2-hexicon.png" download>
+      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
+      PNG 下载
+    </a>
+    <a class="dl-btn" href="logo-v2-hexicon.svg" download>
+      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
+      SVG 下载
+    </a>
+  </div>
+  <div class="usage-row">
+    <span class="usage-tag">网站导航栏</span>
+    <span class="usage-tag">App 图标</span>
+    <span class="usage-tag">名片</span>
+    <span class="usage-tag">产品水印</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== V3 Orbital ===== -->
+<div class="variant">
+  <div class="variant-header">
+    <span class="variant-num">03 /</span>
+    <span class="variant-name">Orbital Ring</span>
+    <span class="variant-desc">轨道环形竖版 · 1680 × 960 px</span>
+  </div>
+
+  <div class="logo-display" style="min-height:400px;">
+    <span class="corner-tag">Dark · 3×</span>
+    <img src="logo-v3-orbital.png" alt="Token∞ Logo V3 Orbital" style="max-height:400px;">
+  </div>
+
+  <div class="compare-row">
+    <div class="logo-display light" style="min-height:200px;">
+      <span class="corner-tag light">Light BG</span>
+      <img src="logo-v3-orbital.png" alt="V3 light"
+        style="max-height:180px; filter: invert(1) hue-rotate(185deg) brightness(0.65) contrast(1.3);">
+    </div>
+    <div class="logo-display compact" style="min-height:200px;">
+      <span class="corner-tag">Small Scale</span>
+      <img src="logo-v3-orbital.png" alt="V3 small" style="max-height:160px;">
+    </div>
+  </div>
+
+  <div class="dl-row">
+    <a class="dl-btn" href="logo-v3-orbital.png" download>
+      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
+      PNG 下载
+    </a>
+    <a class="dl-btn" href="logo-v3-orbital.svg" download>
+      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
+      SVG 下载
+    </a>
+  </div>
+  <div class="usage-row">
+    <span class="usage-tag">官网首页大 Logo</span>
+    <span class="usage-tag">启动页 / Splash</span>
+    <span class="usage-tag">展会展板</span>
+    <span class="usage-tag">PPT 封面</span>
+  </div>
+</div>
+
+<footer>
+  token00.com · Token∞ AI Platform · Logo Design System · 2026
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Highlight.js - GitHub Dark theme for code blocks */
+@import url('https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css');
+
+@layer base {
+  /* ===== 暗夜蓝紫（默认） ===== */
+  :root,
+  [data-theme='night'] {
+    --bg-primary: #020810;
+    --bg-secondary: #0a1628;
+    --bg-tertiary: #111d32;
+    --text-primary: #e0e8ff;
+    --text-secondary: #7a8ba8;
+    --text-muted: #4a5a78;
+    --accent-blue: #00d4ff;
+    --accent-purple: #7c3aed;
+    --accent-blue-dim: #0090cc;
+    --border-color: rgba(0, 180, 255, 0.08);
+    --hover-bg: rgba(0, 180, 255, 0.05);
+    --gradient-from: #00d4ff;
+    --gradient-via: #ffffff;
+    --gradient-to: #7c3aed;
+    --grid-pattern: rgba(0, 212, 255, 0.02);
+    --selection-bg: rgba(0, 212, 255, 0.2);
+    --scrollbar-thumb: rgba(0, 212, 255, 0.2);
+    --scrollbar-thumb-hover: rgba(0, 212, 255, 0.4);
+    --focus-ring: rgba(0, 212, 255, 0.5);
+    --card-border-hover: rgba(0, 212, 255, 0.2);
+    --section-divider: rgba(0, 212, 255, 0.2);
+    --btn-glow-from: rgba(0, 212, 255, 0.15);
+    --btn-glow-to: rgba(124, 58, 237, 0.15);
+  }
+
+  /* ===== 赛博青绿 ===== */
+  [data-theme='cyber'] {
+    --bg-primary: #001010;
+    --bg-secondary: #002520;
+    --bg-tertiary: #003a30;
+    --text-primary: #e0ffe8;
+    --text-secondary: #70a888;
+    --text-muted: #407060;
+    --accent-blue: #00ff88;
+    --accent-purple: #00ccff;
+    --accent-blue-dim: #00bb66;
+    --border-color: rgba(0, 255, 136, 0.1);
+    --hover-bg: rgba(0, 255, 136, 0.06);
+    --gradient-from: #00ff88;
+    --gradient-via: #80ffc0;
+    --gradient-to: #00ccff;
+    --grid-pattern: rgba(0, 255, 136, 0.03);
+    --selection-bg: rgba(0, 255, 136, 0.25);
+    --scrollbar-thumb: rgba(0, 255, 136, 0.2);
+    --scrollbar-thumb-hover: rgba(0, 255, 136, 0.4);
+    --focus-ring: rgba(0, 255, 136, 0.5);
+    --card-border-hover: rgba(0, 255, 136, 0.2);
+    --section-divider: rgba(0, 255, 136, 0.2);
+    --btn-glow-from: rgba(0, 255, 136, 0.15);
+    --btn-glow-to: rgba(0, 204, 255, 0.15);
+  }
+
+  /* ===== 熔岩橙红 ===== */
+  [data-theme='lava'] {
+    --bg-primary: #0a0500;
+    --bg-secondary: #1a0e00;
+    --bg-tertiary: #2a1808;
+    --text-primary: #ffe8e0;
+    --text-secondary: #b08870;
+    --text-muted: #705040;
+    --accent-blue: #ff6b35;
+    --accent-purple: #ff3366;
+    --accent-blue-dim: #cc5522;
+    --border-color: rgba(255, 107, 53, 0.1);
+    --hover-bg: rgba(255, 107, 53, 0.06);
+    --gradient-from: #ff6b35;
+    --gradient-via: #ffaa66;
+    --gradient-to: #ff3366;
+    --grid-pattern: rgba(255, 107, 53, 0.03);
+    --selection-bg: rgba(255, 107, 53, 0.25);
+    --scrollbar-thumb: rgba(255, 107, 53, 0.2);
+    --scrollbar-thumb-hover: rgba(255, 107, 53, 0.4);
+    --focus-ring: rgba(255, 107, 53, 0.5);
+    --card-border-hover: rgba(255, 107, 53, 0.2);
+    --section-divider: rgba(255, 107, 53, 0.2);
+    --btn-glow-from: rgba(255, 107, 53, 0.15);
+    --btn-glow-to: rgba(255, 51, 102, 0.15);
+  }
+
+  /* ===== 极简亮白 ===== */
+  [data-theme='light'] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --bg-tertiary: #e8e8ed;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-muted: #a1a1a6;
+    --accent-blue: #007aff;
+    --accent-purple: #5856d6;
+    --accent-blue-dim: #0055cc;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --hover-bg: rgba(0, 0, 0, 0.04);
+    --gradient-from: #007aff;
+    --gradient-via: #5a9eff;
+    --gradient-to: #5856d6;
+    --grid-pattern: rgba(0, 0, 0, 0.03);
+    --selection-bg: rgba(0, 122, 255, 0.2);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+    --focus-ring: rgba(0, 122, 255, 0.5);
+    --card-border-hover: rgba(0, 122, 255, 0.2);
+    --section-divider: rgba(0, 0, 0, 0.1);
+    --btn-glow-from: rgba(0, 122, 255, 0.12);
+    --btn-glow-to: rgba(88, 86, 214, 0.12);
+  }
+
+  /* ===== 太空深蓝 ===== */
+  [data-theme='space'] {
+    --bg-primary: #050b1a;
+    --bg-secondary: #0a1838;
+    --bg-tertiary: #122550;
+    --text-primary: #d0e0ff;
+    --text-secondary: #6080b8;
+    --text-muted: #305080;
+    --accent-blue: #4488ff;
+    --accent-purple: #00ccff;
+    --accent-blue-dim: #2266dd;
+    --border-color: rgba(68, 136, 255, 0.08);
+    --hover-bg: rgba(68, 136, 255, 0.05);
+    --gradient-from: #4488ff;
+    --gradient-via: #88bbff;
+    --gradient-to: #00ccff;
+    --grid-pattern: rgba(68, 136, 255, 0.02);
+    --selection-bg: rgba(68, 136, 255, 0.2);
+    --scrollbar-thumb: rgba(68, 136, 255, 0.2);
+    --scrollbar-thumb-hover: rgba(68, 136, 255, 0.4);
+    --focus-ring: rgba(68, 136, 255, 0.5);
+    --card-border-hover: rgba(68, 136, 255, 0.2);
+    --section-divider: rgba(68, 136, 255, 0.2);
+    --btn-glow-from: rgba(68, 136, 255, 0.15);
+    --btn-glow-to: rgba(0, 204, 255, 0.15);
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  ::selection {
+    background-color: var(--selection-bg);
+    color: white;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: var(--bg-primary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: var(--scrollbar-thumb);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+
+  /* Focus ring */
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 4px var(--bg-primary);
+  }
+}
+
+@layer components {
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, var(--gradient-from), var(--gradient-via), var(--gradient-to));
+  }
+
+  /* Card surface */
+  .card-surface {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    @apply border rounded-2xl;
+  }
+
+  .card-surface-hover {
+    @apply card-surface transition-all duration-300;
+  }
+
+  .card-surface-hover:hover {
+    border-color: var(--card-border-hover);
+  }
+
+  /* Section divider */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--section-divider), transparent);
+  }
+
+  /* Gradient accent background */
+  .bg-gradient-accent {
+    background-image: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+  }
+
+  /* Glow button */
+  .btn-glow {
+    @apply relative overflow-hidden;
+  }
+
+  .btn-glow::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    background: linear-gradient(135deg, var(--btn-glow-from), var(--btn-glow-to));
+    @apply opacity-0 transition-opacity duration-300;
+  }
+
+  .btn-glow:hover::after {
+    @apply opacity-100;
+  }
+
+  /* Grid background pattern */
+  .grid-pattern {
+    background-image:
+      linear-gradient(var(--grid-pattern) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-pattern) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Hero carousel flip effect */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .rotate-y-0 {
+    transform: rotateY(0deg);
+  }
+
+  .rotate-y-90 {
+    transform: rotateY(90deg);
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+}

@@ -1,0 +1,26 @@
+# TokenPress Deployment Config
+# Copy to deploy.conf and edit
+
+# Site domain (for SSL certificate)
+DOMAIN=www.yourdomain.com
+
+# VPS deployment path
+SITE_PATH=/root/yourdomain
+
+# Ports
+HTTP_PORT=8080
+HTTPS_PORT=8443
+
+# JWT secret (REQUIRED - change to a random string)
+JWT_SECRET=your-jwt-secret-change-me
+
+# Optional: override auto-detected site URL
+SITE_URL=
+
+# SSL Configuration
+# Set to true to apply for Let's Encrypt SSL certificate
+ENABLE_SSL=false
+
+# SSL renewal schedule (cron format)
+# Default: check at 3 AM every day
+SSL_RENEWAL_SCHEDULE=0 3 * * *

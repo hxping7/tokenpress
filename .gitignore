@@ -1,0 +1,91 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+.next/
+out/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.bak
+
+# Deploy config (contains sensitive info)
+host.conf
+deploy.conf
+
+
+# Scripts
+upload_ftp.py
+
+# API Tokens (for blog publishing)
+pub_token*.txt
+publish.cjs
+publish-with-images.cjs
+
+# IDE
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+apps/server/data/
+
+# Uploads
+apps/web/public/uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Turbo
+.turbo/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.tsbuildinfo
+
+# Docker build artifacts
+token00-*.tar.gz
+tokenpress-*.tar.gz
+
+# Site config (contains API token)
+.token00.conf
+.tokenpress.conf
+
+# Published article backups
+published/
+
+# AI Agent / Assistant configs
+.workbuddy/
+.trae/
+.arts/
+
+# Design docs (internal planning)
+develop_v2_design.md
+develop_v2_plan.md
+i18n-theme-plan.md
+plan.md
+ad_devplan.md
+sec_devplan.md
+token00-publisher.zip
+.claude/settings.local.json
+posts/
+.npmrc
+nginx.conf

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token∞ Logo Showcase</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020810;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e0e8ff;
+    }
+
+    header {
+      text-align: center;
+      padding: 56px 20px 32px;
+    }
+    header .site { font-size: 11px; letter-spacing: 6px; color: #1a4060; text-transform: uppercase; margin-bottom: 12px; }
+    header h1 { font-size: 13px; letter-spacing: 4px; color: #3a7aaa; text-transform: uppercase; }
+
+    /* 分隔线 */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.2), rgba(124,58,237,0.2), transparent);
+      margin: 0 60px;
+    }
+
+    /* 每个方案容器 */
+    .variant {
+      padding: 72px 60px;
+      border-bottom: 1px solid rgba(0,180,255,0.05);
+      position: relative;
+    }
+    .variant:last-of-type { border-bottom: none; }
+
+    .variant-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .variant-num {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: #00d4ff;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+    .variant-name {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: #2a4a6a;
+      text-transform: uppercase;
+    }
+    .variant-desc {
+      font-size: 11px;
+      color: #1a3a5a;
+      letter-spacing: 1px;
+      margin-left: auto;
+    }
+
+    /* Logo 展示区：深色背景 */
+    .logo-display {
+      background: #050a14;
+      border: 1px solid rgba(0,180,255,0.08);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.4s, box-shadow 0.4s;
+    }
+    .logo-display::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), rgba(124,58,237,0.3), transparent);
+    }
+    .logo-display:hover {
+      border-color: rgba(0,212,255,0.2);
+      box-shadow: 0 0 40px rgba(0,180,255,0.06), inset 0 0 60px rgba(0,100,200,0.03);
+    }
+    /* 背景网格纹理 */
+    .logo-display::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .logo-display svg, .logo-display img {
+      position: relative;
+      z-index: 1;
+      max-width: 100%;
+    }
+
+    /* 使用场景说明 */
+    .usage-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .usage-tag {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #1a4060;
+      border: 1px solid rgba(0,180,255,0.1);
+      padding: 5px 12px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    /* 白底版对比 */
+    .logo-display.light {
+      background: #f0f6ff;
+      border-color: rgba(0,100,200,0.12);
+    }
+    .logo-display.light::after {
+      background-image:
+        linear-gradient(rgba(0,100,200,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,100,200,0.04) 1px, transparent 1px);
+    }
+
+    /* 方案对比行 */
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 2px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 48px;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #0f2030;
+      text-transform: uppercase;
+    }
+
+    /* 下载提示 */
+    .dl-hint {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #0a3050;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="site">token00.com</div>
+  <h1>Token∞ · Logo Design Showcase</h1>
+</header>
+
+<div class="divider"></div>
+
+<!-- ============ V1 Minimal ============ -->
+<div class="variant">
+  <div class="variant-header">
+    <span class="variant-num">01 /</span>
+    <span class="variant-name">Minimal Glow</span>
+    <span class="variant-desc">极简发光 · 横向文字版</span>
+  </div>
+
+  <div class="logo-display" style="min-height: 200px;">
+    <span class="dl-hint">V1 · MINIMAL</span>
+    <!-- 方案1 SVG 内联，放大1.5倍展示 -->
+    <svg width="700" height="180" viewBox="0 0 700 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s1tg" x1="20" y1="0" x2="700" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#5ab8ff"/>
+          <stop offset="55%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#a78bfa"/>
+        </linearGradient>
+        <linearGradient id="s1ig" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#00d4ff"/>
+          <stop offset="50%" stop-color="#7c3aed"/>
+          <stop offset="100%" stop-color="#00d4ff"/>
+        </linearGradient>
+        <filter id="s1glow" x="-5%" y="-30%" width="110%" height="160%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="s1infglow" x="-30%" y="-60%" width="160%" height="220%">
+          <feGaussianBlur stdDeviation="10" result="b1"/>
+          <feGaussianBlur stdDeviation="4" result="b2"/>
+          <feMerge><feMergeNode in="b1"/><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Token -->
+      <text x="20" y="128"
+        font-family="'Segoe UI', Arial, sans-serif"
+        font-size="116"
+        font-weight="700"
+        letter-spacing="-3"
+        fill="url(#s1tg)"
+        filter="url(#s1glow)">Token</text>
+      <!-- ∞ -->
+      <g transform="translate(463, 90)" filter="url(#s1infglow)">
+        <path d="M 88 0 C 88 -45, 35 -45, 0 0 C -35 45, -88 45, -88 0 C -88 -45, -35 -45, 0 0 C 35 45, 88 45, 88 0 Z"
+          fill="none" stroke="url(#s1ig)" stroke-width="11" stroke-linecap="round"/>
+        <path d="M 60 0 C 60 -30, 24 -30, 0 0 C -24 30, -60 30, -60 0 C -60 -30, -24 -30, 0 0 C 24 30, 60 30, 60 0 Z"
+          fill="none" stroke="rgba(0,212,255,0.18)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="0" cy="0" r="5" fill="rgba(255,255,255,0.55)"/>
+      </g>
+      <!-- 底线 -->
+      <line x1="20" y1="150" x2="680" y2="150" stroke="url(#s1ig)" stroke-width="1" opacity="0.2"/>
+      <circle cx="20" cy="150" r="3" fill="#00d4ff" opacity="0.45"/>
+      <circle cx="680" cy="150" r="3" fill="#7c3aed" opacity="0.45"/>
+    </svg>
+  </div>
+
+  <!-- 白底对比 -->
+  <div class="compare-row">
+    <div class="logo-display light" style="min-height:120px; margin-top:2px;">
+      <span class="dl-hint" style="color:#aac0d8;">浅色背景</span>
+      <svg width="420" height="108" viewBox="0 0 420 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="s1ltg" x1="12" y1="0" x2="420" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0070b8"/>
+            <stop offset="60%" stop-color="#0a1840"/>
+            <stop offset="100%" stop-color="#5020a0"/>
+          </linearGradient>
+          <linearGradient id="s1lig" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#0090cc"/>
+            <stop offset="50%" stop-color="#5a20b0"/>
+            <stop offset="100%" stop-color="#0090cc"/>
+          </linearGradient>
+        </defs>
+        <text x="12" y="76"
+          font-family="'Segoe UI', Arial, sans-serif"
+          font-size="70" font-weight="700" letter-spacing="-2"
+          fill="url(#s1ltg)">Token</text>
+        <g transform="translate(278, 54)">
+          <path d="M 52 0 C 52 -27, 21 -27, 0 0 C -21 27, -52 27, -52 0 C -52 -27, -21 -27, 0 0 C 21 27, 52 27, 52 0 Z"
+            fill="none" stroke="url(#s1lig)" stroke-width="7" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <div class="logo-display" style="min-height:120px; margin-top:2px; background:#0d1a2e;">
+      <span class="dl-hint">小尺寸</span>
+      <svg width="240" height="62" viewBox="0 0 240 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="s1stg" x1="8" y1="0" x2="240" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#5ab8ff"/>
+            <stop offset="55%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#a78bfa"/>
+          </linearGradient>
+          <linearGradient id="s1sig" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#00d4ff"/>
+            <stop offset="50%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#00d4ff"/>
+          </linearGradient>
+          <filter id="s1sglow">
+            <feGaussianBlur stdDeviation="2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <text x="8" y="44" font-family="'Segoe UI', Arial, sans-serif"
+          font-size="40" font-weight="700" letter-spacing="-1"
+          fill="url(#s1stg)" filter="url(#s1sglow)">Token</text>
+        <g transform="translate(160, 30)" filter="url(#s1sglow)">
+          <path d="M 30 0 C 30 -16, 12 -16, 0 0 C -12 16, -30 16, -30 0 C -30 -16, -12 -16, 0 0 C 12 16, 30 16, 30 0 Z"
+            fill="none" stroke="url(#s1sig)" stroke-width="4" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="usage-row">
+    <span class="usage-tag">官网 Hero Banner</span>
+    <span class="usage-tag">邮件签名</span>
+    <span class="usage-tag">文档封面</span>
+    <span class="usage-tag">社交媒体封面</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ============ V2 Hexicon ============ -->
+<div class="variant">
+  <div class="variant-header">
+    <span class="variant-num">02 /</span>
+    <span class="variant-name">Hex Icon + Text</span>
+    <span class="variant-desc">六边形图标 · 横排组合版</span>
+  </div>
+
+  <div class="logo-display" style="min-height: 200px;">
+    <span class="dl-hint">V2 · HEXICON</span>
+    <svg width="620" height="182" viewBox="0 0 620 182" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s2hexbg" x1="0" y1="0" x2="182" y2="182" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0f2448"/>
+          <stop offset="100%" stop-color="#1a0840"/>
+        </linearGradient>
+        <linearGradient id="s2hexbd" x1="0" y1="0" x2="182" y2="182" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#00d4ff"/>
+          <stop offset="50%" stop-color="#7c3aed"/>
+          <stop offset="100%" stop-color="#00d4ff"/>
+        </linearGradient>
+        <linearGradient id="s2ig" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#00ffea"/>
+          <stop offset="50%" stop-color="#a855f7"/>
+          <stop offset="100%" stop-color="#00d4ff"/>
+        </linearGradient>
+        <linearGradient id="s2tg" x1="200" y1="0" x2="620" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#e8f6ff"/>
+          <stop offset="100%" stop-color="#c0deff"/>
+        </linearGradient>
+        <filter id="s2hexglow">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="s2tglow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- 六边形 (cx=91, cy=91, r=78) -->
+      <polygon points="91,6 159,44 159,138 91,176 23,138 23,44"
+        fill="url(#s2hexbg)" stroke="url(#s2hexbd)" stroke-width="3"/>
+      <polygon points="91,18 149,51 149,131 91,164 33,131 33,51"
+        fill="none" stroke="rgba(0,212,255,0.1)" stroke-width="2"/>
+
+      <!-- 六边形内∞ -->
+      <g transform="translate(91,91)" filter="url(#s2hexglow)">
+        <path d="M 46 0 C 46 -24, 18 -24, 0 0 C -18 24, -46 24, -46 0 C -46 -24, -18 -24, 0 0 C 18 24, 46 24, 46 0 Z"
+          fill="none" stroke="url(#s2ig)" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="0" cy="0" r="4.5" fill="rgba(255,255,255,0.65)"/>
+      </g>
+
+      <!-- 六边形角点装饰 -->
+      <circle cx="91" cy="6" r="4" fill="#00d4ff" opacity="0.8"/>
+      <circle cx="159" cy="44" r="3" fill="#7c3aed" opacity="0.7"/>
+      <circle cx="159" cy="138" r="3" fill="#00d4ff" opacity="0.6"/>
+      <circle cx="91" cy="176" r="4" fill="#7c3aed" opacity="0.6"/>
+
+      <!-- 连接线：六边形右边到文字 -->
+      <line x1="190" y1="91" x2="210" y2="91" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+
+      <!-- 右侧文字 -->
+      <text x="210" y="120"
+        font-family="'Segoe UI', Arial, sans-serif"
+        font-size="84" font-weight="700" letter-spacing="1"
+        fill="url(#s2tg)" filter="url(#s2tglow)">Token</text>
+      <!-- 域名副标题 -->
+      <text x="218" y="152"
+        font-family="'Segoe UI', Arial, sans-serif"
+        font-size="15" font-weight="400" letter-spacing="7"
+        fill="#1a4a6a">TOKEN00.COM</text>
+    </svg>
+  </div>
+
+  <!-- 纯图标版（32/64/128） -->
+  <div class="compare-row">
+    <div class="logo-display" style="min-height:110px; margin-top:2px; gap:28px; flex-direction:row;">
+      <span class="dl-hint">图标独立版</span>
+      <!-- 128 -->
+      <svg width="96" height="96" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ic128bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0f2448"/>
+            <stop offset="100%" stop-color="#1a0840"/>
+          </linearGradient>
+          <linearGradient id="ic128bd" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#00d4ff"/>
+            <stop offset="50%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#00d4ff"/>
+          </linearGradient>
+          <linearGradient id="ic128ig" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#00ffea"/>
+            <stop offset="50%" stop-color="#a855f7"/>
+            <stop offset="100%" stop-color="#00d4ff"/>
+          </linearGradient>
+          <filter id="ic128g">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <polygon points="64,4 118,34 118,94 64,124 10,94 10,34"
+          fill="url(#ic128bg)" stroke="url(#ic128bd)" stroke-width="2"/>
+        <g transform="translate(64,64)" filter="url(#ic128g)">
+          <path d="M 36 0 C 36-19,14-19,0 0 C-14 19,-36 19,-36 0 C-36-19,-14-19,0 0 C14 19,36 19,36 0 Z"
+            fill="none" stroke="url(#ic128ig)" stroke-width="5.5" stroke-linecap="round"/>
+          <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.6)"/>
+        </g>
+        <circle cx="64" cy="4" r="3" fill="#00d4ff" opacity="0.7"/>
+        <circle cx="118" cy="34" r="2.5" fill="#7c3aed" opacity="0.6"/>
+      </svg>
+      <!-- 64 -->
+      <svg width="64" height="64" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="64,4 118,34 118,94 64,124 10,94 10,34"
+          fill="#0f1a30" stroke="url(#ic128bd)" stroke-width="2"/>
+        <g transform="translate(64,64)" filter="url(#ic128g)">
+          <path d="M 36 0 C 36-19,14-19,0 0 C-14 19,-36 19,-36 0 C-36-19,-14-19,0 0 C14 19,36 19,36 0 Z"
+            fill="none" stroke="url(#ic128ig)" stroke-width="5.5" stroke-linecap="round"/>
+          <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.6)"/>
+        </g>
+      </svg>
+      <!-- 32 -->
+      <svg width="32" height="32" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="64,4 118,34 118,94 64,124 10,94 10,34"
+          fill="#0f1a30" stroke="url(#ic128bd)" stroke-width="2"/>
+        <g transform="translate(64,64)" filter="url(#ic128g)">
+          <path d="M 36 0 C 36-19,14-19,0 0 C-14 19,-36 19,-36 0 C-36-19,-14-19,0 0 C14 19,36 19,36 0 Z"
+            fill="none" stroke="url(#ic128ig)" stroke-width="5.5" stroke-linecap="round"/>
+          <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.6)"/>
+        </g>
+      </svg>
+    </div>
+    <div class="logo-display light" style="min-height:110px; margin-top:2px;">
+      <span class="dl-hint" style="color:#88aac8;">浅色背景</span>
+      <svg width="360" height="106" viewBox="0 0 480 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="s2lhbd" x1="0" y1="0" x2="140" y2="140" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0070b8"/>
+            <stop offset="50%" stop-color="#5020a0"/>
+            <stop offset="100%" stop-color="#0070b8"/>
+          </linearGradient>
+          <linearGradient id="s2lig" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#008090"/>
+            <stop offset="50%" stop-color="#5020a0"/>
+            <stop offset="100%" stop-color="#0080c0"/>
+          </linearGradient>
+        </defs>
+        <polygon points="70,8 121,38 121,102 70,132 19,102 19,38"
+          fill="#e8f4ff" stroke="url(#s2lhbd)" stroke-width="2.5"/>
+        <g transform="translate(70,70)">
+          <path d="M 34 0 C 34-18,13-18,0 0 C-13 18,-34 18,-34 0 C-34-18,-13-18,0 0 C13 18,34 18,34 0 Z"
+            fill="none" stroke="url(#s2lig)" stroke-width="5.5" stroke-linecap="round"/>
+        </g>
+        <text x="154" y="88" font-family="'Segoe UI',Arial,sans-serif"
+          font-size="64" font-weight="700" letter-spacing="1" fill="#0a2050">Token</text>
+        <text x="158" y="114" font-family="'Segoe UI',Arial,sans-serif"
+          font-size="14" font-weight="400" letter-spacing="6" fill="#4a70a0">TOKEN00.COM</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="usage-row">
+    <span class="usage-tag">网站导航栏</span>
+    <span class="usage-tag">App 图标</span>
+    <span class="usage-tag">名片</span>
+    <span class="usage-tag">产品水印</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ============ V3 Orbital ============ -->
+<div class="variant">
+  <div class="variant-header">
+    <span class="variant-num">03 /</span>
+    <span class="variant-name">Orbital Ring</span>
+    <span class="variant-desc">轨道环形 · 竖向叠放版</span>
+  </div>
+
+  <div class="logo-display" style="min-height: 360px;">
+    <span class="dl-hint">V3 · ORBITAL</span>
+    <svg width="700" height="400" viewBox="0 0 700 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s3ring" x1="0" y1="0" x2="700" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#00d4ff" stop-opacity="0"/>
+          <stop offset="20%" stop-color="#00d4ff"/>
+          <stop offset="80%" stop-color="#7c3aed"/>
+          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="s3tg" x1="100" y1="0" x2="600" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#60c0ff"/>
+          <stop offset="45%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#b088ff"/>
+        </linearGradient>
+        <linearGradient id="s3ig" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#00d4ff"/>
+          <stop offset="50%" stop-color="#7c3aed"/>
+          <stop offset="100%" stop-color="#00d4ff"/>
+        </linearGradient>
+        <filter id="s3tglow">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="s3iglow">
+          <feGaussianBlur stdDeviation="9" result="b1"/>
+          <feGaussianBlur stdDeviation="4" result="b2"/>
+          <feMerge><feMergeNode in="b1"/><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- 轨道椭圆 3层 -->
+      <ellipse cx="350" cy="185" rx="310" ry="130" fill="none" stroke="url(#s3ring)" stroke-width="1" opacity="0.5"/>
+      <ellipse cx="350" cy="185" rx="285" ry="112" fill="none" stroke="rgba(0,212,255,0.07)" stroke-width="1.5"/>
+      <ellipse cx="350" cy="185" rx="260" ry="95"  fill="none" stroke="rgba(124,58,237,0.06)" stroke-width="1"/>
+
+      <!-- 扫描线 -->
+      <line x1="12" y1="185" x2="95" y2="185" stroke="#00d4ff" stroke-width="1" opacity="0.6"/>
+      <line x1="605" y1="185" x2="688" y2="185" stroke="#7c3aed" stroke-width="1" opacity="0.6"/>
+      <circle cx="12" cy="185" r="4" fill="#00d4ff" opacity="0.8"/>
+      <circle cx="688" cy="185" r="4" fill="#7c3aed" opacity="0.8"/>
+      <circle cx="50" cy="185" r="2" fill="#00d4ff" opacity="0.35"/>
+      <circle cx="650" cy="185" r="2" fill="#7c3aed" opacity="0.35"/>
+
+      <!-- 主标题 Token -->
+      <text x="350" y="178"
+        text-anchor="middle"
+        font-family="'Segoe UI', Arial, sans-serif"
+        font-size="110" font-weight="800" letter-spacing="-3"
+        fill="url(#s3tg)" filter="url(#s3tglow)">Token</text>
+
+      <!-- ∞ 符号 -->
+      <g transform="translate(350,252)" filter="url(#s3iglow)">
+        <path d="M 86 0 C 86-44,33-44,0 0 C-33 44,-86 44,-86 0 C-86-44,-33-44,0 0 C33 44,86 44,86 0 Z"
+          fill="none" stroke="url(#s3ig)" stroke-width="10" stroke-linecap="round"/>
+        <path d="M 58 0 C 58-28,22-28,0 0 C-22 28,-58 28,-58 0 C-58-28,-22-28,0 0 C22 28,58 28,58 0 Z"
+          fill="none" stroke="rgba(0,212,255,0.13)" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- 节点 -->
+        <circle cx="-86" cy="0" r="6.5" fill="#00d4ff" opacity="0.95"/>
+        <circle cx="86"  cy="0" r="6.5" fill="#7c3aed" opacity="0.95"/>
+        <circle cx="0"   cy="0" r="5"   fill="rgba(255,255,255,0.7)"/>
+        <!-- 节点光晕 -->
+        <circle cx="-86" cy="0" r="13" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.3"/>
+        <circle cx="86"  cy="0" r="13" fill="none" stroke="#7c3aed" stroke-width="1.5" opacity="0.3"/>
+      </g>
+
+      <!-- 装饰粒子 -->
+      <circle cx="175" cy="78" r="2" fill="#00d4ff" opacity="0.3"/>
+      <circle cx="525" cy="78" r="2" fill="#7c3aed" opacity="0.3"/>
+      <circle cx="140" cy="100" r="1.3" fill="#00d4ff" opacity="0.2"/>
+      <circle cx="560" cy="100" r="1.3" fill="#7c3aed" opacity="0.2"/>
+      <circle cx="195" cy="56"  r="1"   fill="#00d4ff" opacity="0.15"/>
+      <circle cx="505" cy="56"  r="1"   fill="#7c3aed" opacity="0.15"/>
+
+      <!-- 域名 -->
+      <text x="350" y="370"
+        text-anchor="middle"
+        font-family="'Segoe UI', Arial, sans-serif"
+        font-size="13" font-weight="400" letter-spacing="9"
+        fill="#1a4060" opacity="0.9">TOKEN00.COM</text>
+    </svg>
+  </div>
+
+  <div class="usage-row">
+    <span class="usage-tag">官网首页大 Logo</span>
+    <span class="usage-tag">启动页 / Splash</span>
+    <span class="usage-tag">展会展板</span>
+    <span class="usage-tag">PPT 封面</span>
+  </div>
+</div>
+
+<footer>
+  token00.com · Token∞ AI Platform · Logo Design System · 2026
+</footer>
+
+<style>
+  @keyframes pulse {
+    0%,100%{filter:drop-shadow(0 0 0px transparent)}
+    50%{filter:drop-shadow(0 0 30px rgba(0,180,255,0.15))}
+  }
+  .logo-display { animation: pulse 5s ease-in-out infinite; }
+  .logo-display:hover { animation: none; filter: drop-shadow(0 0 40px rgba(0,180,255,0.2)); }
+</style>
+
+</body>
+</html>
