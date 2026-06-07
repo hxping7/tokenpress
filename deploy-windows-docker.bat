@@ -92,18 +92,32 @@ echo.
 REM Wait for backend health check
 set RETRY=0
 :wait_loop
-ping -n 3 127.0.0.1 >nul
+timeout /t 2 /nobreak >nul
 docker inspect --format={{.State.Health.Status}} token00-backend 2>nul | findstr "healthy" >nul
 if errorlevel 1 (
     set /a RETRY+=1
-    if !RETRY! LSS 30 (
-        echo Waiting... (!RETRY!/30)
+    if !RETRY! LSS 15 (
+        echo Waiting for backend... (!RETRY!/15)
         goto wait_loop
     )
     echo [ERROR] Backend not healthy
     docker logs token00-backend --tail 20
     pause
     exit /b 1
+)
+
+REM Check frontend is responding
+set RETRY=0
+:wait_frontend
+curl -s -o /dev/null -w "" http://localhost:%HTTP_PORT%/ 2>nul
+if errorlevel 1 (
+    set /a RETRY+=1
+    if !RETRY! LSS 10 (
+        echo Waiting for frontend... (!RETRY!/10)
+        timeout /t 2 /nobreak >nul
+        goto wait_frontend
+    )
+    echo [WARNING] Frontend may not be ready, but continuing...
 )
 
 echo.
