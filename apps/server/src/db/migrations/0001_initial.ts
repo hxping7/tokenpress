@@ -62,7 +62,7 @@ export async function migrate() {
       cover_image TEXT,
       section_id INTEGER NOT NULL,
       category_id INTEGER REFERENCES categories(id),
-      status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published','archived')),
+      status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published','archived','scheduled','pending_review')),
       view_count INTEGER NOT NULL DEFAULT 0,
       author_id INTEGER NOT NULL REFERENCES users(id),
       published_at TEXT,

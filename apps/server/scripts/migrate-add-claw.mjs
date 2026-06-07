@@ -32,7 +32,7 @@ async function migrate() {
         cover_image TEXT,
         section TEXT NOT NULL CHECK(section IN ('token_plan','ai_coding','ai_works','blog','claw')),
         category_id INTEGER REFERENCES categories(id),
-        status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published','archived')),
+        status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published','archived','scheduled','pending_review')),
         author_id INTEGER NOT NULL REFERENCES users(id),
         published_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),

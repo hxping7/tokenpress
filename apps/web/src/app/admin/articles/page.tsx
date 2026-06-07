@@ -19,7 +19,7 @@ interface Article {
   slug: string
   section: { id: number; name: string; slug: string; path: string }
   categoryId: number | null
-  status: 'draft' | 'published' | 'archived' | 'scheduled'
+  status: 'draft' | 'published' | 'archived' | 'scheduled' | 'pending_review'
   coverImage: string | null
   authorId: number
   author_name?: string
@@ -73,7 +73,7 @@ export default function ArticlesPage() {
   const [editorSection, setEditorSection] = useState<keyof typeof sectionMap>('blog')
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [coverImage, setCoverImage] = useState('')
-  const [articleStatus, setArticleStatus] = useState<'draft' | 'published' | 'scheduled'>('draft')
+  const [articleStatus, setArticleStatus] = useState<'draft' | 'published' | 'scheduled' | 'pending_review'>('draft')
   const [scheduledAt, setScheduledAt] = useState('')
   const [tags, setTags] = useState('')
   const [uploadingCover, setUploadingCover] = useState(false)
@@ -199,7 +199,7 @@ export default function ArticlesPage() {
   const loadArticleContent = async (article: Article) => {
     setLoadingArticle(true)
     try {
-      const res = await api.getArticle(article.id)
+      const res = await api.getAdminArticle(article.id)
       const fullArticle = res.data
       setContent(fullArticle.content || '')
       if (fullArticle.tags?.length) {
@@ -224,7 +224,7 @@ export default function ArticlesPage() {
       setEditorSection((article.section?.slug || 'blog') as keyof typeof sectionMap)
       setCategoryId(article.categoryId)
       setCoverImage(article.coverImage || '')
-      setArticleStatus(article.status as 'draft' | 'published' | 'scheduled')
+      setArticleStatus(article.status as 'draft' | 'published' | 'scheduled' | 'pending_review')
       if (article.status === 'scheduled' && article.publishedAt) {
         const d = new Date(article.publishedAt)
         setScheduledAt(d.toISOString().slice(0, 16))
@@ -317,6 +317,7 @@ export default function ArticlesPage() {
           <option value="published">{t('common.published', backendLocale)}</option>
           <option value="draft">{t('common.draft', backendLocale)}</option>
           <option value="scheduled">{t('articles.scheduled', backendLocale)}</option>
+          <option value="pending_review">{t('reviews.pending', backendLocale)}</option>
           <option value="archived">{t('common.archived', backendLocale)}</option>
         </select>
       </div>
@@ -365,9 +366,14 @@ export default function ArticlesPage() {
                         article.status === 'published' ? 'bg-green-500/20 text-green-400' :
                         article.status === 'draft' ? 'bg-yellow-500/20 text-yellow-400' :
                         article.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' :
+                        article.status === 'pending_review' ? 'bg-purple-500/20 text-purple-400' :
                         'bg-gray-500/20 text-gray-400'
                       }`}>
-                        {article.status === 'published' ? t('common.published', backendLocale) : article.status === 'draft' ? t('common.draft', backendLocale) : article.status === 'scheduled' ? t('articles.scheduled', backendLocale) : t('common.archived', backendLocale)}
+                        {article.status === 'published' ? t('common.published', backendLocale) :
+                         article.status === 'draft' ? t('common.draft', backendLocale) :
+                         article.status === 'scheduled' ? t('articles.scheduled', backendLocale) :
+                         article.status === 'pending_review' ? t('reviews.pending', backendLocale) :
+                         t('common.archived', backendLocale)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-t-text-secondary">

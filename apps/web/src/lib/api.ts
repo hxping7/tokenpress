@@ -120,6 +120,10 @@ class ApiClient {
   }
 
   // ===== Admin Articles =====
+  async getAdminArticle(id: number) {
+    return this.request<{ success: boolean; data: any }>(`/admin/articles/${id}`)
+  }
+
   async createArticle(data: any) {
     return this.request<{ success: boolean; data: any }>('/admin/articles', {
       method: 'POST',

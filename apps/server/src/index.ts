@@ -22,6 +22,8 @@ import { migrate as migrateContentReviews } from './db/migrations/0015_content_r
 import { migrate as migrateSensitiveKeywords } from './db/migrations/0016_sensitive_keywords.js'
 import { migrate as migrateMediaReviewFields } from './db/migrations/0017_media_review_fields.js'
 import { migrate as migrateAds } from './db/migrations/0018_ads.js'
+import { migrate as migrateArticleStatus } from './db/migrations/0019_article_status_scheduled.js'
+import { migrate as migratePendingReview } from './db/migrations/0020_article_status_pending_review.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -221,6 +223,8 @@ async function start() {
   await migrateSensitiveKeywords()
   await migrateMediaReviewFields()
   await migrateAds()
+  await migrateArticleStatus()
+  await migratePendingReview()
   logger.info('✅ Database ready')
 
   // Initialize content review provider

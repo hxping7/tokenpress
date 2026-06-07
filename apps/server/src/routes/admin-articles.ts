@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { db } from '../db/index.js'
-import { articles, articleTags, tags, categories, sections } from '../db/schema.js'
-import { eq, and, desc, sql, like } from 'drizzle-orm'
+import { articles, articleTags, tags, categories, sections, users } from '../db/schema.js'
+import { eq, and, desc, sql, like, inArray } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { generateSlug, extractExcerpt } from '@tokenpress/shared'
 import type { ContentStatus } from '@tokenpress/shared'
@@ -77,6 +77,59 @@ router.get('/', async (req: AuthRequest, res) => {
   } catch (err) {
     console.error('List admin articles error:', err)
     res.status(500).json({ success: false, error: 'Failed to list articles' })
+  }
+})
+
+// GET /api/v1/admin/articles/:id — 获取单篇文章详情（包含草稿/待审核）
+router.get('/:id', async (req: AuthRequest, res) => {
+  try {
+    const id = req.params.id
+    const articleId = parseInt(Array.isArray(id) ? id[0] : id)
+
+    if (isNaN(articleId)) {
+      return res.status(400).json({ success: false, error: 'Invalid article ID' })
+    }
+
+    const article = await db.select().from(articles).where(eq(articles.id, articleId)).get()
+
+    if (!article) {
+      return res.status(404).json({ success: false, error: 'Article not found' })
+    }
+
+    // user can only view own articles
+    if (req.user!.role === 'user' && article.authorId !== req.user!.userId) {
+      return res.status(403).json({ success: false, error: 'Cannot view other users articles' })
+    }
+
+    // Get section and category info
+    const section = await db.select().from(sections).where(eq(sections.id, article.sectionId)).get()
+    let category = null
+    if (article.categoryId) {
+      category = await db.select().from(categories).where(eq(categories.id, article.categoryId)).get()
+    }
+
+    // Get tags
+    const articleTagRecords = await db.select().from(articleTags).where(eq(articleTags.articleId, articleId))
+    const tagIds = articleTagRecords.map(t => t.tagId)
+    const tagsList = tagIds.length > 0 ? await db.select().from(tags).where(inArray(tags.id, tagIds)).all() : []
+    const tagNames = tagsList.map(t => t.name)
+
+    // Get author
+    const author = await db.select().from(users).where(eq(users.id, article.authorId)).get()
+
+    res.json({
+      success: true,
+      data: {
+        ...article,
+        section,
+        category,
+        tags: tagNames,
+        author: author ? { id: author.id, username: author.username, displayName: author.displayName } : null,
+      },
+    })
+  } catch (err) {
+    console.error('Get admin article error:', err)
+    res.status(500).json({ success: false, error: 'Failed to get article' })
   }
 })
 
