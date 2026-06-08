@@ -25,6 +25,8 @@ import { migrate as migrateAds } from './db/migrations/0018_ads.js'
 import { migrate as migrateArticleStatus } from './db/migrations/0019_article_status_scheduled.js'
 import { migrate as migratePendingReview } from './db/migrations/0020_article_status_pending_review.js'
 import { migrate as migrateContentReviewSetting } from './db/migrations/0021_content_review_setting.js'
+import { migrate as migrateReviewCloudProvider } from './db/migrations/0022_review_cloud_provider.js'
+import { migrate as migrateReviewProviderKeys } from './db/migrations/0023_review_provider_keys.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -55,8 +57,9 @@ import adminSensitiveKeywordsRoutes from './routes/admin-sensitive-keywords.js'
 import aiAdsRoutes from './routes/ai-ads.js'
 import adsPublicRoutes from './routes/ads-public.js'
 import adminAdsRoutes from './routes/admin-ads.js'
-import { initProviders, loadProviderConfigFromEnv } from './lib/contentReview/providers/index.js'
-import { startReviewWorker, stopReviewWorker } from './workers/reviewScheduler.js'
+import { initProviders, loadProviderConfigFromEnv, reloadProviderFromDB } from './lib/contentReview/providers/index.js'
+import { startReviewWorker, stopReviewWorker, retryFailedReviews } from './workers/reviewScheduler.js'
+import { aiPatrolTick } from './workers/aiPatrol.js'
 import { adScheduler } from './workers/adScheduler.js'
 import { cleanupExpiredLocks } from './lib/cronLock.js'
 import cron from 'node-cron'
@@ -227,11 +230,14 @@ async function start() {
   await migrateArticleStatus()
   await migratePendingReview()
   await migrateContentReviewSetting()
+  await migrateReviewCloudProvider()
+  await migrateReviewProviderKeys()
   logger.info('✅ Database ready')
 
-  // Initialize content review provider
+  // Initialize content review provider (DB setting overrides env)
   const providerConfig = loadProviderConfigFromEnv()
   initProviders(providerConfig)
+  await reloadProviderFromDB()
 
   // Start review worker
   startReviewWorker()
@@ -251,6 +257,25 @@ async function start() {
       await cleanupExpiredLocks()
     } catch (err) {
       logger.error({ err }, 'Lock cleanup failed')
+    }
+  })
+
+  // Retry failed cloud reviews every 5 minutes
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      await retryFailedReviews()
+    } catch (err) {
+      logger.error({ err }, 'Retry failed reviews failed')
+    }
+  })
+
+  // AI patrol: scan published content every 6 hours
+  cron.schedule('0 */6 * * *', async () => {
+    try {
+      const result = await aiPatrolTick()
+      logger.info(result, 'AI patrol completed')
+    } catch (err) {
+      logger.error({ err }, 'AI patrol failed')
     }
   })
 

@@ -35,7 +35,7 @@ export interface CloudProvider {
 }
 
 export interface ProviderConfig {
-  provider: 'tencent' | 'aliyun' | 'baidu' | 'none'
+  provider: 'tencent' | 'aliyun' | 'baidu' | 'built_in_ai' | 'none'
   passThreshold: number
   rejectThreshold: number
   tencent: { secretId: string; secretKey: string; region: string }

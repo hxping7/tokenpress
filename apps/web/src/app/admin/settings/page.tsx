@@ -137,6 +137,20 @@ export default function SettingsPage() {
   // ===== 安全设置 =====
   const [antiScrapingEnabled, setAntiScrapingEnabled] = useState(true)
   const [contentReviewEnabled, setContentReviewEnabled] = useState(false)
+  const [reviewCloudProvider, setReviewCloudProvider] = useState('none')
+
+  // Provider API keys
+  const [tencentSecretId, setTencentSecretId] = useState('')
+  const [tencentSecretKey, setTencentSecretKey] = useState('')
+  const [tencentRegion, setTencentRegion] = useState('ap-guangzhou')
+  const [aliyunAccessKeyId, setAliyunAccessKeyId] = useState('')
+  const [aliyunAccessKeySecret, setAliyunAccessKeySecret] = useState('')
+  const [aliyunRegion, setAliyunRegion] = useState('cn-shanghai')
+  const [baiduAppId, setBaiduAppId] = useState('')
+  const [baiduApiKey, setBaiduApiKey] = useState('')
+  const [baiduSecretKey, setBaiduSecretKey] = useState('')
+  const [builtinAiApiUrl, setBuiltinAiApiUrl] = useState('')
+  const [builtinAiApiKey, setBuiltinAiApiKey] = useState('')
 
   const { data: backupSettingsData } = useQuery({
     queryKey: ['backup-settings'],
@@ -307,6 +321,18 @@ export default function SettingsPage() {
       setAnalyticsCode(s.analytics_code || '')
       setAntiScrapingEnabled(s.anti_scraping_enabled !== 'false')
       setContentReviewEnabled(s.content_review_enabled === 'true')
+      setReviewCloudProvider(s.review_cloud_provider || 'none')
+      setTencentSecretId(s.review_tencent_secret_id || '')
+      setTencentSecretKey(s.review_tencent_secret_key || '')
+      setTencentRegion(s.review_tencent_region || 'ap-guangzhou')
+      setAliyunAccessKeyId(s.review_aliyun_access_key_id || '')
+      setAliyunAccessKeySecret(s.review_aliyun_access_key_secret || '')
+      setAliyunRegion(s.review_aliyun_region || 'cn-shanghai')
+      setBaiduAppId(s.review_baidu_app_id || '')
+      setBaiduApiKey(s.review_baidu_api_key || '')
+      setBaiduSecretKey(s.review_baidu_secret_key || '')
+      setBuiltinAiApiUrl(s.review_builtin_ai_api_url || '')
+      setBuiltinAiApiKey(s.review_builtin_ai_api_key || '')
     }
   }, [settingsData])
 
@@ -514,6 +540,18 @@ export default function SettingsPage() {
       analytics_code: analyticsCode,
       anti_scraping_enabled: antiScrapingEnabled.toString(),
       content_review_enabled: contentReviewEnabled.toString(),
+      review_cloud_provider: reviewCloudProvider,
+      review_tencent_secret_id: tencentSecretId,
+      review_tencent_secret_key: tencentSecretKey,
+      review_tencent_region: tencentRegion,
+      review_aliyun_access_key_id: aliyunAccessKeyId,
+      review_aliyun_access_key_secret: aliyunAccessKeySecret,
+      review_aliyun_region: aliyunRegion,
+      review_baidu_app_id: baiduAppId,
+      review_baidu_api_key: baiduApiKey,
+      review_baidu_secret_key: baiduSecretKey,
+      review_builtin_ai_api_url: builtinAiApiUrl,
+      review_builtin_ai_api_key: builtinAiApiKey,
     })
   }
 
@@ -1564,68 +1602,430 @@ export default function SettingsPage() {
 
       {/* 安全设置 */}
       {activeTab === 'security' && (
-        <div className="bg-t-bg-primary border border-t-border rounded-xl">
-          <div className="px-6 py-4 border-b border-t-border">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Settings size={18} className="text-t-accent-blue" />
-              {t('settings.securityAntiScraping', adminLocale)}
-            </h2>
-          </div>
-          <div className="p-6 space-y-4">
-            <p className="text-sm text-t-text-secondary">
-              {t('settings.securityAntiScrapingDesc', adminLocale)}
-            </p>
-
-            <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
-              <div className="flex items-center gap-3">
-                <span className="font-medium">{t('settings.securityAntiScrapingEnabled', adminLocale)}</span>
-              </div>
-              <button
-                onClick={() => setAntiScrapingEnabled(!antiScrapingEnabled)}
-                className={`relative w-14 h-7 rounded-full transition-colors ${
-                  antiScrapingEnabled ? 'bg-t-accent-blue' : 'bg-t-border'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    antiScrapingEnabled ? 'translate-x-8' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+        <div className="space-y-6">
+          {/* 反爬虫防护 */}
+          <div className="bg-t-bg-primary border border-t-border rounded-xl">
+            <div className="px-6 py-4 border-b border-t-border">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Settings size={18} className="text-t-accent-blue" />
+                {t('settings.securityAntiScraping', adminLocale)}
+              </h2>
             </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-t-text-secondary">
+                {t('settings.securityAntiScrapingDesc', adminLocale)}
+              </p>
 
-            {/* 内容审核开关 */}
-            <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg mt-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="font-medium">{t('settings.securityAntiScrapingEnabled', adminLocale)}</span>
+                </div>
+                <button
+                  onClick={() => setAntiScrapingEnabled(!antiScrapingEnabled)}
+                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                    antiScrapingEnabled ? 'bg-t-accent-blue' : 'bg-t-border'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      antiScrapingEnabled ? 'translate-x-8' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <p className="text-sm text-yellow-400">
+                  {adminLocale === 'en'
+                    ? 'Note: Changes take effect immediately. Disabled means all User-Agent requests will be allowed (except explicitly blocked).'
+                    : '注意：修改立即生效。关闭后除明确拦截的爬虫外所有 User-Agent 都将允许访问。'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 内容审查 */}
+          <div className="bg-t-bg-primary border border-t-border rounded-xl">
+            <div className="px-6 py-4 border-b border-t-border">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Settings size={18} className="text-t-accent-blue" />
+                {adminLocale === 'zh' ? '内容审查' : 'Content Review'}
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-t-text-secondary">
+                {adminLocale === 'zh'
+                  ? '启用后，发布内容需经过审查通过后才能公开显示。支持本地敏感词扫描和云服务商 AI 审核。'
+                  : 'When enabled, published content must pass review before being publicly visible. Supports local keyword scanning and cloud AI review.'}
+              </p>
+
+              {/* 审核开关 */}
+              <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
                 <div>
-                  <span className="font-medium">{adminLocale === 'zh' ? '内容审核' : 'Content Review'}</span>
+                  <span className="font-medium">{adminLocale === 'zh' ? '启用内容审查' : 'Enable Content Review'}</span>
                   <p className="text-xs text-t-text-secondary mt-1">
                     {adminLocale === 'zh'
-                      ? '启用后，发布文章需经过 AI 审核通过后才能公开显示'
-                      : 'When enabled, articles need to pass AI review before being publicly visible'}
+                      ? '开启后，文章、广告、媒体等内容的发布需通过审查'
+                      : 'When enabled, articles, ads, media etc. must pass review before publishing'}
                   </p>
                 </div>
-              </div>
-              <button
-                onClick={() => setContentReviewEnabled(!contentReviewEnabled)}
-                className={`relative w-14 h-7 rounded-full transition-colors ${
-                  contentReviewEnabled ? 'bg-t-accent-blue' : 'bg-t-border'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    contentReviewEnabled ? 'translate-x-8' : 'translate-x-1'
+                <button
+                  onClick={() => setContentReviewEnabled(!contentReviewEnabled)}
+                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                    contentReviewEnabled ? 'bg-t-accent-blue' : 'bg-t-border'
                   }`}
-                />
-              </button>
-            </div>
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      contentReviewEnabled ? 'translate-x-8' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
 
-            <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <p className="text-sm text-yellow-400">
-                {adminLocale === 'en'
-                  ? 'Note: Changes take effect immediately. Disabled means all User-Agent requests will be allowed (except explicitly blocked).'
-                  : '注意：修改立即生效。关闭后除明确拦截的爬虫外所有 User-Agent 都将允许访问。'}
-              </p>
+              {/* 审查模式选择 */}
+              {contentReviewEnabled && (
+                <div className="p-4 bg-t-bg-secondary rounded-lg space-y-3">
+                  <div>
+                    <span className="font-medium">{adminLocale === 'zh' ? '审查模式' : 'Review Mode'}</span>
+                    <p className="text-xs text-t-text-secondary mt-1">
+                      {adminLocale === 'zh'
+                        ? '选择内容审查方式。本地敏感词始终生效，云服务商提供 AI 智能审核能力。'
+                        : 'Choose review method. Local keywords always apply; cloud providers add AI-powered review.'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    {/* 本地敏感词 */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      reviewCloudProvider === 'none'
+                        ? 'border-t-accent-blue bg-t-accent-blue/10'
+                        : 'border-t-border hover:border-t-accent-blue/50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="reviewCloudProvider"
+                        value="none"
+                        checked={reviewCloudProvider === 'none'}
+                        onChange={() => setReviewCloudProvider('none')}
+                        className="w-4 h-4 text-t-accent-blue"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{adminLocale === 'zh' ? '本地敏感词' : 'Local Keywords'}</span>
+                          <span className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">{adminLocale === 'zh' ? '默认' : 'Default'}</span>
+                        </div>
+                        <p className="text-xs text-t-text-secondary mt-0.5">
+                          {adminLocale === 'zh'
+                            ? '基于本地敏感词库扫描，支持手动添加关键词，毫秒级响应'
+                            : 'Scan against local keyword database, supports manual additions, millisecond response'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* 腾讯云 */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      reviewCloudProvider === 'tencent'
+                        ? 'border-t-accent-blue bg-t-accent-blue/10'
+                        : 'border-t-border hover:border-t-accent-blue/50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="reviewCloudProvider"
+                        value="tencent"
+                        checked={reviewCloudProvider === 'tencent'}
+                        onChange={() => setReviewCloudProvider('tencent')}
+                        className="w-4 h-4 text-t-accent-blue"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{adminLocale === 'zh' ? '腾讯云内容安全' : 'Tencent Cloud CMS'}</span>
+                          <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">{adminLocale === 'zh' ? '推荐' : 'Recommended'}</span>
+                        </div>
+                        <p className="text-xs text-t-text-secondary mt-0.5">
+                          {adminLocale === 'zh'
+                            ? '腾讯云内容安全（CMS），支持文本+图片审核，需配置 API 密钥'
+                            : 'Tencent Cloud Content Moderation, text+image review, requires API key configuration'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* 阿里云 */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      reviewCloudProvider === 'aliyun'
+                        ? 'border-t-accent-blue bg-t-accent-blue/10'
+                        : 'border-t-border hover:border-t-accent-blue/50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="reviewCloudProvider"
+                        value="aliyun"
+                        checked={reviewCloudProvider === 'aliyun'}
+                        onChange={() => setReviewCloudProvider('aliyun')}
+                        className="w-4 h-4 text-t-accent-blue"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{adminLocale === 'zh' ? '阿里云内容安全' : 'Alibaba Cloud Green'}</span>
+                        </div>
+                        <p className="text-xs text-t-text-secondary mt-0.5">
+                          {adminLocale === 'zh'
+                            ? '阿里云绿网内容安全，需配置 AccessKey'
+                            : 'Alibaba Cloud Green moderation, requires AccessKey configuration'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* 百度云 */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      reviewCloudProvider === 'baidu'
+                        ? 'border-t-accent-blue bg-t-accent-blue/10'
+                        : 'border-t-border hover:border-t-accent-blue/50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="reviewCloudProvider"
+                        value="baidu"
+                        checked={reviewCloudProvider === 'baidu'}
+                        onChange={() => setReviewCloudProvider('baidu')}
+                        className="w-4 h-4 text-t-accent-blue"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{adminLocale === 'zh' ? '百度云内容审核' : 'Baidu AI Review'}</span>
+                        </div>
+                        <p className="text-xs text-t-text-secondary mt-0.5">
+                          {adminLocale === 'zh'
+                            ? '百度 AI 内容审核平台，需配置 API Key'
+                            : 'Baidu AI Content Review Platform, requires API Key configuration'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* 内置AI */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      reviewCloudProvider === 'built_in_ai'
+                        ? 'border-t-accent-blue bg-t-accent-blue/10'
+                        : 'border-t-border hover:border-t-accent-blue/50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="reviewCloudProvider"
+                        value="built_in_ai"
+                        checked={reviewCloudProvider === 'built_in_ai'}
+                        onChange={() => setReviewCloudProvider('built_in_ai')}
+                        className="w-4 h-4 text-t-accent-blue"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{adminLocale === 'zh' ? '内置 AI 巡检' : 'Built-in AI Patrol'}</span>
+                          <span className="text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">{adminLocale === 'zh' ? '预留' : 'Reserved'}</span>
+                        </div>
+                        <p className="text-xs text-t-text-secondary mt-0.5">
+                          {adminLocale === 'zh'
+                            ? '自研 AI 巡检引擎，对已发布内容周期性复查，发现违规自动下架'
+                            : 'Built-in AI patrol engine, periodically re-checks published content, auto-takes down violations'}
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* 模式说明 */}
+                  <div className="p-3 bg-t-bg-primary rounded-lg border border-t-border">
+                    <p className="text-xs text-t-text-secondary">
+                      {adminLocale === 'zh'
+                        ? '💡 所有模式均包含本地敏感词扫描。云服务商模式在本地扫描通过后，额外调用 AI 接口进行文本和图片审核。敏感词可在「内容审核」页面管理。'
+                        : '💡 All modes include local keyword scanning. Cloud provider modes additionally call AI APIs for text and image review after local scan passes. Keywords can be managed in the Content Review page.'}
+                    </p>
+                  </div>
+
+                  {/* 腾讯云密钥配置 */}
+                  {reviewCloudProvider === 'tencent' && (
+                    <div className="p-4 bg-t-bg-primary rounded-lg border border-t-border space-y-3">
+                      <h3 className="font-medium text-sm flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-400 rounded-full" />
+                        {adminLocale === 'zh' ? '腾讯云 API 密钥' : 'Tencent Cloud API Keys'}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">SecretId</label>
+                          <input
+                            type="password"
+                            value={tencentSecretId}
+                            onChange={(e) => setTencentSecretId(e.target.value)}
+                            placeholder="AKIDxxxx..."
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">SecretKey</label>
+                          <input
+                            type="password"
+                            value={tencentSecretKey}
+                            onChange={(e) => setTencentSecretKey(e.target.value)}
+                            placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-t-text-secondary mb-1">{adminLocale === 'zh' ? '区域' : 'Region'}</label>
+                        <select
+                          value={tencentRegion}
+                          onChange={(e) => setTencentRegion(e.target.value)}
+                          className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                        >
+                          <option value="ap-guangzhou">ap-guangzhou (广州)</option>
+                          <option value="ap-beijing">ap-beijing (北京)</option>
+                          <option value="ap-shanghai">ap-shanghai (上海)</option>
+                          <option value="ap-chengdu">ap-chengdu (成都)</option>
+                          <option value="ap-singapore">ap-singapore (新加坡)</option>
+                        </select>
+                      </div>
+                      <p className="text-xs text-t-text-secondary">
+                        {adminLocale === 'zh'
+                          ? '在腾讯云控制台 → 访问管理 → API 密钥管理中获取。需开通内容安全（CMS）服务。'
+                          : 'Get from Tencent Cloud Console → Access Management → API Key Management. Content Moderation (CMS) service must be enabled.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 阿里云密钥配置 */}
+                  {reviewCloudProvider === 'aliyun' && (
+                    <div className="p-4 bg-t-bg-primary rounded-lg border border-t-border space-y-3">
+                      <h3 className="font-medium text-sm flex items-center gap-2">
+                        <span className="w-2 h-2 bg-orange-400 rounded-full" />
+                        {adminLocale === 'zh' ? '阿里云 AccessKey' : 'Alibaba Cloud AccessKey'}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">AccessKey ID</label>
+                          <input
+                            type="password"
+                            value={aliyunAccessKeyId}
+                            onChange={(e) => setAliyunAccessKeyId(e.target.value)}
+                            placeholder="LTAI5txxxxxxxxxxxxxx"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">AccessKey Secret</label>
+                          <input
+                            type="password"
+                            value={aliyunAccessKeySecret}
+                            onChange={(e) => setAliyunAccessKeySecret(e.target.value)}
+                            placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-t-text-secondary mb-1">{adminLocale === 'zh' ? '区域' : 'Region'}</label>
+                        <select
+                          value={aliyunRegion}
+                          onChange={(e) => setAliyunRegion(e.target.value)}
+                          className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                        >
+                          <option value="cn-shanghai">cn-shanghai (上海)</option>
+                          <option value="cn-beijing">cn-beijing (北京)</option>
+                          <option value="cn-shenzhen">cn-shenzhen (深圳)</option>
+                          <option value="cn-hangzhou">cn-hangzhou (杭州)</option>
+                        </select>
+                      </div>
+                      <p className="text-xs text-t-text-secondary">
+                        {adminLocale === 'zh'
+                          ? '在阿里云控制台 → RAM用户 → AccessKey 管理中获取。需开通内容安全（绿网）服务，并授权 AliyunYundunGreenWebFullAccess 权限。'
+                          : 'Get from Alibaba Cloud Console → RAM → AccessKey Management. Content Security (Green) service must be enabled with AliyunYundunGreenWebFullAccess permission.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 百度云密钥配置 */}
+                  {reviewCloudProvider === 'baidu' && (
+                    <div className="p-4 bg-t-bg-primary rounded-lg border border-t-border space-y-3">
+                      <h3 className="font-medium text-sm flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-400 rounded-full" />
+                        {adminLocale === 'zh' ? '百度云 API 密钥' : 'Baidu Cloud API Keys'}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">AppID</label>
+                          <input
+                            type="password"
+                            value={baiduAppId}
+                            onChange={(e) => setBaiduAppId(e.target.value)}
+                            placeholder="12345678"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">API Key</label>
+                          <input
+                            type="password"
+                            value={baiduApiKey}
+                            onChange={(e) => setBaiduApiKey(e.target.value)}
+                            placeholder="xxxxxxxxxxxxxxxx"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">Secret Key</label>
+                          <input
+                            type="password"
+                            value={baiduSecretKey}
+                            onChange={(e) => setBaiduSecretKey(e.target.value)}
+                            placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-t-text-secondary">
+                        {adminLocale === 'zh'
+                          ? '在百度智能云控制台 → 内容审核平台 → 应用列表中获取 API Key 和 Secret Key。需开通内容审核服务。'
+                          : 'Get from Baidu AI Cloud Console → Content Review Platform → Application List. Content Review service must be enabled.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 内置AI配置 */}
+                  {reviewCloudProvider === 'built_in_ai' && (
+                    <div className="p-4 bg-t-bg-primary rounded-lg border border-t-border space-y-3">
+                      <h3 className="font-medium text-sm flex items-center gap-2">
+                        <span className="w-2 h-2 bg-purple-400 rounded-full" />
+                        {adminLocale === 'zh' ? '内置 AI 巡检配置' : 'Built-in AI Patrol Config'}
+                        <span className="text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">{adminLocale === 'zh' ? '预留' : 'Reserved'}</span>
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">{adminLocale === 'zh' ? 'API 地址' : 'API URL'}</label>
+                          <input
+                            type="text"
+                            value={builtinAiApiUrl}
+                            onChange={(e) => setBuiltinAiApiUrl(e.target.value)}
+                            placeholder="http://localhost:8000/v1/moderate"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-t-text-secondary mb-1">API Key</label>
+                          <input
+                            type="password"
+                            value={builtinAiApiKey}
+                            onChange={(e) => setBuiltinAiApiKey(e.target.value)}
+                            placeholder="sk-xxxxxxxxxxxxxxxx"
+                            className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-t-text-secondary">
+                        {adminLocale === 'zh'
+                          ? '自研 AI 巡检引擎的 API 接口地址和密钥。当前为预留功能，暂不可用。'
+                          : 'API endpoint and key for the built-in AI patrol engine. This is a reserved feature, not yet available.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

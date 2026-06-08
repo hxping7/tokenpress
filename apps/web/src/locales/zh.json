@@ -50,6 +50,7 @@
     "apiStats": "API 统计",
     "aiDebug": "AI 发布调试",
     "reviews": "内容审核",
+    "sensitiveKeywords": "敏感词管理",
     "ads": "广告管理",
     "logs": "系统日志",
     "settings": "系统设置",
@@ -610,5 +611,70 @@
     "topDevices": "设备分布",
     "views": "次浏览",
     "direct": "直接访问"
+  },
+  "skw": {
+    "title": "敏感词管理",
+    "desc": "管理本地敏感词库，支持增删改查和批量导入",
+    "addKeyword": "添加敏感词",
+    "editKeyword": "编辑敏感词",
+    "batchImport": "批量导入",
+    "importBtn": "导入",
+    "totalKeywords": "总词数",
+    "blockCount": "拦截数",
+    "reviewCount": "复查数",
+    "enabledCount": "已启用",
+    "searchPlaceholder": "搜索敏感词...",
+    "allCategories": "全部分类",
+    "allScopes": "全部范围",
+    "keyword": "关键词",
+    "keywordPlaceholder": "输入敏感词内容",
+    "category": "分类",
+    "severity": "严重度",
+    "action": "处置方式",
+    "scope": "作用范围",
+    "status": "状态",
+    "actions": "操作",
+    "edit": "编辑",
+    "delete": "删除",
+    "confirmDelete": "确定删除敏感词「{word}」吗？",
+    "enabled": "启用",
+    "disabled": "禁用",
+    "loading": "加载中...",
+    "noKeywords": "暂无敏感词，点击右上角添加",
+    "previous": "上一页",
+    "next": "下一页",
+    "page": "第 {page} / {total} 页",
+    "batchDesc": "每行一个敏感词。导入后默认分类为「通用」，严重度为「中」，处置为「人工复查」。",
+    "batchPlaceholder": "每行一个敏感词，例如：\n赌博\n色情\n诈骗\n联系方式\n...",
+    "linesCount": "条待导入",
+    "cat": {
+      "general": "通用",
+      "gambling": "赌博",
+      "pornography": "色情",
+      "fraud": "诈骗",
+      "finance": "金融风险",
+      "drugs": "毒品",
+      "violence": "暴力",
+      "politics": "政治敏感",
+      "contact": "联系方式",
+      "spam": "垃圾广告",
+      "custom": "自定义"
+    },
+    "severityOpts": {
+      "low": "低",
+      "medium": "中",
+      "high": "高"
+    },
+    "actionOpts": {
+      "block": "拦截",
+      "review": "人工复查"
+    },
+    "scopeOpts": {
+      "all": "全部",
+      "article": "文章",
+      "media": "媒体",
+      "ad": "广告",
+      "friend_link": "友链"
+    }
   }
 }

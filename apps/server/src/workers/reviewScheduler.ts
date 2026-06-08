@@ -1,11 +1,12 @@
 import { db } from '../db/index.js'
 import { contentReviews } from '../db/schema.js'
-import { eq, and, lt } from 'drizzle-orm'
+import { eq, and, lt, or } from 'drizzle-orm'
 import { reviewContent } from '../lib/contentReview/index.js'
 import logger from '../utils/logger.js'
 
 const POLL_INTERVAL = 5_000
 const STALE_THRESHOLD_MS = 5 * 60 * 1000
+const MAX_RETRY_COUNT = 3
 
 let timer: ReturnType<typeof setInterval> | null = null
 
@@ -71,6 +72,45 @@ export async function recoverStaleReviews(): Promise<void> {
       await reviewContent(review.id)
     } catch (err) {
       logger.error({ err, reviewId: review.id }, 'Failed to recover stale review')
+    }
+  }
+}
+
+export async function retryFailedReviews(): Promise<void> {
+  const failed = await db.select()
+    .from(contentReviews)
+    .where(or(
+      eq(contentReviews.cloudTextStatus, 'error'),
+      eq(contentReviews.cloudImageStatus, 'error'),
+    ))
+    .limit(20)
+
+  if (failed.length === 0) return
+
+  logger.info({ count: failed.length }, 'Retrying failed cloud reviews')
+
+  for (const review of failed) {
+    try {
+      const detail = review.cloudDetailJson ? JSON.parse(review.cloudDetailJson) : {}
+      const retryCount = (detail.retryCount || 0) + 1
+
+      if (retryCount > MAX_RETRY_COUNT) {
+        logger.info({ reviewId: review.id, retryCount }, 'Max retry count reached, skipping')
+        continue
+      }
+
+      await db.update(contentReviews)
+        .set({
+          cloudTextStatus: 'pending',
+          cloudImageStatus: 'pending',
+          cloudDetailJson: JSON.stringify({ ...detail, retryCount, lastRetryAt: new Date().toISOString() }),
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(contentReviews.id, review.id))
+
+      await reviewContent(review.id)
+    } catch (err) {
+      logger.error({ err, reviewId: review.id }, 'Failed to retry review')
     }
   }
 }

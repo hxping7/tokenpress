@@ -24,6 +24,9 @@ export function getProvider(): CloudProvider | null {
       case 'baidu':
         _provider = createBaiduProvider(_config)
         break
+      case 'built_in_ai':
+        _provider = createBuiltInAiProvider(_config)
+        break
     }
   }
   return _provider
@@ -53,6 +56,61 @@ export function loadProviderConfigFromEnv(): ProviderConfig {
       apiKey: process.env.BAIDU_API_KEY || '',
       secretKey: process.env.BAIDU_SECRET_KEY || '',
     },
+  }
+}
+
+export async function loadProviderConfigFromDB(): Promise<ProviderConfig | null> {
+  try {
+    const { db } = await import('../../../db/index.js')
+    const { siteSettings } = await import('../../../db/schema.js')
+    const { eq } = await import('drizzle-orm')
+
+    const allSettings = await db.select().from(siteSettings).all()
+    const s: Record<string, string> = {}
+    allSettings.forEach(row => { s[row.key] = row.value || '' })
+
+    const provider = s.review_cloud_provider || 'none'
+    if (provider === 'none') return null
+
+    const envConfig = loadProviderConfigFromEnv()
+    envConfig.provider = provider as ProviderConfig['provider']
+
+    // DB values override env vars for each provider's credentials
+    if (s.review_tencent_secret_id) envConfig.tencent.secretId = s.review_tencent_secret_id
+    if (s.review_tencent_secret_key) envConfig.tencent.secretKey = s.review_tencent_secret_key
+    if (s.review_tencent_region) envConfig.tencent.region = s.review_tencent_region
+
+    if (s.review_aliyun_access_key_id) envConfig.aliyun.accessKeyId = s.review_aliyun_access_key_id
+    if (s.review_aliyun_access_key_secret) envConfig.aliyun.accessKeySecret = s.review_aliyun_access_key_secret
+    if (s.review_aliyun_region) envConfig.aliyun.region = s.review_aliyun_region
+
+    if (s.review_baidu_app_id) envConfig.baidu.appId = s.review_baidu_app_id
+    if (s.review_baidu_api_key) envConfig.baidu.apiKey = s.review_baidu_api_key
+    if (s.review_baidu_secret_key) envConfig.baidu.secretKey = s.review_baidu_secret_key
+
+    // Built-in AI
+    if (s.review_builtin_ai_api_url || s.review_builtin_ai_api_key) {
+      ;(envConfig as any).builtInAi = {
+        apiUrl: s.review_builtin_ai_api_url || '',
+        apiKey: s.review_builtin_ai_api_key || '',
+      }
+    }
+
+    return envConfig
+  } catch {
+    return null
+  }
+}
+
+export async function reloadProviderFromDB(): Promise<void> {
+  const dbConfig = await loadProviderConfigFromDB()
+  if (dbConfig) {
+    initProviders(dbConfig)
+    logger.info({ provider: dbConfig.provider }, 'Content review provider reloaded from DB')
+  } else {
+    const envConfig = loadProviderConfigFromEnv()
+    initProviders(envConfig)
+    logger.info({ provider: envConfig.provider }, 'Content review provider loaded from env')
   }
 }
 
@@ -92,15 +150,30 @@ function createAliyunProvider(config: ProviderConfig): CloudProvider {
   return {
     name: 'aliyun',
     async reviewText(text: string): Promise<ProviderResult> {
-      logger.info('Aliyun text review: not implemented, returning pass')
-      return { verdict: 'pass', label: 'normal', score: 0, detail: null }
+      try {
+        const aliyun = await import('./aliyun.js')
+        return await aliyun.reviewText(text, config)
+      } catch (err: any) {
+        logger.error({ err }, 'Aliyun text review failed')
+        return { verdict: 'error', label: 'error', score: 0, detail: { error: err.message } }
+      }
     },
     async reviewImage(image: Buffer | string): Promise<ProviderResult> {
-      logger.info('Aliyun image review: not implemented, returning pass')
-      return { verdict: 'pass', label: 'normal', score: 0, detail: null }
+      try {
+        const aliyun = await import('./aliyun.js')
+        return await aliyun.reviewImage(image, config)
+      } catch (err: any) {
+        logger.error({ err }, 'Aliyun image review failed')
+        return { verdict: 'error', label: 'error', score: 0, detail: { error: err.message } }
+      }
     },
     async healthCheck(): Promise<boolean> {
-      return false
+      try {
+        const aliyun = await import('./aliyun.js')
+        return await aliyun.healthCheck(config)
+      } catch {
+        return false
+      }
     },
   }
 }
@@ -109,12 +182,44 @@ function createBaiduProvider(config: ProviderConfig): CloudProvider {
   return {
     name: 'baidu',
     async reviewText(text: string): Promise<ProviderResult> {
-      logger.info('Baidu text review: not implemented, returning pass')
-      return { verdict: 'pass', label: 'normal', score: 0, detail: null }
+      try {
+        const baidu = await import('./baidu.js')
+        return await baidu.reviewText(text, config)
+      } catch (err: any) {
+        logger.error({ err }, 'Baidu text review failed')
+        return { verdict: 'error', label: 'error', score: 0, detail: { error: err.message } }
+      }
     },
     async reviewImage(image: Buffer | string): Promise<ProviderResult> {
-      logger.info('Baidu image review: not implemented, returning pass')
-      return { verdict: 'pass', label: 'normal', score: 0, detail: null }
+      try {
+        const baidu = await import('./baidu.js')
+        return await baidu.reviewImage(image, config)
+      } catch (err: any) {
+        logger.error({ err }, 'Baidu image review failed')
+        return { verdict: 'error', label: 'error', score: 0, detail: { error: err.message } }
+      }
+    },
+    async healthCheck(): Promise<boolean> {
+      try {
+        const baidu = await import('./baidu.js')
+        return await baidu.healthCheck(config)
+      } catch {
+        return false
+      }
+    },
+  }
+}
+
+function createBuiltInAiProvider(config: ProviderConfig): CloudProvider {
+  return {
+    name: 'built_in_ai',
+    async reviewText(text: string): Promise<ProviderResult> {
+      logger.warn('Built-in AI text review: reserved, not implemented, returning error')
+      return { verdict: 'error', label: 'error', score: 0, detail: { error: 'Built-in AI provider not implemented' } }
+    },
+    async reviewImage(image: Buffer | string): Promise<ProviderResult> {
+      logger.warn('Built-in AI image review: reserved, not implemented, returning error')
+      return { verdict: 'error', label: 'error', score: 0, detail: { error: 'Built-in AI provider not implemented' } }
     },
     async healthCheck(): Promise<boolean> {
       return false

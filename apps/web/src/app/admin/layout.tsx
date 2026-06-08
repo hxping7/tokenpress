@@ -22,6 +22,7 @@ import {
   Globe,
   ScrollText,
   Shield,
+  ShieldAlert,
   Megaphone,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -42,6 +43,7 @@ function useMenuItems() {
     { key: '/admin/stats', label: t('admin.stats', backendLocale), icon: BarChart3, roles: ['superadmin', 'admin'] },
     { key: '/admin/ai-debug', label: t('admin.aiDebug', backendLocale), icon: Zap, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/reviews', label: t('admin.reviews', backendLocale), icon: Shield, roles: ['superadmin', 'admin'] },
+    { key: '/admin/sensitive-keywords', label: t('admin.sensitiveKeywords', backendLocale), icon: ShieldAlert, roles: ['superadmin', 'admin'] },
     { key: '/admin/ads', label: t('admin.ads', backendLocale), icon: Megaphone, roles: ['superadmin', 'admin'] },
     { key: '/admin/logs', label: t('admin.logs', backendLocale), icon: ScrollText, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/settings', label: t('admin.settings', backendLocale), icon: Settings, roles: ['superadmin'] },

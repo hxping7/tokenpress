@@ -50,6 +50,7 @@
     "apiStats": "API Stats",
     "aiDebug": "AI Publish Debug",
     "reviews": "Content Review",
+    "sensitiveKeywords": "Sensitive Keywords",
     "ads": "Ad Management",
     "logs": "System Logs",
     "settings": "Settings",
@@ -610,5 +611,70 @@
     "topDevices": "Top Devices",
     "views": "views",
     "direct": "Direct"
+  },
+  "skw": {
+    "title": "Sensitive Keywords",
+    "desc": "Manage local sensitive word library with CRUD and batch import",
+    "addKeyword": "Add Keyword",
+    "editKeyword": "Edit Keyword",
+    "batchImport": "Batch Import",
+    "importBtn": "Import",
+    "totalKeywords": "Total",
+    "blockCount": "Blocked",
+    "reviewCount": "Review",
+    "enabledCount": "Enabled",
+    "searchPlaceholder": "Search keywords...",
+    "allCategories": "All Categories",
+    "allScopes": "All Scopes",
+    "keyword": "Keyword",
+    "keywordPlaceholder": "Enter sensitive keyword",
+    "category": "Category",
+    "severity": "Severity",
+    "action": "Action",
+    "scope": "Scope",
+    "status": "Status",
+    "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete keyword \"{word}\"?",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "loading": "Loading...",
+    "noKeywords": "No keywords yet, click Add to create one",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} / {total}",
+    "batchDesc": "One keyword per line. Default: category=General, severity=Medium, action=Review.",
+    "batchPlaceholder": "One keyword per line, e.g.:\ngambling\npornography\nfraud\ncontact info\n...",
+    "linesCount": "lines to import",
+    "cat": {
+      "general": "General",
+      "gambling": "Gambling",
+      "pornography": "Pornography",
+      "fraud": "Fraud",
+      "finance": "Financial Risk",
+      "drugs": "Drugs",
+      "violence": "Violence",
+      "politics": "Political",
+      "contact": "Contact Info",
+      "spam": "Spam",
+      "custom": "Custom"
+    },
+    "severityOpts": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "actionOpts": {
+      "block": "Block",
+      "review": "Review"
+    },
+    "scopeOpts": {
+      "all": "All",
+      "article": "Article",
+      "media": "Media",
+      "ad": "Ad",
+      "friend_link": "Friend Link"
+    }
   }
 }

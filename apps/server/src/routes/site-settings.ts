@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
+import { reloadProviderFromDB } from '../lib/contentReview/providers/index.js'
 
 const router = Router()
 
@@ -90,6 +91,12 @@ router.put('/', async (req, res) => {
       } else {
         await db.insert(siteSettings).values({ key, value }).run()
       }
+    }
+
+    // Reload content review provider if review-related settings changed
+    const reviewKeys = Object.keys(settings).filter(k => k.startsWith('review_'))
+    if (reviewKeys.length > 0) {
+      await reloadProviderFromDB()
     }
 
     // Return updated settings
