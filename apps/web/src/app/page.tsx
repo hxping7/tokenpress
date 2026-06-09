@@ -28,12 +28,16 @@ interface Article {
 }
 
 // ISR: 每 60 秒重新生成
+export const dynamic = 'force-dynamic'
 export const revalidate = 60
 
 async function getHeroSlides(): Promise<HeroSlide[]> {
   try {
-    const data = await api.get('/site-settings/keys/hero_slides,hero_effect')
-    const heroSlidesValue = data.data?.hero_slides
+    const baseUrl = typeof window === 'undefined' ? 'http://localhost:4000' : ''
+    const res = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect`, { next: { revalidate: 60 } })
+    if (!res.ok) return []
+    const json = await res.json()
+    const heroSlidesValue = json.data?.hero_slides
     if (heroSlidesValue) {
       try {
         return JSON.parse(heroSlidesValue)
@@ -41,9 +45,7 @@ async function getHeroSlides(): Promise<HeroSlide[]> {
         return []
       }
     }
-  } catch {
-    // 降级处理
-  }
+  } catch {}
   return []
 }
 

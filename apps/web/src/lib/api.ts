@@ -1,11 +1,15 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'
+const CLIENT_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'
+// SSR: 请求自身 localhost:4000，由 next.config.mjs rewrites 代理到后端
+// CSR: 使用 NEXT_PUBLIC_API_URL（相对路径走 nginx，绝对路径直连）
+const SERVER_API_BASE = 'http://localhost:4000/api/v1'
+
+function getApiBase(): string {
+  if (typeof window === 'undefined') return SERVER_API_BASE
+  return CLIENT_API_BASE
+}
 
 class ApiClient {
-  private baseUrl: string
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl
-  }
+  private get baseUrl(): string { return getApiBase() }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${path}`
@@ -331,4 +335,4 @@ export class ApiError extends Error {
   }
 }
 
-export const api = new ApiClient(API_BASE)
+export const api = new ApiClient()
