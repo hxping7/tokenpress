@@ -41,7 +41,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative pt-8 pb-4 flex items-center justify-center overflow-hidden"
+      className="relative pt-20 pb-4 flex items-center justify-center overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
