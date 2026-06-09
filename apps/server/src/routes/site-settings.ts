@@ -9,7 +9,7 @@ import { reloadProviderFromDB } from '../lib/contentReview/providers/index.js'
 
 const router = Router()
 
-// GET /api/v1/site-settings — public, get all settings as key-value object
+// GET /api/v1/site-settings — public
 router.get('/', async (_req, res) => {
   try {
     const settings = await db.select().from(siteSettings).all()
@@ -118,10 +118,10 @@ router.put('/', async (req, res) => {
   }
 })
 
-// GET /api/v1/site-settings/keys/:keys — public, get specific settings by keys (comma-separated)
+// GET /api/v1/site-settings/keys/:keys — public
 router.get('/keys/:keys', async (req, res) => {
   try {
-    const keys = req.params.keys.split(',').map(k => k.trim())
+    const keys = (req.params.keys as string).split(',').map(k => k.trim())
     const settings = await db.select().from(siteSettings).all()
 
     const result: Record<string, string> = {}

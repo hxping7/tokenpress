@@ -1,12 +1,15 @@
 import { Router } from 'express'
+import path from 'node:path'
+import fs from 'node:fs'
 import { db } from '../db/index.js'
-import { articles, articleTags, tags, categories, sections, users, siteSettings, articleLikes, articleViews, adLogs } from '../db/schema.js'
+import { articles, articleTags, tags, categories, sections, users, siteSettings, articleLikes, articleViews, adLogs, media } from '../db/schema.js'
 import { eq, and, desc, sql, like, inArray } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { generateSlug, extractExcerpt } from '@tokenpress/shared'
 import type { ContentStatus } from '@tokenpress/shared'
 import { revalidateTag } from '../utils/revalidate.js'
 import { auditLog } from '../utils/auditLogger.js'
+import { UPLOAD_DIR, MEDIA_URL_PREFIX } from '../utils/paths.js'
 import { scheduleReview } from '../lib/contentReview/index.js'
 import { extractText as extractReviewText } from '../lib/contentReview/extractText.js'
 import { extractImages as extractReviewImages } from '../lib/contentReview/extractImages.js'
@@ -353,10 +356,12 @@ router.put('/:id', async (req: AuthRequest, res) => {
 })
 
 // DELETE /api/v1/admin/articles/:id — user只能删自己的, admin/superadmin可删全部
+// ?deleteMedia=true 可选：同时删除关联的媒体文件
 router.delete('/:id', async (req: AuthRequest, res) => {
   try {
     const id = req.params.id
     const articleId = parseInt(Array.isArray(id) ? id[0] : id)
+    const deleteMedia = req.query.deleteMedia === 'true'
     const existing = await db.select().from(articles).where(eq(articles.id, articleId)).get()
 
     if (!existing) {
@@ -368,6 +373,40 @@ router.delete('/:id', async (req: AuthRequest, res) => {
       return res.status(403).json({ success: false, error: 'Cannot delete other users articles' })
     }
 
+    // 可选：清理关联媒体
+    if (deleteMedia) {
+      const linkedMedia = await db.select().from(media)
+        .where(eq(media.articleId, articleId)).all()
+
+      let deleteFailures = 0
+      for (const m of linkedMedia) {
+        if (m.url.startsWith(MEDIA_URL_PREFIX)) {
+          const relativePath = m.url.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+          const filePath = path.resolve(UPLOAD_DIR, relativePath)
+          if (filePath.startsWith(UPLOAD_DIR)) {
+            try { fs.unlinkSync(filePath) } catch (_) { deleteFailures++ }
+          } else {
+            deleteFailures++
+          }
+        }
+        if (m.thumbnailUrl?.startsWith(MEDIA_URL_PREFIX)) {
+          const relativePath = m.thumbnailUrl.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+          const filePath = path.resolve(UPLOAD_DIR, relativePath)
+          if (filePath.startsWith(UPLOAD_DIR)) {
+            try { fs.unlinkSync(filePath) } catch (_) { deleteFailures++ }
+          } else {
+            deleteFailures++
+          }
+        }
+      }
+
+      if (linkedMedia.length > 0) {
+        await db.delete(media).where(eq(media.articleId, articleId)).run()
+      }
+
+      console.log(`[mediaCleanup] Deleted article #${articleId}: ${linkedMedia.length} media records, ${deleteFailures} file deletion failures`)
+    }
+
     // Delete related records first (order matters for foreign keys)
     await db.delete(articleTags).where(eq(articleTags.articleId, articleId)).run()
     await db.delete(articleLikes).where(eq(articleLikes.articleId, articleId)).run()
@@ -377,8 +416,12 @@ router.delete('/:id', async (req: AuthRequest, res) => {
 
     revalidateTag('articles')
     revalidateTag('sections')
-    await auditLog(req, 'delete', 'article', articleId, `Deleted article: ${existing.title}`)
-    res.json({ success: true, message: 'Article deleted successfully' })
+    await auditLog(req, 'delete', 'article', articleId, `Deleted article: ${existing.title}${deleteMedia ? ' (+media)' : ''}`)
+    res.json({
+      success: true,
+      message: 'Article deleted successfully',
+      data: deleteMedia ? { mediaDeleted: true } : undefined,
+    })
   } catch (err) {
     console.error('Delete article error:', err)
     res.status(500).json({ success: false, error: 'Failed to delete article' })

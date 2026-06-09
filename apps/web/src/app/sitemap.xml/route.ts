@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://token00.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!
 
 export const dynamic = 'force-dynamic'
 

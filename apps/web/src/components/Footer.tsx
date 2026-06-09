@@ -55,7 +55,7 @@ export function Footer() {
   const footerNavStr = settings.footer_nav
   const footerNavColumns = parseInt(settings.footer_nav_columns || '4', 10)
   const poweredBy = settings.powered_by || ''
-  const copyrightText = settings.copyright_text || `© ${new Date().getFullYear()} Token00. All rights reserved.`
+  const copyrightText = settings.copyright_text || `© ${new Date().getFullYear()} TokenPress. All rights reserved.`
   const icpNumber = settings.icp_number
   const icpUrl = settings.icp_url || 'https://beian.miit.gov.cn/'
 

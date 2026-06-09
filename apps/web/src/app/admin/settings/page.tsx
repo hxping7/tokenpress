@@ -52,7 +52,7 @@ export default function SettingsPage() {
   })
 
   // ===== 基本信息 =====
-  const [siteName, setSiteName] = useState('Token∞')
+  const [siteName, setSiteName] = useState('TokenPress')
   const [siteDesc, setSiteDesc] = useState('Token 力量无限放大 | AI 赋能综合内容平台')
 
   // ===== Logo 设置 =====
@@ -102,7 +102,7 @@ export default function SettingsPage() {
   const [friendLinksColumns, setFriendLinksColumns] = useState('2')
 
   // ===== Footer 版权设置 =====
-  const [copyrightText, setCopyrightText] = useState('')
+  const [copyrightText, setCopyrightText] = useState(`© ${new Date().getFullYear()} TokenPress. All rights reserved.`)
   const [icpNumber, setIcpNumber] = useState('')
   const [icpUrl, setIcpUrl] = useState('')
   const [poweredBy, setPoweredBy] = useState('')
@@ -288,7 +288,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (settingsData?.data) {
       const s = settingsData.data
-      setSiteName(s.site_name || 'Token∞')
+      setSiteName(s.site_name || 'TokenPress')
       setSiteDesc(s.site_description || 'Token 力量无限放大 | AI 赋能综合内容平台')
       setHeaderLogo(s.header_logo || '')
       setFooterLogo(s.footer_logo || '')
@@ -314,7 +314,7 @@ export default function SettingsPage() {
       if (s.hero_effect) {
         setHeroEffect(s.hero_effect)
       }
-      setCopyrightText(s.copyright_text || '')
+      if (s.copyright_text !== undefined) setCopyrightText(s.copyright_text)
       setIcpNumber(s.icp_number || '')
       setIcpUrl(s.icp_url || 'https://beian.miit.gov.cn/')
       setPoweredBy(s.powered_by || '')
@@ -1328,7 +1328,7 @@ export default function SettingsPage() {
                 <div className="p-4 bg-t-bg-secondary rounded-lg border border-t-border">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-xs text-t-text-muted">
                     <div className="flex flex-col items-center md:items-start gap-2">
-                      <span>{copyrightText || `© ${new Date().getFullYear()} Token00. All rights reserved.`}</span>
+                      <span>{copyrightText || `© ${new Date().getFullYear()} TokenPress. All rights reserved.`}</span>
                     </div>
                     <div className="flex justify-center">
                       {icpNumber && <span>{icpNumber}</span>}

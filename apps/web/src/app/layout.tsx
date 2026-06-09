@@ -10,15 +10,15 @@ import { AnalyticsLoader } from '@/components/AnalyticsLoader'
 // 使用系统字体，无网络依赖
 const SYSTEM_FONT = `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'Microsoft YaHei', sans-serif`
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://token00.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Token∞ — Token 力量无限放大',
-    template: '%s | Token∞',
+    default: 'TokenPress — Token 力量无限放大',
+    template: '%s | TokenPress',
   },
-  description: 'Token00.com - AI赋能综合内容平台，聚焦Token计划、AI编程、AI作品与技术博客',
+  description: `${SITE_URL} - AI赋能综合内容平台，聚焦Token计划、AI编程、AI作品与技术博客`,
   keywords: ['AI', 'Token', '编程', '人工智能', '博客', '作品展示', 'AI Agent'],
   authors: [{ name: 'Token00' }],
   creator: 'Token00',
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'zh_CN',
     url: SITE_URL,
-    siteName: 'Token∞',
-    title: 'Token∞ — Token 力量无限放大',
+    siteName: 'TokenPress',
+    title: 'TokenPress — Token 力量无限放大',
     description: 'AI赋能综合内容平台',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Token∞ — Token 力量无限放大',
+    title: 'TokenPress — Token 力量无限放大',
     description: 'AI赋能综合内容平台',
   },
   robots: {

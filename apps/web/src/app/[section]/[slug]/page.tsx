@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { ArticleDetailClient } from './ArticleDetailClient'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://token00.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!
 
 interface Props {
   params: Promise<{ section: string; slug: string }>

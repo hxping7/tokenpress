@@ -1,18 +1,77 @@
 import { Router } from 'express'
+import path from 'node:path'
+import fs from 'node:fs'
 import { db } from '../db/index.js'
-import { articles, articleTags, tags, categories, sections } from '../db/schema.js'
-import { eq, and } from 'drizzle-orm'
+import { articles, articleTags, tags, categories, sections, media, articleLikes, articleViews, adLogs, users } from '../db/schema.js'
+import { eq, and, inArray, isNull, sql } from 'drizzle-orm'
 import { apiTokenAuth, requirePermission, type ApiAuthRequest } from '../middleware/apiToken.js'
 import { generateSlug, extractExcerpt } from '@tokenpress/shared'
 import type { ContentStatus } from '@tokenpress/shared'
 import { getParam } from '../utils/params.js'
 import { revalidateTag, revalidatePath } from '../utils/revalidate.js'
+import { UPLOAD_DIR, MEDIA_URL_PREFIX } from '../utils/paths.js'
 import { scheduleReview } from '../lib/contentReview/index.js'
 import { extractText } from '../lib/contentReview/extractText.js'
 import { extractImages } from '../lib/contentReview/extractImages.js'
 
 const router = Router()
 router.use(apiTokenAuth)
+
+/**
+ * 从文章内容中提取所有媒体文件 URL
+ * 匹配 Markdown 图片、HTML img/video/audio/source 标签中的 src
+ */
+function extractMediaUrls(content: string, coverImageUrl?: string | null): string[] {
+  const urls: Set<string> = new Set()
+
+  // 1. 封面图
+  if (coverImageUrl && coverImageUrl.startsWith(MEDIA_URL_PREFIX)) {
+    urls.add(coverImageUrl)
+  }
+
+  // 2. Markdown 图片: ![alt](url) 或 ![alt](url "title")
+  const mdImgRegex = /!\[.*?\]\(([^\s"')]+)/g
+  let match: RegExpExecArray | null
+  while ((match = mdImgRegex.exec(content)) !== null) {
+    const url = match[1].trim()
+    if (url.startsWith(MEDIA_URL_PREFIX)) {
+      urls.add(url)
+    }
+  }
+
+  // 3. HTML 标签: <img src="...">, <video src="...">, <audio src="...">, <source src="...">
+  const htmlTagRegex = /<(?:img|video|audio|source)\s[^>]*src=["']([^"']+)["']/gi
+  while ((match = htmlTagRegex.exec(content)) !== null) {
+    const url = match[1].trim()
+    if (url.startsWith(MEDIA_URL_PREFIX)) {
+      urls.add(url)
+    }
+  }
+
+  return Array.from(urls)
+}
+
+/**
+ * 将媒体文件关联到文章（异步非阻塞）
+ * 发布/更新文章后自动调用，从 content 中提取 URL 并回填 articleId
+ */
+async function linkMediaToArticle(articleId: number, content: string, coverImageUrl?: string | null) {
+  try {
+    const mediaUrls = extractMediaUrls(content, coverImageUrl)
+    if (mediaUrls.length === 0) return
+
+    await db.update(media)
+      .set({ articleId })
+      .where(and(
+        inArray(media.url, mediaUrls),
+        isNull(media.articleId),       // 只更新未关联的，避免覆盖手动指定
+      ))
+      .run()
+  } catch (err) {
+    // 非阻塞：回填失败不影响发布结果
+    console.error('Failed to link media to article:', err)
+  }
+}
 
 /**
  * AI Publishing API
@@ -82,6 +141,15 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
     const existing = await db.select().from(articles).where(eq(articles.slug, slug)).get()
 
     if (existing) {
+      // Ownership check: admin/superadmin can update any article, users only own articles
+      const tokenUser = await db.select({ role: users.role }).from(users).where(eq(users.id, req.apiToken!.userId)).get()
+      if (tokenUser?.role !== 'superadmin' && tokenUser?.role !== 'admin' && existing.authorId !== req.apiToken!.userId) {
+        return res.status(403).json({
+          success: false,
+          error: 'Cannot update articles owned by other users',
+        })
+      }
+
       // Update existing article
       const effectiveStatus: ContentStatus = requestedStatus === 'published' ? 'pending_review' : requestedStatus
       const updates: Record<string, unknown> = {
@@ -135,12 +203,15 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
         }).catch(err => console.error('Failed to schedule review:', err))
       }
 
+      // 自动关联媒体文件到文章
+      linkMediaToArticle(existing.id, content, coverImageUrl)
+
       return res.json({
         success: true,
         data: {
           id: article!.id,
           slug: article!.slug,
-          url: `${process.env.SITE_URL || 'http://localhost:4000'}${section.path}/${article!.slug}`,
+          url: `${process.env.SITE_URL || 'http://localhost:3000'}${section.path}/${article!.slug}`,
           status: article!.status,
           action: 'updated',
         },
@@ -219,6 +290,9 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       }).catch(err => console.error('Failed to schedule review:', err))
     }
 
+    // 自动关联媒体文件到文章
+    linkMediaToArticle(articleId, content, coverImageUrl)
+
     // Trigger ISR revalidation
     revalidateTag('articles')
     revalidateTag(`article-${slug}`)
@@ -260,6 +334,14 @@ router.get('/articles', async (req: ApiAuthRequest, res) => {
       }
     }
 
+    const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0]
+
+    const countResult = await db.select({ total: sql<number>`count(*)` })
+      .from(articles)
+      .where(whereClause)
+      .get()
+    const total = countResult?.total || 0
+
     const rows = await db.select({
       id: articles.id,
       title: articles.title,
@@ -270,7 +352,7 @@ router.get('/articles', async (req: ApiAuthRequest, res) => {
     })
       .from(articles)
       .leftJoin(sections, eq(articles.sectionId, sections.id))
-      .where(conditions.length > 1 ? and(...conditions) : conditions[0])
+      .where(whereClause)
       .limit(limit)
       .offset(offset)
       .all()
@@ -278,7 +360,7 @@ router.get('/articles', async (req: ApiAuthRequest, res) => {
     res.json({
       success: true,
       data: rows,
-      pagination: { page, limit, total: rows.length },
+      pagination: { page, limit, total },
     })
   } catch (err) {
     console.error('AI list articles error:', err)
@@ -287,21 +369,76 @@ router.get('/articles', async (req: ApiAuthRequest, res) => {
 })
 
 // DELETE /api/v1/ai/articles/:slug — delete article by slug
+// ?deleteMedia=true 可选：同时删除关联的媒体文件
 router.delete('/articles/:slug', requirePermission('content:delete'), async (req: ApiAuthRequest, res) => {
   try {
     const slug = getParam(req.params.slug)
     if (!slug) {
       return res.status(400).json({ success: false, error: 'Invalid slug' })
     }
+    const deleteMedia = req.query.deleteMedia === 'true'
+
     const article = await db.select().from(articles).where(eq(articles.slug, slug)).get()
     if (!article) {
       return res.status(404).json({ success: false, error: 'Article not found' })
     }
 
+    // Ownership check: admin/superadmin can delete any article, users only own articles
+    const tokenUser = await db.select({ role: users.role }).from(users).where(eq(users.id, req.apiToken!.userId)).get()
+    if (tokenUser?.role !== 'superadmin' && tokenUser?.role !== 'admin' && article.authorId !== req.apiToken!.userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Cannot delete articles owned by other users',
+      })
+    }
+
+    // 可选：清理关联媒体
+    if (deleteMedia) {
+      const linkedMedia = await db.select().from(media)
+        .where(eq(media.articleId, article.id)).all()
+
+      let deleteFailures = 0
+      for (const m of linkedMedia) {
+        // 删除物理文件（含路径遍历防护）
+        if (m.url.startsWith(MEDIA_URL_PREFIX)) {
+          const relativePath = m.url.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+          const filePath = path.resolve(UPLOAD_DIR, relativePath)
+          if (filePath.startsWith(UPLOAD_DIR)) {
+            try { fs.unlinkSync(filePath) } catch (_) { deleteFailures++ }
+          } else {
+            deleteFailures++
+          }
+        }
+        if (m.thumbnailUrl?.startsWith(MEDIA_URL_PREFIX)) {
+          const relativePath = m.thumbnailUrl.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+          const filePath = path.resolve(UPLOAD_DIR, relativePath)
+          if (filePath.startsWith(UPLOAD_DIR)) {
+            try { fs.unlinkSync(filePath) } catch (_) { deleteFailures++ }
+          } else {
+            deleteFailures++
+          }
+        }
+      }
+
+      // 删数据库记录
+      if (linkedMedia.length > 0) {
+        await db.delete(media).where(eq(media.articleId, article.id)).run()
+      }
+
+      console.log(`[mediaCleanup] Deleted article #${article.id}: ${linkedMedia.length} media records, ${deleteFailures} file deletion failures`)
+    }
+
     await db.delete(articleTags).where(eq(articleTags.articleId, article.id)).run()
+    await db.delete(articleLikes).where(eq(articleLikes.articleId, article.id)).run()
+    await db.delete(articleViews).where(eq(articleViews.articleId, article.id)).run()
+    await db.delete(adLogs).where(eq(adLogs.articleId, article.id)).run()
     await db.delete(articles).where(eq(articles.id, article.id)).run()
 
-    res.json({ success: true, message: 'Article deleted successfully' })
+    res.json({
+      success: true,
+      message: 'Article deleted successfully',
+      data: deleteMedia ? { mediaDeleted: true } : undefined,
+    })
   } catch (err) {
     console.error('AI delete article error:', err)
     res.status(500).json({ success: false, error: 'Failed to delete article' })

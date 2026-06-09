@@ -1,6 +1,6 @@
 {
   "common": {
-    "siteName": "Token∞",
+    "siteName": "TokenPress",
     "siteDesc": "Token 力量无限放大 | AI 赋能综合内容平台",
     "manageLogin": "管理登录",
     "admin": "管理后台",
@@ -138,7 +138,7 @@
     "heroEffectFlip": "翻转效果",
     "footerSection": "版权信息",
     "footerCopyrightText": "版权声明文本",
-    "footerCopyrightPlaceholder": "© 2026 Token00. All rights reserved.",
+    "footerCopyrightPlaceholder": "© 2026 TokenPress. All rights reserved.",
     "footerCopyrightHint": "显示在页面底部，支持自定义文本",
     "footerIcpNumber": "ICP 备案号",
     "footerIcpUrl": "备案链接",

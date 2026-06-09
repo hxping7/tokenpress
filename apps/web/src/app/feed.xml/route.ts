@@ -1,12 +1,12 @@
 import { Feed } from 'feed'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://token00.com'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!
 
 export async function GET() {
   const apiUrl = process.env.BACKEND_URL || 'http://localhost:4001'
 
   const feed = new Feed({
-    title: 'Token∞',
+    title: 'TokenPress',
     description: 'Token 力量无限放大 — AI赋能综合内容平台',
     id: SITE_URL,
     link: SITE_URL,

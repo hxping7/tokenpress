@@ -170,7 +170,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-3xl font-bold gradient-text">
-            Token∞
+            TokenPress
           </Link>
           <p className="text-sm text-t-text-secondary mt-2">登录管理后台</p>
         </div>
@@ -180,7 +180,7 @@ export default function LoginPage() {
         </Suspense>
 
         <p className="text-center text-xs text-t-text-muted mt-6">
-          Token00.com · AI 赋能综合内容平台
+          TokenPress · AI 赋能综合内容平台
         </p>
       </div>
     </div>

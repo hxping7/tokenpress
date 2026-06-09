@@ -2,7 +2,7 @@ import { Router } from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
 import { v4 as uuidv4 } from 'uuid'
-import { eq, desc, sql, count as sqlCount, like, or, and } from 'drizzle-orm'
+import { eq, desc, sql, count as sqlCount, like, or, and, inArray } from 'drizzle-orm'
 import { db } from '../db/index.js'
 import { media } from '../db/schema.js'
 import { authMiddleware, adminOrAbove, type AuthRequest } from '../middleware/auth.js'
@@ -10,12 +10,12 @@ import { apiTokenAuth, requirePermission, type ApiAuthRequest } from '../middlew
 import { sanitizeFilename, isAllowedMimeType, formatFileSize } from '@tokenpress/shared'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
+import { UPLOAD_DIR, MEDIA_URL_PREFIX } from '../utils/paths.js'
 import { scheduleReview } from '../lib/contentReview/index.js'
 
 const router = Router()
 
 // Upload directory
-const UPLOAD_DIR = path.resolve(process.cwd(), 'data', 'uploads')
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true })
 }
@@ -58,27 +58,53 @@ router.get('/files/uploads/*', (req, res) => {
 })
 
 // ===== Upload handlers =====
-
+//
 async function handleUpload(req: any, res: any, userId: number) {
-  const { file, filename, mimeType, url: fileUrl, section } = req.body
+  const { file, filename, mimeType, url: fileUrl, section, articleId } = req.body
 
+  // 验证 articleId（可选）
+  let validArticleId: number | null = null
+  if (articleId) {
+    const parsed = Number(articleId)
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid articleId: must be a positive integer' })
+    }
+    validArticleId = parsed
+  }
+
+  // --- URL reference upload ---
   if (fileUrl) {
-    const result = await db.insert(media).values({
-      filename: path.basename(fileUrl) || `external-${uuidv4()}`,
-      originalName: filename || path.basename(fileUrl) || 'external-file',
-      mimeType: mimeType || 'image/*',
-      size: 0,
-      url: fileUrl,
-      thumbnailUrl: null,
-      uploadedBy: userId,
-    }).run()
+    try {
+      var result = await db.insert(media).values({
+        filename: path.basename(fileUrl) || `external-${uuidv4()}`,
+        originalName: filename || path.basename(fileUrl) || 'external-file',
+        mimeType: mimeType || 'image/*',
+        size: 0,
+        url: fileUrl,
+        thumbnailUrl: null,
+        uploadedBy: userId,
+        articleId: validArticleId || null,
+      }).run()
+    } catch (dbErr: any) {
+      console.error('Media insert error (URL mode):', dbErr)
+      return res.status(500).json({ success: false, error: 'Database write failed', detail: dbErr.message })
+    }
 
     const id = Number(result.lastInsertRowid)
-    const mediaRecord = await db.select().from(media).where(eq(media.id, id)).get()
 
-    await auditLog(req, 'upload', 'media', id, `Uploaded media: ${path.basename(fileUrl) || 'external-file'}`)
+    try {
+      var mediaRecord = await db.select().from(media).where(eq(media.id, id)).get()
+    } catch (dbErr: any) {
+      console.error('Media select error after insert:', dbErr)
+      return res.status(500).json({ success: false, error: 'Failed to read back media record', detail: dbErr.message })
+    }
 
-    // Schedule content review for image uploads
+    // Audit log (non-blocking)
+    auditLog(req, 'upload', 'media', id, `Uploaded media: ${path.basename(fileUrl) || 'external-file'}`).catch(err =>
+      console.error('Audit log failed (non-fatal):', err)
+    )
+
+    // Content review (non-blocking, isolated)
     if ((mimeType || '').startsWith('image/')) {
       scheduleReview({
         targetType: 'media',
@@ -87,15 +113,24 @@ async function handleUpload(req: any, res: any, userId: number) {
       }).catch(err => console.error('Failed to schedule media review:', err))
     }
 
-    return res.status(201).json({ success: true, data: mediaRecord })
+    return res.status(201).json({
+      success: true,
+      data: {
+        ...mediaRecord,
+        fullUrl: fileUrl,   // URL引用上传，fileUrl本身已是完整URL
+      },
+    })
   }
 
+  // --- Base64 file upload ---
   if (file && filename && mimeType) {
+    // Validate MIME type
     const allowedTypes = ALL_ALLOWED_TYPES
     if (!isAllowedMimeType(mimeType, allowedTypes)) {
       return res.status(400).json({ success: false, error: `File type ${mimeType} is not allowed` })
     }
 
+    // Determine max size by category
     const { UPLOAD_LIMITS } = await import('@tokenpress/shared')
     let maxSize = UPLOAD_LIMITS.documentSize
     if (UPLOAD_LIMITS.allowedImageTypes.includes(mimeType)) {
@@ -106,39 +141,82 @@ async function handleUpload(req: any, res: any, userId: number) {
       maxSize = UPLOAD_LIMITS.audioSize
     }
 
-    const buffer = Buffer.from(file, 'base64')
+    // Decode base64
+    let buffer: Buffer
+    try {
+      buffer = Buffer.from(file, 'base64')
+    } catch (decodeErr: any) {
+      return res.status(400).json({ success: false, error: 'Invalid base64 data', detail: decodeErr.message })
+    }
+
     if (buffer.length > maxSize) {
       return res.status(400).json({ success: false, error: `File too large. Max ${maxSize / 1024 / 1024}MB` })
     }
 
-    const subdir = section ? path.join(UPLOAD_DIR, section) : UPLOAD_DIR
-    if (!fs.existsSync(subdir)) {
-      fs.mkdirSync(subdir, { recursive: true })
+    // Ensure upload subdirectory exists (按月维度: uploads/YYYY/MM/section/)
+    const now = new Date()
+    const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
+    const subdir = section
+      ? path.join(UPLOAD_DIR, yearMonth, section)
+      : path.join(UPLOAD_DIR, yearMonth)
+    try {
+      if (!fs.existsSync(subdir)) {
+        fs.mkdirSync(subdir, { recursive: true })
+      }
+    } catch (fsErr: any) {
+      console.error('Failed to create upload directory:', fsErr)
+      return res.status(500).json({ success: false, error: 'Failed to create upload directory', detail: fsErr.message })
     }
 
+    // Sanitize filename & write file
     const safeName = sanitizeFilename(filename)
     const filePath = path.join(subdir, safeName)
-    fs.writeFileSync(filePath, buffer)
+    try {
+      fs.writeFileSync(filePath, buffer)
+    } catch (writeErr: any) {
+      console.error('File write error:', writeErr)
+      return res.status(500).json({ success: false, error: 'Failed to write file to disk', detail: writeErr.message })
+    }
 
-    const relativePath = section ? `uploads/${section}/${safeName}` : `uploads/${safeName}`
-    const publicUrl = `/api/v1/media/files/${relativePath}`
+    const relativePath = section
+      ? `uploads/${yearMonth}/${section}/${safeName}`
+      : `uploads/${yearMonth}/${safeName}`
+    const publicUrl = `${MEDIA_URL_PREFIX}${relativePath}`
 
-    const result = await db.insert(media).values({
-      filename: safeName,
-      originalName: filename,
-      mimeType,
-      size: buffer.length,
-      url: publicUrl,
-      thumbnailUrl: null,
-      uploadedBy: userId,
-    }).run()
+    // Insert into database
+    try {
+      var result = await db.insert(media).values({
+        filename: safeName,
+        originalName: filename,
+        mimeType,
+        size: buffer.length,
+        url: publicUrl,
+        thumbnailUrl: null,
+        uploadedBy: userId,
+        articleId: validArticleId || null,
+      }).run()
+    } catch (dbErr: any) {
+      // Rollback: delete the written file since DB insert failed
+      try { fs.unlinkSync(filePath) } catch (_) { /* ignore cleanup failure */ }
+      console.error('Media DB insert error:', dbErr)
+      return res.status(500).json({ success: false, error: 'Database write failed', detail: dbErr.message })
+    }
 
     const id = Number(result.lastInsertRowid)
-    const mediaRecord = await db.select().from(media).where(eq(media.id, id)).get()
 
-    await auditLog(req, 'upload', 'media', id, `Uploaded media: ${safeName}`)
+    try {
+      var mediaRecord = await db.select().from(media).where(eq(media.id, id)).get()
+    } catch (dbErr: any) {
+      console.error('Media select error after insert:', dbErr)
+      return res.status(500).json({ success: false, error: 'Failed to read back media record', detail: dbErr.message })
+    }
 
-    // Schedule content review for image uploads
+    // Audit log (non-blocking — must not block upload response)
+    auditLog(req, 'upload', 'media', id, `Uploaded media: ${safeName}`).catch(err =>
+      console.error('Audit log failed (non-fatal):', err)
+    )
+
+    // Content review (non-blocking, fully isolated)
     if (mimeType.startsWith('image/')) {
       scheduleReview({
         targetType: 'media',
@@ -147,7 +225,17 @@ async function handleUpload(req: any, res: any, userId: number) {
       }).catch(err => console.error('Failed to schedule media review:', err))
     }
 
-    return res.status(201).json({ success: true, data: mediaRecord })
+    // Build full URL for agent verification
+    const siteUrl = process.env.SITE_URL || ''
+    const fullUrl = siteUrl ? `${siteUrl}${publicUrl}` : publicUrl
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        ...mediaRecord,
+        fullUrl,   // 完整URL，方便Agent直接验证可访问性
+      },
+    })
   }
 
   return res.status(400).json({
@@ -160,10 +248,14 @@ async function handleUpload(req: any, res: any, userId: number) {
 router.post('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     await handleUpload(req, res, req.user!.userId)
-  } catch (err) {
+  } catch (err: any) {
     console.error('Upload error:', err)
     if (!res.headersSent) {
-      res.status(500).json({ success: false, error: 'Upload failed' })
+      res.status(500).json({
+        success: false,
+        error: 'Upload failed',
+        detail: process.env.NODE_ENV === 'development' ? err?.message : undefined,
+      })
     }
   }
 })
@@ -172,10 +264,14 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
 router.post('/ai', apiTokenAuth, requirePermission('media:upload'), async (req: ApiAuthRequest, res) => {
   try {
     await handleUpload(req, res, req.apiToken!.userId)
-  } catch (err) {
+  } catch (err: any) {
     console.error('AI upload error:', err)
     if (!res.headersSent) {
-      res.status(500).json({ success: false, error: 'Upload failed' })
+      res.status(500).json({
+        success: false,
+        error: 'Upload failed',
+        detail: process.env.NODE_ENV === 'development' ? err?.message : undefined,
+      })
     }
   }
 })
@@ -283,10 +379,18 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
       return res.status(403).json({ success: false, error: 'Cannot delete other users media' })
     }
 
-    // Delete physical file if it's local
+    // Delete physical file if it's local（含路径遍历防护）
     if (item.url && !item.url.startsWith('http')) {
-      const filePath = path.join(process.cwd(), 'data', item.url)
-      if (fs.existsSync(filePath)) {
+      const relativePath = item.url.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+      const filePath = path.resolve(UPLOAD_DIR, relativePath)
+      if (filePath.startsWith(UPLOAD_DIR) && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+      }
+    }
+    if (item.thumbnailUrl && !item.thumbnailUrl.startsWith('http')) {
+      const relativePath = item.thumbnailUrl.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+      const filePath = path.resolve(UPLOAD_DIR, relativePath)
+      if (filePath.startsWith(UPLOAD_DIR) && fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
       }
     }
@@ -310,8 +414,14 @@ router.post('/batch-delete', authMiddleware, async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, error: 'Invalid IDs array' })
     }
 
+    // Validate all IDs are positive integers
+    const validIds = ids.filter(id => Number.isInteger(id) && id > 0)
+    if (validIds.length !== ids.length) {
+      return res.status(400).json({ success: false, error: 'Invalid ID values' })
+    }
+
     // Get all items to delete
-    const items = await db.select().from(media).where(sql`${media.id} IN (${ids.join(',')})`).all()
+    const items = await db.select().from(media).where(inArray(media.id, validIds)).all()
 
     // Permission check: user can only delete own uploads
     if (req.user!.role === 'user') {
@@ -324,7 +434,15 @@ router.post('/batch-delete', authMiddleware, async (req: AuthRequest, res) => {
     // Delete physical files
     for (const item of items) {
       if (item.url && !item.url.startsWith('http')) {
-        const filePath = path.join(process.cwd(), 'data', item.url)
+        const relativePath = item.url.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+        const filePath = path.join(UPLOAD_DIR, relativePath)
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath)
+        }
+      }
+      if (item.thumbnailUrl && !item.thumbnailUrl.startsWith('http')) {
+        const relativePath = item.thumbnailUrl.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+        const filePath = path.join(UPLOAD_DIR, relativePath)
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath)
         }
@@ -332,7 +450,7 @@ router.post('/batch-delete', authMiddleware, async (req: AuthRequest, res) => {
     }
 
     // Delete database records
-    await db.delete(media).where(sql`${media.id} IN (${ids.join(',')})`).run()
+    await db.delete(media).where(inArray(media.id, validIds)).run()
 
     await auditLog(req, 'batch_delete', 'media', undefined, `Batch deleted ${items.length} media items`)
     res.json({ success: true, message: `${items.length} items deleted` })

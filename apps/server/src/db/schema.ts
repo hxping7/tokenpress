@@ -95,6 +95,7 @@ export const media = sqliteTable('media', {
   height: integer('height'),
   duration: real('duration'),
   uploadedBy: integer('uploaded_by').notNull().references(() => users.id),
+  articleId: integer('article_id').references(() => articles.id, { onDelete: 'set null' }),
   isReviewed: integer('is_reviewed').notNull().default(0),
   reviewNote: text('review_note'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),

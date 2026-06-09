@@ -6,6 +6,7 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import logger from './utils/logger.js'
 import { migrate } from './db/migrations/0000_initial.js'
+import { migrate as migrateMediaArticleId } from './db/migrations/0013_media_article_id.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -194,6 +195,7 @@ app.use(errorHandler)
 async function start() {
   logger.info('🔄 Running database migration...')
   await migrate()
+  await migrateMediaArticleId()
   logger.info('✅ Database ready')
 
   // Initialize login cleanup task
