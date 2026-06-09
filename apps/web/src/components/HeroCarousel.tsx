@@ -14,9 +14,10 @@ interface HeroSlide {
 
 interface HeroCarouselProps {
   slides: HeroSlide[]
+  size?: 'default' | 'fullscreen' | 'wide'
 }
 
-export function HeroCarousel({ slides }: HeroCarouselProps) {
+export function HeroCarousel({ slides, size = 'default' }: HeroCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
@@ -41,22 +42,34 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative pt-20 pb-4 flex items-center justify-center overflow-hidden"
+      className={`relative flex items-center justify-center overflow-hidden ${
+        size === 'fullscreen' ? 'pt-14' : 'pt-20 pb-4'
+      }`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Background grid pattern */}
       <div className="absolute inset-0 grid-pattern" />
 
-      <div className="relative z-10 text-center px-4 w-full max-w-3xl mx-auto">
+      <div className={`relative z-10 text-center px-4 w-full ${
+        size === 'fullscreen' ? '' : size === 'wide' ? 'max-w-6xl mx-auto' : 'max-w-3xl mx-auto'
+      }`}>
         {useDefaultSvg ? (
           // 默认 SVG Logo
           <DefaultHeroSvg />
         ) : (
           // 轮播图
-          <div className="relative rounded-2xl overflow-hidden border border-t-border bg-t-bg-secondary">
+          <div className={`relative overflow-hidden border border-t-border bg-t-bg-secondary ${
+            size === 'fullscreen' ? '' : 'rounded-2xl'
+          }`}>
             {/* Slides */}
-            <div className="relative aspect-[16/9] md:aspect-[21/9]">
+            <div className={`relative ${
+              size === 'fullscreen'
+                ? 'aspect-[2/1]'
+                : size === 'wide'
+                  ? 'aspect-[16/9] md:aspect-[21/9]'
+                  : 'aspect-[16/9] md:aspect-[21/9]'
+            }`}>
               {slides.map((slide, index) => {
                 const isActive = index === currentSlide
                 const isSvg = slide.imageUrl?.toLowerCase().endsWith('.svg')
@@ -80,7 +93,7 @@ export function HeroCarousel({ slides }: HeroCarouselProps) {
                       fill
                       className="object-cover"
                       priority={index === 0}
-                      sizes="(max-width: 768px) 100vw, 800px"
+                      sizes={size === 'fullscreen' ? '100vw' : '(max-width: 768px) 100vw, 800px'}
                       unoptimized
                     />
                   </Link>

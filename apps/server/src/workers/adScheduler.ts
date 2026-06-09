@@ -16,12 +16,15 @@ export const adScheduler = {
 
       logger.info({ activated, expired, capped }, 'ad scheduler tick')
 
-      await db.insert(systemEvents).values({
-        eventType: 'ad_scheduler_tick',
-        level: 'info',
-        message: `Activated: ${activated}, Expired: ${expired}, Capped: ${capped}`,
-        detail: JSON.stringify({ tickAt: new Date().toISOString(), activated, expired, capped }),
-      })
+      // Only log event when there's actual activity
+      if (activated > 0 || expired > 0 || capped > 0) {
+        await db.insert(systemEvents).values({
+          eventType: 'ad_scheduler_tick',
+          level: 'info',
+          message: `Activated: ${activated}, Expired: ${expired}, Capped: ${capped}`,
+          detail: JSON.stringify({ tickAt: new Date().toISOString(), activated, expired, capped }),
+        })
+      }
 
       lastTickAt = new Date().toISOString()
       lastTickSuccess = true

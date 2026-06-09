@@ -6,6 +6,7 @@ import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
 import { reloadProviderFromDB } from '../lib/contentReview/providers/index.js'
+import { revalidatePath } from '../utils/revalidate.js'
 
 const router = Router()
 
@@ -98,6 +99,9 @@ router.put('/', async (req, res) => {
     if (reviewKeys.length > 0) {
       await reloadProviderFromDB()
     }
+
+    // Revalidate homepage ISR cache so hero_size etc. take effect immediately
+    revalidatePath('/')
 
     // Return updated settings
     const allSettings = await db.select().from(siteSettings).all()

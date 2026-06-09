@@ -63,6 +63,7 @@ export default function SettingsPage() {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([])
   const [heroMediaBrowserTarget, setHeroMediaBrowserTarget] = useState<number | null>(null)
   const [heroEffect, setHeroEffect] = useState('fade')
+  const [heroSize, setHeroSize] = useState('default')
 
   // ===== 媒体库 =====
   const [showMediaBrowser, setShowMediaBrowser] = useState(false)
@@ -314,6 +315,9 @@ export default function SettingsPage() {
       if (s.hero_effect) {
         setHeroEffect(s.hero_effect)
       }
+      if (s.hero_size) {
+        setHeroSize(s.hero_size)
+      }
       if (s.copyright_text !== undefined) setCopyrightText(s.copyright_text)
       setIcpNumber(s.icp_number || '')
       setIcpUrl(s.icp_url || 'https://beian.miit.gov.cn/')
@@ -529,6 +533,7 @@ export default function SettingsPage() {
       footer_nav_columns: footerNavColumns,
       hero_slides: JSON.stringify(heroSlides),
       hero_effect: heroEffect,
+      hero_size: heroSize,
       friend_links_columns: friendLinksColumns,
       default_theme: defaultTheme,
       frontend_locale: frontendLocale,
@@ -944,6 +949,20 @@ export default function SettingsPage() {
               <option value="slide">{t('settings.heroEffectSlide', adminLocale)}</option>
               <option value="zoom">{t('settings.heroEffectZoom', adminLocale)}</option>
               <option value="flip">{t('settings.heroEffectFlip', adminLocale)}</option>
+            </select>
+          </div>
+
+          {/* 轮播尺寸选择 */}
+          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
+            <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroSize', adminLocale)}</span>
+            <select
+              value={heroSize}
+              onChange={(e) => setHeroSize(e.target.value)}
+              className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+            >
+              <option value="default">{t('settings.heroSizeDefault', adminLocale)}</option>
+              <option value="wide">{t('settings.heroSizeWide', adminLocale)}</option>
+              <option value="fullscreen">{t('settings.heroSizeFullscreen', adminLocale)}</option>
             </select>
           </div>
 

@@ -1,6 +1,6 @@
-import { Router } from 'express'
+import {Router} from 'express'
 import { db } from '../db/index.js'
-import { auditLogs, loginLogs, apiLogs, systemEvents, users } from '../db/schema.js'
+import { auditLogs, loginLogs, apiLogs, systemEvents, users, apiTokens } from '../db/schema.js'
 import { eq, and, desc, sql, like, gte, lte } from 'drizzle-orm'
 import { authMiddleware, adminOrAbove, type AuthRequest } from '../middleware/auth.js'
 
@@ -117,7 +117,25 @@ router.get('/api', authMiddleware, adminOrAbove, async (req: AuthRequest, res) =
     const countResult = await db.select({ count: sql<number>`count(*)` })
       .from(apiLogs).where(whereClause as any).get()
 
-    const items = await db.select().from(apiLogs)
+    const items = await db.select({
+      id: apiLogs.id,
+      tokenId: apiLogs.tokenId,
+      endpoint: apiLogs.endpoint,
+      method: apiLogs.method,
+      statusCode: apiLogs.statusCode,
+      responseTime: apiLogs.responseTime,
+      ipAddress: apiLogs.ipAddress,
+      userAgent: apiLogs.userAgent,
+      contentUrl: apiLogs.contentUrl,
+      error: apiLogs.error,
+      createdAt: apiLogs.createdAt,
+      tokenName: apiTokens.name,
+      tokenOwner: users.username,
+      token: apiTokens.token,
+    })
+      .from(apiLogs)
+      .leftJoin(apiTokens, eq(apiLogs.tokenId, apiTokens.id))
+      .leftJoin(users, eq(apiTokens.userId, users.id))
       .where(whereClause as any)
       .orderBy(desc(apiLogs.createdAt))
       .limit(limit).offset(offset).all()

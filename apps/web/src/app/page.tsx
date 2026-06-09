@@ -31,22 +31,26 @@ interface Article {
 export const dynamic = 'force-dynamic'
 export const revalidate = 60
 
-async function getHeroSlides(): Promise<HeroSlide[]> {
+async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
   try {
     const baseUrl = typeof window === 'undefined' ? 'http://localhost:4000' : ''
-    const res = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect`, { next: { revalidate: 60 } })
-    if (!res.ok) return []
+    const res = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size`, { next: { revalidate: 60 } })
+    if (!res.ok) return { slides: [], size: 'default' }
     const json = await res.json()
     const heroSlidesValue = json.data?.hero_slides
+    const heroSize = json.data?.hero_size || 'default'
+    let slides: HeroSlide[] = []
     if (heroSlidesValue) {
       try {
-        return JSON.parse(heroSlidesValue)
+        slides = JSON.parse(heroSlidesValue)
       } catch {
-        return []
+        slides = []
       }
     }
-  } catch {}
-  return []
+    return { slides, size: heroSize }
+  } catch {
+    return { slides: [], size: 'default' }
+  }
 }
 
 async function getRecentArticles(): Promise<Article[]> {
@@ -70,7 +74,7 @@ function HeroFallback() {
 }
 
 export default async function HomePage() {
-  const [heroSlides, recentArticles] = await Promise.all([
+  const [{ slides: heroSlides, size: heroSize }, recentArticles] = await Promise.all([
     getHeroSlides(),
     getRecentArticles(),
   ])
@@ -79,7 +83,7 @@ export default async function HomePage() {
     <>
       {/* Hero - 宣传页图片轮播或默认 SVG */}
       <Suspense fallback={<HeroFallback />}>
-        <HeroCarousel slides={heroSlides} />
+        <HeroCarousel slides={heroSlides} size={heroSize as 'default' | 'fullscreen' | 'wide'} />
       </Suspense>
 
       {/* 搜索栏 */}
