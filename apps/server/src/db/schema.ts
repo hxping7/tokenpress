@@ -62,6 +62,7 @@ export const articles = sqliteTable('articles', {
   sectionId: integer('section_id').notNull().references(() => sections.id, { onDelete: 'cascade' }),
   categoryId: integer('category_id').references(() => categories.id),
   status: text('status', { enum: ['draft', 'published', 'archived', 'scheduled', 'pending_review'] }).notNull().default('draft'),
+  viewCount: integer('view_count').notNull().default(0),
   authorId: integer('author_id').notNull().references(() => users.id),
   publishedAt: text('published_at'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
@@ -72,6 +73,7 @@ export const articles = sqliteTable('articles', {
 export const tags = sqliteTable('tags', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
 })
 
 // ===== Article-Tags junction =====

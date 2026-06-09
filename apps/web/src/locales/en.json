@@ -426,7 +426,8 @@
     "noReviews": "No reviews found",
     "previous": "Previous",
     "next": "Next",
-    "page": "Page {page} / {total}"
+    "page": "Page {page} / {total}",
+    "view": "View"
   },
   "ads": {
     "title": "Ad Management",

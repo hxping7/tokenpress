@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'next/navigation'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
@@ -27,6 +28,9 @@ export default function MediaPage() {
   const queryClient = useQueryClient()
   const { token } = useAuthStore()
   const { backendLocale } = useLocaleStore()
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+  const highlightRef = useRef<HTMLDivElement | HTMLTableRowElement>(null)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [displayMode, setDisplayMode] = useState<DisplayMode>('medium')
@@ -135,6 +139,13 @@ export default function MediaPage() {
   const toggleSelect = (id: number) => {
     setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
   }
+
+  // 滚动到高亮的媒体
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [highlightId, mediaData])
 
   const toggleSelectAll = () => {
     if (selectedItems.length === mediaData?.data?.length) {
@@ -292,8 +303,13 @@ export default function MediaPage() {
             <tbody>
               {mediaData?.data?.map((media: Media) => {
                 const IconComponent = isDocument(media.mimeType) ? getDocumentIcon(media.mimeType) : (isVideo(media.mimeType) ? Video : ImageIcon)
+                const isHighlighted = highlightId === String(media.id)
                 return (
-                  <tr key={media.id} className="border-b border-t-border hover:bg-t-bg-secondary/50">
+                  <tr
+                    key={media.id}
+                    ref={isHighlighted ? highlightRef as React.RefObject<HTMLTableRowElement> : undefined}
+                    className={`border-b border-t-border hover:bg-t-bg-secondary/50 ${isHighlighted ? 'bg-t-accent-blue/10 ring-2 ring-t-accent-blue ring-inset' : ''}`}
+                  >
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
@@ -335,8 +351,13 @@ export default function MediaPage() {
         <div className={`grid ${getGridCols(displayMode)} gap-4`}>
           {mediaData?.data?.map((media: Media) => {
             const IconComponent = isDocument(media.mimeType) ? getDocumentIcon(media.mimeType) : (isVideo(media.mimeType) ? Video : ImageIcon)
+            const isHighlighted = highlightId === String(media.id)
             return (
-              <div key={media.id} className="bg-t-bg-primary border border-t-border rounded-xl overflow-hidden group hover:border-t-accent-blue/30 transition-colors">
+              <div
+                key={media.id}
+                ref={isHighlighted ? highlightRef as React.RefObject<HTMLDivElement> : undefined}
+                className={`bg-t-bg-primary border rounded-xl overflow-hidden group hover:border-t-accent-blue/30 transition-colors ${isHighlighted ? 'border-t-accent-blue ring-2 ring-t-accent-blue' : 'border-t-border'}`}
+              >
                 {/* Selection checkbox */}
                 <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                   <input

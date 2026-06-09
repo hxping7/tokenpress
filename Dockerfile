@@ -30,6 +30,7 @@ RUN echo "registry=https://registry.npmmirror.com" > .npmrc && \
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 COPY --from=backend-builder /app/apps/server/dist ./apps/server/dist
+COPY --from=backend-builder /app/apps/server/src/db/defaults ./apps/server/dist/db/defaults
 COPY --from=backend-builder /app/apps/server/package.json ./apps/server/
 COPY --from=backend-builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=backend-builder /app/packages/shared/package.json ./packages/shared/

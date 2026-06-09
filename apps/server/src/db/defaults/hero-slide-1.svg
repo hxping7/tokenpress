@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 540" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1200" y2="540" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#1a1a3a"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="ring1" x1="0" y1="0" x2="1200" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00d4ff" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#00d4ff"/>
+      <stop offset="70%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="text1" x1="200" y1="0" x2="1000" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60c0ff"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#b088ff"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="600" cy="270" r="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="540" fill="url(#bg1)"/>
+  <rect width="1200" height="540" fill="url(#glow1)"/>
+  <g opacity="0.15">
+    <line x1="0" y1="100" x2="1200" y2="100" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="0" y1="200" x2="1200" y2="200" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="0" y1="300" x2="1200" y2="300" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#00d4ff" stroke-width="0.5"/>
+    <line x1="200" y1="0" x2="200" y2="540" stroke="#7c3aed" stroke-width="0.5"/>
+    <line x1="400" y1="0" x2="400" y2="540" stroke="#7c3aed" stroke-width="0.5"/>
+    <line x1="600" y1="0" x2="600" y2="540" stroke="#7c3aed" stroke-width="0.5"/>
+    <line x1="800" y1="0" x2="800" y2="540" stroke="#7c3aed" stroke-width="0.5"/>
+    <line x1="1000" y1="0" x2="1000" y2="540" stroke="#7c3aed" stroke-width="0.5"/>
+  </g>
+  <ellipse cx="600" cy="270" rx="280" ry="180" fill="none" stroke="url(#ring1)" stroke-width="3" opacity="0.8"/>
+  <ellipse cx="600" cy="270" rx="220" ry="140" fill="none" stroke="url(#ring1)" stroke-width="2" opacity="0.5"/>
+  <text x="600" y="260" text-anchor="middle" font-family="system-ui,sans-serif" font-size="72" font-weight="800" fill="url(#text1)">TokenPress</text>
+  <text x="600" y="320" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" font-weight="500" fill="#a0a0c0">Token 力量无限放大</text>
+  <text x="600" y="360" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" font-weight="400" fill="#7080a0">AI 赋能综合内容平台</text>
+</svg>

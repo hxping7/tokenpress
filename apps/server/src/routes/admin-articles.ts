@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { db } from '../db/index.js'
-import { articles, articleTags, tags, categories, sections, users, siteSettings } from '../db/schema.js'
+import { articles, articleTags, tags, categories, sections, users, siteSettings, articleLikes, articleViews, adLogs } from '../db/schema.js'
 import { eq, and, desc, sql, like, inArray } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { generateSlug, extractExcerpt } from '@tokenpress/shared'
@@ -307,7 +307,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
     await db.update(articles).set(updates).where(eq(articles.id, articleId)).run()
 
     if (req.body.tags !== undefined) {
-      await db.delete(articleTags).where(eq(articleTags.articleId, articleId)).run()
+      await db.run(sql`DELETE FROM article_tags WHERE article_id = ${articleId}`)
 
       const tagsList = Array.isArray(req.body.tags) ? req.body.tags : [req.body.tags]
       for (const tagName of tagsList as string[]) {
@@ -368,7 +368,11 @@ router.delete('/:id', async (req: AuthRequest, res) => {
       return res.status(403).json({ success: false, error: 'Cannot delete other users articles' })
     }
 
+    // Delete related records first (order matters for foreign keys)
     await db.delete(articleTags).where(eq(articleTags.articleId, articleId)).run()
+    await db.delete(articleLikes).where(eq(articleLikes.articleId, articleId)).run()
+    await db.delete(articleViews).where(eq(articleViews.articleId, articleId)).run()
+    await db.delete(adLogs).where(eq(adLogs.articleId, articleId)).run()
     await db.delete(articles).where(eq(articles.id, articleId)).run()
 
     revalidateTag('articles')

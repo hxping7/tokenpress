@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { db } from '../db/index.js'
-import { contentReviews } from '../db/schema.js'
+import { contentReviews, articles, media, friendLinks, ads } from '../db/schema.js'
 import { eq, and, desc, sql, count } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { applyReviewResult } from '../lib/contentReview/statusManager.js'
@@ -34,13 +34,53 @@ router.get('/', async (req: AuthRequest, res) => {
       .limit(limit)
       .offset(offset)
 
+    // Enrich with target info (article title, media filename, etc.)
+    const enrichedRows = await Promise.all(
+      rows.map(async (row) => {
+        let targetInfo: { title?: string; filename?: string; name?: string; url?: string } = {}
+        
+        if (row.targetType === 'article' && row.targetId) {
+          const article = await db.select({ title: articles.title, slug: articles.slug })
+            .from(articles)
+            .where(eq(articles.id, row.targetId))
+            .get()
+          if (article) {
+            targetInfo = { title: article.title, url: `/article/${article.slug}` }
+          }
+        } else if (row.targetType === 'media' && row.targetId) {
+          const m = await db.select({ filename: media.originalName, url: media.url })
+            .from(media)
+            .where(eq(media.id, row.targetId))
+            .get()
+          if (m) {
+            targetInfo = { title: m.filename, url: m.url }
+          }
+        } else if (row.targetType === 'friend_link' && row.targetId) {
+          const fl = await db.select({ name: friendLinks.name, url: friendLinks.url })
+            .from(friendLinks)
+            .where(eq(friendLinks.id, row.targetId))
+            .get()
+          if (fl) {
+            targetInfo = { title: fl.name, url: fl.url }
+          }
+        } else if (row.targetType === 'ad' && row.targetId) {
+          const ad = await db.select({ title: ads.title }).from(ads).where(eq(ads.id, row.targetId)).get()
+          if (ad) {
+            targetInfo = { title: ad.title }
+          }
+        }
+
+        return { ...row, targetInfo }
+      })
+    )
+
     const totalResult = await db.select({ count: count() })
       .from(contentReviews)
       .where(where)
 
     res.json({
       success: true,
-      data: rows,
+      data: enrichedRows,
       pagination: {
         page,
         limit,
@@ -79,12 +119,12 @@ router.get('/stats', async (req: AuthRequest, res) => {
     const [pending, approvedToday, rejectedToday, total] = await Promise.all([
       db.select({ count: count() }).from(contentReviews).where(eq(contentReviews.finalVerdict, 'pending')),
       db.select({ count: count() }).from(contentReviews).where(and(
-        eq(contentReviews.manualStatus, 'approved'),
-        sql`date(${contentReviews.manualReviewedAt}) = ${today}`,
+        eq(contentReviews.finalVerdict, 'pass'),
+        sql`(date(${contentReviews.manualReviewedAt}) = ${today} OR date(${contentReviews.updatedAt}) = ${today})`,
       )),
       db.select({ count: count() }).from(contentReviews).where(and(
-        eq(contentReviews.manualStatus, 'rejected'),
-        sql`date(${contentReviews.manualReviewedAt}) = ${today}`,
+        eq(contentReviews.finalVerdict, 'reject'),
+        sql`(date(${contentReviews.manualReviewedAt}) = ${today} OR date(${contentReviews.updatedAt}) = ${today})`,
       )),
       db.select({ count: count() }).from(contentReviews),
     ])

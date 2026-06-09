@@ -1,32 +1,11 @@
 import 'dotenv/config'
 
 import express from 'express'
+import path from 'node:path'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import logger from './utils/logger.js'
-import { migrate } from './db/migrations/0001_initial.js'
-import { migrate as migrateSections } from './db/migrations/0002_sections.js'
-import { migrate as migrateExternalUrl } from './db/migrations/0003_external_url.js'
-import { migrate as migrateFriendLinks } from './db/migrations/0004_friend_links.js'
-import { migrate as migrateSiteSettings } from './db/migrations/0005_site_settings.js'
-import { migrate as migrateSeparateLocales } from './db/migrations/0006_separate_locales.js'
-import { migrate as migrateLoginProtect } from './db/migrations/0007_login_protect.js'
-import { migrate as migrateBackups } from './db/migrations/0008_backups.js'
-import { migrate as migrateFts5 } from './db/migrations/0009_fts5.js'
-import { migrate as migrateApiLogsContentUrl } from './db/migrations/0010_api_logs_content_url.js'
-import { migrate as migrateThreeLevelRoles } from './db/migrations/0011_three_level_roles.js'
-import { migrate as migrateAuditLogs } from './db/migrations/0012_audit_logs.js'
-import { migrate as migrateArticleLikesViews } from './db/migrations/0013_article_likes_views.js'
-import { migrate as migrateScheduledArticles } from './db/migrations/0014_scheduled_articles.js'
-import { migrate as migrateContentReviews } from './db/migrations/0015_content_reviews.js'
-import { migrate as migrateSensitiveKeywords } from './db/migrations/0016_sensitive_keywords.js'
-import { migrate as migrateMediaReviewFields } from './db/migrations/0017_media_review_fields.js'
-import { migrate as migrateAds } from './db/migrations/0018_ads.js'
-import { migrate as migrateArticleStatus } from './db/migrations/0019_article_status_scheduled.js'
-import { migrate as migratePendingReview } from './db/migrations/0020_article_status_pending_review.js'
-import { migrate as migrateContentReviewSetting } from './db/migrations/0021_content_review_setting.js'
-import { migrate as migrateReviewCloudProvider } from './db/migrations/0022_review_cloud_provider.js'
-import { migrate as migrateReviewProviderKeys } from './db/migrations/0023_review_provider_keys.js'
+import { migrate } from './db/migrations/0000_initial.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -35,7 +14,7 @@ import { db } from './db/index.js'
 import { articles } from './db/schema.js'
 import { eq, and, lte, sql } from 'drizzle-orm'
 import { revalidateTag } from './utils/revalidate.js'
-import authRoutes from './routes/auth.js'
+import authRoutes, { initLoginCleanup } from './routes/auth.js'
 import userRoutes from './routes/users.js'
 import articleRoutes from './routes/articles.js'
 import adminArticleRoutes from './routes/admin-articles.js'
@@ -48,7 +27,7 @@ import tokenRoutes from './routes/tokens.js'
 import mediaRoutes from './routes/media.js'
 import statsRoutes from './routes/stats.js'
 import logsRoutes from './routes/logs.js'
-import backupRoutes from './routes/backup.js'
+import backupRoutes, { initBackupTasks } from './routes/backup.js'
 import searchRoutes from './routes/search.js'
 import tagsRoutes from './routes/tags.js'
 import articleInteractionRoutes from './routes/article-interactions.js'
@@ -97,6 +76,10 @@ app.use(antiScrapingMiddleware)
 
 // 图片防盗链
 app.use(imageHotlinkProtection)
+
+// 静态文件：uploads 目录
+const UPLOADS_DIR = path.resolve(process.cwd(), 'data', 'uploads')
+app.use('/uploads', express.static(UPLOADS_DIR))
 
 app.use(express.json({ limit: '10mb' }))
 
@@ -211,28 +194,13 @@ app.use(errorHandler)
 async function start() {
   logger.info('🔄 Running database migration...')
   await migrate()
-  await migrateSections()
-  await migrateExternalUrl()
-  await migrateFriendLinks()
-  await migrateSiteSettings()
-  await migrateLoginProtect()
-  await migrateBackups()
-  await migrateFts5()
-  await migrateApiLogsContentUrl()
-  await migrateThreeLevelRoles()
-  await migrateAuditLogs()
-  await migrateArticleLikesViews()
-  await migrateScheduledArticles()
-  await migrateContentReviews()
-  await migrateSensitiveKeywords()
-  await migrateMediaReviewFields()
-  await migrateAds()
-  await migrateArticleStatus()
-  await migratePendingReview()
-  await migrateContentReviewSetting()
-  await migrateReviewCloudProvider()
-  await migrateReviewProviderKeys()
   logger.info('✅ Database ready')
+
+  // Initialize login cleanup task
+  initLoginCleanup()
+
+  // Initialize backup tasks
+  initBackupTasks()
 
   // Initialize content review provider (DB setting overrides env)
   const providerConfig = loadProviderConfigFromEnv()
@@ -328,7 +296,8 @@ export { app }
 export { start }
 
 // Only auto-start if this is the main module
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}`) {
+const mainModulePath = process.argv[1]?.replace(/\\/g, '/')
+if (import.meta.url === `file://${mainModulePath}` || import.meta.url === `file:///${mainModulePath}`) {
   start().catch((err) => {
     logger.error({ err }, '❌ Failed to start server')
     process.exit(1)

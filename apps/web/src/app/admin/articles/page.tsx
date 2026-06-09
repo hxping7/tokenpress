@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'next/navigation'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
@@ -58,6 +59,9 @@ export default function ArticlesPage() {
   const queryClient = useQueryClient()
   const { token } = useAuthStore()
   const { backendLocale } = useLocaleStore()
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+  const highlightRef = useRef<HTMLTableRowElement>(null)
   const [search, setSearch] = useState('')
   const [section, setSection] = useState('')
   const [status, setStatus] = useState('')
@@ -126,6 +130,13 @@ export default function ArticlesPage() {
     mutationFn: (id: number) => api.deleteArticle(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-articles'] }),
   })
+
+  // 滚动到高亮的文章
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [highlightId, articlesData])
 
   const resetEditor = () => {
     setTitle('')
@@ -341,8 +352,14 @@ export default function ArticlesPage() {
               ) : articlesData?.data?.length === 0 ? (
                 <tr><td colSpan={5} className="px-6 py-12 text-center text-t-text-secondary">{t('admin.noArticles', backendLocale)}</td></tr>
               ) : (
-                articlesData?.data?.map((article: Article) => (
-                  <tr key={article.id} className="hover:bg-t-hover transition-colors">
+                articlesData?.data?.map((article: Article) => {
+                  const isHighlighted = highlightId === String(article.id)
+                  return (
+                  <tr
+                    key={article.id}
+                    ref={isHighlighted ? highlightRef : undefined}
+                    className={`hover:bg-t-hover transition-colors ${isHighlighted ? 'bg-t-accent-blue/10 ring-2 ring-t-accent-blue ring-inset' : ''}`}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {article.coverImage ? (
@@ -407,7 +424,8 @@ export default function ArticlesPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  )
+                })
               )}
             </tbody>
           </table>

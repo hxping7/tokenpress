@@ -56,9 +56,11 @@ async function cleanupExpiredData() {
   }
 }
 
-// 启动时清理一次，然后每小时清理一次
-cleanupExpiredData()
-setInterval(cleanupExpiredData, 60 * 60 * 1000)
+// 初始化定时清理任务
+export function initLoginCleanup() {
+  cleanupExpiredData()
+  setInterval(cleanupExpiredData, 60 * 60 * 1000)
+}
 
 // GET /api/v1/auth/captcha - 获取验证码（独立端点）
 router.get('/captcha', (_req, res) => {

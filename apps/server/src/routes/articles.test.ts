@@ -16,21 +16,8 @@ beforeAll(async () => {
     fs.mkdirSync(TEST_DATA_DIR, { recursive: true })
   }
 
-  const { migrate } = await import('../db/migrations/0001_initial.js')
-  const { migrate: migrateSections } = await import('../db/migrations/0002_sections.js')
-  const { migrate: migrateExternalUrl } = await import('../db/migrations/0003_external_url.js')
-  const { migrate: migrateFriendLinks } = await import('../db/migrations/0004_friend_links.js')
-  const { migrate: migrateSiteSettings } = await import('../db/migrations/0005_site_settings.js')
-  const { migrate: migrateLoginProtect } = await import('../db/migrations/0007_login_protect.js')
-  const { migrate: migrateBackups } = await import('../db/migrations/0008_backups.js')
-
+  const { migrate } = await import('../db/migrations/0000_initial.js')
   await migrate()
-  await migrateSections()
-  await migrateExternalUrl()
-  await migrateFriendLinks()
-  await migrateSiteSettings()
-  await migrateLoginProtect()
-  await migrateBackups()
 }, 30000)
 
 afterAll(async () => {

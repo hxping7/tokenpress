@@ -6,30 +6,37 @@ import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
-import { Check, X, RefreshCw, Shield, Clock, AlertTriangle, Eye, Filter } from 'lucide-react'
+import { Check, X, RefreshCw, Shield, Clock, AlertTriangle, Eye, Filter, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 
 interface ContentReview {
   id: number
-  target_type: string
-  target_id: number
+  targetType: string
+  targetId: number
   version: number
-  content_snapshot: string | null
-  image_urls_json: string | null
-  local_scan_status: string
-  local_matched_words: string | null
-  cloud_provider: string | null
-  cloud_text_status: string
-  cloud_image_status: string
-  cloud_label: string | null
-  cloud_score: number | null
-  cloud_detail_json: string | null
-  manual_status: string
-  manual_reviewer: number | null
-  manual_reviewed_at: string | null
-  manual_note: string | null
-  final_verdict: string
-  created_at: string
-  updated_at: string
+  contentSnapshot: string | null
+  imageUrlsJson: string | null
+  localScanStatus: string
+  localMatchedWords: string | null
+  cloudProvider: string | null
+  cloudTextStatus: string
+  cloudImageStatus: string
+  cloudLabel: string | null
+  cloudScore: number | null
+  cloudDetailJson: string | null
+  manualStatus: string
+  manualReviewer: number | null
+  manualReviewedAt: string | null
+  manualNote: string | null
+  finalVerdict: string
+  createdAt: string
+  updatedAt: string
+  targetInfo?: {
+    title?: string
+    filename?: string
+    name?: string
+    url?: string
+  }
 }
 
 const typeKeyMap: Record<string, string> = {
@@ -105,8 +112,8 @@ export default function ReviewsPage() {
   }
 
   function getMatchedWords(review: ContentReview): string[] {
-    if (!review.local_matched_words) return []
-    try { return JSON.parse(review.local_matched_words) } catch { return [] }
+    if (!review.localMatchedWords) return []
+    try { return JSON.parse(review.localMatchedWords) } catch { return [] }
   }
 
   return (
@@ -171,24 +178,59 @@ export default function ReviewsPage() {
         <div className="text-center py-12 text-t-text-secondary">{t('reviews.noReviews', locale)}</div>
       ) : (
         <div className="space-y-3">
-          {reviews.map(review => {
+          {reviews.filter(Boolean).map(review => {
             const matchedWords = getMatchedWords(review)
+            const targetType = review.targetType || 'unknown'
+            const verdict = review.finalVerdict || 'pending'
             return (
               <div key={review.id} className="bg-t-bg-secondary rounded-lg border border-t-border p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
+                    {/* Target Info Header */}
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-xs px-2 py-0.5 rounded bg-t-accent-blue/20 text-t-accent-blue font-medium">
-                        {t(typeKeyMap[review.target_type] || review.target_type, locale)}
+                        {t(typeKeyMap[targetType] || targetType, locale)}
                       </span>
-                      <span className="text-xs text-t-text-secondary">#{review.target_id}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded ${verdictColors[review.final_verdict] || ''}`}>
-                        {t(`reviews.${review.final_verdict === 'pass' ? 'passed' : review.final_verdict === 'reject' ? 'rejected' : 'pending'}`, locale)}
+                      <span className="text-xs text-t-text-secondary">#{review.targetId ?? '-'}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${verdictColors[verdict] || ''}`}>
+                        {t(`reviews.${verdict === 'pass' ? 'passed' : verdict === 'reject' ? 'rejected' : 'pending'}`, locale)}
                       </span>
-                      {review.cloud_provider && (
+                      {review.cloudProvider && (
                         <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400">
-                          {review.cloud_provider}
+                          {review.cloudProvider}
                         </span>
+                      )}
+                      {review.targetInfo?.title && (
+                        <span className="text-sm font-medium text-t-text-primary truncate max-w-md">
+                          {review.targetInfo.title}
+                        </span>
+                      )}
+                      {targetType === 'article' && (
+                        <Link
+                          href={`/admin/articles?highlight=${review.targetId}`}
+                          className="flex items-center gap-1 text-xs text-t-accent-blue hover:text-t-accent-blue/80"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {t('reviews.view', locale)}
+                        </Link>
+                      )}
+                      {targetType === 'media' && (
+                        <Link
+                          href={`/admin/media?highlight=${review.targetId}`}
+                          className="flex items-center gap-1 text-xs text-t-accent-blue hover:text-t-accent-blue/80"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {t('reviews.view', locale)}
+                        </Link>
+                      )}
+                      {targetType === 'friend_link' && (
+                        <Link
+                          href={`/admin/settings?tab=links`}
+                          className="flex items-center gap-1 text-xs text-t-accent-blue hover:text-t-accent-blue/80"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {t('reviews.view', locale)}
+                        </Link>
                       )}
                     </div>
 
@@ -196,10 +238,10 @@ export default function ReviewsPage() {
                     <div className="flex items-center gap-4 text-sm text-t-text-secondary mb-1">
                       <span className="flex items-center gap-1">
                         <Eye className="w-3 h-3" />
-                        {t('reviews.local', locale)}: {review.local_scan_status}
+                        {t('reviews.local', locale)}: {review.localScanStatus ?? '-'}
                       </span>
-                      <span>{t('reviews.text', locale)}: {review.cloud_text_status}</span>
-                      <span>{t('reviews.image', locale)}: {review.cloud_image_status}</span>
+                      <span>{t('reviews.text', locale)}: {review.cloudTextStatus ?? '-'}</span>
+                      <span>{t('reviews.image', locale)}: {review.cloudImageStatus ?? '-'}</span>
                     </div>
 
                     {/* Matched keywords */}
@@ -216,35 +258,35 @@ export default function ReviewsPage() {
                     )}
 
                     {/* Cloud result */}
-                    {review.cloud_label && (
+                    {review.cloudLabel && (
                       <div className="text-xs text-t-text-secondary mt-1">
-                        {t('reviews.cloud', locale)}: {review.cloud_label}
-                        {review.cloud_score != null && ` (${t('reviews.score', locale)}: ${review.cloud_score})`}
+                        {t('reviews.cloud', locale)}: {review.cloudLabel}
+                        {review.cloudScore != null && ` (${t('reviews.score', locale)}: ${review.cloudScore})`}
                       </div>
                     )}
 
                     {/* Content snapshot */}
-                    {review.content_snapshot && (
+                    {review.contentSnapshot && (
                       <div className="mt-2 text-xs text-t-text-secondary bg-t-bg-primary rounded p-2 max-h-20 overflow-hidden">
-                        {review.content_snapshot.slice(0, 200)}
-                        {review.content_snapshot.length > 200 ? '...' : ''}
+                        {review.contentSnapshot.slice(0, 200)}
+                        {review.contentSnapshot.length > 200 ? '...' : ''}
                       </div>
                     )}
 
                     <div className="flex items-center gap-2 mt-2 text-xs text-t-text-secondary">
                       <Clock className="w-3 h-3" />
-                      {formatTime(review.created_at)}
-                      {review.manual_reviewed_at && (
-                        <span className="ml-2">{t('reviews.reviewed', locale)}: {formatTime(review.manual_reviewed_at)}</span>
+                      {review.createdAt ? formatTime(review.createdAt) : '-'}
+                      {review.manualReviewedAt && (
+                        <span className="ml-2">{t('reviews.reviewed', locale)}: {formatTime(review.manualReviewedAt)}</span>
                       )}
-                      {review.manual_note && (
-                        <span className="ml-2 text-t-text-primary">{t('reviews.note', locale)}: {review.manual_note}</span>
+                      {review.manualNote && (
+                        <span className="ml-2 text-t-text-primary">{t('reviews.note', locale)}: {review.manualNote}</span>
                       )}
                     </div>
                   </div>
 
                   {/* Actions */}
-                  {review.final_verdict === 'pending' && (
+                  {verdict === 'pending' && (
                     <div className="flex items-center gap-2 ml-4">
                       <button
                         onClick={() => approveMutation.mutate(review.id)}
@@ -278,7 +320,7 @@ export default function ReviewsPage() {
                 </div>
 
                 {/* Reject note input */}
-                {review.final_verdict === 'pending' && (
+                {verdict === 'pending' && (
                   <div className="mt-2">
                     <input
                       type="text"

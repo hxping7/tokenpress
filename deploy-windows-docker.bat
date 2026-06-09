@@ -89,19 +89,19 @@ echo.
 echo [3/3] Waiting for services...
 echo.
 
-REM Wait for backend health check
+REM Wait for backend health check (max 60s)
 set RETRY=0
 :wait_loop
 timeout /t 2 /nobreak >nul
-docker inspect --format={{.State.Health.Status}} token00-backend 2>nul | findstr "healthy" >nul
+docker inspect --format={{.State.Health.Status}} tokenpress-backend 2>nul | findstr "healthy" >nul
 if errorlevel 1 (
     set /a RETRY+=1
-    if !RETRY! LSS 15 (
-        echo Waiting for backend... (!RETRY!/15)
+    if !RETRY! LSS 30 (
+        echo Waiting for backend... (!RETRY!/30)
         goto wait_loop
     )
-    echo [ERROR] Backend not healthy
-    docker logs token00-backend --tail 20
+    echo [ERROR] Backend not healthy after 60s
+    docker logs tokenpress-backend --tail 30
     pause
     exit /b 1
 )
@@ -130,6 +130,6 @@ echo   HTTPS:  https://localhost:%HTTPS_PORT% (need SSL)
 echo   Login:  admin / admin123 (CHANGE PASSWORD ON FIRST LOGIN!)
 echo.
 echo   Stop:  docker-compose down
-echo   Logs:  docker logs token00-backend
+echo   Logs:  docker logs tokenpress-backend
 echo ========================================
 pause

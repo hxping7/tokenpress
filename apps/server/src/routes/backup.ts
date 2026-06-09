@@ -655,8 +655,10 @@ async function cleanupPendingBackups() {
   }
 }
 
-// 启动时初始化定时任务
-startAutoBackup().catch(console.error)
-cleanupPendingBackups().catch(console.error)
+// 初始化备份任务
+export function initBackupTasks() {
+  startAutoBackup().catch(console.error)
+  cleanupPendingBackups().catch(console.error)
+}
 
 export default router

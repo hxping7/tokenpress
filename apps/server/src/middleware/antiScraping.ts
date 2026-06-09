@@ -110,6 +110,7 @@ export function imageHotlinkProtection(
     process.env.FRONTEND_URL,
     'token00.com',
     'www.token00.com',
+    'localhost',
   ].filter((d): d is string => Boolean(d))
 
   // 允许空 referer（直接访问、API 调用）
