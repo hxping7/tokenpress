@@ -2,9 +2,10 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import rehypeShiki from '@shikijs/rehype'
+import rehypePrism from 'rehype-prism-plus'
 import { useState, useCallback, useMemo } from 'react'
 import { Check, Copy } from 'lucide-react'
+import 'prismjs/themes/prism-tomorrow.css'
 
 function generateHeadingId(text: string): string {
   return text
@@ -127,9 +128,7 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     ">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[
-          [rehypeShiki, { theme: 'github-dark' }]
-        ]}
+        rehypePlugins={[rehypePrism]}
         components={{
           h2({ children }) {
             const text = String(children).replace(/[*_`]/g, '').trim()
