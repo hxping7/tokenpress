@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@shikijs/rehype": "^4.2.0",
     "@tanstack/react-query": "^5.62.0",
     "@tokenpress/shared": "workspace:*",
     "class-variance-authority": "^0.7.1",

@@ -2,8 +2,7 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeRaw from 'rehype-raw'
+import rehypeShiki from '@shikijs/rehype'
 import { useState, useCallback, useMemo } from 'react'
 import { Check, Copy } from 'lucide-react'
 
@@ -128,7 +127,9 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     ">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight, rehypeRaw]}
+        rehypePlugins={[
+          [rehypeShiki, { theme: 'github-dark' }]
+        ]}
         components={{
           h2({ children }) {
             const text = String(children).replace(/[*_`]/g, '').trim()
