@@ -12,4 +12,4 @@ HTTPS_PORT=8443
 JWT_SECRET=your-jwt-secret-change-me
 
 # Optional
-SITE_URL=
+SITE_URL=https://www.yourdomain.com

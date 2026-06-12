@@ -1,41 +1,80 @@
 # TokenPress AI Publish API Reference
 
-## 认证
+## Agent Quick Reference
 
-所有请求 Header:
-```
-Authorization: Bearer t00_sk_xxxxx
+| 操作 | 方法 | URL 路径 | 必需权限 |
+|------|------|---------|----------|
+| 发布文章 | `POST` | `/api/v1/ai/publish` | `article:write` |
+| 上传媒体 | `POST` | `/api/v1/media/ai` | `media:upload` |
+| 文章列表 | `GET` | `/api/v1/ai/articles` | 需 Token（无特定权限） |
+| 删除文章 | `DELETE` | `/api/v1/ai/articles/:slug` | `content:delete` |
+| 板块列表 | `GET` | `/api/v1/sections` | — |
+| 分类列表 | `GET` | `/api/v1/categories` | — |
+| 标签列表 | `GET` | `/api/v1/tags` | — |
+| 系统设置 | `GET` / `PUT` | `/api/v1/site-settings` | 需 Token / PUT 需 `settings:write` |
+
+**Base URL:** `{API_BASE}/api/v1`
+**Auth Header:** `Authorization: Bearer {TOKEN}`（Token 格式：`t00_sk_` 开头）
+**限流:** 10次/分钟（AI 发布端点）、100次/分钟（全局）
+**Content-Type:** 所有 POST/PUT 请求 `application/json; charset=utf-8`
+
+---
+
+## 统一响应格式
+
+### 成功响应
+
+```json
+{ "success": true, "data": { ... }, "message": "操作成功描述" }
 ```
 
-## 基础 URL
+### 错误响应（所有接口统一）
 
-```
-https://www.yourdomain.com/api/v1
+```json
+{
+  "success": false,
+  "error": "<机器可读的错误码字符串>",
+  "detail": "<人类可读的详细原因>",
+  "hint": "<修复建议>"
+}
 ```
 
 ---
 
-## 接口
+## 发布文章
 
-### POST /api/v1/ai/publish — 发布文章
+**POST** `/api/v1/ai/publish`
 
-创建或更新文章（根据 slug 判断是创建还是更新）。
+创建新文章或更新已有文章（根据 slug 判断：相同 slug = 更新，不同/缺失 = 新建）。
 
-**请求体:**
+**请求体：**
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| title | string | Y | 文章标题，支持 HTML 格式化 |
-| content | string | Y | Markdown 正文 |
-| section | string | Y | 板块 slug (blog/ai_coding/ai_works/token_plan) |
-| category | string | N | 分类 slug 或名称 |
-| tags | string[] | N | 标签数组 |
-| coverImageUrl | string | N | 封面图 URL |
-| status | string | N | draft 或 published，默认 draft |
-| slug | string | N | 自定义 URL slug |
-| publishedAt | string | N | ISO 8601 发布时间 |
+```json
+{
+  "title": "文章标题（支持 <strong>HTML</strong>）",
+  "content": "# Markdown 内容",
+  "section": "blog",
+  "category": "分类slug或名称",
+  "tags": ["标签1", "标签2"],
+  "coverImageUrl": "https://example.com/cover.jpg",
+  "status": "published",
+  "slug": "custom-slug",
+  "publishedAt": "2024-01-15T10:00:00Z"
+}
+```
 
-**响应:**
+**必须参数：** `title`、`content`、`section`
+**常用板块 slug：** `blog`、`ai_coding`、`ai_works`、`token_plan`、`claw`
+
+**关于 `status` 字段：**
+
+- `draft` — 草稿
+- `published` — 发布（如果网站开启了内容审查，会先进入 `pending_review`，审核通过后自动变为 `published`）
+- `archived` — 归档
+
+响应中的 `data.status` 反映实际存储状态，可能与提交值不同。
+
+**成功响应（创建）：**
 
 ```json
 {
@@ -43,67 +82,90 @@ https://www.yourdomain.com/api/v1
   "data": {
     "id": 123,
     "slug": "article-slug",
-    "url": "https://www.yourdomain.com/blog/article-slug",
+    "url": "https://your-domain.com/blog/article-slug",
     "status": "published",
     "action": "created"
   }
 }
 ```
 
----
-
-### GET /api/v1/ai/articles — 获取文章列表
-
-| 参数 | 类型 | 默认 | 说明 |
-|------|------|------|------|
-| page | number | 1 | 页码 |
-| limit | number | 20 | 每页数量 (max 50) |
-| section | string | - | 按板块筛选 |
+> `data.action` — `created`（新建）或 `updated`（更新）
+> `data.status` — 实际存储状态。若网站开启了内容审查且提交 `published`，可能返回 `pending_review`
 
 ---
 
-### DELETE /api/v1/ai/articles/:slug — 删除文章
+## 上传媒体
 
-需 `content:delete` 权限。
+**POST** `/api/v1/media/ai`  需 `media:upload` 权限。
+
+### Base64 上传（本地文件）
+
+```json
+{
+  "file": "<纯 base64 字符串，无 data:xxx;base64, 前缀>",
+  "filename": "photo.jpg",
+  "mimeType": "image/jpeg",
+  "section": "blog"
+}
+```
+
+### URL 引用上传（外部文件 → 媒体库）
+
+```json
+{
+  "url": "https://example.com/image.png",
+  "filename": "saved-name.png",
+  "mimeType": "image/png"
+}
+```
+
+**注意：** SVG/MD/TXT/LOG 文件以文本方式发送（非 base64），其余用 base64。
+
+### 成功响应（HTTP 201）
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 42,
+    "filename": "photo-mq6ite5dl0mj.jpg",
+    "originalName": "photo.jpg",
+    "mimeType": "image/jpeg",
+    "size": 12345,
+    "url": "/api/v1/media/files/uploads/blog/photo-mq6ite5dl0mj.jpg",
+    "fullUrl": "https://your-domain.com/api/v1/media/files/uploads/blog/photo-mq6ite5dl0mj.jpg",
+    "thumbnailUrl": null
+  }
+}
+```
+
+> `data.url` 用于填入 `coverImageUrl` 或 `content` 的 `![](url)`
+> `data.fullUrl` 用于验证可访问性
+
+### 支持的文件类型与大小限制
+
+| 类别 | 扩展名 | 大小限制 |
+|------|--------|----------|
+| 图片 | jpg, jpeg, png, gif, webp, svg | **10 MB** |
+| 视频 | mp4, webm, ogv, mov | **200 MB** |
+| 音频 | mp3, wav, ogg, flac, m4a | **50 MB** |
+| 文档 | pdf, md, txt, log, xlsx, doc, docx, ppt, pptx | **50 MB** |
 
 ---
 
-### POST /api/v1/media/ai — 上传媒体
+## 获取文章列表
 
-需 `media:upload` 权限。
+**GET** `/api/v1/ai/articles?page=1&limit=20&section=blog`
 
-**Base64 上传:**
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| file | string | Y* | Base64 编码文件 |
-| filename | string | Y | 文件名 |
-| mimeType | string | Y | MIME 类型 |
-| section | string | N | 存储子目录 |
-
-**URL 引用上传:**
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| url | string | Y* | 外部文件 URL |
-| filename | string | Y | 文件名 |
-| mimeType | string | Y | MIME 类型 |
-
-**支持类型:** image/jpeg, image/png, image/gif, image/webp, image/svg+xml, video/mp4, video/webm, video/quicktime
+> 仅返回 `status = published` 的文章。`pending_review` / `draft` 状态的文章不在此列表中。
 
 ---
 
-### GET /api/v1/sections — 板块列表（无需认证）
+## 删除文章
 
-### GET /api/v1/sections/:id/categories — 板块分类（无需认证）
+**DELETE** `/api/v1/ai/articles/:slug?deleteMedia=true`
 
-### GET /api/v1/categories?section=blog — 分类列表（无需认证）
-
-### GET /api/v1/tags?limit=20 — 热门标签（无需认证）
-
-### GET /api/v1/site-settings — 获取系统设置
-
-### PUT /api/v1/site-settings — 更新系统设置（需 settings:write 权限）
+`deleteMedia=true` 时同时删除关联的媒体文件。
 
 ---
 
@@ -111,32 +173,59 @@ https://www.yourdomain.com/api/v1
 
 | 权限 | 说明 |
 |------|------|
-| article:write | 发布文章 |
-| media:upload | 上传媒体 |
-| work:write | 发布 AI 作品 |
-| content:delete | 删除文章 |
-| settings:write | 修改系统设置 |
+| `article:write` | 发布/更新文章（必需） |
+| `media:upload` | 上传媒体文件（有图片时必需） |
+| `content:delete` | 删除文章 |
+| `settings:write` | 修改系统设置 |
 
-## 错误码
+---
 
-| 状态码 | 说明 |
-|--------|------|
-| 200 | 成功 |
-| 201 | 创建成功 |
-| 400 | 参数错误 |
-| 401 | 未授权 |
-| 403 | 权限不足 |
-| 404 | 不存在 |
-| 500 | 服务器错误 |
+## 健康检查
 
-## 限流
+**GET** `/api/v1/health`
 
-10 次/分钟
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "timestamp": "2024-01-01T00:00:00.000Z",
+    "version": "1.0.0"
+  }
+}
+```
+
+---
+
+## 错误码速查
+
+| error 值 | HTTP | Agent 应对 |
+|----------|------|-----------|
+| `Required fields: xxx` | 400 | 补全参数后重试 |
+| `Invalid section "xxx"` | 400 | 确认 section 有效值：`token_plan`/`ai_coding`/`ai_works`/`blog`/`claw` |
+| `Invalid status "xxx"` | 400 | status 只能为 `draft`/`published`/`archived` |
+| `File type xxx is not allowed` | 400 | 检查扩展名→MIME映射 |
+| `File too large. Max xxMB` | 400 | 图片≤10MB 视频≤200MB 文档≤50MB |
+| `Invalid base64 data` | 400 | 检查是否包含 `data:...;base64,` 前缀（应去掉） |
+| `Missing API token` / `Invalid API token format` | 401 | 检查 Token 是否以 `t00_sk_` 开头 |
+| `API token not found` | 401 | Token 不存在，检查是否复制完整 |
+| `API token has been revoked` | 401 | Token 已被撤销，需重新创建 |
+| `API token has expired` | 401 | Token 已过期，需重新创建 |
+| `Missing required permission: xxx` | 403 | 提示用户为 Token 添加该权限 |
+| `Cannot update/delete articles owned by other users` | 403 | user 角色只能操作自己的文章 |
+| `Article not found` | 404 | slug 对应的文章不存在 |
+| `Too many publish requests` | 429 | 限流 10次/分钟，稍后重试 |
+| `Database write failed` | 500 | 稍后重试 |
+
+---
 
 ## 标题 HTML 格式化
 
-标题支持 HTML 标签:
-- `<strong>加粗</strong>`
-- `<span style="color:#60c0ff">蓝色</span>`
+支持 HTML 标签实现视觉增强：
 
-可用颜色: #60c0ff(蓝), #7c3aed(紫), #10b981(绿), #f59e0b(橙), #ef4444(红), #ec4899(粉)
+```json
+{ "title": "<strong>加粗标题</strong>" }
+{ "title": "<span style=\"color:#60c0ff\">蓝色标题</span>" }
+```
+
+**可用颜色：** `#60c0ff`(蓝) `#7c3aed`(紫) `#10b981`(绿) `#f59e0b`(橙) `#ef4444`(红) `#ec4899`(粉)

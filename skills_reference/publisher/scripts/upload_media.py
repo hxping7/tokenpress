@@ -2,11 +2,13 @@
 """
 Token00 媒体上传脚本
 
-上传本地图片/视频文件，或通过 URL 引用外部文件到媒体库。
+上传本地图片/视频/音频/文档文件，或通过 URL 引用外部文件到媒体库。
 
 用法:
   python upload_media.py path/to/image.png --section blog
   python upload_media.py --url https://example.com/img.png --filename img.png
+  python upload_media.py path/to/report.pdf --section blog
+  python upload_media.py path/to/demo.mp4 --section blog
   python upload_media.py --url https://example.com/img.png --token t00_sk_xxx --api-base https://x.com/api/v1
 """
 
@@ -18,15 +20,23 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import resolve_config
-from util import api_request, upload_local_image, SUPPORTED_TYPES
+from util import api_request, upload_local_file, SUPPORTED_TYPES, normalize_media_url
 
 
 def upload_url(url: str, filename: str, token: str, api_base: str, mime: str = None) -> dict:
     if not mime:
         ext = Path(filename).suffix.lower()
-        mime = SUPPORTED_TYPES.get(ext, "image/png")
+        mime = SUPPORTED_TYPES.get(ext, "application/octet-stream")
     payload = {"url": url, "filename": filename, "mimeType": mime}
-    return api_request("POST", f"{api_base}/media/ai", token, payload)
+    result = api_request("POST", f"{api_base}/media/ai", token, payload)
+    if result.get("success"):
+        data = result.get("data", {})
+        if data.get("url"):
+            data["url"] = normalize_media_url(api_base, data["url"])
+        if data.get("fullUrl"):
+            data["fullUrl"] = normalize_media_url(api_base, data["fullUrl"])
+        result["data"] = data
+    return result
 
 
 def main():
@@ -56,7 +66,7 @@ def main():
     print("=" * 50)
 
     if args.file:
-        result = upload_local_image(args.file, token, api_base, args.section)
+        result = upload_local_file(args.file, token, api_base, args.section)
     else:
         if not args.filename:
             args.filename = args.url.split("/")[-1].split("?")[0] or "unknown"
@@ -66,10 +76,18 @@ def main():
 
     if result.get("success"):
         data = result.get("data", {})
-        print(f"\nUploaded: {data.get('url', '-')}")
+        url = data.get("url", data.get("fullUrl", "-"))
+        print(f"\nUploaded: {url}")
         sys.exit(0)
     else:
-        print(f"\nError: {result.get('error', 'Unknown')}")
+        err = result.get("error", "Unknown")
+        detail = result.get("detail", "")
+        hint = result.get("hint", "")
+        print(f"\nError: {err}")
+        if detail:
+            print(f"Detail: {detail}")
+        if hint:
+            print(f"Hint: {hint}")
         sys.exit(1)
 
 

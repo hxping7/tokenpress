@@ -2,7 +2,7 @@ import { Router } from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
 import { db } from '../db/index.js'
-import { articles, articleTags, tags, categories, sections, media, articleLikes, articleViews, adLogs, users } from '../db/schema.js'
+import { articles, articleTags, tags, categories, sections, media, articleLikes, articleViews, adLogs, users, siteSettings } from '../db/schema.js'
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm'
 import { apiTokenAuth, requirePermission, type ApiAuthRequest } from '../middleware/apiToken.js'
 import { generateSlug, extractExcerpt } from '@tokenpress/shared'
@@ -127,12 +127,18 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
     }
     const sectionId = section.id
 
-    // Determine status — published articles go through review first
+    // Determine status — check if content review is enabled
     const requestedStatus: ContentStatus = status || 'draft'
     if (!['draft', 'published', 'archived'].includes(requestedStatus)) {
       return res.status(400).json({ success: false, error: `Invalid status "${status}"` })
     }
-    const articleStatus: ContentStatus = requestedStatus === 'published' ? 'pending_review' : requestedStatus
+    const reviewSetting = await db.select().from(siteSettings).where(eq(siteSettings.key, 'content_review_enabled')).get()
+    const contentReviewEnabled = reviewSetting?.value === 'true'
+
+    let effectiveStatus: ContentStatus = requestedStatus
+    if (requestedStatus === 'published') {
+      effectiveStatus = contentReviewEnabled ? 'pending_review' : 'published'
+    }
 
     // Generate slug
     let slug = customSlug || generateSlug(title)
@@ -150,8 +156,7 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
         })
       }
 
-      // Update existing article
-      const effectiveStatus: ContentStatus = requestedStatus === 'published' ? 'pending_review' : requestedStatus
+      // Update existing article (reuse effectiveStatus determined above)
       const updates: Record<string, unknown> = {
         title,
         content,
@@ -191,16 +196,9 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
 
       const article = await db.select().from(articles).where(eq(articles.id, existing.id)).get()
 
-      // Schedule content review for updated articles going to pending_review
+      // Schedule content review — fire-and-forget, isolated from response
       if (effectiveStatus === 'pending_review') {
-        const reviewText = extractText('article', { title, content })
-        const reviewImages = extractImages('article', { coverImage: coverImageUrl, content })
-        scheduleReview({
-          targetType: 'article',
-          targetId: existing.id,
-          text: reviewText,
-          imageUrls: reviewImages,
-        }).catch(err => console.error('Failed to schedule review:', err))
+        scheduleReviewAsync(existing.id, title, content, coverImageUrl)
       }
 
       // 自动关联媒体文件到文章
@@ -253,7 +251,7 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       coverImage: coverImageUrl || null,
       sectionId,
       categoryId,
-      status: articleStatus,
+      status: effectiveStatus,
       authorId: req.apiToken!.userId,
       publishedAt: (requestedStatus === 'published')
         ? publishedAt || new Date().toISOString()
@@ -278,16 +276,9 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
 
     const article = await db.select().from(articles).where(eq(articles.id, articleId)).get()
 
-    // Schedule content review for pending_review articles
-    if (articleStatus === 'pending_review') {
-      const reviewText = extractText('article', { title, content })
-      const reviewImages = extractImages('article', { coverImage: coverImageUrl, content })
-      scheduleReview({
-        targetType: 'article',
-        targetId: articleId,
-        text: reviewText,
-        imageUrls: reviewImages,
-      }).catch(err => console.error('Failed to schedule review:', err))
+    // Schedule content review — fire-and-forget, isolated from response
+    if (effectiveStatus === 'pending_review') {
+      scheduleReviewAsync(articleId, title, content, coverImageUrl)
     }
 
     // 自动关联媒体文件到文章
@@ -446,3 +437,24 @@ router.delete('/articles/:slug', requirePermission('content:delete'), async (req
 })
 
 export default router
+
+// ============================================================
+// 内容审核调度（fire-and-forget，完全隔离于主请求响应）
+// ============================================================
+
+function scheduleReviewAsync(targetId: number, title: string, content: string, coverImageUrl?: string) {
+  setImmediate(() => {
+    try {
+      const reviewText = extractText('article', { title, content })
+      const reviewImages = extractImages('article', { coverImage: coverImageUrl, content })
+      scheduleReview({
+        targetType: 'article',
+        targetId,
+        text: reviewText,
+        imageUrls: reviewImages,
+      }).catch(err => console.error('Failed to schedule review:', err))
+    } catch (err) {
+      console.error('Review scheduling failed (non-blocking):', err)
+    }
+  })
+}

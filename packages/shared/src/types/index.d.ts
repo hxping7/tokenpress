@@ -8,7 +8,7 @@ export interface User {
     createdAt: string;
     updatedAt: string;
 }
-export type UserRole = 'admin' | 'editor' | 'user';
+export type UserRole = 'superadmin' | 'admin' | 'user';
 export interface CreateUserDTO {
     username: string;
     password: string;
@@ -40,7 +40,7 @@ export interface ApiToken {
     isActive: boolean;
     createdAt: string;
 }
-export type ApiPermission = 'article:write' | 'media:upload' | 'work:write' | 'content:delete';
+export type ApiPermission = 'article:write' | 'media:upload' | 'work:write' | 'content:delete' | 'settings:write';
 export interface CreateApiTokenDTO {
     name: string;
     permissions: ApiPermission[];
@@ -54,8 +54,8 @@ export interface Category {
     description: string | null;
     sortOrder: number;
 }
-export type ContentSection = 'token_plan' | 'ai_coding' | 'ai_works' | 'blog';
-export type ContentStatus = 'draft' | 'published' | 'archived';
+export type ContentSection = 'token_plan' | 'ai_coding' | 'ai_works' | 'blog' | 'claw';
+export type ContentStatus = 'draft' | 'published' | 'archived' | 'scheduled' | 'pending_review';
 export interface Article {
     id: number;
     title: string;

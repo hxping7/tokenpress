@@ -221,16 +221,22 @@ router.post('/', async (req: AuthRequest, res) => {
 
     const article = await db.select().from(articles).where(eq(articles.id, articleId)).get()
 
-    // Schedule content review for pending_review articles
+    // Schedule content review for pending_review articles — fire-and-forget, isolated from response
     if (articleStatus === 'pending_review') {
-      const reviewText = extractReviewText('article', { title, content })
-      const reviewImages = extractReviewImages('article', { coverImage, content })
-      scheduleReview({
-        targetType: 'article',
-        targetId: articleId,
-        text: reviewText,
-        imageUrls: reviewImages,
-      }).catch(err => console.error('Failed to schedule review:', err))
+      setImmediate(() => {
+        try {
+          const reviewText = extractReviewText('article', { title, content })
+          const reviewImages = extractReviewImages('article', { coverImage, content })
+          scheduleReview({
+            targetType: 'article',
+            targetId: articleId,
+            text: reviewText,
+            imageUrls: reviewImages,
+          }).catch(err => console.error('Failed to schedule review:', err))
+        } catch (err) {
+          console.error('Schedule review error:', err)
+        }
+      })
     }
 
     revalidateTag('articles')
@@ -327,22 +333,25 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
     const article = await db.select().from(articles).where(eq(articles.id, articleId)).get()
 
-    // Schedule content review if status changed to pending_review
+    // Schedule content review if status changed to pending_review — fire-and-forget, isolated from response
     if (req.body.status === 'published') {
-      const reviewText = extractReviewText('article', {
-        title: (updates.title as string) || existing.title,
-        content: (updates.content as string) || existing.content,
+      const reviewTitle = (updates.title as string) || existing.title
+      const reviewContent = (updates.content as string) || existing.content
+      const reviewCoverImage = (updates.coverImage as string) || existing.coverImage
+      setImmediate(() => {
+        try {
+          const reviewText = extractReviewText('article', { title: reviewTitle, content: reviewContent })
+          const reviewImages = extractReviewImages('article', { coverImage: reviewCoverImage, content: reviewContent })
+          scheduleReview({
+            targetType: 'article',
+            targetId: articleId,
+            text: reviewText,
+            imageUrls: reviewImages,
+          }).catch(err => console.error('Failed to schedule review:', err))
+        } catch (err) {
+          console.error('Schedule review error:', err)
+        }
       })
-      const reviewImages = extractReviewImages('article', {
-        coverImage: (updates.coverImage as string) || existing.coverImage,
-        content: (updates.content as string) || existing.content,
-      })
-      scheduleReview({
-        targetType: 'article',
-        targetId: articleId,
-        text: reviewText,
-        imageUrls: reviewImages,
-      }).catch(err => console.error('Failed to schedule review:', err))
     }
 
     revalidateTag('articles')
@@ -351,6 +360,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
     res.json({ success: true, data: article })
   } catch (err) {
     console.error('Update article error:', err)
+    console.error('Article ID:', req.params.id, 'Body keys:', Object.keys(req.body), 'Status:', req.body.status)
     res.status(500).json({ success: false, error: 'Failed to update article' })
   }
 })

@@ -34,6 +34,7 @@ from util import (
     api_request,
     parse_frontmatter,
     process_media_in_content,
+    upload_local_file,
 )
 
 
@@ -102,8 +103,25 @@ def auto_detect_category(title: str, content: str, categories: list[dict]) -> st
 
 
 # ============================================================
-# 作者署名
+# 作者署名 + 智能免责声明
 # ============================================================
+
+# 金融/投资关键词（命中 ≥2 个触发金融免责声明）
+FINANCE_KEYWORDS = [
+    "股票", "股市", "A股", "港股", "美股", "基金", "投资", "理财",
+    "收益", "涨跌", "涨停", "跌停", "大盘", "基金", "债券", "期货",
+    "杠杆", "融资", "融券", "牛市", "熊市", "利率", "汇率",
+    "通胀", "通缩", "分红", "股息", "市值", "市盈率", "PE",
+    "ROI", "年化", "持仓", "仓位", "止盈", "止损", "回撤",
+]
+
+# 医疗/健康关键词（命中 ≥2 个触发医疗免责声明）
+MEDICAL_KEYWORDS = [
+    "治疗", "诊断", "症状", "药物", "处方", "手术", "疗效",
+    "临床", "患者", "痊愈", "康复", "副作用", "禁忌", "剂量",
+    "抗生素", "疫苗", "感染", "慢性病", "急性", "肿瘤", "癌症",
+    "血压", "血糖", "心率", "失眠", "抑郁", "焦虑",
+]
 
 
 def append_author_signature(content: str, author: str) -> str:
@@ -126,9 +144,109 @@ def append_author_signature(content: str, author: str) -> str:
     return content.rstrip() + signature
 
 
+def _count_keyword_hits(text: str, keywords: list[str]) -> int:
+    """统计文本中命中的关键词数量"""
+    text_lower = text.lower()
+    count = 0
+    for kw in keywords:
+        if kw.lower() in text_lower:
+            count += 1
+    return count
+
+
+def append_disclaimer(content: str, title: str = "", tags: list[str] = None) -> str:
+    """
+    智能免责声明：当文章涉及金融/医疗领域时，自动追加对应的免责声明。
+
+    触发条件：标题+正文+标签 合并文本中，某类关键词命中 ≥2 个
+    防重复机制：HTML 标记 / 正则检测已存在声明 / 去重
+    """
+    # 防重复 1：作者手动标记跳过
+    if "<!--token00-disclaimer-->" in content:
+        return content
+
+    # 防重复 2：已存在免责声明/风险提示
+    if re.search(r">\s*\*{1,2}(免责声明|风险提示)\*{1,2}[：:]", content):
+        return content
+
+    # 合并检测文本
+    check_text = title
+    if tags:
+        check_text += " " + " ".join(tags)
+    # 正文只取前 2000 字符做检测（避免全文扫描开销）
+    check_text += " " + content[:2000]
+
+    finance_hits = _count_keyword_hits(check_text, FINANCE_KEYWORDS)
+    medical_hits = _count_keyword_hits(check_text, MEDICAL_KEYWORDS)
+
+    disclaimer = None
+    if finance_hits >= 2:
+        disclaimer = "\n> ⚠️ **风险提示**：本文由 AI 基于公开信息收集整理，仅供参考学习，不构成任何投资建议。股市有风险，投资需谨慎。"
+    elif medical_hits >= 2:
+        disclaimer = "\n> ⚠️ **免责声明**：本文由 AI 基于公开资料整理，仅供参考，不构成医疗建议。请咨询专业医疗机构。"
+
+    if disclaimer:
+        content = content.rstrip()
+        # 如果末尾已有作者署名，插在署名之前
+        sig_match = re.search(r"\n---\n\n> 本文由\s*\*{1,2}.+?\*{1,2}\s*发布\s*$", content)
+        if sig_match:
+            content = content[:sig_match.start()] + disclaimer + content[sig_match.start():]
+        else:
+            content += disclaimer
+
+    return content
+
+
 # ============================================================
 # 发布
 # ============================================================
+
+
+def process_cover_image(
+    cover_value: str,
+    md_dir: str,
+    token: str,
+    api_base: str,
+    section: str = "blog",
+) -> str:
+    """
+    处理 coverImageUrl frontmatter 字段：
+    - 若是本地文件路径，自动上传并替换为远程 URL
+    - 若是 http(s) 或 data URI，原样返回
+    """
+    if not cover_value:
+        return cover_value
+
+    s = cover_value.strip()
+
+    # 远程 URL 或 data URI，直接返回
+    if s.startswith("http://") or s.startswith("https://") or s.startswith("data:"):
+        return s
+
+    # 解析本地路径（支持 ./  ../  绝对路径）
+    if os.path.isabs(s):
+        local_path = os.path.normpath(s)
+    else:
+        local_path = os.path.normpath(os.path.join(md_dir, s))
+
+    if not os.path.isfile(local_path):
+        print(f"    [WARN] coverImage not found: {local_path}")
+        return s
+
+    print(f"    [COVER] uploading {os.path.basename(local_path)}...")
+    result = upload_local_file(local_path, token, api_base, section)
+
+    if result.get("success"):
+        remote_url = result.get("data", {}).get("url", "")
+        if remote_url:
+            print(f"    [COVER] uploaded -> {remote_url}")
+            return remote_url
+        else:
+            print(f"    [WARN] coverImage upload returned no URL, keeping original")
+            return s
+    else:
+        print(f"    [WARN] coverImage upload failed: {result.get('error', 'Unknown')}, keeping original")
+        return s
 
 
 def publish_article(
@@ -209,9 +327,24 @@ def publish_article(
     )
     payload["content"] = processed_content
 
+    # --- 封面图处理（本地路径自动上传） ---
+    if "coverImageUrl" in payload and payload["coverImageUrl"]:
+        new_cover = process_cover_image(
+            payload["coverImageUrl"], md_dir, token, api_base, payload.get("section", "blog")
+        )
+        payload["coverImageUrl"] = new_cover
+
     # --- 作者署名 ---
     if author:
         payload["content"] = append_author_signature(payload["content"], author)
+
+    # --- 智能免责声明（金融/医疗关键词自动触发） ---
+    tags = payload.get("tags", [])
+    payload["content"] = append_disclaimer(
+        payload["content"],
+        title=payload.get("title", ""),
+        tags=tags if isinstance(tags, list) else [],
+    )
 
     # --- 校验 ---
     required = ["title", "content", "section"]
@@ -239,6 +372,8 @@ def publish_article(
             parts.append(f"{media_stats['videos']} videos")
         if media_stats.get("audio"):
             parts.append(f"{media_stats['audio']} audio")
+        if media_stats.get("documents"):
+            parts.append(f"{media_stats['documents']} documents")
         media_str = " + ".join(parts) if parts else "files"
         print(f"  Media:    {media_str} uploaded")
         if media_stats["fail"]:
@@ -347,7 +482,10 @@ Examples:
             fail_count += 1
             print(f"  Result:   FAILED")
             print(f"  Error:    {result.get('error', 'Unknown error')}")
+            detail = result.get("detail", "")
             hint = result.get("hint", "")
+            if detail:
+                print(f"  Detail:   {detail}")
             if hint:
                 print(f"  Hint:     {hint}")
 
