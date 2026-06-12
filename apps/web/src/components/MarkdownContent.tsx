@@ -2,6 +2,7 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
 import { useState, useCallback, useMemo } from 'react'
 import { Check, Copy } from 'lucide-react'
@@ -128,7 +129,7 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     ">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypePrism]}
+        rehypePlugins={[rehypeRaw, rehypePrism]}
         components={{
           h2({ children }) {
             const text = String(children).replace(/[*_`]/g, '').trim()
