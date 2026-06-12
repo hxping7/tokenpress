@@ -33,9 +33,9 @@ fi
 
 # 3. Build backend
 echo "[BUILD] Step 1/4: Building backend image..."
-echo "[BUILD]   docker build --target backend -t yourdomain-backend:latest"
+echo "[BUILD]   docker build --target backend -t tokenpress-backend:latest"
 cd "$PROJECT_DIR"
-if docker build --target backend -t yourdomain-backend:latest . 2>&1; then
+if docker build --no-cache --target backend -t tokenpress-backend:latest . 2>&1; then
     echo "[BUILD]   Backend image built successfully"
 else
     echo "[BUILD] [ERROR] Backend build FAILED - compile errors detected"
@@ -45,8 +45,8 @@ echo ""
 
 # 4. Build frontend
 echo "[BUILD] Step 2/4: Building frontend image..."
-echo "[BUILD]   docker build --target frontend -t yourdomain-frontend:latest"
-if docker build --target frontend -t yourdomain-frontend:latest . 2>&1; then
+echo "[BUILD]   docker build --target frontend -t tokenpress-frontend:latest"
+if docker build --no-cache --target frontend -t tokenpress-frontend:latest . 2>&1; then
     echo "[BUILD]   Frontend image built successfully"
 else
     echo "[BUILD] [ERROR] Frontend build FAILED - compile errors detected"
@@ -57,14 +57,14 @@ echo ""
 # 5. Export images (gzip compressed)
 echo "[BUILD] Step 3/4: Exporting images (gzip)..."
 echo "[BUILD]   Exporting backend..."
-docker save yourdomain-backend:latest | gzip > "$PROJECT_DIR/yourdomain-backend.tar.gz"
-BACKEND_SIZE=$(stat -c%s "$PROJECT_DIR/yourdomain-backend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/yourdomain-backend.tar.gz" 2>/dev/null)
-echo "[BUILD]   yourdomain-backend.tar.gz: $(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes)"
+docker save tokenpress-backend:latest | gzip > "$PROJECT_DIR/tokenpress-backend.tar.gz"
+BACKEND_SIZE=$(stat -c%s "$PROJECT_DIR/tokenpress-backend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/tokenpress-backend.tar.gz" 2>/dev/null)
+echo "[BUILD]   tokenpress-backend.tar.gz: $(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes)"
 
 echo "[BUILD]   Exporting frontend..."
-docker save yourdomain-frontend:latest | gzip > "$PROJECT_DIR/yourdomain-frontend.tar.gz"
-FRONTEND_SIZE=$(stat -c%s "$PROJECT_DIR/yourdomain-frontend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/yourdomain-frontend.tar.gz" 2>/dev/null)
-echo "[BUILD]   yourdomain-frontend.tar.gz: $(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes)"
+docker save tokenpress-frontend:latest | gzip > "$PROJECT_DIR/tokenpress-frontend.tar.gz"
+FRONTEND_SIZE=$(stat -c%s "$PROJECT_DIR/tokenpress-frontend.tar.gz" 2>/dev/null || stat -f%z "$PROJECT_DIR/tokenpress-frontend.tar.gz" 2>/dev/null)
+echo "[BUILD]   tokenpress-frontend.tar.gz: $(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes)"
 echo ""
 
 # 6. Generate checksums for integrity verification
@@ -76,18 +76,18 @@ if ! command -v "$SHACMD" &>/dev/null; then
     SHACMD="shasum -a 256"
 fi
 
-$SHACMD "$PROJECT_DIR/yourdomain-backend.tar.gz" > "$PROJECT_DIR/yourdomain-backend.tar.gz.sha256"
-$SHACMD "$PROJECT_DIR/yourdomain-frontend.tar.gz" > "$PROJECT_DIR/yourdomain-frontend.tar.gz.sha256"
+$SHACMD "$PROJECT_DIR/tokenpress-backend.tar.gz" > "$PROJECT_DIR/tokenpress-backend.tar.gz.sha256"
+$SHACMD "$PROJECT_DIR/tokenpress-frontend.tar.gz" > "$PROJECT_DIR/tokenpress-frontend.tar.gz.sha256"
 echo "[BUILD]   Checksums saved to .sha256 files"
 
 # Remove intermediate tar files if they exist
-rm -f "$PROJECT_DIR/yourdomain-backend.tar" "$PROJECT_DIR/yourdomain-frontend.tar"
+rm -f "$PROJECT_DIR/tokenpress-backend.tar" "$PROJECT_DIR/tokenpress-frontend.tar"
 
 echo ""
 echo "[BUILD] ========================================"
 echo "[BUILD]  Build Complete!"
 echo "[BUILD] ========================================"
-echo "[BUILD]   Backend:  yourdomain-backend.tar.gz ($(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes))"
-echo "[BUILD]   Frontend: yourdomain-frontend.tar.gz ($(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes))"
+echo "[BUILD]   Backend:  tokenpress-backend.tar.gz ($(numfmt --to=iec $BACKEND_SIZE 2>/dev/null || echo $BACKEND_SIZE bytes))"
+echo "[BUILD]   Frontend: tokenpress-frontend.tar.gz ($(numfmt --to=iec $FRONTEND_SIZE 2>/dev/null || echo $FRONTEND_SIZE bytes))"
 echo "[BUILD]   Checksum: SHA256"
 echo ""

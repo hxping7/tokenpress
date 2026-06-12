@@ -24,9 +24,28 @@ from pathlib import Path
 
 
 def find_config_file() -> Path | None:
-    """查找 .token00.conf 配置文件"""
+    """查找 .token00.conf 配置文件
+
+    查找策略：
+    1. 当前工作目录及其父目录
+    2. 脚本所在目录及其父目录（适用于 WorkBuddy 等非项目工作目录场景）
+    """
+    search_dirs = []
+
+    # 策略 1：从 cwd 向上查找
     cwd = Path.cwd()
-    for directory in [cwd] + list(cwd.parents):
+    search_dirs.extend([cwd] + list(cwd.parents))
+
+    # 策略 2：从脚本所在目录向上查找
+    script_dir = Path(__file__).resolve().parent
+    # 避免重复添加（如果脚本在 cwd 下的子目录中）
+    if script_dir not in search_dirs:
+        search_dirs.append(script_dir)
+        for parent in script_dir.parents:
+            if parent not in search_dirs:
+                search_dirs.append(parent)
+
+    for directory in search_dirs:
         conf = directory / ".token00.conf"
         if conf.is_file():
             return conf

@@ -38,18 +38,14 @@ if errorlevel 1 (
 echo [BUILD]   Docker OK
 
 REM ============================================================
-REM PowerShell gzip helper scriptlet (no gzip.exe dependency)
+REM PowerShell gzip: uses separate .ps1 script to avoid
+REM escaping issues with GZipStream constructor in inline mode
 REM ============================================================
-set GZIP_PS=powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$src = [System.IO.File]::OpenRead('%~1'); " ^
-    "$dst = [System.IO.File]::Create('%~2'); " ^
-    "$gs = New-Object System.IO.Compression.GzipStream $dst ([System.IO.Compression.CompressionMode]::Compress); " ^
-    "$src.CopyTo($gs); $gs.Close(); $dst.Close(); $src.Close()"
 
 REM Step 1/2: Build backend
 echo [BUILD] Step 1/2: Building backend image...
 cd /d "%PROJECT_DIR%"
-docker build --target backend -t yourdomain-backend:latest .
+docker build --target backend -t tokenpress-backend:latest .
 if errorlevel 1 (
     echo [BUILD] [ERROR] Backend build FAILED
     echo [BUILD] [INFO]  Fix compilation errors then rebuild
@@ -59,24 +55,20 @@ echo [BUILD]   Backend built successfully
 
 REM Export + compress backend
 echo [BUILD]   Exporting backend image...
-docker save yourdomain-backend:latest -o "%PROJECT_DIR%\yourdomain-backend.tar"
+docker save tokenpress-backend:latest -o "%PROJECT_DIR%\tokenpress-backend.tar"
 if %errorlevel% equ 0 (
-    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-        "$src = [System.IO.File]::OpenRead('%PROJECT_DIR:\=\\%\\yourdomain-backend.tar'); " ^
-        "$dst = [System.IO.File]::Create('%PROJECT_DIR:\=\\%\\yourdomain-backend.tar.gz'); " ^
-        "$gs = New-Object System.IO.Compression.GzipStream $dst ([System.IO.Compression.CompressionMode]::Compress); " ^
-        "$src.CopyTo($gs); $gs.Close(); $dst.Close(); $src.Close()"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0gzip-compress.ps1" "%PROJECT_DIR%\tokenpress-backend.tar" "%PROJECT_DIR%\tokenpress-backend.tar.gz"
     if errorlevel 1 (
         echo [BUILD] [WARN] PowerShell gzip failed, using uncompressed .tar
     ) else (
-        if exist "%PROJECT_DIR%\yourdomain-backend.tar" del "%PROJECT_DIR%\yourdomain-backend.tar"
+        if exist "%PROJECT_DIR%\tokenpress-backend.tar" del "%PROJECT_DIR%\tokenpress-backend.tar"
     )
 )
 echo.
 
 REM Step 2/2: Build frontend
 echo [BUILD] Step 2/2: Building frontend image...
-docker build --target frontend -t yourdomain-frontend:latest .
+docker build --no-cache --target frontend -t tokenpress-frontend:latest .
 if errorlevel 1 (
     echo [BUILD] [ERROR] Frontend build FAILED
     echo [BUILD] [INFO]  Fix compilation errors then rebuild
@@ -86,56 +78,52 @@ echo [BUILD]   Frontend built successfully
 
 REM Export + compress frontend
 echo [BUILD]   Exporting frontend image...
-docker save yourdomain-frontend:latest -o "%PROJECT_DIR%\yourdomain-frontend.tar"
+docker save tokenpress-frontend:latest -o "%PROJECT_DIR%\tokenpress-frontend.tar"
 if %errorlevel% equ 0 (
-    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-        "$src = [System.IO.File]::OpenRead('%PROJECT_DIR:\=\\%\\yourdomain-frontend.tar'); " ^
-        "$dst = [System.IO.File]::Create('%PROJECT_DIR:\=\\%\\yourdomain-frontend.tar.gz'); " ^
-        "$gs = New-Object System.IO.Compression.GzipStream $dst ([System.IO.Compression.CompressionMode]::Compress); " ^
-        "$src.CopyTo($gs); $gs.Close(); $dst.Close(); $src.Close()"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0gzip-compress.ps1" "%PROJECT_DIR%\tokenpress-frontend.tar" "%PROJECT_DIR%\tokenpress-frontend.tar.gz"
     if errorlevel 1 (
         echo [BUILD] [WARN] PowerShell gzip failed, using uncompressed .tar
     ) else (
-        if exist "%PROJECT_DIR%\yourdomain-frontend.tar" del "%PROJECT_DIR%\yourdomain-frontend.tar"
+        if exist "%PROJECT_DIR%\tokenpress-frontend.tar" del "%PROJECT_DIR%\tokenpress-frontend.tar"
     )
 )
 echo.
 
 REM Generate SHA256 checksums via PowerShell (certutil alternative)
 echo [BUILD] Generating SHA256 checksums...
-if exist "%PROJECT_DIR%\yourdomain-backend.tar.gz" (
-    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\yourdomain-backend.tar.gz' -Algorithm SHA256).Hash.ToLower()"`) do (
-        echo %%s  yourdomain-backend.tar.gz > "%PROJECT_DIR%\yourdomain-backend.tar.gz.sha256"
+if exist "%PROJECT_DIR%\tokenpress-backend.tar.gz" (
+    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\tokenpress-backend.tar.gz' -Algorithm SHA256).Hash.ToLower()"`) do (
+        echo %%s  tokenpress-backend.tar.gz > "%PROJECT_DIR%\tokenpress-backend.tar.gz.sha256"
     )
-) else if exist "%PROJECT_DIR%\yourdomain-backend.tar" (
-    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\yourdomain-backend.tar' -Algorithm SHA256).Hash.ToLower()"`) do (
-        echo %%s  yourdomain-backend.tar > "%PROJECT_DIR%\yourdomain-backend.tar.sha256"
+) else if exist "%PROJECT_DIR%\tokenpress-backend.tar" (
+    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\tokenpress-backend.tar' -Algorithm SHA256).Hash.ToLower()"`) do (
+        echo %%s  tokenpress-backend.tar > "%PROJECT_DIR%\tokenpress-backend.tar.sha256"
     )
 )
 
-if exist "%PROJECT_DIR%\yourdomain-frontend.tar.gz" (
-    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\yourdomain-frontend.tar.gz' -Algorithm SHA256).Hash.ToLower()"`) do (
-        echo %%s  yourdomain-frontend.tar.gz > "%PROJECT_DIR%\yourdomain-frontend.tar.gz.sha256"
+if exist "%PROJECT_DIR%\tokenpress-frontend.tar.gz" (
+    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\tokenpress-frontend.tar.gz' -Algorithm SHA256).Hash.ToLower()"`) do (
+        echo %%s  tokenpress-frontend.tar.gz > "%PROJECT_DIR%\tokenpress-frontend.tar.gz.sha256"
     )
-) else if exist "%PROJECT_DIR%\yourdomain-frontend.tar" (
-    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\yourdomain-frontend.tar' -Algorithm SHA256).Hash.ToLower()"`) do (
-        echo %%s  yourdomain-frontend.tar > "%PROJECT_DIR%\yourdomain-frontend.tar.sha256"
+) else if exist "%PROJECT_DIR%\tokenpress-frontend.tar" (
+    for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "(Get-FileHash -Path '%PROJECT_DIR%\tokenpress-frontend.tar' -Algorithm SHA256).Hash.ToLower()"`) do (
+        echo %%s  tokenpress-frontend.tar > "%PROJECT_DIR%\tokenpress-frontend.tar.sha256"
     )
 )
 
 REM Show sizes
 echo [BUILD]   Artifacts:
-if exist "%PROJECT_DIR%\yourdomain-backend.tar.gz" (
-    for %%A in ("%PROJECT_DIR%\yourdomain-backend.tar.gz") do echo [BUILD]     backend.tar.gz: %%~zA bytes
+if exist "%PROJECT_DIR%\tokenpress-backend.tar.gz" (
+    for %%A in ("%PROJECT_DIR%\tokenpress-backend.tar.gz") do echo [BUILD]     backend.tar.gz: %%~zA bytes
 )
-if exist "%PROJECT_DIR%\yourdomain-frontend.tar.gz" (
-    for %%A in ("%PROJECT_DIR%\yourdomain-frontend.tar.gz") do echo [BUILD]     frontend.tar.gz: %%~zA bytes
+if exist "%PROJECT_DIR%\tokenpress-frontend.tar.gz" (
+    for %%A in ("%PROJECT_DIR%\tokenpress-frontend.tar.gz") do echo [BUILD]     frontend.tar.gz: %%~zA bytes
 )
-if exist "%PROJECT_DIR%\yourdomain-backend.tar" (
-    for %%A in ("%PROJECT_DIR%\yourdomain-backend.tar") do echo [BUILD]     backend.tar: %%~zA bytes ^(uncompressed^)
+if exist "%PROJECT_DIR%\tokenpress-backend.tar" (
+    for %%A in ("%PROJECT_DIR%\tokenpress-backend.tar") do echo [BUILD]     backend.tar: %%~zA bytes ^(uncompressed^)
 )
-if exist "%PROJECT_DIR%\yourdomain-frontend.tar" (
-    for %%A in ("%PROJECT_DIR%\yourdomain-frontend.tar") do echo [BUILD]     frontend.tar: %%~zA bytes ^(uncompressed^)
+if exist "%PROJECT_DIR%\tokenpress-frontend.tar" (
+    for %%A in ("%PROJECT_DIR%\tokenpress-frontend.tar") do echo [BUILD]     frontend.tar: %%~zA bytes ^(uncompressed^)
 )
 
 echo.

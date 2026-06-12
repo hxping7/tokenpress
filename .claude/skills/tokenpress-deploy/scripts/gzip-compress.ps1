@@ -1,0 +1,8 @@
+param([string]$srcPath, [string]$dstPath)
+$src = [System.IO.File]::OpenRead($srcPath)
+$dst = [System.IO.File]::Create($dstPath)
+$gs = New-Object System.IO.Compression.GZipStream($dst, [System.IO.Compression.CompressionMode]::Compress)
+$src.CopyTo($gs)
+$gs.Close()
+$dst.Close()
+$src.Close()

@@ -2,14 +2,14 @@
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM Token00 VPS Deployment Script
+REM tokenpress VPS Deployment Script
 REM gzip + split + SCP chunked (resume)
 REM ========================================
 
 cd /d "%~dp0"
 
 echo ========================================
-echo   Token00 VPS Deployment
+echo   tokenpress VPS Deployment
 echo ========================================
 echo.
 
@@ -56,7 +56,7 @@ if not defined JWT_SECRET (
 REM Defaults
 if not defined VPS_USER set VPS_USER=root
 if not defined VPS_PORT set VPS_PORT=22
-if not defined SITE_PATH set SITE_PATH=/root/token00
+if not defined SITE_PATH set SITE_PATH=/root/tokenpress
 if not defined CHUNK_MB set CHUNK_MB=50
 
 set SSH_CMD=ssh -i "%SSH_KEY%" -p %VPS_PORT% -o StrictHostKeyChecking=no -o ConnectTimeout=10
@@ -81,7 +81,7 @@ echo [1/3] Building Docker images...
 echo.
 
 echo Building backend image...
-docker build --target backend -t token00-backend:latest .
+docker build --no-cache --target backend -t tokenpress-backend:latest .
 if errorlevel 1 (
     echo [ERROR] Backend build failed
     pause
@@ -90,7 +90,7 @@ if errorlevel 1 (
 echo Backend image built successfully.
 
 echo Building frontend image...
-docker build --target frontend -t token00-frontend:latest .
+docker build --no-cache --target frontend -t tokenpress-frontend:latest .
 if errorlevel 1 (
     echo [ERROR] Frontend build failed
     pause
@@ -100,24 +100,24 @@ echo Frontend image built successfully.
 
 echo.
 echo Compressing images (gzip)...
-docker save token00-backend:latest | gzip > token00-backend.tar.gz
+docker save tokenpress-backend:latest | gzip > tokenpress-backend.tar.gz
 if errorlevel 1 (
     echo [ERROR] Failed to compress backend
     pause
     exit /b 1
 )
-for %%A in (token00-backend.tar.gz) do echo   backend: %%~zA bytes
+for %%A in (tokenpress-backend.tar.gz) do echo   backend: %%~zA bytes
 
-docker save token00-frontend:latest | gzip > token00-frontend.tar.gz
+docker save tokenpress-frontend:latest | gzip > tokenpress-frontend.tar.gz
 if errorlevel 1 (
     echo [ERROR] Failed to compress frontend
     pause
     exit /b 1
 )
-for %%A in (token00-frontend.tar.gz) do echo   frontend: %%~zA bytes
+for %%A in (tokenpress-frontend.tar.gz) do echo   frontend: %%~zA bytes
 
-if exist "token00-backend.tar" del "token00-backend.tar"
-if exist "token00-frontend.tar" del "token00-frontend.tar"
+if exist "tokenpress-backend.tar" del "tokenpress-backend.tar"
+if exist "tokenpress-frontend.tar" del "tokenpress-frontend.tar"
 
 echo.
 echo [1/3] Build complete!
@@ -128,24 +128,24 @@ goto end
 echo [2/3] Uploading to VPS (chunked + resume)...
 echo.
 
-if not exist "token00-backend.tar.gz" (
-    echo [ERROR] token00-backend.tar.gz not found. Run 'build' first.
+if not exist "tokenpress-backend.tar.gz" (
+    echo [ERROR] tokenpress-backend.tar.gz not found. Run 'build' first.
     pause
     exit /b 1
 )
-if not exist "token00-frontend.tar.gz" (
-    echo [ERROR] token00-frontend.tar.gz not found. Run 'build' first.
+if not exist "tokenpress-frontend.tar.gz" (
+    echo [ERROR] tokenpress-frontend.tar.gz not found. Run 'build' first.
     pause
     exit /b 1
 )
 
 REM Create VPS upload directory
-%SSH_CMD% %VPS_USER%@%VPS_HOST% "mkdir -p /root/token00-upload"
+%SSH_CMD% %VPS_USER%@%VPS_HOST% "mkdir -p /root/tokenpress-upload"
 
 REM Split and upload each image
-call :upload_image token00-backend.tar.gz backend
+call :upload_image tokenpress-backend.tar.gz backend
 if errorlevel 1 goto upload_fail
-call :upload_image token00-frontend.tar.gz frontend
+call :upload_image tokenpress-frontend.tar.gz frontend
 if errorlevel 1 goto upload_fail
 
 REM Upload config files
@@ -154,7 +154,7 @@ echo Uploading config files...
 
 REM Merge chunks on VPS
 echo Merging chunks on VPS...
-%SSH_CMD% %VPS_USER%@%VPS_HOST% "cd /root/token00-upload && cat backend_* > /root/token00-backend.tar.gz && cat frontend_* > /root/token00-frontend.tar.gz && cd /root && rm -rf token00-upload && echo 'Merge done'"
+%SSH_CMD% %VPS_USER%@%VPS_HOST% "cd /root/tokenpress-upload && cat backend_* > /root/tokenpress-backend.tar.gz && cat frontend_* > /root/tokenpress-frontend.tar.gz && cd /root && rm -rf tokenpress-upload && echo 'Merge done'"
 
 echo.
 echo [2/3] Upload complete!
@@ -191,7 +191,7 @@ for %%F in (%IMG_PREFIX%_part_*) do (
     set CHUNK_NAME=%%F
 
     REM Check if chunk already exists on VPS (same size = skip)
-    %SSH_CMD% %VPS_USER%@%VPS_HOST% "test -f /root/token00-upload/!CHUNK_NAME! && stat -c %%s /root/token00-upload/!CHUNK_NAME!" > _vps_size.txt 2>nul
+    %SSH_CMD% %VPS_USER%@%VPS_HOST% "test -f /root/tokenpress-upload/!CHUNK_NAME! && stat -c %%s /root/tokenpress-upload/!CHUNK_NAME!" > _vps_size.txt 2>nul
     set VPS_SIZE=
     for /f %%S in (_vps_size.txt) do set VPS_SIZE=%%S
     set LOCAL_SIZE=%%~zF
@@ -200,10 +200,10 @@ for %%F in (%IMG_PREFIX%_part_*) do (
         echo   [!COUNT!/%TOTAL%] !CHUNK_NAME! already uploaded, skipping
     ) else (
         echo   [!COUNT!/%TOTAL%] Uploading !CHUNK_NAME!...
-        %SCP_CMD% !CHUNK_NAME! %VPS_USER%@%VPS_HOST%:/root/token00-upload/
+        %SCP_CMD% !CHUNK_NAME! %VPS_USER%@%VPS_HOST%:/root/tokenpress-upload/
         if errorlevel 1 (
             echo   [WARN] Upload failed, retrying...
-            %SCP_CMD% !CHUNK_NAME! %VPS_USER%@%VPS_HOST%:/root/token00-upload/
+            %SCP_CMD% !CHUNK_NAME! %VPS_USER%@%VPS_HOST%:/root/tokenpress-upload/
             if errorlevel 1 (
                 echo [ERROR] Failed to upload !CHUNK_NAME!
                 del _vps_size.txt 2>nul
