@@ -3,7 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { db } from '../db/index.js'
 import { articles, articleTags, tags, categories, sections, users, siteSettings, articleLikes, articleViews, adLogs, media } from '../db/schema.js'
-import { eq, and, desc, sql, like, inArray } from 'drizzle-orm'
+import { eq, and, desc, asc, sql, like, inArray } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { generateSlug, extractExcerpt } from '@tokenpress/shared'
 import type { ContentStatus } from '@tokenpress/shared'
@@ -22,11 +22,16 @@ router.use(authMiddleware)
 router.get('/', async (req: AuthRequest, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1)
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20))
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 10))
     const sectionSlug = req.query.section as string
     const status = req.query.status as string
     const search = req.query.search as string
+    const sort = (req.query.sort as string) || 'createdAt'
+    const order = (req.query.order as string) === 'asc' ? 'asc' : 'desc'
     const offset = (page - 1) * limit
+
+    const allowedSortFields = ['title', 'section', 'status', 'createdAt'] as const
+    const sortField = allowedSortFields.includes(sort as any) ? sort : 'createdAt'
 
     const conditions: any[] = []
 
@@ -49,6 +54,12 @@ router.get('/', async (req: AuthRequest, res) => {
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .get()
 
+    const sortColumn = sortField === 'title' ? articles.title
+      : sortField === 'status' ? articles.status
+      : sortField === 'createdAt' ? articles.createdAt
+      : sections.name
+    const sortOrder = order === 'asc' ? asc : desc
+
     const rows = await db.select({
       id: articles.id,
       title: articles.title,
@@ -67,7 +78,7 @@ router.get('/', async (req: AuthRequest, res) => {
       .from(articles)
       .leftJoin(sections, eq(articles.sectionId, sections.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(articles.createdAt))
+      .orderBy(sortOrder(sortColumn))
       .limit(limit)
       .offset(offset)
       .all()

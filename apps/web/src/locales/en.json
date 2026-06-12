@@ -239,7 +239,10 @@
     "save": "Save",
     "saving": "Saving...",
     "publishNow": "Publish Now",
-    "scheduled": "Scheduled"
+    "scheduled": "Scheduled",
+    "perPage": "/page",
+    "totalCount": "Total: %s",
+    "currentPage": "Page"
   },
   "theme": {
     "switchTheme": "Switch Theme",

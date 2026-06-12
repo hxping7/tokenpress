@@ -239,7 +239,10 @@
     "save": "保存",
     "saving": "保存中...",
     "publishNow": "立即发布",
-    "scheduled": "定时发布"
+    "scheduled": "定时发布",
+    "perPage": "条/页",
+    "totalCount": "共 %s 条",
+    "currentPage": "第"
   },
   "theme": {
     "switchTheme": "切换主题",

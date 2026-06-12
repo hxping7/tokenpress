@@ -10,7 +10,8 @@ import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { t } from '@/lib/i18n'
 import {
   Plus, Search, Edit, Trash2, Eye,
-  X, Check, Image as ImageIcon, Loader2, Upload, Bold, Palette, Shuffle
+  X, Check, Image as ImageIcon, Loader2, Upload, Bold, Palette, Shuffle,
+  ChevronLeft, ChevronRight, ChevronsUpDown, ChevronsUp, ChevronsDown
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -65,6 +66,10 @@ export default function ArticlesPage() {
   const [search, setSearch] = useState('')
   const [section, setSection] = useState('')
   const [status, setStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [sortField, setSortField] = useState<'title' | 'section' | 'status' | 'createdAt'>('createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showEditor, setShowEditor] = useState(false)
   const [editingArticle, setEditingArticle] = useState<Article | null>(null)
   const [loadingArticle, setLoadingArticle] = useState(false)
@@ -92,9 +97,13 @@ export default function ArticlesPage() {
   })
 
   const { data: articlesData, isLoading } = useQuery({
-    queryKey: ['admin-articles', search, section, status],
+    queryKey: ['admin-articles', search, section, status, page, pageSize, sortField, sortOrder],
     queryFn: () => {
       const params = new URLSearchParams()
+      params.append('page', String(page))
+      params.append('limit', String(pageSize))
+      params.append('sort', sortField)
+      params.append('order', sortOrder)
       if (search) params.append('search', search)
       if (section) params.append('section', section)
       if (status) params.append('status', status)
@@ -149,6 +158,43 @@ export default function ArticlesPage() {
     setArticleStatus('draft')
     setScheduledAt('')
     setTags('')
+  }
+
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('desc')
+    }
+    setPage(1)
+  }
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size)
+    setPage(1)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
+
+  const handleSectionChange = (value: string) => {
+    setSection(value)
+    setPage(1)
+  }
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value)
+    setPage(1)
+  }
+
+  const SortIcon = ({ field }: { field: typeof sortField }) => {
+    if (sortField !== field) return <ChevronsUpDown size={14} className="text-t-text-secondary/50" />
+    return sortOrder === 'asc'
+      ? <ChevronsUp size={14} className="text-t-accent-blue" />
+      : <ChevronsDown size={14} className="text-t-accent-blue" />
   }
 
   // 封面图上传
@@ -298,20 +344,20 @@ export default function ArticlesPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-end">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-t-text-secondary" size={18} />
           <input
             type="text"
             placeholder={t('articles.searchPlaceholder', backendLocale)}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary placeholder-t-text-secondary focus:outline-none focus:border-t-accent-blue"
           />
         </div>
         <select
           value={section}
-          onChange={(e) => setSection(e.target.value)}
+          onChange={(e) => handleSectionChange(e.target.value)}
           className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue"
         >
           <option value="">{t('articles.allCategories', backendLocale)}</option>
@@ -321,7 +367,7 @@ export default function ArticlesPage() {
         </select>
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => handleStatusChange(e.target.value)}
           className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue"
         >
           <option value="">{t('articles.allStatuses', backendLocale)}</option>
@@ -331,6 +377,15 @@ export default function ArticlesPage() {
           <option value="pending_review">{t('reviews.pending', backendLocale)}</option>
           <option value="archived">{t('common.archived', backendLocale)}</option>
         </select>
+        <select
+          value={String(pageSize)}
+          onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+          className="px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue"
+        >
+          {[10, 20, 50, 100].map(size => (
+            <option key={size} value={size}>{size} {t('articles.perPage', backendLocale)}</option>
+          ))}
+        </select>
       </div>
 
       {/* Articles Table */}
@@ -339,10 +394,42 @@ export default function ArticlesPage() {
           <table className="w-full">
             <thead className="bg-t-bg-secondary border-b border-t-border">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary">{t('articles.articleTitle', backendLocale)}</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary">{t('articles.section', backendLocale)}</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary">{t('articles.status', backendLocale)}</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary">{t('articles.createdAt', backendLocale)}</th>
+                <th
+                  className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary cursor-pointer hover:text-t-text-primary select-none"
+                  onClick={() => handleSort('title')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('articles.articleTitle', backendLocale)}
+                    <SortIcon field="title" />
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary cursor-pointer hover:text-t-text-primary select-none"
+                  onClick={() => handleSort('section')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('articles.section', backendLocale)}
+                    <SortIcon field="section" />
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary cursor-pointer hover:text-t-text-primary select-none"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('articles.status', backendLocale)}
+                    <SortIcon field="status" />
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary cursor-pointer hover:text-t-text-primary select-none"
+                  onClick={() => handleSort('createdAt')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('articles.createdAt', backendLocale)}
+                    <SortIcon field="createdAt" />
+                  </div>
+                </th>
                 <th className="px-6 py-3 text-right text-sm font-medium text-t-text-secondary">{t('articles.actions', backendLocale)}</th>
               </tr>
             </thead>
@@ -431,6 +518,61 @@ export default function ArticlesPage() {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {articlesData?.pagination && articlesData.pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-t-text-secondary">
+            {t('articles.totalCount', backendLocale, String(articlesData.pagination.total))}
+            {articlesData.pagination.totalPages > 1 && (
+              <span className="ml-2">
+                {t('articles.currentPage', backendLocale)} {articlesData.pagination.page}/{articlesData.pagination.totalPages}
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="flex items-center gap-1 px-3 py-2 text-sm bg-t-bg-primary border border-t-border rounded-lg hover:bg-t-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: Math.min(5, articlesData.pagination.totalPages) }, (_, i) => {
+              let pageNum: number
+              if (articlesData.pagination.totalPages <= 5) {
+                pageNum = i + 1
+              } else if (page <= 3) {
+                pageNum = i + 1
+              } else if (page >= articlesData.pagination.totalPages - 2) {
+                pageNum = articlesData.pagination.totalPages - 4 + i
+              } else {
+                pageNum = page - 2 + i
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setPage(pageNum)}
+                  className={`w-9 h-9 text-sm rounded-lg border transition-colors ${
+                    page === pageNum
+                      ? 'bg-t-accent-blue text-black border-t-accent-blue'
+                      : 'bg-t-bg-primary border-t-border text-t-text-secondary hover:bg-t-hover'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            })}
+            <button
+              onClick={() => setPage(p => Math.min(articlesData!.pagination!.totalPages, p + 1))}
+              disabled={page >= articlesData.pagination.totalPages}
+              className="flex items-center gap-1 px-3 py-2 text-sm bg-t-bg-primary border border-t-border rounded-lg hover:bg-t-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Editor Modal */}
       {showEditor && (

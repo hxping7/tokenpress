@@ -18,9 +18,15 @@ function getNestedValue(obj: DeepRecord, path: string): string {
   return typeof current === 'string' ? current : path
 }
 
-export function t(key: string, locale: string = 'zh'): string {
+export function t(key: string, locale: string = 'zh', ...args: string[]): string {
   const dict = translations[locale] || translations['zh']
-  return getNestedValue(dict, key)
+  let text = getNestedValue(dict, key)
+  if (args.length > 0) {
+    args.forEach((arg, i) => {
+      text = text.replace(`%s`, arg).replace(`%${i + 1}`, arg)
+    })
+  }
+  return text
 }
 
 export { zh, en }
