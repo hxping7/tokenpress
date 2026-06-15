@@ -109,6 +109,18 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       slug: customSlug,
     } = req.body
 
+    // 防御性处理：去除 coverImageUrl 可能的引号包裹
+    if (coverImageUrl && typeof coverImageUrl === 'string') {
+      coverImageUrl = coverImageUrl.trim()
+      if (
+        coverImageUrl.length >= 2 &&
+        coverImageUrl[0] === coverImageUrl[coverImageUrl.length - 1] &&
+        (coverImageUrl[0] === '"' || coverImageUrl[0] === "'")
+      ) {
+        coverImageUrl = coverImageUrl.slice(1, -1)
+      }
+    }
+
     if (!title || !content || !sectionSlug) {
       return res.status(400).json({
         success: false,
