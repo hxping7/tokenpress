@@ -33,12 +33,42 @@ export const revalidate = 60
 
 async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
   try {
-    const baseUrl = typeof window === 'undefined' ? 'http://localhost:4000' : ''
-    const res = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size`, { next: { revalidate: 60 } })
-    if (!res.ok) return { slides: [], size: 'default' }
-    const json = await res.json()
-    const heroSlidesValue = json.data?.hero_slides
-    const heroSize = json.data?.hero_size || 'default'
+    const baseUrl = typeof window === 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') : ''
+    
+    // 获取所有相关的设置项
+    const settingsRes = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size,hero_carousel_use_articles,hero_carousel_article_source,hero_carousel_max_items`, { next: { revalidate: 60 } })
+    if (!settingsRes.ok) return { slides: [], size: 'default' }
+    
+    const settingsJson = await settingsRes.json()
+    const settings = settingsJson.data || {}
+    
+    const heroSize = settings.hero_size || 'default'
+    const useArticles = settings.hero_carousel_use_articles === 'true'
+    
+      // 如果启用了文章轮播图，从API获取文章封面图
+      if (useArticles) {
+        const source = settings.hero_carousel_article_source || 'latest'
+        const limit = parseInt(settings.hero_carousel_max_items) || 5
+        
+        const articlesRes = await fetch(`${baseUrl}/api/v1/carousel-articles?source=${source}&limit=${limit}`, { next: { revalidate: 60 } })
+      if (!articlesRes.ok) return { slides: [], size: heroSize }
+      
+      const articlesJson = await articlesRes.json()
+      const articles = articlesJson.data || []
+      
+      // 将文章数据转换为HeroSlide格式
+      const slides: HeroSlide[] = articles.map((article: any) => ({
+        id: `article-${article.id}`,
+        imageUrl: article.coverImage,
+        linkUrl: `/${article.section?.path || 'blog'}/${article.slug}`,
+        linkTarget: '_self' as const,
+      }))
+      
+      return { slides, size: heroSize }
+    }
+    
+    // 否则，使用自定义的轮播图设置
+    const heroSlidesValue = settings.hero_slides
     let slides: HeroSlide[] = []
     if (heroSlidesValue) {
       try {
@@ -47,6 +77,7 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
         slides = []
       }
     }
+    
     return { slides, size: heroSize }
   } catch {
     return { slides: [], size: 'default' }

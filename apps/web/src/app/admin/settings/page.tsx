@@ -64,6 +64,9 @@ export default function SettingsPage() {
   const [heroMediaBrowserTarget, setHeroMediaBrowserTarget] = useState<number | null>(null)
   const [heroEffect, setHeroEffect] = useState('fade')
   const [heroSize, setHeroSize] = useState('default')
+  const [heroCarouselUseArticles, setHeroCarouselUseArticles] = useState(false)
+  const [heroCarouselArticleSource, setHeroCarouselArticleSource] = useState('latest')
+  const [heroCarouselMaxItems, setHeroCarouselMaxItems] = useState(5)
 
   // ===== 媒体库 =====
   const [showMediaBrowser, setShowMediaBrowser] = useState(false)
@@ -318,6 +321,15 @@ export default function SettingsPage() {
       if (s.hero_size) {
         setHeroSize(s.hero_size)
       }
+      if (s.hero_carousel_use_articles !== undefined) {
+        setHeroCarouselUseArticles(s.hero_carousel_use_articles === 'true')
+      }
+      if (s.hero_carousel_article_source) {
+        setHeroCarouselArticleSource(s.hero_carousel_article_source)
+      }
+      if (s.hero_carousel_max_items) {
+        setHeroCarouselMaxItems(parseInt(s.hero_carousel_max_items) || 5)
+      }
       if (s.copyright_text !== undefined) setCopyrightText(s.copyright_text)
       setIcpNumber(s.icp_number || '')
       setIcpUrl(s.icp_url || 'https://beian.miit.gov.cn/')
@@ -534,6 +546,9 @@ export default function SettingsPage() {
       hero_slides: JSON.stringify(heroSlides),
       hero_effect: heroEffect,
       hero_size: heroSize,
+      hero_carousel_use_articles: heroCarouselUseArticles.toString(),
+      hero_carousel_article_source: heroCarouselArticleSource,
+      hero_carousel_max_items: heroCarouselMaxItems.toString(),
       friend_links_columns: friendLinksColumns,
       default_theme: defaultTheme,
       frontend_locale: frontendLocale,
@@ -936,6 +951,58 @@ export default function SettingsPage() {
         </div>
         <div className="p-6 space-y-4">
           <p className="text-sm text-t-text-secondary">{t('settings.heroSectionDesc', adminLocale)}</p>
+
+          {/* 启用文章轮播图 */}
+          <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
+            <div>
+              <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselUseArticles', adminLocale) || '启用文章轮播图'}</span>
+              <p className="text-xs text-t-text-muted mt-1">{t('settings.heroCarouselUseArticlesDesc', adminLocale) || '使用文章封面图作为轮播图，而不是自定义图片'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setHeroCarouselUseArticles(!heroCarouselUseArticles)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                heroCarouselUseArticles ? 'bg-t-accent-blue' : 'bg-t-bg-tertiary'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  heroCarouselUseArticles ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* 文章来源选择 - 只有启用了文章轮播图才显示 */}
+          {heroCarouselUseArticles && (
+            <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
+              <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselArticleSource', adminLocale) || '文章来源'}</span>
+              <select
+                value={heroCarouselArticleSource}
+                onChange={(e) => setHeroCarouselArticleSource(e.target.value)}
+                className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+              >
+                <option value="latest">{t('settings.heroCarouselArticleSourceLatest', adminLocale) || '最新文章'}</option>
+                <option value="hot">{t('settings.heroCarouselArticleSourceHot', adminLocale) || '热点文章'}</option>
+              </select>
+            </div>
+          )}
+
+          {/* 轮播数量设置 - 只有启用了文章轮播图才显示 */}
+          {heroCarouselUseArticles && (
+            <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
+              <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselMaxItems', adminLocale) || '轮播数量'}</span>
+              <select
+                value={heroCarouselMaxItems}
+                onChange={(e) => setHeroCarouselMaxItems(parseInt(e.target.value))}
+                className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* 轮播效果选择 */}
           <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">

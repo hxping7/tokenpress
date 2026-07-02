@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit'
 import logger from './utils/logger.js'
 import { migrate } from './db/migrations/0000_initial.js'
 import { migrate as migrateMediaArticleId } from './db/migrations/0013_media_article_id.js'
+import { migrate as migrateHeroCarouselSettings } from './db/migrations/0014_add_hero_carousel_settings.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -36,6 +37,7 @@ import adminReviewRoutes from './routes/admin-reviews.js'
 import adminSensitiveKeywordsRoutes from './routes/admin-sensitive-keywords.js'
 import aiAdsRoutes from './routes/ai-ads.js'
 import adsPublicRoutes from './routes/ads-public.js'
+import carouselArticlesRoutes from './routes/carousel-articles.js'
 import adminAdsRoutes from './routes/admin-ads.js'
 import { initProviders, loadProviderConfigFromEnv, reloadProviderFromDB } from './lib/contentReview/providers/index.js'
 import { startReviewWorker, stopReviewWorker, retryFailedReviews } from './workers/reviewScheduler.js'
@@ -172,6 +174,9 @@ app.use('/api/v1/ai', aiPublishLimiter, aiPublishRoutes)
 // Public ad serving
 app.use('/api/v1/ads', adsPublicRoutes)
 
+// Carousel articles (public)
+app.use('/api/v1/carousel-articles', carouselArticlesRoutes)
+
 // Health check
 app.get('/api/v1/health', (_req, res) => {
   res.json({
@@ -196,6 +201,7 @@ async function start() {
   logger.info('🔄 Running database migration...')
   await migrate()
   await migrateMediaArticleId()
+  await migrateHeroCarouselSettings()
   logger.info('✅ Database ready')
 
   // Initialize login cleanup task
