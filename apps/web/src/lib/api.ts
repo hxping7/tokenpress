@@ -13,7 +13,18 @@ class ApiClient {
   private get baseUrl(): string { return getApiBase() }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}/api/v1${path}`
+    // 确保 path 以 / 开头
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    
+    // 构建完整URL，避免重复 /api/v1 前缀
+    let url: string
+    if (this.baseUrl && this.baseUrl !== '') {
+      // 如果 baseUrl 不为空，直接使用（假设它已经包含了必要的前缀）
+      url = `${this.baseUrl}${normalizedPath}`
+    } else {
+      // 如果 baseUrl 为空，添加 /api/v1 前缀
+      url = `/api/v1${normalizedPath}`
+    }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
