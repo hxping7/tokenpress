@@ -159,7 +159,7 @@ This is an article for testing the API publish feature.`)
       // Generate formatted title
       const formattedTitle = formatTitle(title, titleBold, titleColor)
 
-      const response = await fetch(`${baseUrl}/ai/publish`, {
+      const response = await fetch(`${baseUrl}/api/v1/ai/publish`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ This is an article for testing the API publish feature.`)
       const token = tokens.find((t: Token) => t.id === Number(selectedToken))
       if (!token) throw new Error(t('aiDebug.tokenNotExist', backendLocale))
 
-      const response = await fetch(`${baseUrl}/ai/articles/${slug}`, {
+      const response = await fetch(`${baseUrl}/api/v1/ai/articles/${slug}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token.token}`,
