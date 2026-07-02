@@ -95,6 +95,10 @@ WORKDIR /app/apps/web
 
 ENV NODE_ENV=production
 ENV PORT=4000
+# Docker 内部后端地址（用于 SSR 和 rewrites）
+ENV BACKEND_URL=http://backend:4001
+# 客户端使用相对路径（已在构建时嵌入）
+ENV NEXT_PUBLIC_API_URL=
 
 EXPOSE 4000
 

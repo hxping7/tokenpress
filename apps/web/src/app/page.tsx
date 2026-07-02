@@ -65,7 +65,7 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
         id: `article-${article.id}`,
         imageUrl: article.coverImage,
         linkUrl: `${article.section?.path || '/blog'}/${article.slug}`,
-        linkTarget: '_self' as const,
+        linkTarget: '_blank' as const,  // 在新窗口打开
       }))
       
       return { slides, size: heroSize }
@@ -76,7 +76,12 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
     let slides: HeroSlide[] = []
     if (heroSlidesValue) {
       try {
-        slides = JSON.parse(heroSlidesValue)
+        const parsedSlides = JSON.parse(heroSlidesValue)
+        // 为每个 slide 添加默认的 linkTarget（如果没有设置）
+        slides = parsedSlides.map((slide: any) => ({
+          ...slide,
+          linkTarget: slide.linkTarget || '_blank',  // 默认在新窗口打开
+        }))
       } catch {
         slides = []
       }
