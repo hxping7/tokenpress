@@ -33,7 +33,11 @@ export const revalidate = 60
 
 async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
   try {
-    const baseUrl = typeof window === 'undefined' ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') : ''
+    // 服务器端：使用 BACKEND_URL（Docker内网）或默认地址
+    // 客户端：使用空字符串（相对路径，走 nginx 代理）
+    const baseUrl = typeof window === 'undefined' 
+      ? `${process.env.BACKEND_URL || 'http://localhost:4001'}`
+      : ''
     
     // 获取所有相关的设置项
     const settingsRes = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size,hero_carousel_use_articles,hero_carousel_article_source,hero_carousel_max_items`, { next: { revalidate: 60 } })
@@ -60,7 +64,7 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
       const slides: HeroSlide[] = articles.map((article: any) => ({
         id: `article-${article.id}`,
         imageUrl: article.coverImage,
-        linkUrl: `/${article.section?.path || 'blog'}/${article.slug}`,
+        linkUrl: `${article.section?.path || '/blog'}/${article.slug}`,
         linkTarget: '_self' as const,
       }))
       

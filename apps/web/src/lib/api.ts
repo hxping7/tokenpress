@@ -1,7 +1,8 @@
-const CLIENT_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'
-// SSR: 请求自身 localhost:4000，由 next.config.mjs rewrites 代理到后端
-// CSR: 使用 NEXT_PUBLIC_API_URL（相对路径走 nginx，绝对路径直连）
-const SERVER_API_BASE = 'http://localhost:4000/api/v1'
+// 统一 baseUrl 不带 /api/v1 前缀
+// 客户端：使用 NEXT_PUBLIC_API_URL 或相对路径（走 nginx 代理）
+const CLIENT_API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
+// 服务器端：使用 BACKEND_URL（Docker 内网直连后端）或默认地址
+const SERVER_API_BASE = process.env.BACKEND_URL || 'http://localhost:4001'
 
 function getApiBase(): string {
   if (typeof window === 'undefined') return SERVER_API_BASE
@@ -12,7 +13,7 @@ class ApiClient {
   private get baseUrl(): string { return getApiBase() }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${path}`
+    const url = `${this.baseUrl}/api/v1${path}`
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

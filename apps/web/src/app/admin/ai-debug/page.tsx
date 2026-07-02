@@ -65,6 +65,7 @@ const formatTitle = (rawTitle: string, bold: boolean, color: string): string => 
 export default function AIDebugPage() {
   const { token: authToken } = useAuthStore()
   const { backendLocale } = useLocaleStore()
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || ''
 
   // Form state
   const [selectedToken, setSelectedToken] = useState<string>('')
@@ -158,7 +159,7 @@ This is an article for testing the API publish feature.`)
       // Generate formatted title
       const formattedTitle = formatTitle(title, titleBold, titleColor)
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1'}/ai/publish`, {
+      const response = await fetch(`${baseUrl}/ai/publish`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +208,7 @@ This is an article for testing the API publish feature.`)
       const token = tokens.find((t: Token) => t.id === Number(selectedToken))
       if (!token) throw new Error(t('aiDebug.tokenNotExist', backendLocale))
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api/v1'}/ai/articles/${slug}`, {
+      const response = await fetch(`${baseUrl}/ai/articles/${slug}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token.token}`,
@@ -554,7 +555,7 @@ This is an article for testing the API publish feature.`)
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-medium text-sm">{t('aiDebug.curlExample', backendLocale)}</h3>
               <button
-                onClick={() => copyToClipboard(`curl -X POST ${process.env.NEXT_PUBLIC_API_URL}/ai/publish \
+                onClick={() => copyToClipboard(`curl -X POST ${baseUrl}/api/v1/ai/publish \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -570,7 +571,7 @@ This is an article for testing the API publish feature.`)
               </button>
             </div>
             <pre className="text-xs font-mono text-t-text-secondary overflow-auto whitespace-pre-wrap">
-{`curl -X POST ${process.env.NEXT_PUBLIC_API_URL}/ai/publish \
+{`curl -X POST ${baseUrl}/api/v1/ai/publish \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
