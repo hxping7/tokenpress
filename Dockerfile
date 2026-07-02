@@ -68,9 +68,9 @@ RUN pnpm install --frozen-lockfile
 
 COPY apps/web ./apps/web
 
-# 设置API相对路径，支持IP和域名访问
-ENV NEXT_PUBLIC_API_URL=/api/v1
-# Docker 内部后端地址（用于 rewrites）
+# 设置API相对路径为空，客户端使用相对路径走 nginx 代理
+ENV NEXT_PUBLIC_API_URL=
+# Docker 内部后端地址（用于 rewrites 和 SSR）
 ENV BACKEND_URL=http://backend:4001
 
 # 清理 Next.js 缓存确保每次构建都是最新的
