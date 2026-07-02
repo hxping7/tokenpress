@@ -170,7 +170,7 @@ This is an article for testing the API publish feature.`)
           section,
           status,
           tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-          coverImageUrl: coverImage || undefined,
+          coverImage: coverImage || undefined,
         }),
       })
 

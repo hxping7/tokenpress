@@ -305,7 +305,7 @@ export default function ArticlesPage() {
       content,
       section: editorSection,
       categoryId: categoryId || undefined,
-      coverImageUrl: coverImage || undefined,
+      coverImage: coverImage || undefined,
       status: articleStatus,
     }
 
