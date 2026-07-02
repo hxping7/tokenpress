@@ -30,9 +30,9 @@ const nextConfig = {
   },
   transpilePackages: ['@tokenpress/shared', 'tailwindcss', '@tailwindcss/typography'],
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api/v1'
-    // Only proxy when using relative path
-    if (apiUrl.startsWith('/')) {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
+    // Only proxy when using relative path (empty or starts with '/')
+    if (!apiUrl || apiUrl.startsWith('/')) {
       // Docker: use BACKEND_URL, Local: use localhost
       const backendUrl = process.env.BACKEND_URL || 'http://localhost:4001'
       return [
