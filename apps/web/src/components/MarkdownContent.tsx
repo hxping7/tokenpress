@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import rehypePrism from 'rehype-prism-plus'
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { Check, Copy } from 'lucide-react'
 import 'prismjs/themes/prism-tomorrow.css'
 
@@ -93,6 +93,28 @@ function CodeBlock({ className, children }: { className?: string; children: Reac
 
 export function MarkdownContent({ content }: MarkdownContentProps) {
   const headingCounter = useMemo(() => ({} as Record<string, number>), [content])
+  const [isDark, setIsDark] = useState(true)
+  const themeRef = useRef(isDark)
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const theme = document.documentElement.getAttribute('data-theme') || 'night'
+      const dark = theme !== 'light'
+      setIsDark(dark)
+      themeRef.current = dark
+    }
+    updateTheme()
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-theme') {
+          updateTheme()
+        }
+      })
+    })
+    observer.observe(document.documentElement, { attributes: true })
+    return () => observer.disconnect()
+  }, [])
 
   const makeHeadingId = (text: string): string => {
     const base = generateHeadingId(text)
@@ -104,8 +126,10 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     return `${base}-${headingCounter[base]}`
   }
 
+  const proseClass = isDark ? 'prose-invert' : ''
+
   return (
-    <div className="prose prose-invert prose-lg max-w-none
+    <div className={`prose prose-lg max-w-none ${proseClass}
       prose-headings:text-t-text-primary prose-headings:font-semibold
       prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
       prose-h2:text-2xl prose-h2:mt-6 prose-h2:mb-3
@@ -126,7 +150,7 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
       prose-iframe:rounded-xl prose-iframe:border prose-iframe:border-t-border prose-iframe:w-full
       prose-video:rounded-xl prose-video:border prose-video:border-t-border prose-video:w-full
       prose-audio:w-full
-    ">
+    `}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypePrism]}

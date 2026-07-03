@@ -94,25 +94,89 @@
     --bg-secondary: #f5f5f7;
     --bg-tertiary: #e8e8ed;
     --text-primary: #1d1d1f;
-    --text-secondary: #6e6e73;
-    --text-muted: #a1a1a6;
+    --text-secondary: #3a3a3f;
+    --text-muted: #8a8a8f;
     --accent-blue: #007aff;
     --accent-purple: #5856d6;
     --accent-blue-dim: #0055cc;
-    --border-color: rgba(0, 0, 0, 0.08);
+    --border-color: rgba(0, 0, 0, 0.12);
     --hover-bg: rgba(0, 0, 0, 0.04);
     --gradient-from: #007aff;
     --gradient-via: #5a9eff;
     --gradient-to: #5856d6;
     --grid-pattern: rgba(0, 0, 0, 0.03);
     --selection-bg: rgba(0, 122, 255, 0.2);
-    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
-    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.4);
     --focus-ring: rgba(0, 122, 255, 0.5);
-    --card-border-hover: rgba(0, 122, 255, 0.2);
-    --section-divider: rgba(0, 0, 0, 0.1);
+    --card-border-hover: rgba(0, 122, 255, 0.3);
+    --section-divider: rgba(0, 0, 0, 0.12);
     --btn-glow-from: rgba(0, 122, 255, 0.12);
     --btn-glow-to: rgba(88, 86, 214, 0.12);
+  }
+
+  /* ===== 亮白主题：代码块亮色覆盖 ===== */
+  [data-theme='light'] pre[class*="language-"],
+  [data-theme='light'] code[class*="language-"] {
+    color: #1d1d1f !important;
+    background: #f5f5f7 !important;
+  }
+
+  [data-theme='light'] pre[class*="language-"] {
+    background: #f0f0f5 !important;
+  }
+
+  [data-theme='light'] .token.comment,
+  [data-theme='light'] .token.prolog,
+  [data-theme='light'] .token.doctype,
+  [data-theme='light'] .token.cdata {
+    color: #8e908c !important;
+  }
+
+  [data-theme='light'] .token.punctuation {
+    color: #525252 !important;
+  }
+
+  [data-theme='light'] .token.property,
+  [data-theme='light'] .token.tag,
+  [data-theme='light'] .token.boolean,
+  [data-theme='light'] .token.number,
+  [data-theme='light'] .token.constant,
+  [data-theme='light'] .token.symbol,
+  [data-theme='light'] .token.deleted {
+    color: #e06c75 !important;
+  }
+
+  [data-theme='light'] .token.selector,
+  [data-theme='light'] .token.attr-name,
+  [data-theme='light'] .token.string,
+  [data-theme='light'] .token.char,
+  [data-theme='light'] .token.builtin,
+  [data-theme='light'] .token.inserted {
+    color: #50a14f !important;
+  }
+
+  [data-theme='light'] .token.operator,
+  [data-theme='light'] .token.entity,
+  [data-theme='light'] .token.url {
+    color: #0184bc !important;
+  }
+
+  [data-theme='light'] .token.atrule,
+  [data-theme='light'] .token.attr-value,
+  [data-theme='light'] .token.keyword {
+    color: #a626a4 !important;
+  }
+
+  [data-theme='light'] .token.function,
+  [data-theme='light'] .token.class-name {
+    color: #4078f2 !important;
+  }
+
+  [data-theme='light'] .token.regex,
+  [data-theme='light'] .token.important,
+  [data-theme='light'] .token.variable {
+    color: #e45649 !important;
   }
 
   /* ===== 太空深蓝 ===== */

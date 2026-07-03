@@ -24,7 +24,7 @@ const themeNames: { key: ThemeName; labelZh: string; labelEn: string; color: str
   { key: 'night', labelZh: '暗夜蓝紫', labelEn: 'Night Blue', color: '#00d4ff' },
   { key: 'cyber', labelZh: '赛博青绿', labelEn: 'Cyber Green', color: '#00ff88' },
   { key: 'lava', labelZh: '熔岩橙红', labelEn: 'Lava Orange', color: '#ff6b35' },
-  { key: 'light', labelZh: '极简亮白', labelEn: 'Minimal Light', color: '#007aff' },
+  { key: 'light', labelZh: '极简亮白', labelEn: 'Minimal Light', color: '#f5c542' },
   { key: 'space', labelZh: '太空深蓝', labelEn: 'Space Blue', color: '#4488ff' },
 ]
 
