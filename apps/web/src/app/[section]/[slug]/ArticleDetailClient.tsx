@@ -133,23 +133,9 @@ export function ArticleDetailClient({ params }: Props) {
         </div>
       </header>
 
-      {/* Cover Image */}
-      {article.coverImage && (
-        <div className="max-w-4xl mx-auto px-4 mt-8">
-          <Image
-            src={article.coverImage}
-            alt={article.title}
-            width={1200}
-            height={630}
-            className="w-full rounded-2xl border border-t-border"
-            priority
-          />
-        </div>
-      )}
-
       {/* Content with Sidebar Layout */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_280px] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_240px] gap-6">
           {/* Left: Table of Contents - 桌面端固定 */}
           <aside className="hidden lg:block">
             <div className="sticky top-20">
@@ -157,8 +143,18 @@ export function ArticleDetailClient({ params }: Props) {
             </div>
           </aside>
 
-          {/* Center: Article Content */}
+          {/* Center: Cover Image + Article Content */}
           <main className="min-w-0">
+            {article.coverImage && (
+              <Image
+                src={article.coverImage}
+                alt={article.title}
+                width={1200}
+                height={630}
+                className="w-full rounded-2xl border border-t-border mb-8"
+                priority
+              />
+            )}
             <MarkdownContent content={article.content} />
           </main>
 
