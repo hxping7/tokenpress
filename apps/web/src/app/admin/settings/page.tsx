@@ -67,6 +67,7 @@ export default function SettingsPage() {
   const [heroCarouselUseArticles, setHeroCarouselUseArticles] = useState(false)
   const [heroCarouselArticleSource, setHeroCarouselArticleSource] = useState('latest')
   const [heroCarouselMaxItems, setHeroCarouselMaxItems] = useState(5)
+  const [heroCarouselInterval, setHeroCarouselInterval] = useState(5) // 单位：秒
 
   // ===== 媒体库 =====
   const [showMediaBrowser, setShowMediaBrowser] = useState(false)
@@ -330,6 +331,9 @@ export default function SettingsPage() {
       if (s.hero_carousel_max_items) {
         setHeroCarouselMaxItems(parseInt(s.hero_carousel_max_items) || 5)
       }
+      if (s.hero_carousel_interval) {
+        setHeroCarouselInterval(parseInt(s.hero_carousel_interval) || 5)
+      }
       if (s.copyright_text !== undefined) setCopyrightText(s.copyright_text)
       setIcpNumber(s.icp_number || '')
       setIcpUrl(s.icp_url || 'https://beian.miit.gov.cn/')
@@ -549,6 +553,7 @@ export default function SettingsPage() {
       hero_carousel_use_articles: heroCarouselUseArticles.toString(),
       hero_carousel_article_source: heroCarouselArticleSource,
       hero_carousel_max_items: heroCarouselMaxItems.toString(),
+      hero_carousel_interval: heroCarouselInterval.toString(),
       friend_links_columns: friendLinksColumns,
       default_theme: defaultTheme,
       frontend_locale: frontendLocale,
@@ -1003,6 +1008,20 @@ export default function SettingsPage() {
               </select>
             </div>
           )}
+
+          {/* 轮播切换间隔时间设置 */}
+          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
+            <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselInterval', adminLocale) || '切换间隔（秒）'}</span>
+            <input
+              type="number"
+              min={1}
+              max={60}
+              value={heroCarouselInterval}
+              onChange={(e) => setHeroCarouselInterval(parseInt(e.target.value) || 5)}
+              className="w-20 px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue text-center"
+            />
+            <span className="text-xs text-t-text-muted">{t('settings.heroCarouselIntervalDesc', adminLocale) || '每张幻灯片显示的时间'}</span>
+          </div>
 
           {/* 轮播效果选择 */}
           <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">

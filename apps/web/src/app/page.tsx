@@ -31,7 +31,7 @@ interface Article {
 export const dynamic = 'force-dynamic'
 export const revalidate = 60
 
-async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
+async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string; interval: number }> {
   try {
     // 服务器端：使用 BACKEND_URL（Docker内网）或默认地址
     // 客户端：使用空字符串（相对路径，走 nginx 代理）
@@ -40,14 +40,15 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
       : ''
     
     // 获取所有相关的设置项
-    const settingsRes = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size,hero_carousel_use_articles,hero_carousel_article_source,hero_carousel_max_items`, { next: { revalidate: 60 } })
-    if (!settingsRes.ok) return { slides: [], size: 'default' }
+    const settingsRes = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size,hero_carousel_use_articles,hero_carousel_article_source,hero_carousel_max_items,hero_carousel_interval`, { next: { revalidate: 60 } })
+    if (!settingsRes.ok) return { slides: [], size: 'default', interval: 5 }
     
     const settingsJson = await settingsRes.json()
     const settings = settingsJson.data || {}
     
     const heroSize = settings.hero_size || 'default'
     const useArticles = settings.hero_carousel_use_articles === 'true'
+    const interval = parseInt(settings.hero_carousel_interval) || 5
     
       // 如果启用了文章轮播图，从API获取文章封面图
       if (useArticles) {
@@ -55,7 +56,7 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
         const limit = parseInt(settings.hero_carousel_max_items) || 5
         
         const articlesRes = await fetch(`${baseUrl}/api/v1/carousel-articles?source=${source}&limit=${limit}`, { next: { revalidate: 60 } })
-      if (!articlesRes.ok) return { slides: [], size: heroSize }
+      if (!articlesRes.ok) return { slides: [], size: heroSize, interval }
       
       const articlesJson = await articlesRes.json()
       const articles = articlesJson.data || []
@@ -68,7 +69,7 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
         linkTarget: '_blank' as const,  // 在新窗口打开
       }))
       
-      return { slides, size: heroSize }
+      return { slides, size: heroSize, interval }
     }
     
     // 否则，使用自定义的轮播图设置
@@ -87,9 +88,9 @@ async function getHeroSlides(): Promise<{ slides: HeroSlide[]; size: string }> {
       }
     }
     
-    return { slides, size: heroSize }
+    return { slides, size: heroSize, interval }
   } catch {
-    return { slides: [], size: 'default' }
+    return { slides: [], size: 'default', interval: 5 }
   }
 }
 
@@ -114,7 +115,7 @@ function HeroFallback() {
 }
 
 export default async function HomePage() {
-  const [{ slides: heroSlides, size: heroSize }, recentArticles] = await Promise.all([
+  const [{ slides: heroSlides, size: heroSize, interval: heroInterval }, recentArticles] = await Promise.all([
     getHeroSlides(),
     getRecentArticles(),
   ])
@@ -123,7 +124,7 @@ export default async function HomePage() {
     <>
       {/* Hero - 宣传页图片轮播或默认 SVG */}
       <Suspense fallback={<HeroFallback />}>
-        <HeroCarousel slides={heroSlides} size={heroSize as 'default' | 'fullscreen' | 'wide'} />
+        <HeroCarousel slides={heroSlides} size={heroSize as 'default' | 'fullscreen' | 'wide'} interval={heroInterval} />
       </Suspense>
 
       {/* 搜索栏 */}

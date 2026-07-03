@@ -15,9 +15,10 @@ interface HeroSlide {
 interface HeroCarouselProps {
   slides: HeroSlide[]
   size?: 'default' | 'fullscreen' | 'wide'
+  interval?: number // 切换间隔，单位：秒，默认5秒
 }
 
-export function HeroCarousel({ slides, size = 'default' }: HeroCarouselProps) {
+export function HeroCarousel({ slides, size = 'default', interval = 5 }: HeroCarouselProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
@@ -33,9 +34,9 @@ export function HeroCarousel({ slides, size = 'default' }: HeroCarouselProps) {
   useEffect(() => {
     if (slides.length <= 1 || isPaused) return
 
-    const interval = setInterval(nextSlide, 5000)
-    return () => clearInterval(interval)
-  }, [slides.length, isPaused, nextSlide])
+    const timer = setInterval(nextSlide, interval * 1000)
+    return () => clearInterval(timer)
+  }, [slides.length, isPaused, nextSlide, interval])
 
   // 使用默认 SVG
   const useDefaultSvg = slides.length === 0 || !slides[0]?.imageUrl

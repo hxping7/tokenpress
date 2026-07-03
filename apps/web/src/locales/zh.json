@@ -146,6 +146,8 @@
     "heroCarouselArticleSourceLatest": "最新文章",
     "heroCarouselArticleSourceHot": "热点文章",
     "heroCarouselMaxItems": "轮播数量",
+    "heroCarouselInterval": "切换间隔（秒）",
+    "heroCarouselIntervalDesc": "每张幻灯片显示的时间",
     "footerSection": "版权信息",
     "footerCopyrightText": "版权声明文本",
     "footerCopyrightPlaceholder": "© 2026 TokenPress. All rights reserved.",

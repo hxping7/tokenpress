@@ -146,6 +146,8 @@
     "heroCarouselArticleSourceLatest": "Latest Articles",
     "heroCarouselArticleSourceHot": "Hot Articles",
     "heroCarouselMaxItems": "Carousel Items",
+    "heroCarouselInterval": "Interval (seconds)",
+    "heroCarouselIntervalDesc": "Time each slide is displayed",
     "footerSection": "Copyright Info",
     "footerCopyrightText": "Copyright Text",
     "footerCopyrightPlaceholder": "© 2026 TokenPress. All rights reserved.",

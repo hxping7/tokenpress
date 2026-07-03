@@ -1,14 +1,18 @@
 # ===== Backend =====
 FROM node:20-alpine AS backend-builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+# 使用 npm 安装 pnpm（配置淘宝镜像加速）
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm@9.15.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
 COPY packages/shared ./packages/shared
 COPY apps/server ./apps/server
 
-RUN echo "registry=https://registry.npmmirror.com" > .npmrc && \
+RUN rm -f .npmrc && \
+    echo "registry=https://registry.npmmirror.com" > .npmrc && \
     echo "node-linker=hoisted" >> .npmrc && \
     echo "shamefully-hoist=true" >> .npmrc
 
@@ -23,11 +27,8 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ libc-dev
 
-RUN echo "registry=https://registry.npmmirror.com" > .npmrc && \
-    echo "node-linker=hoisted" >> .npmrc && \
-    echo "shamefully-hoist=true" >> .npmrc
-
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm@9.15.0
 
 COPY --from=backend-builder /app/apps/server/dist ./apps/server/dist
 COPY --from=backend-builder /app/apps/server/src/db/defaults ./apps/server/dist/db/defaults
@@ -54,13 +55,15 @@ CMD ["node", "dist/index.js"]
 # ===== Frontend =====
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm@9.15.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
 COPY packages/shared ./packages/shared
 
-RUN echo "registry=https://registry.npmmirror.com" > .npmrc && \
+RUN rm -f .npmrc && \
+    echo "registry=https://registry.npmmirror.com" > .npmrc && \
     echo "node-linker=hoisted" >> .npmrc && \
     echo "shamefully-hoist=true" >> .npmrc
 
@@ -81,7 +84,6 @@ RUN pnpm --filter @tokenpress/web build
 # Frontend production
 FROM node:20-alpine AS frontend
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # 复制构建产物和依赖
 COPY --from=frontend-builder /app/apps/web ./apps/web
