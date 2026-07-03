@@ -38,11 +38,13 @@ interface Category {
   section: { id: number; name: string; slug: string; path: string }
 }
 
-const sectionMap: Record<string, string> = {
-  'token_plan': 'Token 计划',
-  'ai_coding': 'AI 编程',
-  'ai_works': 'AI 作品',
-  'blog': '博客',
+interface Section {
+  id: number
+  name: string
+  slug: string
+  path: string
+  description: string | null
+  isActive: number
 }
 
 // 标题颜色选项
@@ -74,12 +76,18 @@ export default function ArticlesPage() {
   const [editingArticle, setEditingArticle] = useState<Article | null>(null)
   const [loadingArticle, setLoadingArticle] = useState(false)
 
+  // 获取板块名称的辅助函数
+  const getSectionName = (slug: string): string => {
+    const section = sectionsData?.data?.find((s: Section) => s.slug === slug)
+    return section?.name || slug || '-'
+  }
+
   // Editor state
   const [title, setTitle] = useState('')
   const [titleBold, setTitleBold] = useState(false)
   const [titleColor, setTitleColor] = useState('')
   const [content, setContent] = useState('')
-  const [editorSection, setEditorSection] = useState<keyof typeof sectionMap>('blog')
+  const [editorSection, setEditorSection] = useState<string>('')
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const [coverImage, setCoverImage] = useState('')
   const [articleStatus, setArticleStatus] = useState<'draft' | 'published' | 'scheduled' | 'pending_review'>('draft')
@@ -94,6 +102,12 @@ export default function ArticlesPage() {
   const { data: mediaData } = useQuery({
     queryKey: ['cover-media'],
     queryFn: () => api.getMedia({ limit: 50 }),
+  })
+
+  // 板块数据（动态获取）
+  const { data: sectionsData } = useQuery({
+    queryKey: ['admin-sections'],
+    queryFn: () => api.get('/sections'),
   })
 
   const { data: articlesData, isLoading } = useQuery({
@@ -152,7 +166,7 @@ export default function ArticlesPage() {
     setTitleBold(false)
     setTitleColor('')
     setContent('')
-    setEditorSection('blog')
+    setEditorSection('')
     setCategoryId(null)
     setCoverImage('')
     setArticleStatus('draft')
@@ -278,7 +292,7 @@ export default function ArticlesPage() {
       setTitle(text)
       setTitleBold(bold)
       setTitleColor(color)
-      setEditorSection((article.section?.slug || 'blog') as keyof typeof sectionMap)
+      setEditorSection(article.section?.slug || '')
       setCategoryId(article.categoryId)
       setCoverImage(article.coverImage || '')
       setArticleStatus(article.status as 'draft' | 'published' | 'scheduled' | 'pending_review')
@@ -324,7 +338,9 @@ export default function ArticlesPage() {
     }
   }
 
-  const categories = categoriesData?.data?.filter((c: Category) => c.section?.slug === editorSection) || []
+  const categories = categoriesData?.data?.filter((c: Category) => 
+    editorSection ? c.section?.slug === editorSection : true
+  ) || []
 
   return (
     <div className="space-y-6">
@@ -361,8 +377,8 @@ export default function ArticlesPage() {
           className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue"
         >
           <option value="">{t('articles.allCategories', backendLocale)}</option>
-          {Object.entries(sectionMap).map(([key, label]) => (
-            <option key={key} value={key}>{label}</option>
+          {sectionsData?.data?.map((s: Section) => (
+            <option key={s.id} value={s.slug}>{s.name}</option>
           ))}
         </select>
         <select
@@ -463,7 +479,7 @@ export default function ArticlesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className="px-2 py-1 bg-t-bg-secondary rounded-lg">{sectionMap[article.section?.slug] || article.section?.name || '-'}</span>
+                      <span className="px-2 py-1 bg-t-bg-secondary rounded-lg">{getSectionName(article.section?.slug)}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -637,19 +653,20 @@ export default function ArticlesPage() {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t('articles.formSection', backendLocale)}</label>
-                    <select
-                      value={editorSection}
-                      onChange={(e) => { setEditorSection(e.target.value as keyof typeof sectionMap); setCategoryId(null) }}
-                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
-                    >
-                      {Object.entries(sectionMap).map(([key, label]) => (
-                        <option key={key} value={key}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('articles.formSection', backendLocale)}</label>
+                      <select
+                        value={editorSection}
+                        onChange={(e) => { setEditorSection(e.target.value); setCategoryId(null) }}
+                        className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                      >
+                        <option value="">{t('articles.selectSection', backendLocale)}</option>
+                        {sectionsData?.data?.map((s: Section) => (
+                          <option key={s.id} value={s.slug}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">{t('articles.formCategory', backendLocale)}</label>
                     <select

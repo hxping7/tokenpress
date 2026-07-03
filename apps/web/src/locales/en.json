@@ -234,6 +234,7 @@
     "formTitle": "Title",
     "formSection": "Section",
     "formCategory": "Category",
+    "selectSection": "Select Section",
     "selectCategory": "Select Category",
     "formCoverImage": "Cover Image",
     "formTags": "Tags (comma separated)",

@@ -234,6 +234,7 @@
     "formTitle": "标题",
     "formSection": "板块",
     "formCategory": "分类",
+    "selectSection": "选择板块",
     "selectCategory": "选择分类",
     "formCoverImage": "封面图",
     "formTags": "标签 (逗号分隔)",
