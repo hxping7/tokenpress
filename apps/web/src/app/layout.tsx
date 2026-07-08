@@ -6,6 +6,7 @@ import { BackToTop } from '@/components/BackToTop'
 import { Providers } from '@/providers/query-provider'
 import { LocaleInitializer } from '@/components/LocaleInitializer'
 import { AnalyticsLoader } from '@/components/AnalyticsLoader'
+import { getSiteUrl } from '@/lib/site-url'
 
 // 使用系统字体，无网络依赖
 const SYSTEM_FONT = `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'Microsoft YaHei', sans-serif`
@@ -13,7 +14,7 @@ const SYSTEM_FONT = `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Not
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: 'TokenPress — Token 力量无限放大',
     template: '%s | TokenPress',
@@ -24,16 +25,17 @@ export const metadata: Metadata = {
   creator: 'Token00',
   openGraph: {
     type: 'website',
+    siteName: 'Token00',
     locale: 'zh_CN',
-    url: SITE_URL,
-    siteName: 'TokenPress',
+    url: getSiteUrl(),
     title: 'TokenPress — Token 力量无限放大',
-    description: 'AI赋能综合内容平台',
+    description: 'AI赋能综合内容平台，聚焦Token计划、AI编程、AI作品与技术博客',
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@token00',
     title: 'TokenPress — Token 力量无限放大',
-    description: 'AI赋能综合内容平台',
+    description: 'AI赋能综合内容平台，聚焦Token计划、AI编程、AI作品与技术博客',
   },
   robots: {
     index: true,
@@ -59,6 +61,29 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="min-h-screen flex flex-col antialiased bg-t-bg-primary text-t-text-primary font-sans" style={{ fontFamily: SYSTEM_FONT }}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Token00',
+              url: getSiteUrl(),
+              description: 'AI赋能综合内容平台，聚焦Token计划、AI编程、AI作品与技术博客',
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Token00',
+              url: getSiteUrl(),
+            }),
+          }}
+        />
         <Providers>
           <LocaleInitializer />
           <AnalyticsLoader />

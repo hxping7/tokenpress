@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
+import { getSiteUrl } from '@/lib/site-url'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL!
+const SITE_URL = getSiteUrl()
 
 export const dynamic = 'force-dynamic'
 
@@ -9,7 +10,7 @@ export async function GET() {
   try {
     const apiUrl = process.env.BACKEND_URL || 'http://localhost:4001'
     const res = await fetch(`${apiUrl}/api/v1/articles?limit=1000&status=published`, {
-      next: { revalidate: 3600 },
+      next: { tags: ['articles'], revalidate: 3600 },
     })
     if (res.ok) {
       const data = await res.json()
@@ -23,7 +24,7 @@ export async function GET() {
   try {
     const apiUrl = process.env.BACKEND_URL || 'http://localhost:4001'
     const res = await fetch(`${apiUrl}/api/v1/sections`, {
-      next: { revalidate: 3600 },
+      next: { tags: ['sections'], revalidate: 3600 },
     })
     if (res.ok) {
       const data = await res.json()

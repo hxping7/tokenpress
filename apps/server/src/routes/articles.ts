@@ -56,6 +56,7 @@ router.get('/', async (req, res) => {
       status: articles.status,
       publishedAt: articles.publishedAt,
       createdAt: articles.createdAt,
+      updatedAt: articles.updatedAt,
       author: { id: users.id, username: users.username, displayName: users.displayName },
       category: { id: categories.id, name: categories.name, slug: categories.slug },
       section: { id: sections.id, name: sections.name, slug: sections.slug, path: sections.path },
