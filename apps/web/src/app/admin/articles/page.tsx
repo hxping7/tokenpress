@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { t } from '@/lib/i18n'
+import { toast } from '@/components/ui/Toast'
 import {
   Plus, Search, Edit, Trash2, Eye,
   X, Check, Image as ImageIcon, Loader2, Upload, Bold, Palette, Shuffle,
@@ -96,6 +97,13 @@ export default function ArticlesPage() {
   const [uploadingCover, setUploadingCover] = useState(false)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
 
+  // 批量管理状态
+  const [selectedItems, setSelectedItems] = useState<number[]>([])
+  const [batchStatus, setBatchStatus] = useState('')
+  const [batchCategory, setBatchCategory] = useState('')
+  const [batchSection, setBatchSection] = useState('')
+  const [isApplying, setIsApplying] = useState(false)
+
   const coverInputRef = useRef<HTMLInputElement>(null)
 
   // 媒体库数据
@@ -153,6 +161,83 @@ export default function ArticlesPage() {
     mutationFn: (id: number) => api.deleteArticle(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-articles'] }),
   })
+
+  const batchUpdateMutation = useMutation({
+    mutationFn: ({ action, data }: { action: 'updateStatus' | 'updateCategory' | 'updateSection'; data: any }) =>
+      api.batchArticles(action, selectedItems, data),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] })
+      setSelectedItems([])
+      setBatchStatus('')
+      setBatchCategory('')
+      setBatchSection('')
+      toast.success(res?.message || t('articles.batchApplied', backendLocale))
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || t('articles.batchFailed', backendLocale))
+    },
+  })
+
+  const batchDeleteMutation = useMutation({
+    mutationFn: () => api.batchArticles('delete', selectedItems),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] })
+      setSelectedItems([])
+      setBatchStatus('')
+      setBatchCategory('')
+      setBatchSection('')
+      toast.success(res?.message || t('articles.batchDeleted', backendLocale))
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || t('articles.batchFailed', backendLocale))
+    },
+  })
+
+  // 当前页文章 ID（用于本页全选）
+  const pageIds: number[] = articlesData?.data?.map((a: Article) => a.id) ?? []
+
+  const toggleSelect = (id: number) => {
+    setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const toggleSelectAll = () => {
+    const allSelected = pageIds.length > 0 && pageIds.every(id => selectedItems.includes(id))
+    if (allSelected) {
+      setSelectedItems(prev => prev.filter(id => !pageIds.includes(id)))
+    } else {
+      setSelectedItems(prev => Array.from(new Set([...prev, ...pageIds])))
+    }
+  }
+
+  const applyBatchStatus = () => {
+    if (!batchStatus) return
+    batchUpdateMutation.mutate({ action: 'updateStatus', data: { status: batchStatus } })
+  }
+
+  const applySectionAndCategory = async () => {
+    if (!batchSection) return
+    const items = [...selectedItems]           // 快照，防止异步间状态变更
+    const sid = Number(batchSection)
+    const cid = batchCategory === '0' ? null : batchCategory ? Number(batchCategory) : null
+
+    setIsApplying(true)
+    try {
+      await api.batchArticles('updateSection', items, { sectionId: sid })
+      if (batchCategory) {
+        await api.batchArticles('updateCategory', items, { categoryId: cid })
+      }
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] })
+      setSelectedItems([])
+      setBatchSection('')
+      setBatchCategory('')
+      setBatchStatus('')
+      toast.success(t('articles.batchApplied', backendLocale))
+    } catch (err: any) {
+      toast.error(err?.message || t('articles.batchFailed', backendLocale))
+    } finally {
+      setIsApplying(false)
+    }
+  }
 
   // 滚动到高亮的文章
   useEffect(() => {
@@ -404,12 +489,111 @@ export default function ArticlesPage() {
         </select>
       </div>
 
+      {/* Batch Actions */}
+      {selectedItems.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 p-3 bg-t-accent-blue/10 border border-t-accent-blue/30 rounded-xl">
+          <span className="text-sm font-medium text-t-text-primary">
+            {t('articles.batchSelected', backendLocale)}: {selectedItems.length} {t('articles.batchItems', backendLocale)}
+          </span>
+          <div className="h-5 w-px bg-t-border" />
+
+          {/* 批量改状态 */}
+          <select
+            value={batchStatus}
+            onChange={(e) => setBatchStatus(e.target.value)}
+            className="px-3 py-1.5 text-sm bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue"
+          >
+            <option value="">{t('articles.batchSelectStatus', backendLocale)}</option>
+            <option value="published">{t('common.published', backendLocale)}</option>
+            <option value="draft">{t('common.draft', backendLocale)}</option>
+            <option value="archived">{t('common.archived', backendLocale)}</option>
+            <option value="scheduled">{t('articles.scheduled', backendLocale)}</option>
+          </select>
+          <button
+            onClick={applyBatchStatus}
+            disabled={!batchStatus || batchUpdateMutation.isPending}
+            className="px-3 py-1.5 text-sm bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary hover:bg-t-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {batchUpdateMutation.isPending ? t('articles.batchUpdating', backendLocale) : t('articles.batchApply', backendLocale)}
+          </button>
+
+          <div className="h-5 w-px bg-t-border" />
+
+          {/* 批量改板块 + 分类（先板块后分类，一个应用按钮） */}
+          <select
+            value={batchSection}
+            onChange={(e) => { setBatchSection(e.target.value); setBatchCategory('') }}
+            className="px-3 py-1.5 text-sm bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue"
+          >
+            <option value="">{t('articles.batchSelectSection', backendLocale)}</option>
+            {sectionsData?.data?.map((s: Section) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={batchCategory}
+            onChange={(e) => setBatchCategory(e.target.value)}
+            disabled={!batchSection}
+            className="px-3 py-1.5 text-sm bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {batchSection ? t('articles.batchSelectCategory', backendLocale) : t('articles.batchSelectSectionFirst', backendLocale)}
+            </option>
+            <option value="0">{t('articles.batchNoCategory', backendLocale)}</option>
+            {categoriesData?.data
+              ?.filter((c: Category) => c.section?.id === Number(batchSection))
+              .map((c: Category) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+          </select>
+
+          <button
+            onClick={applySectionAndCategory}
+            disabled={!batchSection || isApplying}
+            className="px-3 py-1.5 text-sm bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary hover:bg-t-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {isApplying ? t('articles.batchUpdating', backendLocale) : t('articles.batchApply', backendLocale)}
+          </button>
+
+          <div className="h-5 w-px bg-t-border" />
+
+          {/* 批量删除 */}
+          <button
+            onClick={() => {
+              if (confirm(t('articles.batchDeleteConfirm', backendLocale, String(selectedItems.length)))) {
+                batchDeleteMutation.mutate()
+              }
+            }}
+            disabled={batchDeleteMutation.isPending}
+            className="px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {batchDeleteMutation.isPending ? t('articles.batchDeleting', backendLocale) : t('articles.batchDelete', backendLocale)}
+          </button>
+          <button
+            onClick={() => { setSelectedItems([]); setBatchStatus(''); setBatchCategory(''); setBatchSection('') }}
+            className="px-3 py-1.5 text-sm text-t-text-secondary hover:text-t-text-primary transition-colors"
+          >
+            {t('articles.clearSelection', backendLocale)}
+          </button>
+        </div>
+      )}
+
       {/* Articles Table */}
       <div className="bg-t-bg-primary border border-t-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-t-bg-secondary border-b border-t-border">
               <tr>
+                <th className="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={pageIds.length > 0 && pageIds.every(id => selectedItems.includes(id))}
+                    onChange={toggleSelectAll}
+                    className="rounded"
+                    title={t('articles.selectAllOnPage', backendLocale)}
+                  />
+                </th>
                 <th
                   className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary cursor-pointer hover:text-t-text-primary select-none"
                   onClick={() => handleSort('title')}
@@ -451,9 +635,9 @@ export default function ArticlesPage() {
             </thead>
             <tbody className="divide-y divide-t-border">
               {isLoading ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-t-text-secondary">{t('common.loading', backendLocale)}</td></tr>
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-t-text-secondary">{t('common.loading', backendLocale)}</td></tr>
               ) : articlesData?.data?.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-t-text-secondary">{t('admin.noArticles', backendLocale)}</td></tr>
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-t-text-secondary">{t('admin.noArticles', backendLocale)}</td></tr>
               ) : (
                 articlesData?.data?.map((article: Article) => {
                   const isHighlighted = highlightId === String(article.id)
@@ -461,8 +645,16 @@ export default function ArticlesPage() {
                   <tr
                     key={article.id}
                     ref={isHighlighted ? highlightRef : undefined}
-                    className={`hover:bg-t-hover transition-colors ${isHighlighted ? 'bg-t-accent-blue/10 ring-2 ring-t-accent-blue ring-inset' : ''}`}
+                    className={`hover:bg-t-hover transition-colors ${isHighlighted ? 'bg-t-accent-blue/10 ring-2 ring-t-accent-blue ring-inset' : ''} ${selectedItems.includes(article.id) ? 'bg-t-accent-blue/5' : ''}`}
                   >
+                    <td className="px-4 py-4 w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(article.id)}
+                        onChange={() => toggleSelect(article.id)}
+                        className="rounded"
+                      />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {article.coverImage ? (

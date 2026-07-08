@@ -14,6 +14,42 @@ import { scheduleReview } from '../lib/contentReview/index.js'
 import { extractText as extractReviewText } from '../lib/contentReview/extractText.js'
 import { extractImages as extractReviewImages } from '../lib/contentReview/extractImages.js'
 
+// 删除单篇文章（含关联记录与可选媒体清理），供单条删除与批量删除复用。
+async function performArticleDelete(articleId: number, deleteMedia: boolean): Promise<{ found: boolean }> {
+  const existing = await db.select().from(articles).where(eq(articles.id, articleId)).get()
+  if (!existing) return { found: false }
+
+  if (deleteMedia) {
+    const linkedMedia = await db.select().from(media)
+      .where(eq(media.articleId, articleId)).all()
+
+    for (const m of linkedMedia) {
+      for (const urlField of [m.url, m.thumbnailUrl]) {
+        if (urlField && urlField.startsWith(MEDIA_URL_PREFIX)) {
+          const relativePath = urlField.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
+          const filePath = path.resolve(UPLOAD_DIR, relativePath)
+          if (filePath.startsWith(UPLOAD_DIR)) {
+            try { fs.unlinkSync(filePath) } catch { /* ignore cleanup failures */ }
+          }
+        }
+      }
+    }
+
+    if (linkedMedia.length > 0) {
+      await db.delete(media).where(eq(media.articleId, articleId)).run()
+    }
+  }
+
+  // 按外键顺序删除关联记录
+  await db.delete(articleTags).where(eq(articleTags.articleId, articleId)).run()
+  await db.delete(articleLikes).where(eq(articleLikes.articleId, articleId)).run()
+  await db.delete(articleViews).where(eq(articleViews.articleId, articleId)).run()
+  await db.delete(adLogs).where(eq(adLogs.articleId, articleId)).run()
+  await db.delete(articles).where(eq(articles.id, articleId)).run()
+
+  return { found: true }
+}
+
 const router = Router()
 
 router.use(authMiddleware)
@@ -262,6 +298,143 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 })
 
+// POST /api/v1/admin/articles/batch — 批量操作：delete / updateStatus / updateCategory
+router.post('/batch', async (req: AuthRequest, res) => {
+  try {
+    const { action, ids, data } = req.body as {
+      action?: string
+      ids?: number[]
+      data?: { status?: string; categoryId?: number | null; sectionId?: number | null }
+    }
+
+    const allowedActions = ['delete', 'updateStatus', 'updateCategory', 'updateSection']
+    if (!action || !allowedActions.includes(action)) {
+      return res.status(400).json({ success: false, error: 'Invalid or missing action' })
+    }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'ids must be a non-empty array' })
+    }
+
+    const validIds = ids.filter(id => Number.isInteger(id) && id > 0)
+    if (validIds.length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid IDs provided' })
+    }
+
+    // 取出目标文章，校验权限（user 只能操作自己的文章）
+    const targets = await db.select().from(articles).where(inArray(articles.id, validIds)).all()
+    if (req.user!.role === 'user') {
+      const notOwn = targets.find(a => a.authorId !== req.user!.userId)
+      if (notOwn) {
+        return res.status(403).json({ success: false, error: 'Cannot modify other users articles' })
+      }
+    }
+    if (targets.length === 0) {
+      return res.status(404).json({ success: false, error: 'No matching articles found' })
+    }
+
+    const now = new Date().toISOString()
+
+    if (action === 'delete') {
+      const deleteMedia = req.query.deleteMedia === 'true'
+      let deleted = 0
+      for (const a of targets) {
+        const r = await performArticleDelete(a.id, deleteMedia)
+        if (r.found) deleted++
+      }
+      revalidateTag('articles')
+      revalidateTag('sections')
+      await auditLog(req, 'batch_delete', 'article', undefined, `Batch deleted ${deleted} articles${deleteMedia ? ' (+media)' : ''}`)
+      return res.json({ success: true, message: `${deleted} article(s) deleted`, data: { deleted } })
+    }
+
+    if (action === 'updateStatus') {
+      const requestedStatus = data?.status
+      const validStatuses = ['draft', 'published', 'archived', 'scheduled']
+      if (!requestedStatus || !validStatuses.includes(requestedStatus)) {
+        return res.status(400).json({ success: false, error: 'Invalid status' })
+      }
+
+      // 与单条更新一致：开启内容审核时发布进入 pending_review
+      const reviewSetting = await db.select().from(siteSettings).where(eq(siteSettings.key, 'content_review_enabled')).get()
+      const contentReviewEnabled = reviewSetting?.value === 'true'
+      const effectiveStatus: ContentStatus = requestedStatus === 'published'
+        ? (contentReviewEnabled ? 'pending_review' : 'published')
+        : (requestedStatus as ContentStatus)
+
+      for (const a of targets) {
+        const updates: Record<string, unknown> = { status: effectiveStatus, updatedAt: now }
+        if (effectiveStatus === 'published' && !a.publishedAt) {
+          updates.publishedAt = now
+        }
+        await db.update(articles).set(updates).where(eq(articles.id, a.id)).run()
+
+        // 发布时触发内容审核（fire-and-forget）
+        if (requestedStatus === 'published') {
+          setImmediate(() => {
+            try {
+              const reviewText = extractReviewText('article', { title: a.title, content: a.content || '' })
+              const reviewImages = extractReviewImages('article', { coverImage: a.coverImage, content: a.content || '' })
+              scheduleReview({
+                targetType: 'article',
+                targetId: a.id,
+                text: reviewText,
+                imageUrls: reviewImages,
+              }).catch(err => console.error('Failed to schedule review:', err))
+            } catch (err) {
+              console.error('Schedule review error:', err)
+            }
+          })
+        }
+      }
+      revalidateTag('articles')
+      revalidateTag('sections')
+      await auditLog(req, 'batch_update', 'article', undefined, `Batch updated status to "${effectiveStatus}" for ${targets.length} articles`)
+      return res.json({ success: true, message: `${targets.length} article(s) updated`, data: { updated: targets.length, status: effectiveStatus } })
+    }
+
+    if (action === 'updateCategory') {
+      const categoryId = data?.categoryId
+      if (categoryId != null) {
+        const cat = await db.select().from(categories).where(eq(categories.id, categoryId)).get()
+        if (!cat) {
+          return res.status(400).json({ success: false, error: 'Category not found' })
+        }
+      }
+      await db.update(articles)
+        .set({ categoryId: categoryId ?? null, updatedAt: now })
+        .where(inArray(articles.id, targets.map(a => a.id)))
+        .run()
+      revalidateTag('articles')
+      await auditLog(req, 'batch_update', 'article', undefined, `Batch updated category to ${categoryId ?? 'none'} for ${targets.length} articles`)
+      return res.json({ success: true, message: `${targets.length} article(s) updated`, data: { updated: targets.length } })
+    }
+
+    if (action === 'updateSection') {
+      const sectionId = data?.sectionId
+      if (sectionId == null) {
+        return res.status(400).json({ success: false, error: 'sectionId is required' })
+      }
+      const section = await db.select().from(sections).where(eq(sections.id, sectionId)).get()
+      if (!section) {
+        return res.status(400).json({ success: false, error: 'Section not found' })
+      }
+      await db.update(articles)
+        .set({ sectionId: section.id, updatedAt: now })
+        .where(inArray(articles.id, targets.map(a => a.id)))
+        .run()
+      revalidateTag('articles')
+      revalidateTag('sections')
+      await auditLog(req, 'batch_update', 'article', undefined, `Batch updated section to "${section.slug}" for ${targets.length} articles`)
+      return res.json({ success: true, message: `${targets.length} article(s) updated`, data: { updated: targets.length } })
+    }
+
+    return res.status(400).json({ success: false, error: 'Unhandled action' })
+  } catch (err) {
+    console.error('Batch article operation error:', err)
+    res.status(500).json({ success: false, error: 'Failed to perform batch operation' })
+  }
+})
+
 // PUT /api/v1/admin/articles/:id — user只能编辑自己的, admin/superadmin可编辑全部
 router.put('/:id', async (req: AuthRequest, res) => {
   try {
@@ -382,7 +555,6 @@ router.delete('/:id', async (req: AuthRequest, res) => {
   try {
     const id = req.params.id
     const articleId = parseInt(Array.isArray(id) ? id[0] : id)
-    const deleteMedia = req.query.deleteMedia === 'true'
     const existing = await db.select().from(articles).where(eq(articles.id, articleId)).get()
 
     if (!existing) {
@@ -394,46 +566,8 @@ router.delete('/:id', async (req: AuthRequest, res) => {
       return res.status(403).json({ success: false, error: 'Cannot delete other users articles' })
     }
 
-    // 可选：清理关联媒体
-    if (deleteMedia) {
-      const linkedMedia = await db.select().from(media)
-        .where(eq(media.articleId, articleId)).all()
-
-      let deleteFailures = 0
-      for (const m of linkedMedia) {
-        if (m.url.startsWith(MEDIA_URL_PREFIX)) {
-          const relativePath = m.url.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
-          const filePath = path.resolve(UPLOAD_DIR, relativePath)
-          if (filePath.startsWith(UPLOAD_DIR)) {
-            try { fs.unlinkSync(filePath) } catch (_) { deleteFailures++ }
-          } else {
-            deleteFailures++
-          }
-        }
-        if (m.thumbnailUrl?.startsWith(MEDIA_URL_PREFIX)) {
-          const relativePath = m.thumbnailUrl.replace(MEDIA_URL_PREFIX, '').replace(/^uploads\//, '')
-          const filePath = path.resolve(UPLOAD_DIR, relativePath)
-          if (filePath.startsWith(UPLOAD_DIR)) {
-            try { fs.unlinkSync(filePath) } catch (_) { deleteFailures++ }
-          } else {
-            deleteFailures++
-          }
-        }
-      }
-
-      if (linkedMedia.length > 0) {
-        await db.delete(media).where(eq(media.articleId, articleId)).run()
-      }
-
-      console.log(`[mediaCleanup] Deleted article #${articleId}: ${linkedMedia.length} media records, ${deleteFailures} file deletion failures`)
-    }
-
-    // Delete related records first (order matters for foreign keys)
-    await db.delete(articleTags).where(eq(articleTags.articleId, articleId)).run()
-    await db.delete(articleLikes).where(eq(articleLikes.articleId, articleId)).run()
-    await db.delete(articleViews).where(eq(articleViews.articleId, articleId)).run()
-    await db.delete(adLogs).where(eq(adLogs.articleId, articleId)).run()
-    await db.delete(articles).where(eq(articles.id, articleId)).run()
+    const deleteMedia = req.query.deleteMedia === 'true'
+    await performArticleDelete(articleId, deleteMedia)
 
     revalidateTag('articles')
     revalidateTag('sections')

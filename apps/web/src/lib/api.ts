@@ -153,6 +153,17 @@ class ApiClient {
     })
   }
 
+  async batchArticles(
+    action: 'delete' | 'updateStatus' | 'updateCategory' | 'updateSection',
+    ids: number[],
+    data?: { status?: string; categoryId?: number | null; sectionId?: number | null }
+  ) {
+    return this.request<{ success: boolean; message: string; data?: any }>('/admin/articles/batch', {
+      method: 'POST',
+      body: JSON.stringify({ action, ids, data }),
+    })
+  }
+
   // ===== Tokens =====
   async createToken(data: { name: string; permissions: string[] }) {
     return this.request<{ success: boolean; data: any }>('/tokens', {

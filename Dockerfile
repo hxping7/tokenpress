@@ -6,6 +6,9 @@ WORKDIR /app
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install -g pnpm@9.15.0
 
+# better-sqlite3 需要原生编译（python3 + 构建工具），builder 阶段安装依赖时必须可用
+RUN apk add --no-cache python3 make g++ libc-dev
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
 COPY packages/shared ./packages/shared
