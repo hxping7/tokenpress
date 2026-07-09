@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
+import { parseShareConfig, DEFAULT_SHARE_CONFIG, SHARE_PLATFORMS, SHARE_POSITIONS, type ShareConfig } from '@/lib/share-config'
 import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3 } from 'lucide-react'
 import { useRef } from 'react'
 
@@ -111,6 +112,9 @@ export default function SettingsPage() {
   const [icpNumber, setIcpNumber] = useState('')
   const [icpUrl, setIcpUrl] = useState('')
   const [poweredBy, setPoweredBy] = useState('')
+
+  // ===== 文章分享设置 =====
+  const [shareConfig, setShareConfig] = useState<ShareConfig>(DEFAULT_SHARE_CONFIG)
 
   // ===== 外观设置 =====
   const [defaultTheme, setDefaultTheme] = useState('night')
@@ -353,6 +357,11 @@ export default function SettingsPage() {
       setBaiduSecretKey(s.review_baidu_secret_key || '')
       setBuiltinAiApiUrl(s.review_builtin_ai_api_url || '')
       setBuiltinAiApiKey(s.review_builtin_ai_api_key || '')
+      if (s.share_config) {
+        setShareConfig(parseShareConfig(s.share_config))
+      } else {
+        setShareConfig(DEFAULT_SHARE_CONFIG)
+      }
     }
   }, [settingsData])
 
@@ -577,6 +586,7 @@ export default function SettingsPage() {
       review_baidu_secret_key: baiduSecretKey,
       review_builtin_ai_api_url: builtinAiApiUrl,
       review_builtin_ai_api_key: builtinAiApiKey,
+      share_config: JSON.stringify(shareConfig),
     })
   }
 
@@ -847,6 +857,147 @@ export default function SettingsPage() {
                 <option value="en">{t('settings.langEn', adminLocale)}</option>
               </select>
               <p className="text-xs text-t-text-muted mt-1">{adminLocale === 'en' ? 'Controls backend menu language only' : '仅控制后台菜单显示语言'}</p>
+            </div>
+          </div>
+
+          {/* 文章分享设置 */}
+          <div className="border-t border-t-border pt-4">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 className="font-medium">文章分享设置</h3>
+                <p className="text-xs text-t-text-muted mt-1">配置文章页展示哪些分享渠道，以及展示位置（可多选）。</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={shareConfig.enabled}
+                onClick={() => setShareConfig((prev) => ({ ...prev, enabled: !prev.enabled }))}
+                className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+                  shareConfig.enabled ? 'bg-t-accent-blue' : 'bg-t-bg-tertiary border border-t-border'
+                }`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${shareConfig.enabled ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+
+            {shareConfig.enabled && (
+            <>
+              <div className="mb-5">
+              <label className="block text-sm font-medium mb-2">显示哪些分享链接</label>
+              <div className="flex flex-wrap gap-2">
+                {SHARE_PLATFORMS.map((p) => {
+                  const active = shareConfig.platforms.includes(p.key)
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() =>
+                        setShareConfig((prev) => ({
+                          ...prev,
+                          platforms: active
+                            ? prev.platforms.filter((k) => k !== p.key)
+                            : [...prev.platforms, p.key],
+                        }))
+                      }
+                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                        active
+                          ? 'bg-t-accent-blue text-black border-t-accent-blue'
+                          : 'bg-t-bg-secondary text-t-text-secondary border-t-border hover:border-t-accent-blue'
+                      }`}
+                    >
+                      {p.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">显示位置（可多选）</label>
+              <div className="flex flex-wrap gap-2">
+                {SHARE_POSITIONS.map((pos) => {
+                  const active = shareConfig.positions.includes(pos.key)
+                  return (
+                    <button
+                      key={pos.key}
+                      type="button"
+                      title={pos.hint}
+                      onClick={() =>
+                        setShareConfig((prev) => ({
+                          ...prev,
+                          positions: active
+                            ? prev.positions.filter((k) => k !== pos.key)
+                            : [...prev.positions, pos.key],
+                        }))
+                      }
+                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                        active
+                          ? 'bg-t-accent-blue text-black border-t-accent-blue'
+                          : 'bg-t-bg-secondary text-t-text-secondary border-t-border hover:border-t-accent-blue'
+                      }`}
+                    >
+                      {pos.name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            </>
+            )}
+
+            {/* 点赞与收藏 */}
+            <div className="mt-5 pt-5 border-t border-t-border">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div>
+                  <h4 className="font-medium">点赞与收藏</h4>
+                  <p className="text-xs text-t-text-muted mt-1">配置点赞 / 收藏按钮的展示位置（可多选），收藏按钮与点赞放一块。</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={shareConfig.likeEnabled}
+                  onClick={() => setShareConfig((prev) => ({ ...prev, likeEnabled: !prev.likeEnabled }))}
+                  className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+                    shareConfig.likeEnabled ? 'bg-t-accent-blue' : 'bg-t-bg-tertiary border border-t-border'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${shareConfig.likeEnabled ? 'translate-x-5' : ''}`} />
+                </button>
+              </div>
+
+              {shareConfig.likeEnabled && (
+              <div className="mb-5">
+                <label className="block text-sm font-medium mb-2">点赞 / 收藏显示位置（可多选）</label>
+                <div className="flex flex-wrap gap-2">
+                  {SHARE_POSITIONS.map((pos) => {
+                    const active = shareConfig.likePositions.includes(pos.key)
+                    return (
+                      <button
+                        key={pos.key}
+                        type="button"
+                        title={pos.hint}
+                        onClick={() =>
+                          setShareConfig((prev) => ({
+                            ...prev,
+                            likePositions: active
+                              ? prev.likePositions.filter((k) => k !== pos.key)
+                              : [...prev.likePositions, pos.key],
+                          }))
+                        }
+                        className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                          active
+                            ? 'bg-t-accent-blue text-black border-t-accent-blue'
+                            : 'bg-t-bg-secondary text-t-text-secondary border-t-border hover:border-t-accent-blue'
+                        }`}
+                      >
+                        {pos.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              )}
             </div>
           </div>
         </div>

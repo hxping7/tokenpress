@@ -7,8 +7,10 @@ import { api } from '@/lib/api'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { TableOfContents } from '@/components/TableOfContents'
 import { ArticleSidebar } from '@/components/ArticleSidebar'
-import { ArticleLikeButton } from '@/components/ArticleLikeButton'
+import { ArticleEngagement } from '@/components/ArticleEngagement'
 import { ArticleViewTracker } from '@/components/ArticleViewTracker'
+import { ArticleShare } from '@/components/ArticleShare'
+import { parseShareConfig } from '@/lib/share-config'
 import { ArrowLeft, Calendar, User, Tag, Clock } from 'lucide-react'
 import Image from 'next/image'
 import { calculateReadingTime, formatReadingTime } from '@/lib/reading-time'
@@ -34,6 +36,16 @@ export function ArticleDetailClient({ params }: Props) {
     queryFn: () => api.getArticle(slug),
     enabled: !!slug,
   })
+
+  // 分享功能后台配置（公开接口，无需鉴权）
+  const { data: shareRaw } = useQuery({
+    queryKey: ['share-config'],
+    queryFn: () =>
+      api.get<{ success: boolean; data: Record<string, string> }>(
+        '/site-settings/keys/share_config'
+      ),
+  })
+  const shareConfig = parseShareConfig(shareRaw?.data?.share_config)
 
   if (isLoading) {
     return (
@@ -126,10 +138,22 @@ export function ArticleDetailClient({ params }: Props) {
             </div>
           )}
 
-          {/* Like Button */}
-          <div className="mt-4">
-            <ArticleLikeButton articleId={article.id} />
-          </div>
+          {/* 点赞 + 收藏 — 文章正文上方 */}
+          {shareConfig.likeEnabled && shareConfig.likePositions.includes('article_top') && (
+            <ArticleEngagement
+              articleId={article.id}
+              title={article.title}
+            />
+          )}
+
+          {/* Share — 文章正文上方 */}
+          {shareConfig.enabled && shareConfig.positions.includes('article_top') && (
+            <ArticleShare
+              title={article.title}
+              summary={article.excerpt}
+              platforms={shareConfig.platforms}
+            />
+          )}
         </div>
       </header>
 
@@ -160,16 +184,51 @@ export function ArticleDetailClient({ params }: Props) {
 
           {/* Right: Sidebar */}
           <aside className="hidden lg:block">
-            <div className="sticky top-20">
+            <div className="sticky top-20 space-y-4">
               <ArticleSidebar
                 articleId={article.id}
                 articleTags={article.tags}
                 sectionSlug={section}
               />
+              {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
+                <ArticleShare
+                  title={article.title}
+                  summary={article.excerpt}
+                  platforms={shareConfig.platforms}
+                  aside
+                />
+              )}
+              {shareConfig.likeEnabled && shareConfig.likePositions.includes('float_right') && (
+                <ArticleEngagement
+                  articleId={article.id}
+                  title={article.title}
+                />
+              )}
             </div>
           </aside>
         </div>
       </div>
+
+      {/* Share — 文章正文结尾（居中显示） */}
+      {shareConfig.enabled && shareConfig.positions.includes('article_bottom') && (
+        <div className="max-w-7xl mx-auto px-4 pb-6 flex justify-center">
+          <ArticleShare
+            title={article.title}
+            summary={article.excerpt}
+            platforms={shareConfig.platforms}
+          />
+        </div>
+      )}
+
+      {/* 点赞 + 收藏 — 文章正文结尾（居中显示） */}
+      {shareConfig.likeEnabled && shareConfig.likePositions.includes('article_bottom') && (
+        <div className="max-w-7xl mx-auto px-4 pb-12 flex justify-center">
+          <ArticleEngagement
+            articleId={article.id}
+            title={article.title}
+          />
+        </div>
+      )}
     </article>
   )
 }
