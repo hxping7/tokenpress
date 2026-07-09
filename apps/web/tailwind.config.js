@@ -21,6 +21,10 @@ module.exports = {
         sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
+      fontSize: {
+        'heading-1': ['2.25rem', { lineHeight: '2.75rem', fontWeight: '700' }],
+        'heading-2': ['1.875rem', { lineHeight: '2.25rem', fontWeight: '700' }],
+      },
     },
   },
   plugins: [require('@tailwindcss/typography')],

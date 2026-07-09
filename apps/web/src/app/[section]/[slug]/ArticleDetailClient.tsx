@@ -158,7 +158,7 @@ export function ArticleDetailClient({ params }: Props) {
       </header>
 
       {/* Content with Sidebar Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-[var(--content-max-width)] mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_240px] gap-6">
           {/* Left: Table of Contents - 桌面端固定 */}
           <aside className="hidden lg:block">
@@ -179,7 +179,9 @@ export function ArticleDetailClient({ params }: Props) {
                 priority
               />
             )}
-            <MarkdownContent content={article.content} />
+            <div className="max-w-[var(--reading-max-width)]">
+              <MarkdownContent content={article.content} />
+            </div>
           </main>
 
           {/* Right: Sidebar */}
@@ -211,7 +213,7 @@ export function ArticleDetailClient({ params }: Props) {
 
       {/* Share — 文章正文结尾（居中显示） */}
       {shareConfig.enabled && shareConfig.positions.includes('article_bottom') && (
-        <div className="max-w-7xl mx-auto px-4 pb-6 flex justify-center">
+        <div className="max-w-[var(--content-max-width)] mx-auto px-4 pb-6 flex justify-center">
           <ArticleShare
             title={article.title}
             summary={article.excerpt}
@@ -222,7 +224,7 @@ export function ArticleDetailClient({ params }: Props) {
 
       {/* 点赞 + 收藏 — 文章正文结尾（居中显示） */}
       {shareConfig.likeEnabled && shareConfig.likePositions.includes('article_bottom') && (
-        <div className="max-w-7xl mx-auto px-4 pb-12 flex justify-center">
+        <div className="max-w-[var(--content-max-width)] mx-auto px-4 pb-12 flex justify-center">
           <ArticleEngagement
             articleId={article.id}
             title={article.title}

@@ -102,7 +102,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-t-border">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[var(--content-max-width)] mx-auto">
         {/* 竖向多段式导航 */}
         <div className="py-8 px-4">
           <div

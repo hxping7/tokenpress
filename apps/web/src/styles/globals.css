@@ -6,6 +6,12 @@
 @import url('https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css');
 
 @layer base {
+  /* ===== 全局布局宽度变量（由后台「全局宽屏设置」控制，运行时覆盖） ===== */
+  :root {
+    --content-max-width: 80rem; /* 站点级内容容器最大宽度，默认 1280px（兼容旧 max-w-7xl） */
+    --reading-max-width: 48rem; /* 文章正文阅读列最大宽度，保证长文可读性 */
+  }
+
   /* ===== 暗夜蓝紫（默认） ===== */
   :root,
   [data-theme='night'] {

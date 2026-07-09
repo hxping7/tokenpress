@@ -6,6 +6,7 @@ import { BackToTop } from '@/components/BackToTop'
 import { Providers } from '@/providers/query-provider'
 import { LocaleInitializer } from '@/components/LocaleInitializer'
 import { AnalyticsLoader } from '@/components/AnalyticsLoader'
+import { LayoutWidth } from '@/components/LayoutWidth'
 import { getSiteUrl } from '@/lib/site-url'
 
 // 使用系统字体，无网络依赖
@@ -87,6 +88,7 @@ export default function RootLayout({
         <Providers>
           <LocaleInitializer />
           <AnalyticsLoader />
+          <LayoutWidth />
           <Header />
           <main className="flex-1">{children}</main>
           <BackToTop />

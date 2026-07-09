@@ -12,7 +12,7 @@ export function BackToTop() {
 
   return (
     <div>
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-end">
+      <div className="max-w-[var(--content-max-width)] mx-auto px-4 py-3 flex justify-end">
         <button
           onClick={scrollToTop}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-t-text-muted hover:text-t-text-primary hover:bg-t-hover transition-colors text-sm"

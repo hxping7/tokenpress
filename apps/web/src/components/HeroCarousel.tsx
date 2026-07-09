@@ -44,7 +44,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5 }: HeroCar
   return (
     <section
       className={`relative flex items-center justify-center overflow-hidden ${
-        size === 'fullscreen' ? 'pt-14' : 'pt-20 pb-4'
+        size === 'fullscreen' ? 'pt-16' : 'pt-20 pb-4'
       }`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}

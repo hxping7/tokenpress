@@ -129,7 +129,7 @@ export default async function HomePage() {
 
       {/* 搜索栏 */}
       <section className="py-4 px-4 border-b border-t-border">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-[var(--content-max-width)] mx-auto flex items-center justify-between gap-4">
           <div className="flex-1" />
           <SearchBar />
         </div>
@@ -138,7 +138,7 @@ export default async function HomePage() {
       {/* 最近发布 */}
       {recentArticles.length > 0 && (
         <section className="py-8 px-4">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-[var(--content-max-width)] mx-auto">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-t-text-primary">最新文章</h2>
               <div className="flex items-center gap-4">

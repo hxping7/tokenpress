@@ -41,7 +41,7 @@ export function SectionPageClient({ section, sectionPath, title, description }: 
       {description ? (
         <section className="relative py-16 px-4 border-b border-t-border">
           <div className="absolute inset-0 grid-pattern opacity-50" />
-          <div className="relative max-w-7xl mx-auto text-center">
+          <div className="relative max-w-[var(--content-max-width)] mx-auto text-center">
             <h1 className="text-heading-1 gradient-text mb-4">{title}</h1>
             <p className="text-t-text-secondary text-lg max-w-2xl mx-auto">{description}</p>
           </div>
@@ -49,7 +49,7 @@ export function SectionPageClient({ section, sectionPath, title, description }: 
       ) : null}
 
       {/* View Toggle */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+      <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-1 rounded-lg bg-t-bg-tertiary p-1">
             <button
@@ -79,7 +79,7 @@ export function SectionPageClient({ section, sectionPath, title, description }: 
       </div>
 
       {/* Content with Right Sidebar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-8">
           {/* Main Content */}
           <div>

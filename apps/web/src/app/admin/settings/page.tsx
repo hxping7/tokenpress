@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 import { parseShareConfig, DEFAULT_SHARE_CONFIG, SHARE_PLATFORMS, SHARE_POSITIONS, type ShareConfig } from '@/lib/share-config'
+import { WIDTH_PRESETS, DEFAULT_CONTENT_MAX_WIDTH, parseContentMaxWidth } from '@/lib/layout-config'
 import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3 } from 'lucide-react'
 import { useRef } from 'react'
 
@@ -120,6 +121,10 @@ export default function SettingsPage() {
   const [defaultTheme, setDefaultTheme] = useState('night')
   const [frontendLocale, setFrontendLocale] = useState('zh')
   const [backendLocaleSetting, setBackendLocaleSetting] = useState('zh')
+
+  // ===== 全局宽屏设置 =====
+  const [contentMaxWidth, setContentMaxWidth] = useState(DEFAULT_CONTENT_MAX_WIDTH)
+  const [customWidth, setCustomWidth] = useState('')
 
   // ===== 备份设置 =====
   const [autoBackup, setAutoBackup] = useState(false)
@@ -362,6 +367,11 @@ export default function SettingsPage() {
       } else {
         setShareConfig(DEFAULT_SHARE_CONFIG)
       }
+      if (s.content_max_width) {
+        const v = parseContentMaxWidth(s.content_max_width)
+        setContentMaxWidth(v)
+        setCustomWidth(/^(\d+)px$/.test(v) ? v.replace('px', '') : '')
+      }
     }
   }, [settingsData])
 
@@ -587,6 +597,7 @@ export default function SettingsPage() {
       review_builtin_ai_api_url: builtinAiApiUrl,
       review_builtin_ai_api_key: builtinAiApiKey,
       share_config: JSON.stringify(shareConfig),
+      content_max_width: contentMaxWidth,
     })
   }
 
@@ -999,6 +1010,51 @@ export default function SettingsPage() {
 
               )}
             </div>
+          </div>
+
+          {/* 全局宽屏设置 */}
+          <div className="border-t border-t-border pt-4">
+            <div className="mb-4">
+              <h4 className="font-medium">全局宽屏设置</h4>
+              <p className="text-xs text-t-text-muted mt-1">控制全站内容容器的最大宽度。选择「全宽」可让内容占满屏幕（适合大屏 / 笔记本）。</p>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {WIDTH_PRESETS.map((p) => {
+                const active = contentMaxWidth === p.value
+                return (
+                  <button
+                    type="button"
+                    key={p.key}
+                    onClick={() => { setContentMaxWidth(p.value); setCustomWidth('') }}
+                    className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                      active
+                        ? 'bg-t-accent-blue text-black border-t-accent-blue'
+                        : 'bg-t-bg-secondary text-t-text-secondary border-t-border hover:border-t-accent-blue'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium whitespace-nowrap">自定义宽度（像素）</label>
+              <input
+                type="number"
+                min={320}
+                max={3840}
+                value={customWidth}
+                onChange={(e) => {
+                  setCustomWidth(e.target.value)
+                  const n = parseInt(e.target.value, 10)
+                  if (!isNaN(n) && n >= 320) setContentMaxWidth(`${n}px`)
+                }}
+                placeholder="例如 1440"
+                className="w-32 px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue text-sm"
+              />
+              <span className="text-sm text-t-text-muted">px</span>
+            </div>
+            <p className="text-xs text-t-text-muted mt-2">当前生效宽度：<code className="text-t-accent-blue">{contentMaxWidth}</code></p>
           </div>
         </div>
       </div>

@@ -67,7 +67,7 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-t-border bg-t-bg-primary" style={{ backdropFilter: 'blur(20px)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             {/* Logo + Site Name */}
@@ -112,7 +112,7 @@ export function Header() {
             <div className="relative">
               <button
                 onClick={() => setShowThemeMenu(!showThemeMenu)}
-                className="hidden sm:flex items-center gap-1.5 px-2 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
+                className="hidden md:flex items-center gap-1.5 px-2 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
                 title={t('theme.switchTheme', locale)}
               >
                 <Palette size={16} />
@@ -142,7 +142,7 @@ export function Header() {
             <div className="relative">
               <button
                 onClick={() => setShowLocaleMenu(!showLocaleMenu)}
-                className="hidden sm:flex items-center gap-1.5 px-2 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
+                className="hidden md:flex items-center gap-1.5 px-2 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
                 title={t('locale.switchLang', locale)}
               >
                 <Globe size={16} />
@@ -173,14 +173,14 @@ export function Header() {
               <>
                 <Link
                   href="/admin"
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg text-t-accent-blue border border-t-accent-blue/80 opacity-80 transition-colors hover:bg-t-hover"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg text-t-accent-blue border border-t-accent-blue/80 opacity-80 transition-colors hover:bg-t-hover"
                 >
                   <LayoutDashboard size={16} />
                   {t('common.admin', locale)}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-red-400"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-red-400"
                 >
                   <LogOut size={16} />
                   {t('common.logout', locale)}
@@ -189,7 +189,7 @@ export function Header() {
             ) : (
               <Link
                 href="/auth/login"
-                className="hidden sm:block px-4 py-2 text-sm rounded-lg text-t-accent-blue border border-t-accent-blue/80 opacity-80 transition-colors hover:bg-t-hover"
+                className="hidden md:block px-4 py-2 text-sm rounded-lg text-t-accent-blue border border-t-accent-blue/80 opacity-80 transition-colors hover:bg-t-hover"
               >
                 {t('common.manageLogin', locale)}
               </Link>
