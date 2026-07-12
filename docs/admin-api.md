@@ -30,7 +30,7 @@
 | 敏感词 | 列表/增删/批量 | `GET`/`POST`/`PUT`/`DELETE` | `/api/v1/admin/sensitive-keywords(/:id)` | `keywords:write` |
 | 广告 | 列表/创建/审核 | `GET`/`POST` | `/api/v1/admin/ads(/:id/...)` | `ads:write` |
 | 静态页 | 树形/扁平列表 | `GET` | `/api/v1/statichtml/tree`、`/api/v1/statichtml/list` | `statichtml:read` |
-| 静态页 | 建/删文件夹、上传/替换/删文件 | `POST`/`PUT`/`DELETE` | `/api/v1/statichtml/folder`、`/api/v1/statichtml/file` | `statichtml:write` |
+| 静态页 | 建/删/重命名文件夹、上传/替换/删/重命名文件 | `POST`/`PUT`/`DELETE`/`PATCH` | `/api/v1/statichtml/folder`、`/api/v1/statichtml/file` | `statichtml:write` |
 
 **Base URL:** `{API_BASE}/api/v1`（本地预览 `http://localhost:8081/api/v1`，生产 `https://www.token00.com/api/v1`）
 **Auth Header:** `Authorization: Bearer {TOKEN}`（Token 格式：`t00_sk_` 开头）
@@ -123,7 +123,7 @@
 | `keywords:write` | 敏感词 | `GET /admin/sensitive-keywords` | `POST` / `PUT` / `DELETE /:id` / `POST /batch` | admin / superadmin |
 | `ads:write` | 广告 | `GET /admin/ads`、`/pending`、`/:id` | `POST` / `:id/approve` / `:id/reject` / `:id/toggle` | admin / superadmin |
 | `statichtml:read` | 静态页面 | `GET /statichtml/tree`、`GET /statichtml/list` | — | admin / superadmin |
-| `statichtml:write` | 静态页面 | — | `POST`/`DELETE /statichtml/folder`、`POST`/`PUT`/`DELETE /statichtml/file` | admin / superadmin |
+| `statichtml:write` | 静态页面 | — | `POST`/`DELETE`/`PATCH /statichtml/folder`、`POST`/`PUT`/`DELETE`/`PATCH /statichtml/file` | admin / superadmin |
 
 > **角色可签发的权限**：`superadmin` 全部（含 `users:write`）；`admin` 除 `users:write` 外全部；`user` 仅 `article:write`、`media:upload`（见 `ai-publish-api.md`）。
 
@@ -456,6 +456,7 @@ PUT /api/v1/site-settings
 `GET /api/v1/statichtml/list`（`statichtml:read`）— 扁平文件列表（选择器用，字段 `relPath`/`url`/`name`/`ext`）
 `POST /api/v1/statichtml/folder`（`statichtml:write`）— `{ path: "item1" }`（支持多级 `item1/sub`，已存在返回 409）
 `DELETE /api/v1/statichtml/folder`（`statichtml:write`）— `{ path: "item1" }` 递归删文件夹
+`PATCH /api/v1/statichtml/folder`（`statichtml:write`）— `{ path: "item1", newName: "item2" }` 重命名文件夹（仅改最后一级，已存在 409）
 `POST /api/v1/statichtml/file`（`statichtml:write`）— `{ folder?, filename, content? | file?(base64), mimeType? }`
 - 文本类（html/css/js/json/svg/txt/md/xml…）传 `content` 字符串；二进制（图片/字体/pdf）传 `file` base64。
 - 扩展名白名单校验（非白名单 400），10MB 上限（超限 400）；`folder` 缺省存根目录。
@@ -463,6 +464,7 @@ PUT /api/v1/site-settings
 
 `PUT /api/v1/statichtml/file`（`statichtml:write`）— `{ relPath, content? | file?, mimeType? }` 替换已有文件内容
 `DELETE /api/v1/statichtml/file`（`statichtml:write`）— `{ relPath }`
+`PATCH /api/v1/statichtml/file`（`statichtml:write`）— `{ relPath: "item1/test1.html", newName: "new.html" }` 重命名文件（仅改文件名，扩展名受白名单约束，非法 400）
 
 **安全：** 路径解析严格限制在 `data/statichtml` 内（防 `../` 穿越）；`filename` 只保留原名与扩展名（不追加随机后缀，保证 URL 可预测）。
 

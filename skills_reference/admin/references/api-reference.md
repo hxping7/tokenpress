@@ -82,5 +82,7 @@
   - 返回 `{ relPath, url, size }`
 - `PUT /statichtml/file` → `{ relPath, content?|file?, mimeType? }` 替换已有文件内容
 - `DELETE /statichtml/file` → `{ relPath }`
+- `PATCH /statichtml/folder` → `{ path: "item1", newName: "item2" }` 重命名文件夹（仅改最后一级，已存在 409）
+- `PATCH /statichtml/file` → `{ relPath: "item1/test1.html", newName: "new.html" }` 重命名文件（仅改文件名，扩展名受白名单约束，非法 400）
 - 安全：路径解析严格限制在 `data/statichtml` 内（防 `../` 穿越）；`filename` 只保留原名与扩展名（不追加随机后缀，保证 URL 可预测）
 

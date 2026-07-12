@@ -11,6 +11,10 @@
 | 板块列表 | `GET` | `/api/v1/sections` | — |
 | 分类列表 | `GET` | `/api/v1/categories` | — |
 | 标签列表 | `GET` | `/api/v1/tags` | — |
+| 静态页树形 | `GET` | `/api/v1/statichtml/tree` | `statichtml:read` |
+| 静态页列表 | `GET` | `/api/v1/statichtml/list` | `statichtml:read` |
+| 文件夹（建/删/重命名） | `POST`/`DELETE`/`PATCH` | `/api/v1/statichtml/folder` | `statichtml:write` |
+| 文件（上传/更新/删/重命名） | `POST`/`PUT`/`DELETE`/`PATCH` | `/api/v1/statichtml/file` | `statichtml:write` |
 | 系统设置 | `GET` / `PUT` | `/api/v1/site-settings` | 需 Token / PUT 需 `settings:write` |
 
 **Base URL:** `{API_BASE}/api/v1`
@@ -169,6 +173,35 @@
 
 ---
 
+## 静态页面 statichtml
+
+用于发布配套静态资源（HTML/CSS/JS/图片等），由 `express.static('/statichtml')` 经 nginx 直访：`{site_url}/statichtml/<relpath>`（如 `/statichtml/item1/test1.html`），可作板块 externalUrl / Hero slide linkUrl / Hero CTA href 的跳转目标。
+
+### 读取树形 / 列表
+
+- `GET /api/v1/statichtml/tree`（statichtml:read）→ 树形结构（folders + files，含 relPath / url / size / ext / mtime）
+- `GET /api/v1/statichtml/list`（statichtml:read）→ 扁平文件列表（供前端选择器，字段 relPath / url / name / ext）
+
+### 文件夹
+
+- `POST /api/v1/statichtml/folder` → `{ "path": "item1" }`（支持多级 `item1/sub`），已存在返回 409
+- `DELETE /api/v1/statichtml/folder` → `{ "path": "item1" }` 递归删除文件夹
+- `PATCH /api/v1/statichtml/folder` → `{ "path": "item1", "newName": "item2" }` 重命名文件夹（仅改最后一级）
+
+### 文件
+
+- `POST /api/v1/statichtml/file` → `{ "folder"?: "item1", "filename": "test1.html", "content"?: "..." | "file"?: "<base64>", "mimeType"?: "..." }`
+  - 文本类（html/css/js/json/svg/txt/md/xml…）传 `content` 字符串；二进制（图片/字体/pdf）传 `file` base64
+  - 扩展名白名单校验（非白名单 400），10MB 上限（超限 400）；`folder` 缺省存根目录
+  - 返回 `{ relPath, url, size }`
+- `PUT /api/v1/statichtml/file` → `{ "relPath": "item1/test1.html", "content"?: "..." | "file"?: "<base64>", "mimeType"?: "..." }` 替换已有文件内容
+- `DELETE /api/v1/statichtml/file` → `{ "relPath": "item1/test1.html" }`
+- `PATCH /api/v1/statichtml/file` → `{ "relPath": "item1/test1.html", "newName": "new.html" }` 重命名文件（仅改文件名，扩展名受白名单约束）
+
+> **安全约束：** 路径解析严格限制在 `data/statichtml` 内（防 `../` 穿越）；`filename` 只保留原名与扩展名（不追加随机后缀，保证 URL 可预测）；重命名时若 `newName` 扩展名不在白名单则返回 400。
+
+---
+
 ## 权限
 
 | 权限 | 说明 |
@@ -177,6 +210,8 @@
 | `media:upload` | 上传媒体文件（有图片时必需） |
 | `content:delete` | 删除文章 |
 | `settings:write` | 修改系统设置 |
+| `statichtml:read` | 读取静态页面树/列表 |
+| `statichtml:write` | 创建/更新/删除/重命名静态页面文件与文件夹（发布配套静态资源时需要） |
 
 ---
 
@@ -216,6 +251,7 @@
 | `Article not found` | 404 | slug 对应的文章不存在 |
 | `Too many publish requests` | 429 | 限流 10次/分钟，稍后重试 |
 | `Database write failed` | 500 | 稍后重试 |
+| `Folder already exists` | 409 | 文件夹已存在，换用其他 path 或先删除 |
 
 ---
 

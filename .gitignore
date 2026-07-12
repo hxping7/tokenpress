@@ -86,8 +86,8 @@ data/
 # Assistant internal local config
 .codebuddy/
 
-# Stray duplicate of skills_reference/publisher (not part of source)
-publisher/
+# Stray duplicate of skills_reference/publisher at repo root (not part of source)
+/publisher/
 
 # Local helper with hardcoded local paths
 compress-images.ps1
