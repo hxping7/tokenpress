@@ -54,8 +54,9 @@
 - **Markdown 编辑器** — 实时预览 + 语法高亮 + 媒体插入
 - **多板块/分类/标签** — 灵活的内容组织体系
 - **全文搜索** — 基于 SQLite FTS5 的内置搜索引擎
+- **文章置顶** — 全局 / 板块级置顶，后台一键置顶与取消
 - **状态管理** — 草稿 / 已发布 / 定时发布 / 待审核 / 归档
-- **文章互动** — 点赞、浏览计数
+- **文章互动** — 点赞、浏览计数、收藏（浏览器书签引导）、社交分享（微信 / 朋友圈 / 微博 / QQ / Telegram 等，展示位置后台可配）
 
 ### 🎨 前端体验
 - **5 套主题** — Night（暗夜）、Cyber（赛博）、Lava（熔岩）、Light（光）、Space（太空）
@@ -64,15 +65,17 @@
 - **Framer Motion 动效** — 流畅的页面过渡和交互动画
 - **Grid / List 视图切换** — 灵活的浏览模式
 - **首页轮播尺寸可调** — 默认 / 宽屏 / 全屏 三种模式，后台一键切换
+- **社交分享卡片** — 文章页一键分享到微信（二维码）/ 朋友圈 / 微博 / QQ / Telegram 等平台
 
 ### 🔧 全功能管理后台
 - **文章 / 作品管理** — CRUD + 批量操作
 - **用户管理** — 三级角色体系（superadmin / admin / user）
-- **API Token 管理** — 细粒度权限控制（article:write, media:upload 等）
+- **API Token 管理** — 细粒度权限隔离（19 项权限：article:write / media:upload / settings:write / friendlinks:write / sections:write / categories:write / users:write / stats:read / logs:read / backup:write / reviews:write / keywords:write / ads:write|read|delete / statichtml:write|read 等），支持 AI 智能体远程管控全站设置
 - **媒体库** — 上传、缩略图、预览、审核
 - **分类管理** — 板块级分类
 - **广告管理** — 11 个广告位 + 定向投放 + 曝光/点击统计
-- **系统设置** — 10 个设置 Tab（站点信息、导航、SEO、分析等）
+- **系统设置** — 10 个设置 Tab（站点信息、导航、SEO、分析、安全等）
+- **静态页面管理** — 后台树形管理静态 HTML（文件夹 / 文件增删改、重命名、扩展名防护），支持 `/statichtml/<path>` 直访，可嵌入板块 / Hero / CTA 链接
 - **API 统计面板** — 请求量、响应时间、使用趋势
 - **AI 发布调试面板** — 在线调试 AI 发布流程
 - **备份管理** — 数据库备份与恢复
@@ -82,7 +85,7 @@
 ### 🔒 安全与反滥用
 - **JWT 双令牌认证** — Access Token + Refresh Token
 - **验证码** — 登录 SVG 验证码，防暴力破解
-- **反爬虫中间件** — UA 黑名单 + 图片防盗链
+- **反爬虫中间件** — 后台可开关；拦截 curl / python-requests / scrapy / go-http-client 等工具 UA，放行 Google / Bing / Baidu 等搜索引擎；含图片防盗链
 - **请求速率限制** — 全局 + API 级别限流
 - **内容审核** — 腾讯云审核适配器 + 本地敏感词库
 
@@ -177,8 +180,8 @@ tokenpress/
 │   └── server/                     # Express 后端
 │       └── src/
 │           ├── routes/             # 25+ 路由模块
-│           ├── middleware/         # 认证/CORS/反爬虫/错误处理
-│           ├── db/                 # Schema + 18个迁移文件
+│           ├── middleware/          # 认证/CORS/反爬虫/静态页面/错误处理
+│           ├── db/                 # Schema + 数据迁移脚本（0000–0016）
 │           ├── lib/contentReview/  # 内容审核核心库
 │           ├── workers/            # 异步审核/广告调度Worker
 │           └── utils/              # 日志/审计/参数校验
@@ -222,6 +225,15 @@ tokenpress/
 | GET | `/api/v1/ai/articles` | AI 查询已发布文章 |
 | DELETE | `/api/v1/ai/articles/:slug` | AI 删除文章 |
 | POST | `/api/v1/media/ai` | AI 上传媒体文件 |
+
+### 静态页面 & 远程管控
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST/PUT/DELETE/PATCH | `/api/v1/statichtml/folder` | 静态文件夹增删改 / 重命名 |
+| POST/PUT/DELETE/PATCH | `/api/v1/statichtml/file` | 静态文件上传 / 替换 / 删除 / 重命名 |
+| GET | `/api/v1/statichtml/tree` | 静态页面树形结构 |
+| GET | `/api/v1/statichtml/list` | 选择器列表 |
+| POST | `/api/v1/ai/articles/:slug/pin` | 远程置顶文章（全局 / 板块） |
 
 ### 管理 API (需 JWT)
 | 方法 | 路径 | 说明 |
