@@ -7,6 +7,7 @@ import { FooterLogo } from '@/components/FooterLogo'
 import { api } from '@/lib/api'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
+import { APP_VERSION_LABEL } from '@/lib/version'
 
 interface FriendLink {
   id: number
@@ -181,6 +182,7 @@ export function Footer() {
             <div className="flex flex-col items-center md:items-start gap-2">
               <FooterLogo />
               <span className="text-xs text-t-text-muted">{copyrightText}</span>
+              <span className="text-xs text-t-text-muted">{APP_VERSION_LABEL}</span>
             </div>
 
             {/* 中列：ICP 备案 */}
