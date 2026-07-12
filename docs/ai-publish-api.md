@@ -18,6 +18,10 @@
 | 标签列表 | `GET` | `/api/v1/tags` | — |
 | 系统设置 | `GET` / `PUT` | `/api/v1/site-settings` | 需 Token / PUT 需 `settings:write` |
 | 设置/取消置顶 | `POST` | `/api/v1/ai/articles/:slug/pin` | `article:write` |
+| 静态页（读取） | `GET` | `/api/v1/statichtml/tree`、`/api/v1/statichtml/list` | `statichtml:read` |
+| 静态页（文件夹） | `POST`/`DELETE`/`PATCH` | `/api/v1/statichtml/folder` | `statichtml:write` |
+| 静态页（文件） | `POST`/`PUT`/`DELETE`/`PATCH` | `/api/v1/statichtml/file` | `statichtml:write` |
+| 静态页直访 | `GET` | `/statichtml/<path>` | 公开（无需 Token） |
 
 **Base URL:** `{API_BASE}/api/v1`
 **Auth Header:** `Authorization: Bearer {TOKEN}`（Token 格式：`t00_sk_` 开头）
@@ -76,6 +80,7 @@ API Token 在管理后台「Token 管理」中创建。创建时需授予对应�
 | `Database write failed` | 500 | 数据库异常 | 检查 detail 中的 SQL 错误，稍后重试 |
 | `Failed to write file to disk` | 500 | 磁盘写入失败 | 检查服务器 uploads 目录权限和空间 |
 | `Upload failed` | 500 | 其他未预期错误 | 检查 detail 字段中的异常堆栈信息 |
+| `Folder already exists` | 409 | 文件夹已存在 | 换名或先 `DELETE /statichtml/folder` 再重建 |
 
 ---
 
@@ -955,6 +960,47 @@ await fetch(`${apiBase}/ai/publish`, {
 
 ![Figure 1: 架构图](${imgUrls[0]})
 
+### 静态页面 statichtml（需 `statichtml:read` / `statichtml:write`）
+
+文件存于后端 `data/statichtml/`，由 `express.static('/statichtml')` 经 nginx 反代直访：`{site_url}/statichtml/<relpath>`（如 `/statichtml/item1/test1.html`）。可作板块 `externalUrl` / Hero slide `linkUrl` / Hero CTA `href` 的跳转目标——发布文章时如需配套独立落地页（活动页、说明页、协议页），先调本接口上传，再把 URL 填入导航/CTA 即可。
+
+**读取（`statichtml:read`）**
+
+- `GET /api/v1/statichtml/tree` — 树形（folders+files，含 `relPath`/`url`/`size`/`ext`/`mtime`），适合后台文件树。
+- `GET /api/v1/statichtml/list` — 扁平文件列表（选择器用，字段 `relPath`/`url`/`name`/`ext`）。
+
+**写入（`statichtml:write`）**
+
+- `POST /api/v1/statichtml/folder` — `{ "path": "item1" }` 建文件夹（支持多级 `item1/sub`；已存在返回 409）。
+- `DELETE /api/v1/statichtml/folder` — `{ "path": "item1" }` 递归删文件夹。
+- `PATCH /api/v1/statichtml/folder` — `{ "path": "item1", "newName": "item2" }` 重命名文件夹。
+- `POST /api/v1/statichtml/file` — `{ folder?, filename, content? | file?(base64), mimeType? }` 上传/新建文件。
+  - 文本类（html/css/js/json/svg/txt/md/xml…）传 `content` 字符串；二进制（图片/字体/pdf）传 `file` base64。
+  - 扩展名白名单校验（非白名单 400），10MB 上限（超限 400）；`folder` 缺省存根目录。返回 `{ relPath, url, size }`。
+- `PUT /api/v1/statichtml/file` — `{ relPath, content? | file?, mimeType? }` 替换已有文件内容。
+- `DELETE /api/v1/statichtml/file` — `{ "relPath": "item1/test1.html" }` 删除文件。
+- `PATCH /api/v1/statichtml/file` — `{ "relPath": "item1/test1.html", "newName": "new.html" }` 重命名文件（扩展名变更命中非白名单仍返回 400）。
+
+**静态直访（公开，无需 Token）**
+
+`GET /statichtml/<relpath>` 由 nginx / Express 静态服务直接返回文件，可用于 `<a href>`、`<img src>`、iframe 等。
+
+**安全：** 路径解析严格限制在 `data/statichtml` 内（防 `../` 穿越）；`filename` 只保留原名与扩展名（不追加随机后缀，保证 URL 可预测）。
+
+**上传示例：**
+
+```json
+// 文本（HTML）
+POST /api/v1/statichtml/file
+{ "folder": "item1", "filename": "test1.html", "content": "<h1>Hello Static</h1>", "mimeType": "text/html" }
+
+// 二进制（图片，base64）
+POST /api/v1/statichtml/file
+{ "folder": "item1", "filename": "cover.png", "file": "<纯base64，不含data:前缀>", "mimeType": "image/png" }
+```
+
+---
+
 ## 第一章
 
 文字说明...
@@ -1493,6 +1539,8 @@ requests.post(
 | `work:write` | 发布 AI 作品 | 一般不需要 |
 | `content:delete` | 删除文章 | 删除时需要 |
 | `settings:write` | 修改系统设置 | 一般不需要 |
+| `statichtml:read` | 读取静态页面树/列表 | 一般不需要 |
+| `statichtml:write` | 创建/更新/删除/重命名静态页面文件与文件夹 | 发布配套静态资源时需要 |
 
 > **角色与所有权：** 即使拥有对应权限，`user` 角色的 Token 只能操作自己创建的文章（更新/删除）。`admin` / `superadmin` 角色可操作所有文章。
 >
