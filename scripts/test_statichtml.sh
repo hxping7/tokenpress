@@ -6,6 +6,11 @@ WRITE=t00_sk_LOCAL_shwrite
 READ=t00_sk_LOCAL_shread
 NOPERM=t00_sk_LOCAL_shnoperm
 
+# Clean any leftovers from prior runs (idempotency)
+for p in item1 rf rf2 rnx1 rnx2; do
+  curl -s -o /dev/null -A "$UA" -X DELETE "$B/api/v1/statichtml/folder" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d "{\"path\":\"$p\"}"
+done
+
 pass=0; fail=0
 chk(){ # $1=name $2=expected_status $3=actual_status
   if [ "$2" = "$3" ]; then echo "  PASS [$1] -> $3"; pass=$((pass+1)); else echo "  FAIL [$1] expected $2 got $3"; fail=$((fail+1)); fi
@@ -30,6 +35,26 @@ chk "write-token upload html" 201 "$code"
 echo "=== 5. WRITE token: upload nested item1/sub/a.css (201) ==="
 code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" -X POST "$B/api/v1/statichtml/file" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d '{"folder":"item1/sub","filename":"a.css","content":"body{color:red}"}')
 chk "write-token upload nested css" 201 "$code"
+
+echo "=== 5b. Rename: file rf/old.html -> rf/new.html ; folder rf -> rf2 ==="
+curl -s -o /dev/null -A "$UA" -X POST "$B/api/v1/statichtml/folder" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d '{"path":"rf"}'
+curl -s -o /dev/null -A "$UA" -X POST "$B/api/v1/statichtml/file" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d '{"folder":"rf","filename":"old.html","content":"<p>rename me</p>"}'
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" -X PATCH "$B/api/v1/statichtml/file" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d '{"relPath":"rf/old.html","newName":"new.html"}')
+chk "rename file 200" 200 "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" "$N/statichtml/rf/new.html")
+chk "renamed file served 200" 200 "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" "$N/statichtml/rf/old.html")
+chk "old file name 404" 404 "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" -X PATCH "$B/api/v1/statichtml/folder" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d '{"path":"rf","newName":"rf2"}')
+chk "rename folder 200" 200 "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" "$N/statichtml/rf2/new.html")
+chk "renamed folder served 200" 200 "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" "$N/statichtml/rf/new.html")
+chk "old folder name 404" 404 "$code"
+
+echo "=== 5c. Rename extension protection: .exe -> 400 ==="
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" -X PATCH "$B/api/v1/statichtml/file" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d '{"relPath":"rf2/new.html","newName":"bad.exe"}')
+chk "rename to exe 400" 400 "$code"
 
 echo "=== 6. Static serving via nginx (200 + correct body) ==="
 body=$(curl -s -A "$UA" "$N/statichtml/item1/test1.html")
@@ -82,6 +107,8 @@ code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" -X DELETE "$B/api/v1/stat
 chk "delete folder 200" 200 "$code"
 code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" "$N/statichtml/item1/test1.html")
 chk "deleted folder html 404" 404 "$code"
+code=$(curl -s -o /dev/null -w '%{http_code}' -A "$UA" -X DELETE "$B/api/v1/statichtml/folder" -H "Authorization: Bearer $WRITE" -H 'Content-Type: application/json' -d '{"path":"rf2"}')
+chk "delete rf2 folder 200" 200 "$code"
 
 echo "=== SUMMARY ==="
 echo "PASS=$pass FAIL=$fail"

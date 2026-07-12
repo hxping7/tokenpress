@@ -190,6 +190,40 @@ router.delete('/folder', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest,
   }
 })
 
+// ===== Write: rename folder =====
+router.patch('/folder', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
+  try {
+    const { path: folderPath, newName } = req.body as { path?: string; newName?: string }
+    if (!folderPath || typeof folderPath !== 'string' || !folderPath.trim()) {
+      return res.status(400).json({ success: false, error: 'path is required' })
+    }
+    if (!newName || typeof newName !== 'string' || !newName.trim()) {
+      return res.status(400).json({ success: false, error: 'newName is required' })
+    }
+    const clean = folderPath.replace(/^\/+/, '').replace(/\/+$/, '')
+    const abs = safeResolve(clean)
+    if (!abs || !fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) {
+      return res.status(404).json({ success: false, error: 'Folder not found' })
+    }
+    const parent = path.dirname(abs)
+    const safeNew = sanitizeName(newName.trim())
+    const newAbs = path.join(parent, safeNew)
+    if (!safeResolve(path.relative(STATIC_HTML_DIR, newAbs))) {
+      return res.status(400).json({ success: false, error: 'Invalid new name' })
+    }
+    if (fs.existsSync(newAbs)) {
+      return res.status(409).json({ success: false, error: 'Target already exists' })
+    }
+    fs.renameSync(abs, newAbs)
+    const newRel = path.relative(STATIC_HTML_DIR, newAbs).split(path.sep).join('/')
+    auditLog(req, 'update', 'statichtml_folder', undefined, `Renamed folder: ${clean} -> ${newRel}`).catch(() => {})
+    res.json({ success: true, data: { relPath: newRel } })
+  } catch (err: any) {
+    console.error('Rename folder error:', err)
+    res.status(500).json({ success: false, error: 'Failed to rename folder' })
+  }
+})
+
 // ===== Write: upload / create file =====
 router.post('/file', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
@@ -298,6 +332,43 @@ router.put('/file', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res)
   } catch (err: any) {
     console.error('Update static file error:', err)
     res.status(500).json({ success: false, error: 'Failed to update file' })
+  }
+})
+
+// ===== Write: rename file =====
+router.patch('/file', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
+  try {
+    const { relPath, newName } = req.body as { relPath?: string; newName?: string }
+    if (!relPath || typeof relPath !== 'string' || !relPath.trim()) {
+      return res.status(400).json({ success: false, error: 'relPath is required' })
+    }
+    if (!newName || typeof newName !== 'string' || !newName.trim()) {
+      return res.status(400).json({ success: false, error: 'newName is required' })
+    }
+    const abs = safeResolve(relPath)
+    if (!abs || !fs.existsSync(abs) || fs.statSync(abs).isDirectory()) {
+      return res.status(404).json({ success: false, error: 'File not found' })
+    }
+    const parent = path.dirname(abs)
+    const safeNew = sanitizeName(newName.trim())
+    const ext = path.extname(safeNew).replace('.', '').toLowerCase()
+    if (!ext || !ALLOWED_EXT.has(ext)) {
+      return res.status(400).json({ success: false, error: `File type .${ext || '?'} is not allowed` })
+    }
+    const newAbs = path.join(parent, safeNew)
+    if (!safeResolve(path.relative(STATIC_HTML_DIR, newAbs))) {
+      return res.status(400).json({ success: false, error: 'Invalid new name' })
+    }
+    if (fs.existsSync(newAbs)) {
+      return res.status(409).json({ success: false, error: 'Target already exists' })
+    }
+    fs.renameSync(abs, newAbs)
+    const newRel = path.relative(STATIC_HTML_DIR, newAbs).split(path.sep).join('/')
+    auditLog(req, 'update', 'statichtml_file', undefined, `Renamed static file: ${relPath} -> ${newRel}`).catch(() => {})
+    res.json({ success: true, data: { relPath: newRel, url: publicUrl(newRel) } })
+  } catch (err: any) {
+    console.error('Rename file error:', err)
+    res.status(500).json({ success: false, error: 'Failed to rename file' })
   }
 })
 

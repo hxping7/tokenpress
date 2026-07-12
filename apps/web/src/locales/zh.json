@@ -75,6 +75,8 @@
       "confirmDeleteFile": "确定删除该文件？",
       "urlCopied": "链接已复制",
       "typeNotAllowed": "不支持的文件类型",
+      "rename": "重命名",
+      "renameConfirm": "确认重命名",
       "selectStaticPage": "选择静态页面",
       "selectStaticPageDesc": "选择要链接的静态页面"
     },

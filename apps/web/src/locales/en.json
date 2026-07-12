@@ -75,6 +75,8 @@
       "confirmDeleteFile": "Delete this file?",
       "urlCopied": "Link copied",
       "typeNotAllowed": "Unsupported file type",
+      "rename": "Rename",
+      "renameConfirm": "Confirm rename",
       "selectStaticPage": "Select Static Page",
       "selectStaticPageDesc": "Choose a static page to link"
     },

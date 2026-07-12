@@ -8,7 +8,7 @@ import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 import {
   Folder, FolderOpen, File as FileIcon, Upload, Trash2, ExternalLink, Copy, Plus,
-  X, Eye, RefreshCw, ChevronRight, ChevronDown,
+  X, Eye, RefreshCw, ChevronRight, ChevronDown, Pencil, Check,
 } from 'lucide-react'
 
 interface FileNode {
@@ -48,6 +48,8 @@ export default function StaticHtmlPage() {
   const [pendingFolder, setPendingFolder] = useState<string>('')
   const [toast, setToast] = useState('')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [renaming, setRenaming] = useState<{ type: 'folder' | 'file'; relPath: string; name: string } | null>(null)
+  const [renameValue, setRenameValue] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data, isLoading } = useQuery({
@@ -82,6 +84,33 @@ export default function StaticHtmlPage() {
       api.post('/statichtml/file', payload, { headers: { Authorization: `Bearer ${token}` } }),
     onSuccess: () => invalidate(),
   })
+
+  const renameFolderMutation = useMutation({
+    mutationFn: (p: { path: string; newName: string }) => api.patch('/statichtml/folder', p, { headers: { Authorization: `Bearer ${token}` } }),
+    onSuccess: () => { invalidate(); cancelRename() },
+  })
+
+  const renameFileMutation = useMutation({
+    mutationFn: (p: { relPath: string; newName: string }) => api.patch('/statichtml/file', p, { headers: { Authorization: `Bearer ${token}` } }),
+    onSuccess: () => { invalidate(); cancelRename() },
+  })
+
+  const startRename = (type: 'folder' | 'file', relPath: string, name: string) => {
+    setRenaming({ type, relPath, name })
+    setRenameValue(name)
+  }
+  const cancelRename = () => {
+    setRenaming(null)
+    setRenameValue('')
+  }
+  const submitRename = () => {
+    if (!renaming || !renameValue.trim()) return
+    if (renaming.type === 'folder') {
+      renameFolderMutation.mutate({ path: renaming.relPath, newName: renameValue.trim() })
+    } else {
+      renameFileMutation.mutate({ relPath: renaming.relPath, newName: renameValue.trim() })
+    }
+  }
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -151,36 +180,92 @@ export default function StaticHtmlPage() {
               {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </button>
             {isOpen ? <FolderOpen size={18} className="text-t-accent-blue" /> : <Folder size={18} className="text-t-accent-blue" />}
-            <span className="flex-1 truncate text-sm font-medium">{node.name}</span>
-            <button onClick={() => handleUploadClick(node.relPath)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.upload', backendLocale)}>
-              <Upload size={15} />
-            </button>
-            <button onClick={() => { if (confirm(t('admin.staticHtmlPage.confirmDeleteFolder', backendLocale))) deleteFolderMutation.mutate(node.relPath) }} className="p-1.5 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded" title={t('admin.staticHtmlPage.delete', backendLocale)}>
-              <Trash2 size={15} />
-            </button>
+            {renaming?.type === 'folder' && renaming.relPath === node.relPath ? (
+              <>
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={e => setRenameValue(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') submitRename()
+                    if (e.key === 'Escape') cancelRename()
+                  }}
+                  className="flex-1 min-w-0 px-2 py-1 text-sm bg-t-bg-primary border border-t-accent-blue rounded focus:outline-none"
+                />
+                <button onClick={submitRename} className="p-1.5 text-t-accent-blue hover:bg-t-accent-blue/10 rounded" title={t('admin.staticHtmlPage.renameConfirm', backendLocale)}>
+                  <Check size={15} />
+                </button>
+                <button onClick={cancelRename} className="p-1.5 text-t-text-secondary hover:text-t-text-primary rounded" title={t('common.cancel', backendLocale)}>
+                  <X size={15} />
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="flex-1 truncate text-sm font-medium">{node.name}</span>
+                <button onClick={() => handleUploadClick(node.relPath)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.upload', backendLocale)}>
+                  <Upload size={15} />
+                </button>
+                <button onClick={() => startRename('folder', node.relPath, node.name)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.rename', backendLocale)}>
+                  <Pencil size={15} />
+                </button>
+                <button onClick={() => { if (confirm(t('admin.staticHtmlPage.confirmDeleteFolder', backendLocale))) deleteFolderMutation.mutate(node.relPath) }} className="p-1.5 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded" title={t('admin.staticHtmlPage.delete', backendLocale)}>
+                  <Trash2 size={15} />
+                </button>
+              </>
+            )}
           </div>
           {isOpen && node.children.map(child => renderNode(child, depth + 1))}
         </div>
       )
     }
+    const renamingThisFile = renaming?.type === 'file' && renaming.relPath === node.relPath
     return (
       <div key={node.relPath} className="group flex items-center gap-2 py-2 pr-3 hover:bg-t-hover rounded-lg" style={pad}>
         <span className="w-4" />
         <FileIcon size={18} className="text-t-text-secondary" />
-        <span className="flex-1 truncate text-sm">{node.name}</span>
+        {renamingThisFile ? (
+          <input
+            autoFocus
+            value={renameValue}
+            onChange={e => setRenameValue(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') submitRename()
+              if (e.key === 'Escape') cancelRename()
+            }}
+            className="flex-1 min-w-0 px-2 py-1 text-sm bg-t-bg-primary border border-t-accent-blue rounded focus:outline-none"
+          />
+        ) : (
+          <span className="flex-1 truncate text-sm">{node.name}</span>
+        )}
         <span className="text-xs text-t-text-secondary hidden sm:inline">{formatSize(node.size)}</span>
-        <button onClick={() => setPreviewUrl(node.url)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.preview', backendLocale)}>
-          <Eye size={15} />
-        </button>
-        <a href={node.url} target="_blank" rel="noopener noreferrer" className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.open', backendLocale)}>
-          <ExternalLink size={15} />
-        </a>
-        <button onClick={() => copyUrl(node.url)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.copyUrl', backendLocale)}>
-          <Copy size={15} />
-        </button>
-        <button onClick={() => { if (confirm(t('admin.staticHtmlPage.confirmDeleteFile', backendLocale))) deleteFileMutation.mutate(node.relPath) }} className="p-1.5 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded" title={t('admin.staticHtmlPage.delete', backendLocale)}>
-          <Trash2 size={15} />
-        </button>
+        {renamingThisFile ? (
+          <>
+            <button onClick={submitRename} className="p-1.5 text-t-accent-blue hover:bg-t-accent-blue/10 rounded" title={t('admin.staticHtmlPage.renameConfirm', backendLocale)}>
+              <Check size={15} />
+            </button>
+            <button onClick={cancelRename} className="p-1.5 text-t-text-secondary hover:text-t-text-primary rounded" title={t('common.cancel', backendLocale)}>
+              <X size={15} />
+            </button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setPreviewUrl(node.url)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.preview', backendLocale)}>
+              <Eye size={15} />
+            </button>
+            <a href={node.url} target="_blank" rel="noopener noreferrer" className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.open', backendLocale)}>
+              <ExternalLink size={15} />
+            </a>
+            <button onClick={() => copyUrl(node.url)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.copyUrl', backendLocale)}>
+              <Copy size={15} />
+            </button>
+            <button onClick={() => startRename('file', node.relPath, node.name)} className="p-1.5 opacity-0 group-hover:opacity-100 text-t-text-secondary hover:text-t-accent-blue rounded" title={t('admin.staticHtmlPage.rename', backendLocale)}>
+              <Pencil size={15} />
+            </button>
+            <button onClick={() => { if (confirm(t('admin.staticHtmlPage.confirmDeleteFile', backendLocale))) deleteFileMutation.mutate(node.relPath) }} className="p-1.5 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500/10 rounded" title={t('admin.staticHtmlPage.delete', backendLocale)}>
+              <Trash2 size={15} />
+            </button>
+          </>
+        )}
       </div>
     )
   }
