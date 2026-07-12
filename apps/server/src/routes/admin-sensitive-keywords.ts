@@ -2,11 +2,12 @@ import { Router } from 'express'
 import { db } from '../db/index.js'
 import { sensitiveKeywords } from '../db/schema.js'
 import { eq, desc, count } from 'drizzle-orm'
-import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import logger from '../utils/logger.js'
 
 const router = Router()
-router.use(authMiddleware)
+router.use(apiTokenOrAdmin('keywords:write'))
 
 // GET /api/v1/admin/sensitive-keywords — list keywords
 router.get('/', async (req: AuthRequest, res) => {

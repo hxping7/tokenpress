@@ -8,7 +8,11 @@ import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 import { parseShareConfig, DEFAULT_SHARE_CONFIG, SHARE_PLATFORMS, SHARE_POSITIONS, type ShareConfig } from '@/lib/share-config'
 import { WIDTH_PRESETS, DEFAULT_CONTENT_MAX_WIDTH, parseContentMaxWidth } from '@/lib/layout-config'
-import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3 } from 'lucide-react'
+import type { HomeBannerType, HomeBannerPosition, HomeBannerCta, HomeBannerCard, HomeBannerImage, HomeBannerNotice } from '@/components/HomeBanner'
+import { type HeroCtaButton, type HeroCtaVariant, DEFAULT_HERO_CTA } from '@/components/HeroCarousel'
+import { StaticPagePicker } from '@/components/StaticPagePicker'
+import Image from 'next/image'
+import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image as ImageIcon, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3 } from 'lucide-react'
 import { useRef } from 'react'
 
 interface FriendLink {
@@ -38,7 +42,8 @@ interface HeroSlide {
   linkTarget: '_blank' | '_self'
 }
 
-type TabType = 'basic' | 'ui' | 'logo' | 'hero' | 'nav' | 'links' | 'footer' | 'backup' | 'analytics' | 'security'
+type TabType = 'basic' | 'ui' | 'logo' | 'home' | 'nav' | 'links' | 'footer' | 'backup' | 'analytics' | 'security'
+type HomeSubTab = 'hero' | 'banner'
 
 export default function SettingsPage() {
   const queryClient = useQueryClient()
@@ -46,6 +51,7 @@ export default function SettingsPage() {
   const { backendLocale: adminLocale } = useLocaleStore()
   const [saved, setSaved] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('basic')
+const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
 
   // ===== Site Settings =====
   const { data: settingsData } = useQuery({
@@ -70,6 +76,18 @@ export default function SettingsPage() {
   const [heroCarouselArticleSource, setHeroCarouselArticleSource] = useState('latest')
   const [heroCarouselMaxItems, setHeroCarouselMaxItems] = useState(5)
   const [heroCarouselInterval, setHeroCarouselInterval] = useState(5) // 单位：秒
+
+  // ===== Hero CTA 按钮（可后台配置） =====
+  const [heroCtaButtons, setHeroCtaButtons] = useState<HeroCtaButton[]>(DEFAULT_HERO_CTA)
+
+  // ===== 中部 banner 区 =====
+  const [homeBannerEnabled, setHomeBannerEnabled] = useState(false)
+  const [homeBannerType, setHomeBannerType] = useState<HomeBannerType>('cta')
+  const [homeBannerPosition, setHomeBannerPosition] = useState<HomeBannerPosition>('after_hero')
+  const [homeBannerCta, setHomeBannerCta] = useState<HomeBannerCta>({ title: '', subtitle: '', buttonText: '', buttonLink: '', buttonTarget: '_self', bgImage: '', gradient: '', align: 'center' })
+  const [homeBannerCards, setHomeBannerCards] = useState<HomeBannerCard[]>([])
+  const [homeBannerImage, setHomeBannerImage] = useState<HomeBannerImage>({ url: '', link: '', target: '_self', alt: '' })
+  const [homeBannerNotice, setHomeBannerNotice] = useState<HomeBannerNotice>({ text: '', link: '', target: '_self', marquee: false })
 
   // ===== 媒体库 =====
   const [showMediaBrowser, setShowMediaBrowser] = useState(false)
@@ -343,6 +361,19 @@ export default function SettingsPage() {
       if (s.hero_carousel_interval) {
         setHeroCarouselInterval(parseInt(s.hero_carousel_interval) || 5)
       }
+      if (s.hero_cta_buttons) {
+        try {
+          const parsed = JSON.parse(s.hero_cta_buttons)
+          if (Array.isArray(parsed) && parsed.length > 0) setHeroCtaButtons(parsed)
+        } catch {}
+      }
+      if (s.home_banner_enabled !== undefined) setHomeBannerEnabled(s.home_banner_enabled === 'true')
+      if (s.home_banner_type) setHomeBannerType(s.home_banner_type as HomeBannerType)
+      if (s.home_banner_position) setHomeBannerPosition(s.home_banner_position as HomeBannerPosition)
+      if (s.home_banner_cta) { try { setHomeBannerCta(JSON.parse(s.home_banner_cta)) } catch {} }
+      if (s.home_banner_cards) { try { setHomeBannerCards(JSON.parse(s.home_banner_cards)) } catch {} }
+      if (s.home_banner_image) { try { setHomeBannerImage(JSON.parse(s.home_banner_image)) } catch {} }
+      if (s.home_banner_notice) { try { setHomeBannerNotice(JSON.parse(s.home_banner_notice)) } catch {} }
       if (s.copyright_text !== undefined) setCopyrightText(s.copyright_text)
       setIcpNumber(s.icp_number || '')
       setIcpUrl(s.icp_url || 'https://beian.miit.gov.cn/')
@@ -486,6 +517,34 @@ export default function SettingsPage() {
     setHeroSlides(heroSlides.filter((_, i) => i !== index))
   }
 
+  // ===== Hero CTA 按钮处理函数 =====
+  const addHeroCta = () => {
+    if (heroCtaButtons.length >= 4) return
+    setHeroCtaButtons([...heroCtaButtons, { label: '', href: '', target: '_self', variant: 'secondary' }])
+  }
+  const updateHeroCta = (index: number, field: keyof HeroCtaButton, value: string) => {
+    const next = [...heroCtaButtons]
+    next[index] = { ...next[index], [field]: value }
+    setHeroCtaButtons(next)
+  }
+  const removeHeroCta = (index: number) => {
+    setHeroCtaButtons(heroCtaButtons.filter((_, i) => i !== index))
+  }
+
+  // ===== 中部 banner 卡片处理函数 =====
+  const addBannerCard = () => {
+    if (homeBannerCards.length >= 4) return
+    setHomeBannerCards([...homeBannerCards, { title: '', desc: '', link: '', icon: '', target: '_self' }])
+  }
+  const updateBannerCard = (index: number, field: keyof HomeBannerCard, value: string) => {
+    const next = [...homeBannerCards]
+    next[index] = { ...next[index], [field]: value }
+    setHomeBannerCards(next)
+  }
+  const removeBannerCard = (index: number) => {
+    setHomeBannerCards(homeBannerCards.filter((_, i) => i !== index))
+  }
+
   const openHeroMediaBrowser = (index: number) => {
     setHeroMediaBrowserTarget(index)
     setMediaBrowserTarget('header') // 复用媒体库
@@ -573,6 +632,14 @@ export default function SettingsPage() {
       hero_carousel_article_source: heroCarouselArticleSource,
       hero_carousel_max_items: heroCarouselMaxItems.toString(),
       hero_carousel_interval: heroCarouselInterval.toString(),
+      hero_cta_buttons: JSON.stringify(heroCtaButtons),
+      home_banner_enabled: homeBannerEnabled.toString(),
+      home_banner_type: homeBannerType,
+      home_banner_position: homeBannerPosition,
+      home_banner_cta: JSON.stringify(homeBannerCta),
+      home_banner_cards: JSON.stringify(homeBannerCards),
+      home_banner_image: JSON.stringify(homeBannerImage),
+      home_banner_notice: JSON.stringify(homeBannerNotice),
       friend_links_columns: friendLinksColumns,
       default_theme: defaultTheme,
       frontend_locale: frontendLocale,
@@ -716,15 +783,16 @@ export default function SettingsPage() {
         >
           {t('settings.logoSection', adminLocale)}
         </button>
+        {/* 首页设置（包含子 Tab） */}
         <button
-          onClick={() => setActiveTab('hero')}
+          onClick={() => { setActiveTab('home'); setHomeSubTab('hero'); }}
           className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'hero'
+            activeTab === 'home'
               ? 'bg-t-accent-blue text-black'
               : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
           }`}
         >
-          {t('settings.heroSection', adminLocale)}
+          {t('settings.homeSettingsGroup', adminLocale)}
         </button>
         <button
           onClick={() => setActiveTab('nav')}
@@ -787,6 +855,32 @@ export default function SettingsPage() {
           {t('settings.securityTab', adminLocale)}
         </button>
       </div>
+
+      {/* 首页设置子 Tab 导航 */}
+      {activeTab === 'home' && (
+        <div className="flex gap-1 mt-3 px-1">
+          <button
+            onClick={() => setHomeSubTab('hero')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              homeSubTab === 'hero'
+                ? 'bg-t-accent-blue/15 text-t-accent-blue border border-t-accent-blue/30'
+                : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
+            }`}
+          >
+            {t('settings.heroSection', adminLocale)}
+          </button>
+          <button
+            onClick={() => setHomeSubTab('banner')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              homeSubTab === 'banner'
+                ? 'bg-t-accent-blue/15 text-t-accent-blue border border-t-accent-blue/30'
+                : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
+            }`}
+          >
+            {t('settings.bannerSection', adminLocale)}
+          </button>
+        </div>
+      )}
 
       {/* 基本信息 */}
       {activeTab === 'basic' && (
@@ -1064,10 +1158,10 @@ export default function SettingsPage() {
       {activeTab === 'logo' && (
       <div className="bg-t-bg-primary border border-t-border rounded-xl">
         <div className="px-6 py-4 border-b border-t-border">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Image size={18} className="text-t-accent-blue" />
-            {t('settings.logoSection', adminLocale)}
-          </h2>
+            <h2 className="font-semibold flex items-center gap-2">
+              <ImageIcon size={18} className="text-t-accent-blue" />
+              {t('settings.logoSection', adminLocale)}
+            </h2>
         </div>
         <div className="p-6 space-y-6">
           {/* 头部 Logo */}
@@ -1101,7 +1195,15 @@ export default function SettingsPage() {
             </div>
             {headerLogo && (
               <div className="mt-3 p-4 bg-t-bg-secondary rounded-lg inline-block">
-                <img src={headerLogo} alt={t('settings.logoPreview', adminLocale)} className="h-10" />
+                <Image
+                  src={headerLogo}
+                  alt={t('settings.logoPreview', adminLocale)}
+                  width={200}
+                  height={40}
+                  unoptimized
+                  className="h-10 w-auto object-contain"
+                  style={{ height: '2.5rem', width: 'auto' }}
+                />
               </div>
             )}
           </div>
@@ -1137,7 +1239,15 @@ export default function SettingsPage() {
             </div>
             {footerLogo && (
               <div className="mt-3 p-4 bg-t-bg-secondary rounded-lg inline-block">
-                <img src={footerLogo} alt={t('settings.footerLogoPreview', adminLocale)} className="h-10" />
+                <Image
+                  src={footerLogo}
+                  alt={t('settings.footerLogoPreview', adminLocale)}
+                  width={200}
+                  height={40}
+                  unoptimized
+                  className="h-10 w-auto object-contain"
+                  style={{ height: '2.5rem', width: 'auto' }}
+                />
               </div>
             )}
           </div>
@@ -1146,11 +1256,11 @@ export default function SettingsPage() {
       )}
 
       {/* 首页宣传页设置 */}
-      {activeTab === 'hero' && (
+      {activeTab === 'home' && homeSubTab === 'hero' && (
       <div className="bg-t-bg-primary border border-t-border rounded-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-t-border">
           <h2 className="font-semibold flex items-center gap-2">
-            <Image size={18} className="text-t-accent-blue" />
+            <ImageIcon size={18} className="text-t-accent-blue" />
             {t('settings.heroSection', adminLocale)}
           </h2>
           <button
@@ -1306,7 +1416,15 @@ export default function SettingsPage() {
                       </div>
                       {slide.imageUrl && (
                         <div className="mt-2 p-2 bg-t-bg-primary rounded-lg inline-block max-w-[200px]">
-                          <img src={slide.imageUrl} alt="Preview" className="max-h-16 object-contain" />
+                          <Image
+                            src={slide.imageUrl}
+                            alt="Preview"
+                            width={200}
+                            height={64}
+                            unoptimized
+                            className="max-h-16 w-auto object-contain"
+                            style={{ height: 'auto', maxHeight: '4rem', width: 'auto' }}
+                          />
                         </div>
                       )}
                     </div>
@@ -1314,13 +1432,20 @@ export default function SettingsPage() {
                     {/* 链接 URL */}
                     <div>
                       <label className="block text-xs text-t-text-muted mb-1">{t('settings.heroLinkUrl', adminLocale)}</label>
-                      <input
-                        type="url"
-                        value={slide.linkUrl}
-                        onChange={(e) => updateHeroSlide(index, 'linkUrl', e.target.value)}
-                        placeholder={t('settings.heroLinkUrlPlaceholder', adminLocale)}
-                        className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
-                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="url"
+                          value={slide.linkUrl}
+                          onChange={(e) => updateHeroSlide(index, 'linkUrl', e.target.value)}
+                          placeholder={t('settings.heroLinkUrlPlaceholder', adminLocale)}
+                          className="flex-1 px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                        />
+                        <StaticPagePicker
+                          value={slide.linkUrl}
+                          onSelect={(url) => updateHeroSlide(index, 'linkUrl', url)}
+                          label={t('admin.staticHtmlPage.selectStaticPage', adminLocale)}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1338,6 +1463,283 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Hero CTA 按钮 */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-t-text-primary">{t('settings.ctaButtons', adminLocale)}</span>
+              <button
+                type="button"
+                onClick={addHeroCta}
+                disabled={heroCtaButtons.length >= 4}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-t-accent-blue text-black font-medium rounded-lg hover:bg-t-accent-blue/90 disabled:opacity-50"
+              >
+                <Plus size={16} />
+                {t('settings.addCta', adminLocale)}
+              </button>
+            </div>
+            {heroCtaButtons.length === 0 ? (
+              <p className="text-t-text-muted text-sm">{t('settings.noCta', adminLocale)}</p>
+            ) : (
+              heroCtaButtons.map((cta, index) => (
+                <div key={index} className="p-4 bg-t-bg-secondary rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-t-text-secondary">{t('settings.ctaButton', adminLocale)} {index + 1}</span>
+                    <button onClick={() => removeHeroCta(index)} className="p-1.5 text-t-text-secondary hover:text-red-400">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-t-text-muted mb-1">{t('settings.ctaLabel', adminLocale)}</label>
+                      <input type="text" value={cta.label} onChange={(e) => updateHeroCta(index, 'label', e.target.value)} placeholder={t('settings.ctaLabelPlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-t-text-muted mb-1">{t('settings.ctaLink', adminLocale)}</label>
+                      <div className="flex items-center gap-2">
+                        <input type="text" value={cta.href} onChange={(e) => updateHeroCta(index, 'href', e.target.value)} placeholder={t('settings.ctaLinkPlaceholder', adminLocale)} className="flex-1 px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                        <StaticPagePicker
+                          value={cta.href}
+                          onSelect={(url) => updateHeroCta(index, 'href', url)}
+                          label={t('admin.staticHtmlPage.selectStaticPage', adminLocale)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-t-text-muted mb-1">{t('settings.ctaStyle', adminLocale)}</label>
+                      <select value={cta.variant || 'secondary'} onChange={(e) => updateHeroCta(index, 'variant', e.target.value as HeroCtaVariant)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
+                        <option value="primary">{t('settings.ctaPrimary', adminLocale)}</option>
+                        <option value="secondary">{t('settings.ctaSecondary', adminLocale)}</option>
+                        <option value="ghost">{t('settings.ctaGhost', adminLocale)}</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={cta.target === '_blank'} onChange={(e) => updateHeroCta(index, 'target', e.target.checked ? '_blank' : '_self')} className="w-4 h-4 rounded text-t-accent-blue" />
+                        <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+        </div>
+      </div>
+      )}
+
+      {/* 中部 banner 区设置 */}
+      {activeTab === 'home' && homeSubTab === 'banner' && (
+      <div className="bg-t-bg-primary border border-t-border rounded-xl">
+        <div className="px-6 py-4 border-b border-t-border">
+          <h2 className="font-semibold flex items-center gap-2">
+            <ImageIcon size={18} className="text-t-accent-blue" />
+            {t('settings.bannerSection', adminLocale)}
+          </h2>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-t-text-secondary">{t('settings.bannerSectionDesc', adminLocale)}</p>
+
+          {/* 启用 */}
+          <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
+            <div>
+              <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerEnabled', adminLocale)}</span>
+              <p className="text-xs text-t-text-muted mt-1">{t('settings.bannerEnabledDesc', adminLocale)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setHomeBannerEnabled(!homeBannerEnabled)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${homeBannerEnabled ? 'bg-t-accent-blue' : 'bg-t-bg-tertiary'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${homeBannerEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
+          {/* 类型 */}
+          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
+            <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerType', adminLocale)}</span>
+            <select value={homeBannerType} onChange={(e) => setHomeBannerType(e.target.value as HomeBannerType)} className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
+              <option value="cta">{t('settings.bannerTypeCta', adminLocale)}</option>
+              <option value="cards">{t('settings.bannerTypeCards', adminLocale)}</option>
+              <option value="image">{t('settings.bannerTypeImage', adminLocale)}</option>
+              <option value="notice">{t('settings.bannerTypeNotice', adminLocale)}</option>
+            </select>
+          </div>
+
+          {/* 位置 */}
+          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
+            <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerPosition', adminLocale)}</span>
+            <select value={homeBannerPosition} onChange={(e) => setHomeBannerPosition(e.target.value as HomeBannerPosition)} className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
+              <option value="after_hero">{t('settings.bannerPosAfterHero', adminLocale)}</option>
+              <option value="after_articles">{t('settings.bannerPosAfterArticles', adminLocale)}</option>
+            </select>
+          </div>
+
+          {/* CTA 类型字段 */}
+          {homeBannerType === 'cta' && (
+            <div className="space-y-3 p-4 bg-t-bg-secondary rounded-lg">
+              <div>
+                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaTitle', adminLocale)}</label>
+                <input type="text" value={homeBannerCta.title} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, title: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+              </div>
+              <div>
+                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaSubtitle', adminLocale)}</label>
+                <input type="text" value={homeBannerCta.subtitle || ''} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, subtitle: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaButtonText', adminLocale)}</label>
+                  <input type="text" value={homeBannerCta.buttonText} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, buttonText: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                </div>
+                <div>
+                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaButtonLink', adminLocale)}</label>
+                  <input type="text" value={homeBannerCta.buttonLink} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, buttonLink: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaAlign', adminLocale)}</label>
+                  <select value={homeBannerCta.align || 'center'} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, align: e.target.value as 'left' | 'center' })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
+                    <option value="center">{t('settings.alignCenter', adminLocale)}</option>
+                    <option value="left">{t('settings.alignLeft', adminLocale)}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaGradient', adminLocale)}</label>
+                  <select value={homeBannerCta.gradient || ''} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, gradient: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
+                    <option value="">{t('settings.bannerGradDefault', adminLocale)}</option>
+                    <option value="linear-gradient(135deg, #0ea5e9, #7c3aed)">{t('settings.bannerGradBluePurple', adminLocale)}</option>
+                    <option value="linear-gradient(135deg, #00d4ff, #7c3aed)">{t('settings.bannerGradCyber', adminLocale)}</option>
+                    <option value="linear-gradient(135deg, #f59e0b, #ef4444)">{t('settings.bannerGradSunset', adminLocale)}</option>
+                    <option value="linear-gradient(135deg, #0f172a, #1e293b)">{t('settings.bannerGradDark', adminLocale)}</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={homeBannerCta.buttonTarget === '_blank'} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, buttonTarget: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
+                    <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaBgImage', adminLocale)}</label>
+                <input type="url" value={homeBannerCta.bgImage || ''} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, bgImage: e.target.value })} placeholder={t('settings.bannerCtaBgImagePlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+              </div>
+            </div>
+          )}
+
+          {/* 卡片类型字段 */}
+          {homeBannerType === 'cards' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-t-text-primary">{t('settings.bannerCards', adminLocale)}</span>
+                <button
+                  type="button"
+                  onClick={addBannerCard}
+                  disabled={homeBannerCards.length >= 4}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-t-accent-blue text-black font-medium rounded-lg hover:bg-t-accent-blue/90 disabled:opacity-50"
+                >
+                  <Plus size={16} />
+                  {t('settings.bannerAddCard', adminLocale)}
+                </button>
+              </div>
+              {homeBannerCards.length === 0 ? (
+                <p className="text-t-text-muted text-sm">{t('settings.bannerNoCards', adminLocale)}</p>
+              ) : (
+                homeBannerCards.map((card, index) => (
+                  <div key={index} className="p-4 bg-t-bg-secondary rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerCard', adminLocale)} {index + 1}</span>
+                      <button onClick={() => removeBannerCard(index)} className="p-1.5 text-t-text-secondary hover:text-red-400"><Trash2 size={16} /></button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardIcon', adminLocale)}</label>
+                        <input type="text" value={card.icon || ''} onChange={(e) => updateBannerCard(index, 'icon', e.target.value)} placeholder={t('settings.bannerCardIconPlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardTitle', adminLocale)}</label>
+                        <input type="text" value={card.title} onChange={(e) => updateBannerCard(index, 'title', e.target.value)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardDesc', adminLocale)}</label>
+                      <input type="text" value={card.desc || ''} onChange={(e) => updateBannerCard(index, 'desc', e.target.value)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardLink', adminLocale)}</label>
+                        <input type="text" value={card.link} onChange={(e) => updateBannerCard(index, 'link', e.target.value)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                      </div>
+                      <div className="flex items-end">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={card.target === '_blank'} onChange={(e) => updateBannerCard(index, 'target', e.target.checked ? '_blank' : '_self')} className="w-4 h-4 rounded text-t-accent-blue" />
+                          <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* 单图类型字段 */}
+          {homeBannerType === 'image' && (
+            <div className="space-y-3 p-4 bg-t-bg-secondary rounded-lg">
+              <div>
+                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerImageUrl', adminLocale)}</label>
+                <input type="url" value={homeBannerImage.url} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, url: e.target.value })} placeholder={t('settings.bannerImageUrlPlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerImageLink', adminLocale)}</label>
+                  <input type="text" value={homeBannerImage.link || ''} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, link: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                </div>
+                <div>
+                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerImageAlt', adminLocale)}</label>
+                  <input type="text" value={homeBannerImage.alt || ''} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, alt: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                </div>
+              </div>
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={homeBannerImage.target === '_blank'} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, target: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
+                  <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* 公告类型字段 */}
+          {homeBannerType === 'notice' && (
+            <div className="space-y-3 p-4 bg-t-bg-secondary rounded-lg">
+              <div>
+                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerNoticeText', adminLocale)}</label>
+                <input type="text" value={homeBannerNotice.text} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, text: e.target.value })} placeholder={t('settings.bannerNoticeTextPlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerNoticeLink', adminLocale)}</label>
+                  <input type="text" value={homeBannerNotice.link || ''} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, link: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={homeBannerNotice.marquee} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, marquee: e.target.checked })} className="w-4 h-4 rounded text-t-accent-blue" />
+                    <span className="text-sm text-t-text-secondary">{t('settings.bannerNoticeMarquee', adminLocale)}</span>
+                  </label>
+                </div>
+              </div>
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={homeBannerNotice.target === '_blank'} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, target: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
+                  <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
+                </label>
+              </div>
             </div>
           )}
         </div>
@@ -2414,7 +2816,7 @@ export default function SettingsPage() {
                       onClick={() => selectFromMediaBrowser(item.url)}
                       className="relative aspect-square bg-t-bg-secondary rounded-lg overflow-hidden border-2 border-transparent hover:border-t-accent-blue transition-colors group"
                     >
-                      <img src={item.url} alt={item.originalName} className="w-full h-full object-contain" />
+                      <Image src={item.url} alt={item.originalName} fill className="object-contain" unoptimized sizes="(max-width: 768px) 25vw, 150px" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-white text-sm">{t('settings.select', adminLocale)}</span>
                       </div>

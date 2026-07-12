@@ -5,8 +5,8 @@ import { db } from '../db/index.js'
 import { articles, articleTags, tags, categories, sections, users, siteSettings, articleLikes, articleViews, adLogs, media } from '../db/schema.js'
 import { eq, and, desc, asc, sql, like, inArray } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
-import { generateSlug, extractExcerpt } from '@tokenpress/shared'
-import type { ContentStatus } from '@tokenpress/shared'
+import { generateSlug, extractExcerpt, isValidPinScope } from '@tokenpress/shared'
+import type { ContentStatus, PinScope } from '@tokenpress/shared'
 import { revalidateTag } from '../utils/revalidate.js'
 import { auditLog } from '../utils/auditLogger.js'
 import { UPLOAD_DIR, MEDIA_URL_PREFIX } from '../utils/paths.js'
@@ -109,6 +109,8 @@ router.get('/', async (req: AuthRequest, res) => {
       createdAt: articles.createdAt,
       updatedAt: articles.updatedAt,
       publishedAt: articles.publishedAt,
+      pinnedAt: articles.pinnedAt,
+      pinnedScope: articles.pinnedScope,
       section: { id: sections.id, name: sections.name, slug: sections.slug, path: sections.path },
     })
       .from(articles)
@@ -225,6 +227,13 @@ router.post('/', async (req: AuthRequest, res) => {
     const articleStatus: ContentStatus = requestedStatus === 'published' ? 'pending_review' : requestedStatus
     const excerpt = req.body.excerpt || extractExcerpt(content)
 
+    // 置顶范围：none=不置顶 / global=全局置顶 / section=板块内置顶
+    const pinScopeRaw = req.body.pinnedScope
+    const pinScope: PinScope = isValidPinScope(pinScopeRaw) ? pinScopeRaw : 'none'
+    const pinFields = pinScope !== 'none'
+      ? { pinnedAt: new Date().toISOString(), pinnedScope: pinScope }
+      : { pinnedAt: null, pinnedScope: null }
+
     let resolvedPublishedAt: string | null = null
     if (requestedStatus === 'published' && !publishedAt) {
       resolvedPublishedAt = new Date().toISOString()
@@ -245,6 +254,7 @@ router.post('/', async (req: AuthRequest, res) => {
       status: articleStatus,
       authorId: req.user!.userId,
       publishedAt: resolvedPublishedAt,
+      ...pinFields,
     }).run()
 
     const articleId = Number(result.lastInsertRowid)
@@ -304,10 +314,10 @@ router.post('/batch', async (req: AuthRequest, res) => {
     const { action, ids, data } = req.body as {
       action?: string
       ids?: number[]
-      data?: { status?: string; categoryId?: number | null; sectionId?: number | null }
+      data?: { status?: string; categoryId?: number | null; sectionId?: number | null; pinnedScope?: string }
     }
 
-    const allowedActions = ['delete', 'updateStatus', 'updateCategory', 'updateSection']
+    const allowedActions = ['delete', 'updateStatus', 'updateCategory', 'updateSection', 'updatePin']
     if (!action || !allowedActions.includes(action)) {
       return res.status(400).json({ success: false, error: 'Invalid or missing action' })
     }
@@ -428,6 +438,25 @@ router.post('/batch', async (req: AuthRequest, res) => {
       return res.json({ success: true, message: `${targets.length} article(s) updated`, data: { updated: targets.length } })
     }
 
+    if (action === 'updatePin') {
+      const pinScopeRaw = data?.pinnedScope || 'none'
+      if (!isValidPinScope(pinScopeRaw)) {
+        return res.status(400).json({ success: false, error: 'Invalid pinnedScope' })
+      }
+      const pinNow = new Date().toISOString()
+      const updates: Record<string, unknown> = pinScopeRaw === 'none'
+        ? { pinnedAt: null, pinnedScope: null, updatedAt: pinNow }
+        : { pinnedAt: pinNow, pinnedScope: pinScopeRaw, updatedAt: pinNow }
+      await db.update(articles)
+        .set(updates)
+        .where(inArray(articles.id, targets.map(a => a.id)))
+        .run()
+      revalidateTag('articles')
+      revalidateTag('sections')
+      await auditLog(req, 'batch_update', 'article', undefined, `Batch updated pin to "${pinScopeRaw}" for ${targets.length} articles`)
+      return res.json({ success: true, message: `${targets.length} article(s) pin updated`, data: { updated: targets.length, pinnedScope: pinScopeRaw } })
+    }
+
     return res.status(400).json({ success: false, error: 'Unhandled action' })
   } catch (err) {
     console.error('Batch article operation error:', err)
@@ -496,6 +525,21 @@ router.put('/:id', async (req: AuthRequest, res) => {
       }
     }
     if (req.body.publishedAt !== undefined) updates.publishedAt = req.body.publishedAt
+
+    // 置顶范围：none=取消置顶 / global=全局置顶 / section=板块内置顶
+    if (req.body.pinnedScope !== undefined) {
+      const pinScopeRaw = req.body.pinnedScope
+      if (!isValidPinScope(pinScopeRaw)) {
+        return res.status(400).json({ success: false, error: 'Invalid pinnedScope' })
+      }
+      if (pinScopeRaw === 'none') {
+        updates.pinnedAt = null
+        updates.pinnedScope = null
+      } else {
+        updates.pinnedAt = new Date().toISOString()
+        updates.pinnedScope = pinScopeRaw
+      }
+    }
 
     await db.update(articles).set(updates).where(eq(articles.id, articleId)).run()
 

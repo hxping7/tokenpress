@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
@@ -17,8 +18,16 @@ export function FooterLogo() {
   // If custom logo URL is set, use it
   if (customLogo) {
     return (
-      <Link href="/" className="flex items-center gap-3 h-9">
-        <img src={customLogo} alt="Logo" className="h-full w-auto object-contain" />
+      <Link href="/" className="flex items-center gap-3 h-9 relative">
+        <Image
+          src={customLogo}
+          alt="Logo"
+          width={200}
+          height={36}
+          unoptimized
+          className="h-full w-auto object-contain"
+          style={{ height: '100%', width: 'auto' }}
+        />
       </Link>
     )
   }

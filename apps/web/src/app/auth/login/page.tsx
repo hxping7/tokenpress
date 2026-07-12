@@ -39,7 +39,7 @@ function LoginForm() {
     if (captchaRequired && !captchaImage) {
       fetchCaptcha()
     }
-  }, [captchaRequired])
+  }, [captchaRequired, captchaImage])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

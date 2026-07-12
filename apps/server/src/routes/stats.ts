@@ -2,10 +2,11 @@ import { Router } from 'express'
 import { db, client } from '../db/index.js'
 import { apiLogs, apiTokens, articles, sections } from '../db/schema.js'
 import { eq, sql, desc } from 'drizzle-orm'
-import { authMiddleware, adminOrAbove, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 
 const router = Router()
-router.use(authMiddleware, adminOrAbove)
+router.use(apiTokenOrAdmin('stats:read'))
 
 // GET /api/v1/stats — get API usage statistics
 router.get('/', async (req: AuthRequest, res) => {

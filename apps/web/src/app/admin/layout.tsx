@@ -47,6 +47,7 @@ function useMenuItems() {
     { key: '/admin/ads', label: t('admin.ads', backendLocale), icon: Megaphone, roles: ['superadmin', 'admin'] },
     { key: '/admin/logs', label: t('admin.logs', backendLocale), icon: ScrollText, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/settings', label: t('admin.settings', backendLocale), icon: Settings, roles: ['superadmin'] },
+    { key: '/admin/statichtml', label: t('admin.staticHtml', backendLocale), icon: Globe, roles: ['superadmin', 'admin'] },
   ]
 
   return allItems.filter(item => item.roles.includes(role)).map(({ key, label, icon }) => ({ key, label, icon }))

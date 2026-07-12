@@ -8,6 +8,8 @@ import logger from './utils/logger.js'
 import { migrate } from './db/migrations/0000_initial.js'
 import { migrate as migrateMediaArticleId } from './db/migrations/0013_media_article_id.js'
 import { migrate as migrateHeroCarouselSettings } from './db/migrations/0014_add_hero_carousel_settings.js'
+import { migrate as migrateArticlePin } from './db/migrations/0015_add_article_pin.js'
+import { migrate as migrateArticleRebuild } from './db/migrations/0016_rebuild_articles.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -39,6 +41,7 @@ import aiAdsRoutes from './routes/ai-ads.js'
 import adsPublicRoutes from './routes/ads-public.js'
 import carouselArticlesRoutes from './routes/carousel-articles.js'
 import adminAdsRoutes from './routes/admin-ads.js'
+import staticHtmlRoutes from './routes/statichtml.js'
 import { initProviders, loadProviderConfigFromEnv, reloadProviderFromDB } from './lib/contentReview/providers/index.js'
 import { startReviewWorker, stopReviewWorker, retryFailedReviews } from './workers/reviewScheduler.js'
 import { aiPatrolTick } from './workers/aiPatrol.js'
@@ -83,6 +86,17 @@ app.use(imageHotlinkProtection)
 // 静态文件：uploads 目录
 const UPLOADS_DIR = path.resolve(process.cwd(), 'data', 'uploads')
 app.use('/uploads', express.static(UPLOADS_DIR))
+
+// 静态文件：statichtml 目录（用户托管的静态页面，如活动页/教程）
+const STATIC_HTML_DIR = path.resolve(process.cwd(), 'data', 'statichtml')
+app.use('/statichtml', express.static(STATIC_HTML_DIR, {
+  extensions: false,
+  fallthrough: true,
+  setHeaders: (res, filePath) => {
+    // 防止被当作可嵌入框架内容（可选）；保留正常 Content-Type
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+  },
+}))
 
 app.use(express.json({ limit: '10mb' }))
 
@@ -171,6 +185,9 @@ app.use('/api/v1/admin/ads', adminAdsRoutes)
 // AI API Token-protected routes
 app.use('/api/v1/ai', aiPublishLimiter, aiPublishRoutes)
 
+// Static HTML pages (API Token statichtml:* 或 JWT 管理员)
+app.use('/api/v1/statichtml', staticHtmlRoutes)
+
 // Public ad serving
 app.use('/api/v1/ads', adsPublicRoutes)
 
@@ -202,6 +219,8 @@ async function start() {
   await migrate()
   await migrateMediaArticleId()
   await migrateHeroCarouselSettings()
+  await migrateArticlePin()
+  await migrateArticleRebuild()
   logger.info('✅ Database ready')
 
   // Initialize login cleanup task

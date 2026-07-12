@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import Image from 'next/image'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import {
@@ -427,10 +428,13 @@ export function MarkdownEditor({
                         className="aspect-square bg-t-bg-secondary rounded-lg overflow-hidden hover:ring-2 hover:ring-t-accent-blue transition-all group relative"
                       >
                         {isImage ? (
-                          <img
+                          <Image
                             src={media.thumbnailUrl || media.url}
                             alt={media.originalName}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            unoptimized
+                            sizes="(max-width: 768px) 50vw, 200px"
                           />
                         ) : isVideo ? (
                           <div className="w-full h-full flex items-center justify-center">

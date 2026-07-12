@@ -83,8 +83,13 @@ class ApiClient {
     })
   }
 
-  async delete<T = any>(path: string, options?: RequestInit): Promise<T> {
-    return this.request<T>(path, { ...options, method: 'DELETE' })
+  async delete<T = any>(path: string, options?: RequestInit & { data?: any }): Promise<T> {
+    const { data, ...rest } = options || {}
+    return this.request<T>(path, {
+      ...rest,
+      method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
+    })
   }
 
   // ===== Auth =====
@@ -154,9 +159,9 @@ class ApiClient {
   }
 
   async batchArticles(
-    action: 'delete' | 'updateStatus' | 'updateCategory' | 'updateSection',
+    action: 'delete' | 'updateStatus' | 'updateCategory' | 'updateSection' | 'updatePin',
     ids: number[],
-    data?: { status?: string; categoryId?: number | null; sectionId?: number | null }
+    data?: { status?: string; categoryId?: number | null; sectionId?: number | null; pinnedScope?: string }
   ) {
     return this.request<{ success: boolean; message: string; data?: any }>('/admin/articles/batch', {
       method: 'POST',

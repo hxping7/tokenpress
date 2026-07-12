@@ -20,6 +20,47 @@ interface Section {
   isActive: boolean
 }
 
+// 需要硬跳转（非 Next.js 客户端路由）的链接：静态页面、上传资源、外链
+function isHardLink(url: string): boolean {
+  return (
+    url.startsWith('/statichtml') ||
+    url.startsWith('/uploads') ||
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('//')
+  )
+}
+
+function NavItemLink({
+  item,
+  className,
+  onClick,
+}: {
+  item: Section
+  className: string
+  onClick?: () => void
+}) {
+  if (item.externalUrl) {
+    return (
+      <a href={item.externalUrl} onClick={onClick} className={className}>
+        {item.name}
+      </a>
+    )
+  }
+  if (isHardLink(item.path)) {
+    return (
+      <a href={item.path} onClick={onClick} className={className}>
+        {item.name}
+      </a>
+    )
+  }
+  return (
+    <Link href={item.path} onClick={onClick} className={className}>
+      {item.name}
+    </Link>
+  )
+}
+
 const themeNames: { key: ThemeName; labelZh: string; labelEn: string; color: string }[] = [
   { key: 'night', labelZh: '暗夜蓝紫', labelEn: 'Night Blue', color: '#00d4ff' },
   { key: 'cyber', labelZh: '赛博青绿', labelEn: 'Cyber Green', color: '#00ff88' },
@@ -87,23 +128,11 @@ export function Header() {
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => (
-                item.externalUrl ? (
-                  <a
-                    key={item.id}
-                    href={item.externalUrl}
-                    className="px-3 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
-                  >
-                    {item.name}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.id}
-                    href={item.path}
-                    className="px-3 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
-                  >
-                    {item.name}
-                  </Link>
-                )
+                <NavItemLink
+                  key={item.id}
+                  item={item}
+                  className="px-3 py-2 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
+                />
               ))}
             </nav>
           </div>
@@ -210,25 +239,12 @@ export function Header() {
         <div className="md:hidden border-t border-t-border bg-t-bg-primary">
           <nav className="flex flex-col p-4 gap-1">
             {navItems.map((item) => (
-              item.externalUrl ? (
-                <a
-                  key={item.id}
-                  href={item.externalUrl}
-                  className="px-3 py-3 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.name}
-                </a>
-              ) : (
-                <Link
-                  key={item.id}
-                  href={item.path}
-                  className="px-3 py-3 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              )
+              <NavItemLink
+                key={item.id}
+                item={item}
+                className="px-3 py-3 text-sm rounded-lg text-t-text-secondary transition-colors hover:text-t-text-primary hover:bg-t-hover"
+                onClick={() => setMobileOpen(false)}
+              />
             ))}
             {/* Mobile language & theme */}
             <div className="flex items-center gap-2 px-3 py-3 border-t border-t-border pt-3">

@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { db } from '../db/index.js'
 import { articles, categories, sections } from '../db/schema.js'
 import { eq, asc, and, sql } from 'drizzle-orm'
-import { authMiddleware, adminOnly, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { generateSlug } from '@tokenpress/shared'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
@@ -90,7 +91,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // ===== Admin routes =====
-router.use(authMiddleware, adminOnly)
+router.use(apiTokenOrAdmin('categories:write'))
 
 // POST /api/v1/categories — create category
 router.post('/', async (req: AuthRequest, res) => {

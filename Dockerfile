@@ -46,7 +46,7 @@ COPY --from=backend-builder /app/pnpm-workspace.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 
 WORKDIR /app/apps/server
-RUN mkdir -p data/uploads
+RUN mkdir -p data/uploads data/statichtml
 
 ENV NODE_ENV=production
 ENV PORT=4001

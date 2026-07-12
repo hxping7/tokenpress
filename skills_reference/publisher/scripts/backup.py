@@ -85,6 +85,8 @@ def save_backup(
     backup_meta["publishedAt"] = result_data.get("publishedAt", now.isoformat())
     if payload.get("tags"):
         backup_meta["tags"] = payload["tags"]
+    if "coverImageUrl" in payload:
+        backup_meta["coverImageUrl"] = payload["coverImageUrl"]
 
     # 重建 Markdown
     fm_lines = ["---"]

@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { db } from '../db/index.js'
 import { friendLinks } from '../db/schema.js'
 import { eq, asc } from 'drizzle-orm'
-import { authMiddleware, adminOnly, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
 
@@ -22,8 +23,8 @@ router.get('/', async (_req, res) => {
   }
 })
 
-// ===== Admin routes =====
-router.use(authMiddleware, adminOnly)
+// ===== Admin routes (API Token friendlinks:write 或 JWT 管理员) =====
+router.use(apiTokenOrAdmin('friendlinks:write'))
 
 // POST /api/v1/friend-links — create link
 router.post('/', async (req: AuthRequest, res) => {

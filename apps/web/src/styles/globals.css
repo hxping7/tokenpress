@@ -330,3 +330,9 @@
     perspective: 1000px;
   }
 }
+
+/* 中部 banner 公告条滚动动画 */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

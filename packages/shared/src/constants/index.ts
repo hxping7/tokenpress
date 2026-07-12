@@ -83,3 +83,12 @@ export const REFRESH_TOKEN_EXPIRES_IN = '30d'
 export const API_TOKEN_PREFIX = 't00_sk_'
 export const RATE_LIMIT_WINDOW = 60 // seconds
 export const RATE_LIMIT_MAX = 100 // requests per window
+
+// ===== Article pin scopes =====
+// 置顶作用域：none=取消置顶, global=全站置顶, section=仅所属板块置顶
+export const PIN_SCOPES = ['none', 'global', 'section'] as const
+export type PinScope = (typeof PIN_SCOPES)[number]
+
+export function isValidPinScope(value: unknown): value is PinScope {
+  return typeof value === 'string' && (PIN_SCOPES as readonly string[]).includes(value)
+}

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
@@ -83,7 +84,7 @@ export default function MediaPage() {
     },
   })
 
-  const handleFileUpload = async (files: FileList | null) => {
+  const handleFileUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return
     setIsUploading(true)
 
@@ -99,12 +100,12 @@ export default function MediaPage() {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
-  }
+  }, [token, uploadMutation, queryClient])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     handleFileUpload(e.dataTransfer.files)
-  }, [token])
+  }, [handleFileUpload])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -320,9 +321,9 @@ export default function MediaPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-t-bg-secondary rounded flex items-center justify-center flex-shrink-0">
+                        <div className="relative w-10 h-10 bg-t-bg-secondary rounded flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {isImage(media.mimeType) ? (
-                            <img src={media.thumbnailUrl || media.url} alt="" className="w-full h-full object-cover rounded" />
+                            <Image src={media.thumbnailUrl || media.url} alt="" fill className="object-cover rounded" unoptimized sizes="40px" />
                           ) : (
                             <IconComponent size={18} className="text-t-text-secondary" />
                           )}
@@ -371,10 +372,13 @@ export default function MediaPage() {
                 {/* Thumbnail */}
                 <div className="aspect-square relative bg-t-bg-secondary">
                   {media.thumbnailUrl || isImage(media.mimeType) ? (
-                    <img
+                    <Image
                       src={media.thumbnailUrl || media.url}
                       alt={media.originalName}
-                      className="w-full h-full object-cover cursor-pointer"
+                      fill
+                      className="object-cover cursor-pointer"
+                      unoptimized
+                      sizes="(max-width: 768px) 50vw, 200px"
                       onClick={() => setPreviewMedia(media)}
                     />
                   ) : isVideo(media.mimeType) ? (
@@ -448,7 +452,15 @@ export default function MediaPage() {
             {isVideo(previewMedia.mimeType) ? (
               <video src={previewMedia.url} controls className="max-h-[85vh] rounded-lg" />
             ) : isImage(previewMedia.mimeType) ? (
-              <img src={previewMedia.url} alt={previewMedia.originalName} className="max-h-[85vh] rounded-lg" />
+              <Image
+                src={previewMedia.url}
+                alt={previewMedia.originalName}
+                width={1200}
+                height={800}
+                unoptimized
+                className="rounded-lg"
+                style={{ width: 'auto', height: 'auto', maxHeight: '85vh', maxWidth: '100%' }}
+              />
             ) : (
               <div className="bg-t-bg-primary rounded-lg p-8 text-center">
                 {(() => {

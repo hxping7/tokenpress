@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
@@ -12,7 +13,7 @@ import { toast } from '@/components/ui/Toast'
 import {
   Plus, Search, Edit, Trash2, Eye,
   X, Check, Image as ImageIcon, Loader2, Upload, Bold, Palette, Shuffle,
-  ChevronLeft, ChevronRight, ChevronsUpDown, ChevronsUp, ChevronsDown
+  ChevronLeft, ChevronRight, ChevronsUpDown, ChevronsUp, ChevronsDown, Pin
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -25,6 +26,7 @@ interface Article {
   status: 'draft' | 'published' | 'archived' | 'scheduled' | 'pending_review'
   coverImage: string | null
   authorId: number
+  pinnedScope?: 'global' | 'section' | null | string
   author_name?: string
   category_name?: string
   content?: string
@@ -103,6 +105,30 @@ export default function ArticlesPage() {
   const [batchCategory, setBatchCategory] = useState('')
   const [batchSection, setBatchSection] = useState('')
   const [isApplying, setIsApplying] = useState(false)
+
+  // 批量置顶状态
+  const [batchPinScope, setBatchPinScope] = useState('')
+
+  // 单篇置顶
+  const pinMutation = useMutation({
+    mutationFn: ({ id, scope }: { id: number; scope: 'none' | 'global' | 'section' }) =>
+      api.updateArticle(id, { pinnedScope: scope }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-articles'] }),
+    onError: (err: any) => toast.error(err?.message || t('articles.batchFailed', backendLocale)),
+  })
+
+  // 批量置顶
+  const batchPinMutation = useMutation({
+    mutationFn: (scope: 'none' | 'global' | 'section') =>
+      api.batchArticles('updatePin', selectedItems, { pinnedScope: scope }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] })
+      setSelectedItems([])
+      setBatchPinScope('')
+      toast.success(t('articles.pinUpdated', backendLocale))
+    },
+    onError: (err: any) => toast.error(err?.message || t('articles.batchFailed', backendLocale)),
+  })
 
   const coverInputRef = useRef<HTMLInputElement>(null)
 
@@ -558,6 +584,26 @@ export default function ArticlesPage() {
 
           <div className="h-5 w-px bg-t-border" />
 
+          {/* 批量置顶 */}
+          <select
+            value={batchPinScope}
+            onChange={(e) => setBatchPinScope(e.target.value)}
+            className="px-3 py-1.5 text-sm bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue"
+          >
+            <option value="">{t('articles.batchPinScope', backendLocale)}</option>
+            <option value="global">{t('articles.pinGlobal', backendLocale)}</option>
+            <option value="section">{t('articles.pinSection', backendLocale)}</option>
+            <option value="none">{t('articles.pinNone', backendLocale)}</option>
+          </select>
+          <button
+            onClick={() => batchPinScope && batchPinMutation.mutate(batchPinScope as 'none' | 'global' | 'section')}
+            disabled={!batchPinScope || batchPinMutation.isPending}
+            className="px-3 py-1.5 text-sm bg-t-bg-primary border border-t-border rounded-lg text-t-text-primary hover:bg-t-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {batchPinMutation.isPending ? t('articles.batchUpdating', backendLocale) : t('articles.batchPinApply', backendLocale)}
+          </button>
+          <div className="h-5 w-px bg-t-border" />
+
           {/* 批量删除 */}
           <button
             onClick={() => {
@@ -621,6 +667,12 @@ export default function ArticlesPage() {
                     <SortIcon field="status" />
                   </div>
                 </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary">
+                  <div className="flex items-center gap-1">
+                    <Pin size={14} />
+                    {t('articles.pinned', backendLocale)}
+                  </div>
+                </th>
                 <th
                   className="px-6 py-3 text-left text-sm font-medium text-t-text-secondary cursor-pointer hover:text-t-text-primary select-none"
                   onClick={() => handleSort('createdAt')}
@@ -635,9 +687,9 @@ export default function ArticlesPage() {
             </thead>
             <tbody className="divide-y divide-t-border">
               {isLoading ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-t-text-secondary">{t('common.loading', backendLocale)}</td></tr>
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-t-text-secondary">{t('common.loading', backendLocale)}</td></tr>
               ) : articlesData?.data?.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-12 text-center text-t-text-secondary">{t('admin.noArticles', backendLocale)}</td></tr>
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-t-text-secondary">{t('admin.noArticles', backendLocale)}</td></tr>
               ) : (
                 articlesData?.data?.map((article: Article) => {
                   const isHighlighted = highlightId === String(article.id)
@@ -658,7 +710,9 @@ export default function ArticlesPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {article.coverImage ? (
-                          <img src={article.coverImage} alt="" className="w-12 h-12 object-cover rounded-lg" />
+                          <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                            <Image src={article.coverImage} alt="" fill className="object-cover" unoptimized sizes="48px" />
+                          </div>
                         ) : (
                           <div className="w-12 h-12 bg-t-bg-secondary rounded-lg flex items-center justify-center">
                             <ImageIcon size={20} className="text-t-text-secondary" />
@@ -687,6 +741,18 @@ export default function ArticlesPage() {
                          article.status === 'pending_review' ? t('reviews.pending', backendLocale) :
                          t('common.archived', backendLocale)}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={article.pinnedScope || 'none'}
+                        onChange={(e) => pinMutation.mutate({ id: article.id, scope: e.target.value as 'none' | 'global' | 'section' })}
+                        disabled={pinMutation.isPending}
+                        className="px-2 py-1 text-xs bg-t-bg-secondary border border-t-border rounded-lg text-t-text-primary focus:outline-none focus:border-t-accent-blue disabled:opacity-40"
+                      >
+                        <option value="none">{t('articles.pinNone', backendLocale)}</option>
+                        <option value="global">{t('articles.pinGlobal', backendLocale)}</option>
+                        <option value="section">{t('articles.pinSection', backendLocale)}</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-sm text-t-text-secondary">
                       {new Date(article.createdAt).toLocaleDateString('zh-CN')}
@@ -927,7 +993,9 @@ export default function ArticlesPage() {
                     </button>
                   </div>
                   {coverImage && (
-                    <img src={coverImage} alt="Cover" className="mt-2 w-full h-24 object-cover rounded-lg" />
+                    <div className="relative mt-2 w-full h-24">
+                      <Image src={coverImage} alt="Cover" fill className="object-cover rounded-lg" unoptimized sizes="(max-width: 768px) 100vw, 400px" />
+                    </div>
                   )}
                 </div>
                 <div>
@@ -1054,10 +1122,13 @@ export default function ArticlesPage() {
                       className="aspect-square bg-t-bg-secondary rounded-lg overflow-hidden hover:ring-2 hover:ring-t-accent-blue transition-all group relative"
                     >
                       {media.mimeType?.startsWith('image/') ? (
-                        <img
+                        <Image
                           src={media.thumbnailUrl || media.url}
                           alt={media.originalName}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                          sizes="(max-width: 768px) 50vw, 200px"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

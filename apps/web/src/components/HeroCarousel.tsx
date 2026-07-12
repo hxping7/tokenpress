@@ -12,13 +12,46 @@ interface HeroSlide {
   linkTarget: '_blank' | '_self'
 }
 
+export type HeroCtaVariant = 'primary' | 'secondary' | 'ghost'
+
+export interface HeroCtaButton {
+  label: string
+  href: string
+  target?: '_blank' | '_self'
+  variant?: HeroCtaVariant
+}
+
+export const DEFAULT_HERO_CTA: HeroCtaButton[] = [
+  { label: 'Token 套餐', href: '/token-plan', target: '_self', variant: 'primary' },
+  { label: '查看 AI 作品', href: '/ai-works', target: '_self', variant: 'secondary' },
+]
+
 interface HeroCarouselProps {
   slides: HeroSlide[]
   size?: 'default' | 'fullscreen' | 'wide'
   interval?: number // 切换间隔，单位：秒，默认5秒
+  ctaButtons?: HeroCtaButton[] // 可后台配置的 CTA 按钮，未配置时回退到默认值
 }
 
-export function HeroCarousel({ slides, size = 'default', interval = 5 }: HeroCarouselProps) {
+const CTA_VARIANT_CLASS: Record<HeroCtaVariant, string> = {
+  primary: 'btn-glow px-6 py-3 bg-gradient-accent text-white font-medium rounded-xl text-sm transition-transform hover:scale-105',
+  secondary: 'px-6 py-3 border border-t-border text-t-text-primary font-medium rounded-xl text-sm hover:border-t-accent-blue/30 transition-all',
+  ghost: 'px-6 py-3 text-t-text-secondary font-medium rounded-xl text-sm hover:text-t-text-primary hover:bg-t-hover transition-all',
+}
+
+// 需要硬跳转（非 Next.js 客户端路由）的链接：静态页面、上传资源、外链
+function isHardLink(url: string): boolean {
+  return (
+    url.startsWith('/statichtml') ||
+    url.startsWith('/uploads') ||
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('//')
+  )
+}
+
+export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons }: HeroCarouselProps) {
+  const ctaList = ctaButtons && ctaButtons.length > 0 ? ctaButtons : DEFAULT_HERO_CTA
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
@@ -74,13 +107,28 @@ export function HeroCarousel({ slides, size = 'default', interval = 5 }: HeroCar
               {slides.map((slide, index) => {
                 const isActive = index === currentSlide
                 const isSvg = slide.imageUrl?.toLowerCase().endsWith('.svg')
+                const slideHref = slide.linkUrl || '#'
+                const slideHard = isHardLink(slideHref)
+                const linkTarget = slide.linkTarget === '_blank' ? '_blank' : '_self'
 
-                return (
-                  <Link
+                const linkInner = (
+                  <Image
+                    src={slide.imageUrl}
+                    alt={`轮播图 ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    priority={index === 0}
+                    sizes={size === 'fullscreen' ? '100vw' : '(max-width: 768px) 100vw, 800px'}
+                    unoptimized
+                  />
+                )
+
+                return slideHard ? (
+                  <a
                     key={slide.id}
-                    href={slide.linkUrl || '#'}
-                    target={slide.linkTarget === '_blank' ? '_blank' : '_self'}
-                    rel={slide.linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
+                    href={slideHref}
+                    target={linkTarget}
+                    rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
                     className={`absolute inset-0 transition-opacity duration-700 ${
                       isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
                     }`}
@@ -88,15 +136,22 @@ export function HeroCarousel({ slides, size = 'default', interval = 5 }: HeroCar
                       if (!slide.linkUrl) e.preventDefault()
                     }}
                   >
-                    <Image
-                      src={slide.imageUrl}
-                      alt={`轮播图 ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      priority={index === 0}
-                      sizes={size === 'fullscreen' ? '100vw' : '(max-width: 768px) 100vw, 800px'}
-                      unoptimized
-                    />
+                    {linkInner}
+                  </a>
+                ) : (
+                  <Link
+                    key={slide.id}
+                    href={slideHref}
+                    target={linkTarget}
+                    rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
+                    className={`absolute inset-0 transition-opacity duration-700 ${
+                      isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                    }`}
+                    onClick={(e) => {
+                      if (!slide.linkUrl) e.preventDefault()
+                    }}
+                  >
+                    {linkInner}
                   </Link>
                 )
               })}
@@ -150,18 +205,40 @@ export function HeroCarousel({ slides, size = 'default', interval = 5 }: HeroCar
 
         {/* CTA 按钮 */}
         <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
-          <Link
-            href="/token-plan"
-            className="btn-glow px-6 py-3 bg-gradient-accent text-white font-medium rounded-xl text-sm transition-transform hover:scale-105"
-          >
-            探索 Token 计划
-          </Link>
-          <Link
-            href="/ai-works"
-            className="px-6 py-3 border border-t-border text-t-text-primary font-medium rounded-xl text-sm hover:border-t-accent-blue/30 transition-all"
-          >
-            查看 AI 作品
-          </Link>
+          {ctaList.map((cta, idx) => {
+            const variant = cta.variant || 'secondary'
+            const target = cta.target || '_self'
+            const ctaHref = cta.href || '#'
+            const ctaHard = isHardLink(ctaHref)
+            const ctaInner = cta.label
+            return ctaHard ? (
+              <a
+                key={`${cta.href}-${idx}`}
+                href={ctaHref}
+                className={CTA_VARIANT_CLASS[variant]}
+                target={target === '_blank' ? '_blank' : undefined}
+                rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+                onClick={(e) => {
+                  if (!cta.href) e.preventDefault()
+                }}
+              >
+                {ctaInner}
+              </a>
+            ) : (
+              <Link
+                key={`${cta.href}-${idx}`}
+                href={ctaHref}
+                className={CTA_VARIANT_CLASS[variant]}
+                target={target === '_blank' ? '_blank' : undefined}
+                rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+                onClick={(e) => {
+                  if (!cta.href) e.preventDefault()
+                }}
+              >
+                {ctaInner}
+              </Link>
+            )
+          })}
         </div>
       </div>
     </section>

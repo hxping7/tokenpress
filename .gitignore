@@ -77,6 +77,22 @@ published/
 .trae/
 .arts/
 
+# Local deploy state (contains VPS IP / scp logs — DO NOT COMMIT)
+.deploy-state/
+
+# Local runtime data (DB backups + live .db with real content — DO NOT COMMIT)
+data/
+
+# Assistant internal local config
+.codebuddy/
+
+# Stray duplicate of skills_reference/publisher (not part of source)
+publisher/
+
+# Local helper with hardcoded local paths
+compress-images.ps1
+
+
 # Design docs (internal planning)
 develop_v2_design.md
 develop_v2_plan.md

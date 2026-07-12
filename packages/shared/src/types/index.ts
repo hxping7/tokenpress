@@ -170,6 +170,8 @@ export interface AIPublishDTO {
   coverImageUrl?: string
   status?: ContentStatus
   publishedAt?: string | null
+  // 置顶范围：none=不置顶 / global=全局置顶 / section=板块内置顶（不提供则不改动已有置顶状态）
+  pinnedScope?: 'none' | 'global' | 'section'
 }
 
 export interface AIPublishResponse {

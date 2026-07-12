@@ -92,7 +92,7 @@ function CodeBlock({ className, children }: { className?: string; children: Reac
 }
 
 export function MarkdownContent({ content }: MarkdownContentProps) {
-  const headingCounter = useMemo(() => ({} as Record<string, number>), [content])
+  const headingCounter = useMemo(() => ({} as Record<string, number>), [])
   const [isDark, setIsDark] = useState(true)
   const themeRef = useRef(isDark)
 
@@ -180,6 +180,13 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
               return <CodeBlock className={className}>{codeChildren}</CodeBlock>
             }
             return <pre>{children}</pre>
+          },
+          table({ children }) {
+            return (
+              <div className="overflow-x-auto my-6 rounded-lg border border-t-border">
+                <table className="w-full min-w-[640px]">{children}</table>
+              </div>
+            )
           },
         }}
       >

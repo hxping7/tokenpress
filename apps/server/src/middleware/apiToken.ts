@@ -102,7 +102,7 @@ export function requirePermission(permission: string) {
 }
 
 // Helper to log API usage
-async function logApiUsage(data: {
+export async function logApiUsage(data: {
   tokenId: number
   endpoint: string
   method: string

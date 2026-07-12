@@ -17,6 +17,7 @@
 | 板块分类 | `GET` | `/api/v1/sections/:id/categories` | — |
 | 标签列表 | `GET` | `/api/v1/tags` | — |
 | 系统设置 | `GET` / `PUT` | `/api/v1/site-settings` | 需 Token / PUT 需 `settings:write` |
+| 设置/取消置顶 | `POST` | `/api/v1/ai/articles/:slug/pin` | `article:write` |
 
 **Base URL:** `{API_BASE}/api/v1`
 **Auth Header:** `Authorization: Bearer {TOKEN}`（Token 格式：`t00_sk_` 开头）
@@ -461,9 +462,10 @@ curl -X POST https://your-domain.com/api/v1/ai/publish \
   "tags": ["标签1", "标签2"],
   "coverImageUrl": "https://example.com/cover.jpg",
   "status": "published",
-  "slug": "custom-slug",
-  "publishedAt": "2024-01-15T10:00:00Z"
-}
+    "slug": "custom-slug",
+    "publishedAt": "2024-01-15T10:00:00Z",
+    "pinnedScope": "global"
+  }
 ```
 
 **参数说明：**
@@ -479,6 +481,7 @@ curl -X POST https://your-domain.com/api/v1/ai/publish \
 | status | string | ❌ | `draft`、`published` 或 `archived`，默认 `draft` | ⚠️ 当提交 `published` 时，若内容审核已开启，文章将先进入 `pending_review` 状态，审核通过后才变为 `published`；建议重要文章先 draft 再改 published |
 | slug | string | ❌ | 自定义 URL slug | **相同 slug 会覆盖旧文章**；不提供则自动生成 |
 | publishedAt | string | ❌ | ISO 8601 时间 | 不提供则使用当前时间 |
+| pinnedScope | string | ❌ | `none` / `global` / `section` | **置顶范围**：`global`=全站置顶（首页/全量列表顶部），`section`=仅所属板块列表内置顶，`none`=取消置顶；**不提供则保持文章原有置顶状态不变** |
 
 **coverImageUrl 的三种来源方式：**
 
@@ -1372,6 +1375,98 @@ requests.post(f"{API_BASE}/ai/publish",
 | frontend_locale | string | `zh` \| `en` |
 | header_logo | string | 顶部 Logo URL |
 | footer_logo | string | 底部 Logo URL |
+
+---
+
+### 9. 设置 / 取消置顶（远程专属）
+
+**POST** `/api/v1/ai/articles/:slug/pin`
+
+显式控制某篇文章的置顶状态，无需重新发布整篇文章。需要 `article:write` 权限。
+与 `POST /ai/publish` 中的 `pinnedScope` 参数等效，但此接口只改置顶字段、不动标题/正文/状态，适合「已发布文章想临时置顶/取消」的场景。
+
+> **所有权规则：** 与发布接口一致，`superadmin` / `admin` 角色可操作任意文章，`user` 角色只能操作自己创建的文章。
+
+**请求体：**
+
+```json
+{
+  "pinnedScope": "global"
+}
+```
+
+**参数说明：**
+
+| 参数 | 类型 | 必填 | 取值 | 效果 |
+|------|------|------|------|------|
+| pinnedScope | string | ✅ | `global` | **全站置顶**：在首页「最新文章」与全量文章列表（`/blog`）顶部展示 |
+| pinnedScope | string | ✅ | `section` | **板块内置顶**：仅在文章所属板块列表顶部展示 |
+| pinnedScope | string | ✅ | `none` | **取消置顶** |
+
+**成功响应：**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "slug": "article-slug",
+    "pinnedScope": "global",
+    "pinnedAt": "2026-07-12T10:00:00.000Z"
+  },
+  "message": "Article pinned (global)"
+}
+```
+
+**取消置顶响应：**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "slug": "article-slug",
+    "pinnedScope": null,
+    "pinnedAt": null
+  },
+  "message": "Article unpinned"
+}
+```
+
+**错误响应：**
+
+```json
+{
+  "success": false,
+  "error": "Invalid pinnedScope",
+  "hint": "pinnedScope must be one of: none, global, section"
+}
+```
+
+**Python 示例：**
+
+```python
+import requests
+
+API_BASE = "https://your-domain.com/api/v1"
+TOKEN = "t00_sk_xxxxx"
+
+# 将某篇文章设为全站置顶
+resp = requests.post(
+    f"{API_BASE}/ai/articles/my-article-slug/pin",
+    headers={"Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"},
+    json={"pinnedScope": "global"},
+)
+print(resp.json())
+# → {'success': True, 'data': {'id': 123, 'slug': 'my-article-slug', ...}, 'message': 'Article pinned (global)'}
+
+# 取消置顶
+requests.post(
+    f"{API_BASE}/ai/articles/my-article-slug/pin",
+    headers={"Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"},
+    json={"pinnedScope": "none"},
+)
+```
 
 ---
 

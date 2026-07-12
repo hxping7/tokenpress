@@ -2,13 +2,14 @@ import { Router } from 'express'
 import { db } from '../db/index.js'
 import { contentReviews, articles, media, friendLinks, ads } from '../db/schema.js'
 import { eq, and, desc, sql, count } from 'drizzle-orm'
-import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { applyReviewResult } from '../lib/contentReview/statusManager.js'
 import { reviewContent } from '../lib/contentReview/index.js'
 import logger from '../utils/logger.js'
 
 const router = Router()
-router.use(authMiddleware)
+router.use(apiTokenOrAdmin('reviews:write'))
 
 // GET /api/v1/admin/reviews — list reviews with filters
 router.get('/', async (req: AuthRequest, res) => {

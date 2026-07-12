@@ -2,7 +2,8 @@ import {Router} from 'express'
 import { db } from '../db/index.js'
 import { auditLogs, loginLogs, apiLogs, systemEvents, users, apiTokens } from '../db/schema.js'
 import { eq, and, desc, sql, like, gte, lte } from 'drizzle-orm'
-import { authMiddleware, adminOrAbove, type AuthRequest } from '../middleware/auth.js'
+import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 
 const router = Router()
 
@@ -98,7 +99,7 @@ router.get('/login', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // ===== API Logs =====
-router.get('/api', authMiddleware, adminOrAbove, async (req: AuthRequest, res) => {
+router.get('/api', apiTokenOrAdmin('logs:read'), async (req: AuthRequest, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1)
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20))
@@ -152,7 +153,7 @@ router.get('/api', authMiddleware, adminOrAbove, async (req: AuthRequest, res) =
 })
 
 // ===== System Events =====
-router.get('/system', authMiddleware, adminOrAbove, async (req: AuthRequest, res) => {
+router.get('/system', apiTokenOrAdmin('logs:read'), async (req: AuthRequest, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1)
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20))

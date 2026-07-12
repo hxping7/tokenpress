@@ -5,8 +5,8 @@ import { db } from '../db/index.js'
 import { articles, articleTags, tags, categories, sections, media, articleLikes, articleViews, adLogs, users, siteSettings } from '../db/schema.js'
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm'
 import { apiTokenAuth, requirePermission, type ApiAuthRequest } from '../middleware/apiToken.js'
-import { generateSlug, extractExcerpt } from '@tokenpress/shared'
-import type { ContentStatus } from '@tokenpress/shared'
+import { generateSlug, extractExcerpt, isValidPinScope } from '@tokenpress/shared'
+import type { ContentStatus, PinScope } from '@tokenpress/shared'
 import { getParam } from '../utils/params.js'
 import { revalidateTag, revalidatePath } from '../utils/revalidate.js'
 import { UPLOAD_DIR, MEDIA_URL_PREFIX } from '../utils/paths.js'
@@ -107,6 +107,7 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       status,
       publishedAt,
       slug: customSlug,
+      pinnedScope: pinnedScopeRaw,
     } = req.body
 
     // 防御性处理：去除 coverImageUrl 可能的引号包裹
@@ -153,6 +154,15 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       effectiveStatus = contentReviewEnabled ? 'pending_review' : 'published'
     }
 
+    // 置顶范围校验：仅当显式提供时生效；不提供则不改动已有置顶状态
+    let pinnedScope: PinScope | undefined
+    if (pinnedScopeRaw !== undefined) {
+      if (!isValidPinScope(pinnedScopeRaw)) {
+        return res.status(400).json({ success: false, error: `Invalid pinnedScope "${pinnedScopeRaw}"` })
+      }
+      pinnedScope = pinnedScopeRaw
+    }
+
     // Generate slug
     let slug = customSlug || generateSlug(title)
 
@@ -182,6 +192,17 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       if (coverImageUrl) updates.coverImage = coverImageUrl
       if (effectiveStatus === 'pending_review' && !existing.publishedAt) {
         updates.publishedAt = publishedAt || new Date().toISOString()
+      }
+
+      // 置顶范围（仅当显式提供）
+      if (pinnedScope !== undefined) {
+        if (pinnedScope === 'none') {
+          updates.pinnedAt = null
+          updates.pinnedScope = null
+        } else {
+          updates.pinnedAt = new Date().toISOString()
+          updates.pinnedScope = pinnedScope
+        }
       }
 
       await db.update(articles).set(updates).where(eq(articles.id, existing.id)).run()
@@ -269,6 +290,8 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       publishedAt: (requestedStatus === 'published')
         ? publishedAt || new Date().toISOString()
         : publishedAt || null,
+      pinnedScope: (pinnedScope && pinnedScope !== 'none') ? pinnedScope : null,
+      pinnedAt: (pinnedScope && pinnedScope !== 'none') ? new Date().toISOString() : null,
     }).run()
 
     const articleId = Number(result.lastInsertRowid)
@@ -352,6 +375,8 @@ router.get('/articles', async (req: ApiAuthRequest, res) => {
       slug: articles.slug,
       sectionId: articles.sectionId,
       publishedAt: articles.publishedAt,
+      pinnedAt: articles.pinnedAt,
+      pinnedScope: articles.pinnedScope,
       section: { id: sections.id, name: sections.name, slug: sections.slug, path: sections.path },
     })
       .from(articles)
@@ -446,6 +471,72 @@ router.delete('/articles/:slug', requirePermission('content:delete'), async (req
   } catch (err) {
     console.error('AI delete article error:', err)
     res.status(500).json({ success: false, error: 'Failed to delete article' })
+  }
+})
+
+// POST /api/v1/ai/articles/:slug/pin — 远程设置/取消置顶
+// 请求体: { "pinnedScope": "global" | "section" | "none" }
+router.post('/articles/:slug/pin', requirePermission('article:write'), async (req: ApiAuthRequest, res) => {
+  try {
+    const slug = getParam(req.params.slug)
+    if (!slug) {
+      return res.status(400).json({ success: false, error: 'Invalid slug' })
+    }
+    const pinnedScope = req.body.pinnedScope
+    if (!isValidPinScope(pinnedScope)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid pinnedScope',
+        hint: 'pinnedScope must be one of: none, global, section',
+      })
+    }
+
+    const article = await db.select().from(articles).where(eq(articles.slug, slug)).get()
+    if (!article) {
+      return res.status(404).json({ success: false, error: 'Article not found' })
+    }
+
+    // 所有权校验：admin/superadmin 可操作任意文章，user 仅限自己的
+    const tokenUser = await db.select({ role: users.role }).from(users).where(eq(users.id, req.apiToken!.userId)).get()
+    if (tokenUser?.role !== 'superadmin' && tokenUser?.role !== 'admin' && article.authorId !== req.apiToken!.userId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Cannot update articles owned by other users',
+      })
+    }
+
+    const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() }
+    if (pinnedScope === 'none') {
+      updates.pinnedAt = null
+      updates.pinnedScope = null
+    } else {
+      updates.pinnedAt = new Date().toISOString()
+      updates.pinnedScope = pinnedScope
+    }
+
+    await db.update(articles).set(updates).where(eq(articles.id, article.id)).run()
+
+    // 重新校验文章详情页（定位其所属板块路径）
+    const sec = article.sectionId
+      ? await db.select({ path: sections.path }).from(sections).where(eq(sections.id, article.sectionId)).get()
+      : null
+    revalidateTag('articles')
+    revalidateTag(`article-${slug}`)
+    revalidatePath(sec?.path ? `${sec.path}/${slug}` : `/${slug}`)
+
+    res.json({
+      success: true,
+      data: {
+        id: article.id,
+        slug: article.slug,
+        pinnedScope: pinnedScope === 'none' ? null : pinnedScope,
+        pinnedAt: pinnedScope === 'none' ? null : updates.pinnedAt,
+      },
+      message: pinnedScope === 'none' ? 'Article unpinned' : `Article pinned (${pinnedScope})`,
+    })
+  } catch (err) {
+    console.error('AI pin article error:', err)
+    res.status(500).json({ success: false, error: 'Failed to update article pin' })
   }
 })
 

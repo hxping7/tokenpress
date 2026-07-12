@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
+import Image from 'next/image'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
@@ -410,7 +411,9 @@ This is an article for testing the API publish feature.`)
                 </button>
               </div>
               {coverImage && (
-                <img src={coverImage} alt={t('aiDebug.coverImage', backendLocale)} className="mt-2 w-full h-24 object-cover rounded-lg" />
+                <div className="relative mt-2 w-full h-24">
+                  <Image src={coverImage} alt={t('aiDebug.coverImage', backendLocale)} fill className="object-cover rounded-lg" unoptimized sizes="(max-width: 768px) 100vw, 400px" />
+                </div>
               )}
             </div>
 
@@ -614,10 +617,13 @@ This is an article for testing the API publish feature.`)
                       className="aspect-square bg-t-bg-secondary rounded-lg overflow-hidden hover:ring-2 hover:ring-t-accent-blue transition-all group relative"
                     >
                       {media.mimeType?.startsWith('image/') ? (
-                        <img
+                        <Image
                           src={media.thumbnailUrl || media.url}
                           alt={media.originalName}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                          sizes="(max-width: 768px) 50vw, 200px"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

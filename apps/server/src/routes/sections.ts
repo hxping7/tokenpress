@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { db } from '../db/index.js'
 import { sections, categories } from '../db/schema.js'
 import { eq, asc, sql } from 'drizzle-orm'
-import { authMiddleware, adminOnly, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { generateSlug } from '@tokenpress/shared'
 import { getParamAsInt } from '../utils/params.js'
 import { revalidateTag } from '../utils/revalidate.js'
@@ -60,8 +61,8 @@ router.get('/:id/categories', async (req, res) => {
   }
 })
 
-// ===== Admin routes =====
-router.use(authMiddleware, adminOnly)
+// ===== Admin routes (API Token sections:write 或 JWT 管理员) =====
+router.use(apiTokenOrAdmin('sections:write'))
 
 // POST /api/v1/sections — create section
 router.post('/', async (req: AuthRequest, res) => {

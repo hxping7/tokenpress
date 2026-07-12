@@ -1,11 +1,16 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
 export function Logo({ size = 'normal' }: { size?: 'small' | 'normal' | 'large' }) {
-  const cssWidth = { small: 112, normal: 160, large: 280 }[size]
+  const widthClass = {
+    small: 'w-20 sm:w-28', // 80 / 112
+    normal: 'w-28 sm:w-40', // 112 / 160
+    large: 'w-40 sm:w-64', // 160 / 256
+  }[size]
 
   // Fetch custom logo from settings
   const { data: settingsData } = useQuery({
@@ -21,14 +26,22 @@ export function Logo({ size = 'normal' }: { size?: 'small' | 'normal' | 'large' 
     const heightMap = { small: 28, normal: 36, large: 56 }
     const logoHeight = heightMap[size]
     return (
-      <Link href="/" className="flex items-center" style={{ height: logoHeight }}>
-        <img src={customLogo} alt="Logo" className="h-full w-auto object-contain" />
+      <Link href="/" className="flex items-center relative" style={{ height: logoHeight }}>
+        <Image
+          src={customLogo}
+          alt="Logo"
+          width={200}
+          height={logoHeight}
+          unoptimized
+          className="h-full w-auto object-contain"
+          style={{ height: '100%', width: 'auto' }}
+        />
       </Link>
     )
   }
 
   return (
-    <Link href="/" className="flex items-center" style={{ width: cssWidth }}>
+    <Link href="/" className={`flex items-center ${widthClass}`}>
       <svg
         viewBox="0 0 560 144"
         fill="none"

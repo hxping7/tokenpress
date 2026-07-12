@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useLayoutStore } from '@/stores/layout'
 import { calculateReadingTime, formatReadingTime } from '@/lib/reading-time'
-import { Clock } from 'lucide-react'
+import { Clock, Pin } from 'lucide-react'
 
 interface Article {
   id: number
@@ -14,7 +14,8 @@ interface Article {
   content?: string
   coverImage: string | null
   publishedAt: string
-  section: {
+  pinnedScope?: 'global' | 'section' | null | string
+  section?: {
     name: string
     path: string
   }
@@ -32,11 +33,29 @@ export function ArticleCard({ article }: ArticleCardProps) {
       ? calculateReadingTime(article.excerpt)
       : 1
 
+  // 置顶角标：全局置顶 / 板块内置顶
+  const pinBadge = article.pinnedScope ? (
+    <span
+      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
+        article.pinnedScope === 'global'
+          ? 'bg-amber-500/20 text-amber-400'
+          : 'bg-sky-500/20 text-sky-400'
+      }`}
+      title={article.pinnedScope === 'global' ? '全局置顶' : '板块置顶'}
+    >
+      <Pin size={10} />
+      {article.pinnedScope === 'global' ? '置顶' : '板块置顶'}
+    </span>
+  ) : null
+
+  // 文章详情路径：section 缺失时降级到 /blog 前缀，避免出现 undefined 路径
+  const articleHref = `${article.section?.path ?? '/blog'}/${article.slug}`
+
   // 列表视图
   if (view === 'list') {
     return (
       <Link
-        href={`${article.section.path}/${article.slug}`}
+        href={articleHref}
         className="group flex gap-4 p-4 rounded-xl border border-t-border bg-t-bg-primary hover:border-t-accent-blue/30 transition-all"
       >
         {/* 缩略图 */}
@@ -53,18 +72,19 @@ export function ArticleCard({ article }: ArticleCardProps) {
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <span className="text-2xl text-t-text-muted">
-                {article.section.name[0] || '文'}
+                {article.section?.name?.[0] || '文'}
               </span>
             </div>
           )}
         </div>
 
         {/* 内容 */}
-        <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs text-t-accent-blue font-medium">
-              {article.section.name}
+              {article.section?.name}
             </span>
+            {pinBadge}
             <span className="text-t-text-muted">·</span>
             <span className="text-xs text-t-text-secondary flex items-center gap-1">
               <Clock size={12} />
@@ -88,7 +108,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
   // 网格视图（默认）
   return (
     <Link
-      href={`${article.section.path}/${article.slug}`}
+      href={articleHref}
       className="group bg-t-bg-primary border border-t-border rounded-xl overflow-hidden hover:border-t-accent-blue/30 transition-all"
     >
       {/* 缩略图 */}
@@ -105,7 +125,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-4xl text-t-text-muted">
-              {article.section.name[0] || '文'}
+              {article.section?.name?.[0] || '文'}
             </span>
           </div>
         )}
@@ -116,8 +136,9 @@ export function ArticleCard({ article }: ArticleCardProps) {
         {/* 板块标签 */}
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs text-t-accent-blue font-medium">
-            {article.section.name}
+            {article.section?.name}
           </span>
+          {pinBadge}
           {article.publishedAt && (
             <>
               <span className="text-t-text-muted">·</span>

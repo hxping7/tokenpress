@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 import { Plus, Edit, Trash2, X, Check, GripVertical, ChevronDown, ChevronRight, FolderOpen, Layers } from 'lucide-react'
+import { StaticPagePicker } from '@/components/StaticPagePicker'
 
 interface Section {
   id: number
@@ -429,13 +430,20 @@ export default function CategoriesPage() {
                 <label className="block text-sm font-medium mb-2">
                   {t('sections.externalUrl', backendLocale)} <span className="text-t-text-secondary text-xs">({t('sections.externalUrlHint', backendLocale)})</span>
                 </label>
-                <input
-                  type="url"
-                  value={sectionExternalUrl}
-                  onChange={(e) => setSectionExternalUrl(e.target.value)}
-                  placeholder={t('sections.externalUrlPlaceholder', backendLocale)}
-                  className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={sectionExternalUrl}
+                    onChange={(e) => setSectionExternalUrl(e.target.value)}
+                    placeholder={t('sections.externalUrlPlaceholder', backendLocale)}
+                    className="flex-1 px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                  />
+                  <StaticPagePicker
+                    value={sectionExternalUrl}
+                    onSelect={(url) => setSectionExternalUrl(url)}
+                    label={t('admin.staticHtmlPage.selectStaticPage', backendLocale)}
+                  />
+                </div>
               </div>
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">

@@ -57,6 +57,8 @@ router.get('/', async (req, res) => {
       publishedAt: articles.publishedAt,
       createdAt: articles.createdAt,
       updatedAt: articles.updatedAt,
+      pinnedAt: articles.pinnedAt,
+      pinnedScope: articles.pinnedScope,
       author: { id: users.id, username: users.username, displayName: users.displayName },
       category: { id: categories.id, name: categories.name, slug: categories.slug },
       section: { id: sections.id, name: sections.name, slug: sections.slug, path: sections.path },
@@ -66,7 +68,15 @@ router.get('/', async (req, res) => {
       .leftJoin(categories, eq(articles.categoryId, categories.id))
       .leftJoin(sections, eq(articles.sectionId, sections.id))
       .where(and(...conditions))
-      .orderBy(desc(articles.publishedAt), desc(articles.createdAt))
+      // 置顶优先：全局视图仅 global 置顶上浮；板块视图 global+section 置顶上浮
+      .orderBy(
+        sectionSlug
+          ? sql`CASE WHEN ${articles.pinnedScope} IN ('global', 'section') THEN 0 ELSE 1 END ASC`
+          : sql`CASE WHEN ${articles.pinnedScope} = 'global' THEN 0 ELSE 1 END ASC`,
+        desc(articles.pinnedAt),
+        desc(articles.publishedAt),
+        desc(articles.createdAt),
+      )
       .limit(limit)
       .offset(offset)
       .all()

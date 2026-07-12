@@ -6,11 +6,12 @@ import archiver from 'archiver'
 import unzipper from 'unzipper'
 import { db } from '../db/index.js'
 import { backups, siteSettings } from '../db/schema.js'
-import { authMiddleware, superAdminOnly, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrSuperAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { eq, desc } from 'drizzle-orm'
 
 const router = Router()
-router.use(authMiddleware, superAdminOnly)
+router.use(apiTokenOrSuperAdmin('backup:write'))
 
 const DATA_DIR = path.resolve(process.cwd(), 'data')
 const BACKUP_DIR = path.join(DATA_DIR, 'backups')
@@ -352,7 +353,7 @@ async function startAutoBackup() {
 // ===== API Routes =====
 
 // GET /api/v1/backup/settings - 获取备份配置
-router.get('/settings', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/settings', async (req: AuthRequest, res) => {
   try {
     const settings = await getBackupSettings()
     res.json({ success: true, data: settings })
@@ -363,7 +364,7 @@ router.get('/settings', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // PUT /api/v1/backup/settings - 更新备份配置
-router.put('/settings', authMiddleware, async (req: AuthRequest, res) => {
+router.put('/settings', async (req: AuthRequest, res) => {
   try {
     const { autoBackup, intervalHours, retentionDays, includeUploads } = req.body
 
@@ -388,7 +389,7 @@ router.put('/settings', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // POST /api/v1/backup - 手动创建备份
-router.post('/', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/', async (req: AuthRequest, res) => {
   try {
     const { includeUploads = true } = req.body
     console.log('Creating manual backup, includeUploads:', includeUploads)
@@ -431,7 +432,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // GET /api/v1/backup - 获取备份列表
-router.get('/', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/', async (req: AuthRequest, res) => {
   try {
     const list = await db.select()
       .from(backups)
@@ -446,7 +447,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // GET /api/v1/backup/:id/download - 下载备份文件
-router.get('/:id/download', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/:id/download', async (req: AuthRequest, res) => {
   try {
     const id = parseInt(req.params.id as string, 10)
     if (isNaN(id) || id <= 0) {
@@ -484,7 +485,7 @@ router.get('/:id/download', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // DELETE /api/v1/backup/:id - 删除备份
-router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
+router.delete('/:id', async (req: AuthRequest, res) => {
   try {
     const id = parseInt(req.params.id as string, 10)
     if (isNaN(id) || id <= 0) {
@@ -522,7 +523,7 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // POST /api/v1/backup/restore - 上传还原
-router.post('/restore', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/restore', async (req: AuthRequest, res) => {
   try {
     const { fileData, filename } = req.body
 
@@ -594,7 +595,7 @@ router.post('/restore', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // POST /api/v1/backup/:id/restore - 从服务器已有备份还原
-router.post('/:id/restore', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:id/restore', async (req: AuthRequest, res) => {
   try {
     const id = parseInt(req.params.id as string, 10)
     if (isNaN(id) || id <= 0) {

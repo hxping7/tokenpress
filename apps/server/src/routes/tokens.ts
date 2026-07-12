@@ -54,7 +54,13 @@ router.post('/', async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, error: 'Name and permissions are required' })
     }
 
-    const validPermissions = ['article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write']
+    const validPermissions = [
+      'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
+      'friendlinks:write', 'sections:write', 'categories:write',
+      'users:write', 'stats:read', 'logs:read', 'backup:write',
+      'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
+      'statichtml:write', 'statichtml:read',
+    ]
     const invalidPerms = permissions.filter((p: string) => !validPermissions.includes(p))
     if (invalidPerms.length) {
       return res.status(400).json({ success: false, error: `Invalid permissions: ${invalidPerms.join(', ')}` })
@@ -63,8 +69,20 @@ router.post('/', async (req: AuthRequest, res) => {
     // Enforce role-based permission limits
     const role = req.user!.role
     const allowedByRole: Record<string, string[]> = {
-      superadmin: ['article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write'],
-      admin: ['article:write', 'media:upload', 'work:write', 'content:delete'],
+      superadmin: [
+        'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
+        'friendlinks:write', 'sections:write', 'categories:write',
+        'users:write', 'stats:read', 'logs:read', 'backup:write',
+        'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
+        'statichtml:write', 'statichtml:read',
+      ],
+      admin: [
+        'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
+        'friendlinks:write', 'sections:write', 'categories:write',
+        'stats:read', 'logs:read', 'backup:write',
+        'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
+        'statichtml:write', 'statichtml:read',
+      ],
       user: ['article:write', 'media:upload'],
     }
     const allowed = allowedByRole[role] || allowedByRole.user

@@ -63,6 +63,9 @@ export const articles = sqliteTable('articles', {
   categoryId: integer('category_id').references(() => categories.id),
   status: text('status', { enum: ['draft', 'published', 'archived', 'scheduled', 'pending_review'] }).notNull().default('draft'),
   viewCount: integer('view_count').notNull().default(0),
+  // 置顶：pinnedAt 非空即已置顶（记录置顶时间，用于同组内排序）；pinnedScope 区分全局/板块
+  pinnedAt: text('pinned_at'),
+  pinnedScope: text('pinned_scope', { enum: ['global', 'section'] }),
   authorId: integer('author_id').notNull().references(() => users.id),
   publishedAt: text('published_at'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),

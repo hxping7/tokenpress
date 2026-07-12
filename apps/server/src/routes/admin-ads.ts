@@ -2,13 +2,14 @@ import { Router } from 'express'
 import { db } from '../db/index.js'
 import { ads, contentReviews } from '../db/schema.js'
 import { eq, and, desc, sql } from 'drizzle-orm'
-import { authMiddleware, adminOrAbove, superAdminOnly, type AuthRequest } from '../middleware/auth.js'
+import { superAdminOnly, type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { scheduleReview } from '../lib/contentReview/index.js'
 import { extractText } from '../lib/contentReview/extractText.js'
 import { applyAdReview } from '../lib/contentReview/statusManager.js'
 
 const router = Router()
-router.use(authMiddleware, adminOrAbove)
+router.use(apiTokenOrAdmin('ads:write'))
 
 // GET /api/v1/admin/ads — 所有广告列表（管理用）
 router.get('/', async (req: AuthRequest, res) => {
