@@ -2336,7 +2336,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
                 </div>
                 <button
                   onClick={() => setAntiScrapingEnabled(!antiScrapingEnabled)}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                  className={`relative w-14 h-7 rounded-full transition-colors shrink-0 ${
                     antiScrapingEnabled ? 'bg-t-accent-blue' : 'bg-t-border'
                   }`}
                 >
@@ -2385,7 +2385,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
                 </div>
                 <button
                   onClick={() => setContentReviewEnabled(!contentReviewEnabled)}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                  className={`relative w-14 h-7 rounded-full transition-colors shrink-0 ${
                     contentReviewEnabled ? 'bg-t-accent-blue' : 'bg-t-border'
                   }`}
                 >
