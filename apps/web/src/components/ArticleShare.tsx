@@ -191,10 +191,10 @@ export function ArticleShare({ title, summary, platforms, aside }: ArticleShareP
         className="group flex flex-col items-center gap-1 focus:outline-none sm:gap-1.5"
       >
         <span
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-white transition-transform group-hover:scale-105 group-active:scale-95 sm:h-11 sm:w-11 sm:rounded-xl"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-white transition-transform group-hover:scale-105 group-active:scale-95 sm:h-11 sm:w-11 sm:rounded-xl"
           style={{ backgroundColor: isCopied ? '#07C160' : t.color }}
         >
-          <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </span>
         <span className="text-[11px] text-t-text-secondary transition-colors group-hover:text-t-text-primary sm:text-xs">
           {isCopied ? '已复制' : t.name}
