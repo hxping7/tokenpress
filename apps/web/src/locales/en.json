@@ -401,7 +401,10 @@
     "selected": "Selected",
     "items": "items",
     "selectAll": "Select All",
-    "deselectAll": "Deselect All"
+    "deselectAll": "Deselect All",
+    "copyUrl": "Copy URL",
+    "urlCopied": "URL copied",
+    "copyFailed": "Copy failed, please copy manually"
   },
   "sections": {
     "title": "Sections Management",

@@ -8,7 +8,8 @@ import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
-import { Search, Trash2, Eye, Image as ImageIcon, Video, Download, X, Play, Upload, FileText, FileSpreadsheet, Presentation, File } from 'lucide-react'
+import { Search, Trash2, Eye, Image as ImageIcon, Video, Download, X, Play, Upload, FileText, FileSpreadsheet, Presentation, File, Clipboard } from 'lucide-react'
+import { toast } from '@/components/ui/Toast'
 
 type DisplayMode = 'large' | 'medium' | 'small' | 'list'
 
@@ -127,6 +128,28 @@ export default function MediaPage() {
     if (mime.includes('pdf') || mime.includes('word') || mime.includes('document') || mime.includes('text') || mime.includes('markdown')) return FileText
     return File
   }
+
+  const copyUrl = useCallback(async (url: string, name: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url)
+      } else {
+        // Fallback for insecure contexts (e.g. http://localhost)
+        const ta = document.createElement('textarea')
+        ta.value = url
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        const ok = document.execCommand('copy')
+        document.body.removeChild(ta)
+        if (!ok) throw new Error('copy failed')
+      }
+      toast.success(`${name} ${t('media.urlCopied', backendLocale) || '地址已复制'}`)
+    } catch {
+      toast.error(t('media.copyFailed', backendLocale) || '复制失败，请手动复制')
+    }
+  }, [backendLocale, t])
 
   const getGridCols = (mode: DisplayMode) => {
     switch (mode) {
@@ -338,6 +361,7 @@ export default function MediaPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button onClick={() => setPreviewMedia(media)} className="p-1.5 hover:bg-t-bg-secondary rounded"><Eye size={16} /></button>
                         <a href={media.url} target="_blank" download className="p-1.5 hover:bg-t-bg-secondary rounded"><Download size={16} /></a>
+                        <button onClick={() => copyUrl(media.url, media.originalName)} className="p-1.5 hover:bg-t-bg-secondary rounded" title={t('media.copyUrl', backendLocale) || '复制地址'}><Clipboard size={16} /></button>
                         <button onClick={() => { if (confirm(t('common.confirmDelete', backendLocale))) deleteMutation.mutate(media.id) }} className="p-1.5 hover:bg-red-500/10 text-red-500 rounded"><Trash2 size={16} /></button>
                       </div>
                     </td>
@@ -406,6 +430,9 @@ export default function MediaPage() {
                     <a href={media.url} target="_blank" download className="p-2 bg-white/20 rounded-full hover:bg-white/30">
                       <Download size={18} />
                     </a>
+                    <button onClick={() => copyUrl(media.url, media.originalName)} className="p-2 bg-white/20 rounded-full hover:bg-white/30" title={t('media.copyUrl', backendLocale) || '复制地址'}>
+                      <Clipboard size={18} />
+                    </button>
                     <button onClick={() => { if (confirm(t('common.confirmDelete', backendLocale))) deleteMutation.mutate(media.id) }} className="p-2 bg-red-500/50 rounded-full hover:bg-red-500/70">
                       <Trash2 size={18} />
                     </button>

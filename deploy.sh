@@ -63,14 +63,14 @@ fi
 BACKEND_IMG=""
 FRONTEND_IMG=""
 for ext in .tar .tar.gz .zip; do
-    if [ -f "/root/token00-backend$ext" ]; then
-        BACKEND_IMG="/root/token00-backend$ext"
+    if [ -f "/root/tokenpress-backend$ext" ]; then
+        BACKEND_IMG="/root/tokenpress-backend$ext"
         break
     fi
 done
 for ext in .tar .tar.gz .zip; do
-    if [ -f "/root/token00-frontend$ext" ]; then
-        FRONTEND_IMG="/root/token00-frontend$ext"
+    if [ -f "/root/tokenpress-frontend$ext" ]; then
+        FRONTEND_IMG="/root/tokenpress-frontend$ext"
         break
     fi
 done
@@ -89,8 +89,8 @@ echo ">>> [1/3] 导入镜像..."
 
 # 检查当前运行的容器和镜像
 echo ">>> 检查当前环境..."
-CURRENT_BACKEND=$(docker ps -a --filter "name=token00-backend" --format "{{.Image}}" 2>/dev/null | head -1)
-CURRENT_FRONTEND=$(docker ps -a --filter "name=token00-frontend" --format "{{.Image}}" 2>/dev/null | head -1)
+CURRENT_BACKEND=$(docker ps -a --filter "name=tokenpress-backend" --format "{{.Image}}" 2>/dev/null | head -1)
+CURRENT_FRONTEND=$(docker ps -a --filter "name=tokenpress-frontend" --format "{{.Image}}" 2>/dev/null | head -1)
 
 if [ -n "$CURRENT_BACKEND" ]; then
     echo "  当前运行的后端镜像: $CURRENT_BACKEND"
@@ -101,7 +101,7 @@ fi
 
 # 清理旧容器（防止冲突）
 echo ">>> 清理旧容器..."
-docker ps -a --filter "name=token00-" -q | xargs -r docker rm -f 2>/dev/null || true
+docker ps -a --filter "name=tokenpress-" -q | xargs -r docker rm -f 2>/dev/null || true
 docker network prune -f 2>/dev/null || true
 
 load_image() {
@@ -244,8 +244,8 @@ HEALTH=$(curl -s http://localhost:$HTTP_PORT/api/v1/health)
 if echo "$HEALTH" | grep -q '"status":"ok"'; then
     echo "✓ API 正常"
 else
-    echo "✗ API 异常"
-    docker logs token00-backend --tail 20
+        echo "✗ API 异常"
+        docker logs tokenpress-backend --tail 20
 fi
 
 echo ""

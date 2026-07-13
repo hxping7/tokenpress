@@ -401,7 +401,10 @@
     "selected": "已选择",
     "items": "项",
     "selectAll": "全选",
-    "deselectAll": "取消全选"
+    "deselectAll": "取消全选",
+    "copyUrl": "复制地址",
+    "urlCopied": "地址已复制",
+    "copyFailed": "复制失败，请手动复制"
   },
   "sections": {
     "title": "板块管理",
