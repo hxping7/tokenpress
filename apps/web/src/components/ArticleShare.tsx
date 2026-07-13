@@ -188,15 +188,15 @@ export function ArticleShare({ title, summary, platforms, aside }: ArticleShareP
         onClick={() => handleClick(t)}
         title={t.name}
         aria-label={`分享到${t.name}`}
-        className="group flex flex-col items-center gap-1.5 focus:outline-none"
+        className="group flex flex-col items-center gap-1 focus:outline-none sm:gap-1.5"
       >
         <span
-          className="flex h-11 w-11 items-center justify-center rounded-xl text-white transition-transform group-hover:scale-105 group-active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-white transition-transform group-hover:scale-105 group-active:scale-95 sm:h-11 sm:w-11 sm:rounded-xl"
           style={{ backgroundColor: isCopied ? '#07C160' : t.color }}
         >
-          <Icon size={20} />
+          <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
         </span>
-        <span className="text-xs text-t-text-secondary transition-colors group-hover:text-t-text-primary">
+        <span className="text-[11px] text-t-text-secondary transition-colors group-hover:text-t-text-primary sm:text-xs">
           {isCopied ? '已复制' : t.name}
         </span>
       </button>
@@ -212,11 +212,11 @@ export function ArticleShare({ title, summary, platforms, aside }: ArticleShareP
             <Share2 size={14} />
             分享
           </div>
-          <div className="flex flex-wrap gap-3">{shareButtons}</div>
+          <div className="flex flex-wrap gap-2 sm:gap-3">{shareButtons}</div>
         </div>
       ) : (
         // 正文上方/结尾：标签与图标同行
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-x-5 sm:gap-y-3">
           <span className="inline-flex items-center gap-1.5 text-sm text-t-text-secondary">
             <Share2 size={14} />
             分享
