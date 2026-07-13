@@ -10,7 +10,9 @@ import { useLayoutStore } from '@/stores/layout'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 
-export function BlogPageClient() {
+// 全站文章列表（“查看全部”入口）。注意：此组件不过滤板块，
+// 仅用于 /articles 路由；博客板块请走 /blog（动态 [section] 路由）。
+export function AllArticlesClient() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
@@ -18,7 +20,7 @@ export function BlogPageClient() {
   const locale = useLocaleStore((s) => s.locale)
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['blog-articles', page, search],
+    queryKey: ['all-articles', page, search],
     queryFn: () => api.getArticles({ page, limit: 12, search: search || undefined }),
   })
 

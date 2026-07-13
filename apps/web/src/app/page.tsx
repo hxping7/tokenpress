@@ -206,7 +206,7 @@ export default async function HomePage() {
               <div className="flex items-center gap-4">
                 <ViewToggle />
                 <Link
-                  href="/blog"
+                  href="/articles"
                   className="text-sm text-t-accent-blue hover:underline"
                 >
                   查看全部 →

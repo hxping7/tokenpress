@@ -1,4 +1,4 @@
-import { BlogPageClient } from '@/components/BlogPageClient'
+import { AllArticlesClient } from '@/components/AllArticlesClient'
 
 export const revalidate = 60
 
@@ -7,6 +7,6 @@ export const metadata = {
   description: 'Token00 全站已发布文章的完整列表，按发布时间排序。',
 }
 
-export default function BlogPage() {
-  return <BlogPageClient />
+export default function ArticlesPage() {
+  return <AllArticlesClient />
 }
