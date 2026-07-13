@@ -82,6 +82,8 @@ published/
 
 # Local runtime data (DB backups + live .db with real content — DO NOT COMMIT)
 data/
+# Test DB created by `vitest run` (apps/server/src/routes/*.test.ts)
+data-test/
 
 # Assistant internal local config
 .codebuddy/
