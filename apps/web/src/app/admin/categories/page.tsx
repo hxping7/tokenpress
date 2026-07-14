@@ -8,6 +8,8 @@ import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 import { Plus, Edit, Trash2, X, Check, GripVertical, ChevronDown, ChevronRight, FolderOpen, Layers } from 'lucide-react'
 import { StaticPagePicker } from '@/components/StaticPagePicker'
+import { TemplateField } from '@/components/TemplateField'
+import { type TemplateKey, getTemplate } from '@/lib/templates'
 
 interface Section {
   id: number
@@ -18,6 +20,9 @@ interface Section {
   externalUrl: string | null
   sortOrder: number
   isActive: boolean
+  kind?: string
+  template?: string
+  templateConfig?: Record<string, unknown> | null
 }
 
 interface Category {
@@ -27,6 +32,8 @@ interface Category {
   sectionId: number
   description: string | null
   sortOrder: number
+  template?: string
+  templateConfig?: Record<string, unknown> | null
   section?: Section | null
 }
 
@@ -56,6 +63,12 @@ export default function CategoriesPage() {
   const [categoryName, setCategoryName] = useState('')
   const [categorySectionId, setCategorySectionId] = useState<number | null>(null)
   const [categoryDescription, setCategoryDescription] = useState('')
+  const [categoryTemplate, setCategoryTemplate] = useState('article-list')
+  const [categoryTemplateConfig, setCategoryTemplateConfig] = useState<Record<string, unknown> | null>(null)
+
+  // Section template form state
+  const [sectionTemplate, setSectionTemplate] = useState('article-list')
+  const [sectionTemplateConfig, setSectionTemplateConfig] = useState<Record<string, unknown> | null>(null)
 
   // Queries
   const { data: sectionsData, isLoading: sectionsLoading } = useQuery({
@@ -142,6 +155,8 @@ export default function CategoriesPage() {
       setSectionDescription(section.description || '')
       setSectionExternalUrl(section.externalUrl || '')
       setSectionIsActive(section.isActive)
+      setSectionTemplate(section.template || 'article-list')
+      setSectionTemplateConfig(section.templateConfig || null)
     } else {
       setEditingSection(null)
       setSectionName('')
@@ -150,6 +165,8 @@ export default function CategoriesPage() {
       setSectionDescription('')
       setSectionExternalUrl('')
       setSectionIsActive(true)
+      setSectionTemplate('article-list')
+      setSectionTemplateConfig(null)
     }
     setShowSectionEditor(true)
   }
@@ -165,11 +182,15 @@ export default function CategoriesPage() {
       setCategoryName(category.name)
       setCategorySectionId(category.sectionId)
       setCategoryDescription(category.description || '')
+      setCategoryTemplate(category.template || 'article-list')
+      setCategoryTemplateConfig(category.templateConfig || null)
     } else {
       setEditingCategory(null)
       setCategoryName('')
       setCategorySectionId(sectionId)
       setCategoryDescription('')
+      setCategoryTemplate('article-list')
+      setCategoryTemplateConfig(null)
     }
     setShowCategoryEditor(true)
   }
@@ -187,6 +208,8 @@ export default function CategoriesPage() {
       description: sectionDescription || null,
       externalUrl: sectionExternalUrl || null,
       isActive: sectionIsActive,
+      template: sectionTemplate,
+      templateConfig: sectionTemplateConfig,
     }
 
     if (editingSection) {
@@ -203,6 +226,8 @@ export default function CategoriesPage() {
       name: categoryName,
       sectionId: categorySectionId,
       description: categoryDescription || null,
+      template: categoryTemplate,
+      templateConfig: categoryTemplateConfig,
     }
 
     if (editingCategory) {
@@ -293,6 +318,7 @@ export default function CategoriesPage() {
                   </button>
                   <Layers size={18} className="text-t-accent-blue shrink-0" />
                   <span className="font-medium flex-1">{section.name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-t-bg-tertiary text-t-text-muted shrink-0">{getTemplate(section.template).label}</span>
                   <span className="text-sm text-t-text-secondary">{section.path}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${section.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                     {section.isActive ? t('common.enabled', backendLocale) : t('common.disabled', backendLocale)}
@@ -445,6 +471,15 @@ export default function CategoriesPage() {
                   />
                 </div>
               </div>
+              <TemplateField
+                label="模板 / 风格"
+                value={sectionTemplate}
+                onChange={setSectionTemplate}
+                config={sectionTemplateConfig}
+                onConfigChange={setSectionTemplateConfig}
+                exclude={editingSection?.kind === 'design_works' ? undefined : (['design-gallery'] as TemplateKey[])}
+                hint="决定板块内容如何展示（文章列表 / 卡片网格 / 瀑布流 / 杂志头条 / 单页 / 链接墙 / 作品集画廊）"
+              />
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -515,6 +550,20 @@ export default function CategoriesPage() {
                   className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue resize-y"
                 />
               </div>
+              {(() => {
+                const catSection = sections.find((s) => s.id === categorySectionId)
+                return (
+                  <TemplateField
+                    label="模板 / 风格"
+                    value={categoryTemplate}
+                    onChange={setCategoryTemplate}
+                    config={categoryTemplateConfig}
+                    onConfigChange={setCategoryTemplateConfig}
+                    exclude={catSection?.kind === 'design_works' ? undefined : (['design-gallery'] as TemplateKey[])}
+                    hint="分类可覆盖所属板块的展示模板"
+                  />
+                )
+              })()}
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-t-border bg-t-bg-secondary">
               <button onClick={closeCategoryEditor} className="px-4 py-2 text-t-text-secondary hover:text-t-text-primary">{t('common.cancel', backendLocale)}</button>

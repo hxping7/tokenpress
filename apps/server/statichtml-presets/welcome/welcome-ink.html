@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Token00 · 粒子水墨欢迎页</title>
+<style>
+  :root { --gold: #d4af37; --jade: #39d4c8; --ink: #e9e4d8; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #0b0d0c; overflow: hidden; }
+  body { font-family: "STKaiti", "KaiTi", "PingFang SC", "Microsoft YaHei", serif; }
+  #c { display: block; width: 100vw; height: 100vh; }
+  .ui {
+    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-end; padding-bottom: 11vh; z-index: 3; pointer-events: none;
+    opacity: 0; transition: opacity 1.2s ease;
+  }
+  .ui.show { opacity: 1; pointer-events: auto; }
+  .btns { display: flex; gap: 22px; }
+  .btn {
+    pointer-events: auto; cursor: pointer; user-select: none; padding: 13px 44px; font-size: 17px;
+    letter-spacing: 6px; color: var(--ink); background: rgba(233,228,216,0.04);
+    border: 1px solid rgba(212,175,55,0.55); border-radius: 2px; transition: all .4s ease;
+  }
+  .btn:hover { background: rgba(212,175,55,0.14); border-color: var(--gold); color: #fff;
+    box-shadow: 0 0 22px rgba(212,175,55,0.35); }
+  .btn.primary { color: #0b0d0c; background: var(--gold); border-color: var(--gold); }
+  .btn.primary:hover { background: #fff; border-color: #fff; box-shadow: 0 0 28px rgba(255,255,255,0.6); }
+  .cap {
+    position: fixed; left: 0; right: 0; top: 15vh; text-align: center; z-index: 3; color: var(--ink);
+    letter-spacing: 14px; font-size: 28px; opacity: 0; transition: opacity 1s ease; text-shadow: 0 0 18px rgba(57,212,200,0.4);
+  }
+  .cap.show { opacity: 1; }
+  .sub {
+    position: fixed; left: 0; right: 0; top: calc(15vh + 42px); text-align: center; z-index: 3;
+    color: rgba(57,212,200,0.7); letter-spacing: 5px; font-size: 12px; opacity: 0; transition: opacity 1s ease;
+  }
+  .sub.show { opacity: 1; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="cap" id="cap">智能，正在降临</div>
+<div class="sub" id="sub">墨 · 启 · 文 · 明</div>
+<div class="ui" id="ui">
+  <div class="btns">
+    <div class="btn primary" id="enter">进 入</div>
+    <div class="btn" id="replay">重 播</div>
+  </div>
+</div>
+<script>
+(() => {
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const cap = document.getElementById('cap');
+  const sub = document.getElementById('sub');
+  const ui = document.getElementById('ui');
+  const GOLD = '#d4af37', JADE = '#39d4c8', INK = '#e9e4d8';
+  let W, H, DPR, cx, cy;
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0); cx = W / 2; cy = H / 2;
+  }
+  window.addEventListener('resize', resize); resize();
+  const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
+  const easeIn = t => t * t * t;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const bW = () => Math.min(W * 0.2, 200), bH = () => Math.min(H * 0.68, 560);
+
+  const seals = ['智', '慧', '元', '启', '知', '新'];
+  const N = 7;
+  let drops = [];
+  function spawn() {
+    drops = [];
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2 + rand(-0.3, 0.3), r = Math.max(W, H) * 0.72;
+      const sx = cx + Math.cos(a) * r, sy = cy + Math.sin(a) * r * 0.95;
+      const tx = cx + (Math.random() < .5 ? -1 : 1) * bW() * 0.45, ty = cy + rand(-bH() * 0.4, bH() * 0.4);
+      drops.push({ ch: seals[i % seals.length], sx, sy, tx, ty, size: rand(26, 46),
+        col: [GOLD, JADE][i % 2], delay: rand(0, 0.5), trail: [] });
+    }
+  }
+  let mist = [];      // 墨雾粒子
+  function dissolve() {
+    mist = [];
+    const bw = bW(), bh = bH();
+    for (let i = 0; i < 120; i++) {
+      mist.push({ x: cx + rand(-bw / 2, bw / 2), y: cy + rand(-bh / 2, bh / 2),
+        vx: rand(-0.4, 0.4), vy: rand(-1.4, -0.3), r: rand(6, 26), a: rand(0.2, 0.6) });
+    }
+  }
+  let nodes = [];
+  function buildSeal() {
+    nodes = [];
+    const rings = [bW() * 0.7, bW() * 1.15, bW() * 1.6];
+    rings.forEach((rr, ri) => { const m = 8 + ri * 4;
+      for (let i = 0; i < m; i++) { const a = (i / m) * Math.PI * 2;
+        nodes.push({ a, r: rr, ph: rand(0, 6.28), ring: ri, x: 0, y: 0 }); } });
+  }
+  spawn(); buildSeal();
+
+  const T_AP = 2.5, T_IM = 3.5, T_BL = 3.7, T_RP = 6.0, T_END = 8.6;
+  let start = performance.now(), ripples = [], reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function reset() {
+    start = performance.now(); mist = []; ripples = []; spawn(); buildSeal();
+    ui.classList.remove('show'); cap.classList.remove('show'); sub.classList.remove('show');
+  }
+  document.getElementById('replay').addEventListener('click', reset);
+  document.getElementById('enter').addEventListener('click', () => {
+    if (window.self !== window.top) window.parent.postMessage({ type: 'welcome:close' }, '*');
+    else { const f = document.body; f.style.transition = 'opacity .6s'; f.style.opacity = '0';
+      setTimeout(() => { f.style.opacity = '1'; }, 600); }
+  });
+
+  // 墨壁：多层柔和径向渐变堆叠出毛边
+  function drawWall(alpha) {
+    const bw = bW(), bh = bH();
+    ctx.save(); ctx.globalAlpha = alpha;
+    const layers = 5;
+    for (let L = 0; L < layers; L++) {
+      const sc = 1 + L * 0.06, off = (L - layers / 2) * 4;
+      const g = ctx.createRadialGradient(cx + off, cy, 2, cx + off, cy, Math.max(bw, bh) * 0.7 * sc);
+      g.addColorStop(0, 'rgba(20,26,24,0.9)'); g.addColorStop(0.6, 'rgba(14,18,17,0.7)');
+      g.addColorStop(1, 'rgba(11,13,12,0)');
+      ctx.fillStyle = g; ctx.fillRect(cx - bw, cy - bh, bw * 2, bh * 2);
+    }
+    // 笔触竖纹
+    ctx.globalAlpha = alpha * 0.5; ctx.strokeStyle = 'rgba(233,228,216,0.18)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 10; i++) { const x = cx - bw / 2 + (bw / 10) * i + rand(-3, 3);
+      ctx.beginPath(); ctx.moveTo(x, cy - bh / 2); ctx.lineTo(x + rand(-4, 4), cy + bh / 2); ctx.stroke(); }
+    ctx.restore();
+  }
+  function drawMist() {
+    ctx.save();
+    mist.forEach(p => {
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      g.addColorStop(0, 'rgba(230,226,216,' + p.a + ')'); g.addColorStop(1, 'rgba(230,226,216,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.28); ctx.fill();
+      p.x += p.vx; p.y += p.vy; p.vy *= 0.992; p.a *= 0.985; p.r += 0.15;
+    });
+    ctx.restore();
+  }
+  function drawSeal(alpha) {
+    ctx.save(); ctx.globalAlpha = alpha;
+    // 同心墨环
+    ctx.strokeStyle = 'rgba(212,175,55,0.5)'; ctx.lineWidth = 1.4;
+    [bW() * 0.7, bW() * 1.15, bW() * 1.6].forEach(rr => { ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.28); ctx.stroke(); });
+    nodes.forEach(n => { const rr = n.r + Math.sin(performance.now() / 1000 + n.ph) * 6;
+      n.x = cx + Math.cos(n.a) * rr; n.y = cy + Math.sin(n.a) * rr; });
+    ctx.strokeStyle = 'rgba(57,212,200,0.3)'; ctx.lineWidth = 1;
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+      if (nodes[i].ring === nodes[j].ring) { const d = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+        if (d < bW() * 0.9) { ctx.globalAlpha = alpha * 0.5;
+          ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke(); } }
+    }
+    ctx.globalAlpha = alpha;
+    nodes.forEach(n => { ctx.fillStyle = n.ring === 0 ? GOLD : JADE; ctx.shadowColor = n.ring === 0 ? GOLD : JADE; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.ring === 0 ? 3 : 2.2, 0, 6.28); ctx.fill(); });
+    // 中心印
+    ctx.fillStyle = GOLD; ctx.shadowColor = GOLD; ctx.shadowBlur = 20;
+    ctx.font = 'bold ' + (bW() * 0.34) + 'px STKaiti, KaiTi, serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('智', cx, cy);
+    ctx.restore();
+  }
+
+  function frame(now) {
+    const t = (now - start) / 1000;
+    ctx.clearRect(0, 0, W, H);
+    // 宣纸底
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.8);
+    g.addColorStop(0, '#13161a'); g.addColorStop(1, '#0b0d0c');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    if (reduced) {
+      drawSeal(1);
+      if (!ui.classList.contains('show')) { ui.classList.add('show'); cap.textContent = '进入 AI 科技文明';
+        cap.classList.add('show'); sub.classList.add('show'); }
+      requestAnimationFrame(frame); return;
+    }
+
+    if (t > 0.3 && t < T_IM) { cap.textContent = '智能，正在降临'; cap.classList.add('show'); sub.classList.add('show'); }
+    if (t >= T_IM) cap.textContent = '进入 AI 科技文明';
+
+    if (t < T_IM) {
+      const ba = t < T_AP ? 1 : Math.max(0, 1 - (t - T_AP) / (T_IM - T_AP));
+      drawWall(ba * 0.95);
+      drops.forEach(it => {
+        const lt = (t - it.delay) / (T_AP - it.delay), p = easeIn(Math.max(0, Math.min(1, lt)));
+        const x = it.sx + (it.tx - it.sx) * p, y = it.sy + (it.ty - it.sy) * p;
+        it.trail.push({ x, y }); if (it.trail.length > 12) it.trail.shift();
+        for (let k = 0; k < it.trail.length - 1; k++) {
+          ctx.globalAlpha = (k / it.trail.length) * 0.4; ctx.strokeStyle = it.col; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.moveTo(it.trail[k].x, it.trail[k].y); ctx.lineTo(it.trail[k + 1].x, it.trail[k + 1].y); ctx.stroke();
+        }
+        ctx.globalAlpha = 1; ctx.save(); ctx.translate(x, y); ctx.fillStyle = it.col;
+        ctx.font = it.size + 'px STKaiti, KaiTi, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = it.col; ctx.shadowBlur = 16; ctx.fillText(it.ch, 0, 0); ctx.restore();
+      });
+    }
+
+    if (t >= T_AP && t < T_BL) {
+      const k = t - T_AP;
+      drawWall(Math.max(0, 0.95 - k * 1.8));
+      if (mist.length === 0) dissolve();
+      drawMist();
+      // 金玉冲击波
+      const wr = k * 480;
+      ctx.globalAlpha = Math.max(0, 0.6 - k * 0.6); ctx.strokeStyle = JADE; ctx.lineWidth = 2.4;
+      ctx.shadowColor = JADE; ctx.shadowBlur = 16; ctx.beginPath(); ctx.arc(cx, cy, wr, 0, 6.28); ctx.stroke();
+      // 墨点飞溅
+      for (let i = 0; i < 14; i++) { const a = (i / 14) * 6.28, d = k * 360;
+        ctx.globalAlpha = Math.max(0, 0.5 - k * 0.5); ctx.fillStyle = INK;
+        ctx.beginPath(); ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 2.2, 0, 6.28); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    }
+
+    if (t >= T_BL) { const be = ease(Math.min(1, (t - T_BL) / 1.3)); drawSeal(be); drawMist(); }
+
+    if (t >= T_RP) {
+      const rk = t - T_RP;
+      if (t < T_RP + 0.05) ripples = [0, 0.35, 0.7];
+      // 水中墨纹：柔和墨色环
+      ripples.forEach(off => { const rr = (rk - off) * 230;
+        if (rr > 0 && rr < Math.max(W, H)) {
+          ctx.globalAlpha = Math.max(0, 0.32 - (rk - off) * 0.1);
+          ctx.strokeStyle = JADE; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.28); ctx.stroke();
+        } });
+      ctx.globalAlpha = 1;
+    }
+
+    if (t > T_END - 1.2 && !ui.classList.contains('show')) { ui.classList.add('show'); cap.classList.add('show'); sub.classList.add('show'); }
+    if (t > T_END + 4) reset();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

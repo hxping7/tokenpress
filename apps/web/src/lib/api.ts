@@ -129,8 +129,14 @@ class ApiClient {
   }
 
   // ===== Categories =====
-  async getCategories() {
-    return this.request<{ success: boolean; data: any[] }>('/categories')
+  async getCategories(section?: string) {
+    const q = section ? `?section=${encodeURIComponent(section)}` : ''
+    return this.request<{ success: boolean; data: any[] }>(`/categories${q}`)
+  }
+
+  // ===== Friend Links =====
+  async getFriendLinks() {
+    return this.request<{ success: boolean; data: any[] }>('/friend-links').then((r) => r.data || [])
   }
 
   // ===== Admin Articles =====
@@ -417,3 +423,52 @@ export class ApiError extends Error {
 }
 
 export const api = new ApiClient()
+
+export interface DesignWork {
+  id: number
+  title: string
+  slug: string
+  coverImage: string | null
+  summary: string | null
+  content: string | null
+  authorName: string | null
+  authorAvatar: string | null
+  category: string | null
+  tags: string[]
+  externalUrl: string | null
+  galleryImages: string[]
+  status: string
+  sortOrder: number
+  viewCount: number
+  sectionId: number
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+/** 公开：按 section 拉取设计师作品列表 */
+export async function getDesignWorks(sectionSlug: string, opts?: { category?: string; page?: number; pageSize?: number }): Promise<{ data: DesignWork[]; total: number; page: number; pageSize: number }> {
+  const params = new URLSearchParams({ section: sectionSlug })
+  if (opts?.category) params.set('category', opts.category)
+  if (opts?.page) params.set('page', String(opts.page))
+  if (opts?.pageSize) params.set('pageSize', String(opts.pageSize))
+  const res = await fetch(`${getApiBase()}/api/v1/design-works?${params.toString()}`)
+  if (!res.ok) throw new ApiError(res.status, 'Failed to load design works')
+  return res.json()
+}
+
+/** 公开：拉取单条作品详情 */
+export async function getDesignWork(slug: string): Promise<DesignWork | null> {
+  const res = await fetch(`${getApiBase()}/api/v1/design-works/${encodeURIComponent(slug)}`)
+  if (!res.ok) return null
+  const json = await res.json()
+  return json.data || null
+}
+
+/** 公开：拉取某 section 下作品分类列表 */
+export async function getDesignWorkCategories(sectionSlug: string): Promise<string[]> {
+  const res = await fetch(`${getApiBase()}/api/v1/design-works/categories?section=${encodeURIComponent(sectionSlug)}`)
+  if (!res.ok) return []
+  const json = await res.json()
+  return json.data || []
+}

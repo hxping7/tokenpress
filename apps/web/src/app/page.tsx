@@ -2,6 +2,7 @@ import { api } from '@/lib/api'
 import { HomeSections } from '@/components/HomeSections'
 import { type HeroCtaButton } from '@/components/HeroCarousel'
 import { HomeBanner, type HomeBannerConfig, type HomeBannerType, type HomeBannerPosition } from '@/components/HomeBanner'
+import { WelcomeOverlay } from '@/components/WelcomeOverlay'
 
 interface HeroSlide {
   id: string
@@ -145,6 +146,25 @@ async function getRecentArticles(): Promise<Article[]> {
   }
 }
 
+async function getWelcomePage(): Promise<{ enabled: boolean; htmlPath: string }> {
+  try {
+    const baseUrl = typeof window === 'undefined'
+      ? `${process.env.BACKEND_URL || 'http://localhost:4001'}`
+      : ''
+    const res = await fetch(
+      `${baseUrl}/api/v1/site-settings/keys/welcome_page_enabled,welcome_page_html`,
+      { next: { revalidate: 60 } },
+    )
+    if (!res.ok) return { enabled: false, htmlPath: '' }
+    const s = (await res.json()).data || {}
+    const enabled = s.welcome_page_enabled === 'true'
+    const htmlPath = s.welcome_page_html || ''
+    return { enabled, htmlPath }
+  } catch {
+    return { enabled: false, htmlPath: '' }
+  }
+}
+
 function HeroFallback() {
   return (
     <section className="relative pt-8 pb-4 flex items-center justify-center overflow-hidden">
@@ -161,14 +181,17 @@ export default async function HomePage() {
     { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons },
     homeBanner,
     recentArticles,
+    welcomePage,
   ] = await Promise.all([
     getHeroSlides(),
     getHomeBanner(),
     getRecentArticles(),
+    getWelcomePage(),
   ])
 
   return (
     <>
+      <WelcomeOverlay enabled={welcomePage.enabled} htmlPath={welcomePage.htmlPath} />
       <HomeSections
         heroSlides={heroSlides}
         heroSize={heroSize}

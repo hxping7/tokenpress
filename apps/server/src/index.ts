@@ -11,6 +11,8 @@ import { migrate as migrateHeroCarouselSettings } from './db/migrations/0014_add
 import { migrate as migrateArticlePin } from './db/migrations/0015_add_article_pin.js'
 import { migrate as migrateArticleRebuild } from './db/migrations/0016_rebuild_articles.js'
 import { migrate as migrateSectionsLayouts } from './db/migrations/0017_add_sections_layouts.js'
+import { migrate as migrateDesignWorks } from './db/migrations/0018_add_design_works.js'
+import { migrate as migrateTemplate } from './db/migrations/0019_add_template.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { STYLES_DIR } from './utils/paths.js'
 import { systemEvent } from './utils/auditLogger.js'
@@ -44,9 +46,11 @@ import adsPublicRoutes from './routes/ads-public.js'
 import carouselArticlesRoutes from './routes/carousel-articles.js'
 import adminAdsRoutes from './routes/admin-ads.js'
 import styleRoutes from './routes/styles.js'
+import designWorksRoutes from './routes/design-works.js'
 import staticHtmlRoutes from './routes/statichtml.js'
 import { initProviders, loadProviderConfigFromEnv, reloadProviderFromDB } from './lib/contentReview/providers/index.js'
 import { initBuiltinStyles } from './utils/initStyles.js'
+import { initBuiltinStaticHtml } from './utils/initStaticHtml.js'
 import { startReviewWorker, stopReviewWorker, retryFailedReviews } from './workers/reviewScheduler.js'
 import { aiPatrolTick } from './workers/aiPatrol.js'
 import { adScheduler } from './workers/adScheduler.js'
@@ -210,6 +214,9 @@ app.use('/api/v1/carousel-articles', carouselArticlesRoutes)
 // Style Packs (public /active for SSR; list/get/write gated by styles:read / styles:write)
 app.use('/api/v1/styles', styleRoutes)
 
+// Design Works (设计师作品集) — public list/get; write gated by works:write
+app.use('/api/v1/design-works', designWorksRoutes)
+
 // Health check
 app.get('/api/v1/health', (_req, res) => {
   res.json({
@@ -238,10 +245,15 @@ async function start() {
   await migrateArticlePin()
   await migrateArticleRebuild()
   await migrateSectionsLayouts()
+  await migrateDesignWorks()
+  await migrateTemplate()
   logger.info('✅ Database ready')
 
   // 初始化内置模板包到持久卷（仅首次 / 缺失时拷贝，不覆盖用户包）
   await initBuiltinStyles()
+
+  // 初始化内置欢迎页到 statichtml 持久卷（仅缺失时拷贝，不覆盖后台手动编辑）
+  await initBuiltinStaticHtml()
 
   // Initialize login cleanup task
   initLoginCleanup()

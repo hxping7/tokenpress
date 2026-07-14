@@ -1,7 +1,7 @@
 {
   "id": "enterprise",
   "name": "企业官网风格",
-  "description": "适合 B2B 企业站的稳重布局：左二级目录板块页 + 实色吸顶 Header + 多栏 Footer。",
+  "description": "企业官网风：紫罗兰主色（#5B3AFF）+ 紫粉渐变，白底大留白、实色吸顶 Header、多栏 Footer。",
   "version": "1.0.0",
   "author": "token00",
   "preview": "/styles/enterprise/preview.png",

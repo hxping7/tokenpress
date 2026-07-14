@@ -215,10 +215,18 @@ export function StyleEditorModal({ styleId, builtin, onClose, onSaved, onDeleted
                 <textarea
                   value={headerText}
                   onChange={e => setHeaderText(e.target.value)}
-                  rows={8}
+                  rows={10}
                   spellCheck={false}
                   className="w-full px-3 py-2 rounded-lg bg-t-bg-secondary border border-t-border text-xs text-t-text-primary font-mono outline-none focus:border-t-accent-blue resize-y leading-relaxed"
                 />
+                <p className="text-[11px] text-t-text-muted mt-1 leading-relaxed">
+                  右上角操作按钮由 <code className="font-mono">actions</code> 数组定义（数组顺序即从左到右位置）。每项：<br />
+                  <code className="font-mono">type</code>: theme | language | admin | login | logout | link；<br />
+                  <code className="font-mono">icon</code>: palette/globe/dashboard/user/login/logout/settings/...；<br />
+                  <code className="font-mono">style</code>: icon | text | ghost | outline | primary | pill；<br />
+                  <code className="font-mono">label</code>: 字符串或 {'{zh,en}'}；<code className="font-mono">showWhen</code>: always | loggedIn | loggedOut；<br />
+                  <code className="font-mono">href</code>（type=link 时必填）。不写 actions 则回退经典按钮组。
+                </p>
               </section>
 
               {/* Footer */}

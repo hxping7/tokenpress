@@ -4,11 +4,26 @@ import { articles, categories, sections } from '../db/schema.js'
 import { eq, asc, and, sql } from 'drizzle-orm'
 import { type AuthRequest } from '../middleware/auth.js'
 import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
+import { isTemplateValid } from '../lib/sectionTemplates.js'
 import { generateSlug } from '@tokenpress/shared'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
 
 const router = Router()
+
+/** 将 DB 中的 categories 行转换为 API 输出（解析 template_config JSON） */
+function serializeCategory(row: any) {
+  if (!row) return row
+  let templateConfig: unknown = null
+  if (row.templateConfig && typeof row.templateConfig === 'string') {
+    try { templateConfig = JSON.parse(row.templateConfig) } catch { templateConfig = null }
+  }
+  return {
+    ...row,
+    template: row.template || 'article-list',
+    templateConfig,
+  }
+}
 
 // GET /api/v1/categories — public, list categories, supports ?section=<slug> filter
 router.get('/', async (req, res) => {
@@ -22,6 +37,8 @@ router.get('/', async (req, res) => {
       sectionId: categories.sectionId,
       description: categories.description,
       sortOrder: categories.sortOrder,
+      template: categories.template,
+      templateConfig: categories.templateConfig,
       section: {
         id: sections.id,
         name: sections.name,
@@ -42,10 +59,10 @@ router.get('/', async (req, res) => {
           .from(articles)
           .where(and(eq(articles.categoryId, cat.id), eq(articles.status, 'published')))
           .get()
-        return {
+        return serializeCategory({
           ...cat,
           articleCount: countResult?.count || 0,
-        }
+        })
       })
     )
 
@@ -70,6 +87,8 @@ router.get('/:id', async (req, res) => {
       sectionId: categories.sectionId,
       description: categories.description,
       sortOrder: categories.sortOrder,
+      template: categories.template,
+      templateConfig: categories.templateConfig,
       section: {
         id: sections.id,
         name: sections.name,
@@ -83,7 +102,7 @@ router.get('/:id', async (req, res) => {
     if (!category) {
       return res.status(404).json({ success: false, error: 'Category not found' })
     }
-    res.json({ success: true, data: category })
+    res.json({ success: true, data: serializeCategory(category) })
   } catch (err) {
     console.error('Get category error:', err)
     res.status(500).json({ success: false, error: 'Failed to get category' })
@@ -96,7 +115,7 @@ router.use(apiTokenOrAdmin('categories:write'))
 // POST /api/v1/categories — create category
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const { name, slug, sectionId, description, sortOrder = 0 } = req.body
+    const { name, slug, sectionId, description, sortOrder = 0, template, templateConfig } = req.body
 
     if (!name || !sectionId) {
       return res.status(400).json({ success: false, error: 'Name and sectionId are required' })
@@ -123,6 +142,8 @@ router.post('/', async (req: AuthRequest, res) => {
       sectionId,
       description: description || null,
       sortOrder,
+      template: isTemplateValid(template) ? template : 'article-list',
+      templateConfig: templateConfig && typeof templateConfig === 'object' ? JSON.stringify(templateConfig) : null,
     }).run()
 
     const id = Number(result.lastInsertRowid)
@@ -144,7 +165,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, error: 'Invalid ID' })
     }
 
-    const { name, slug, sectionId, description, sortOrder } = req.body
+    const { name, slug, sectionId, description, sortOrder, template, templateConfig } = req.body
 
     const existing = await db.select().from(categories).where(eq(categories.id, categoryId)).get()
     if (!existing) {
@@ -173,6 +194,14 @@ router.put('/:id', async (req: AuthRequest, res) => {
     if (sectionId !== undefined) updates.sectionId = sectionId
     if (description !== undefined) updates.description = description
     if (sortOrder !== undefined) updates.sortOrder = sortOrder
+    if (template !== undefined) {
+      updates.template = isTemplateValid(template) ? template : 'article-list'
+    }
+    if (templateConfig !== undefined) {
+      updates.templateConfig = templateConfig === null
+        ? null
+        : (typeof templateConfig === 'object' ? JSON.stringify(templateConfig) : String(templateConfig))
+    }
 
     await db.update(categories).set(updates).where(eq(categories.id, categoryId)).run()
 

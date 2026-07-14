@@ -60,7 +60,7 @@ router.post('/', async (req: AuthRequest, res) => {
       'users:write', 'stats:read', 'logs:read', 'backup:write',
       'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
       'statichtml:write', 'statichtml:read',
-      'styles:write', 'styles:read',
+      'styles:write', 'styles:read', 'works:write',
     ]
     const invalidPerms = permissions.filter((p: string) => !validPermissions.includes(p))
     if (invalidPerms.length) {
@@ -76,7 +76,7 @@ router.post('/', async (req: AuthRequest, res) => {
         'users:write', 'stats:read', 'logs:read', 'backup:write',
         'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
         'statichtml:write', 'statichtml:read',
-        'styles:write', 'styles:read',
+        'styles:write', 'styles:read', 'works:write',
       ],
       admin: [
         'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
@@ -84,7 +84,7 @@ router.post('/', async (req: AuthRequest, res) => {
         'stats:read', 'logs:read', 'backup:write',
         'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
         'statichtml:write', 'statichtml:read',
-        'styles:write', 'styles:read',
+        'styles:write', 'styles:read', 'works:write',
       ],
       user: ['article:write', 'media:upload'],
     }

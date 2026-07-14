@@ -6,7 +6,10 @@ interface Section {
   slug: string
   path: string
   description: string | null
+  kind: string
   layouts: Record<string, unknown> | null
+  template?: string
+  templateConfig?: Record<string, unknown> | null
 }
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4001'
@@ -55,6 +58,7 @@ export default async function DynamicSectionPage({ params }: Props) {
     )
   }
 
+  // 模板驱动渲染：板块/分类模板（含 design-gallery）统一交由 SectionPageClient 处理
   return (
     <SectionPageClient
       section={section.slug}
@@ -62,6 +66,9 @@ export default async function DynamicSectionPage({ params }: Props) {
       title={section.name}
       description={section.description}
       sectionLayouts={section.layouts}
+      sectionKind={section.kind}
+      template={section.template || 'article-list'}
+      templateConfig={section.templateConfig || null}
     />
   )
 }

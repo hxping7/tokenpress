@@ -1,9 +1,23 @@
 import type { Metadata } from 'next'
 import { ArticleDetailClient } from './ArticleDetailClient'
+import { DesignWorkDetail } from './DesignWorkDetail'
 import { getSiteUrl } from '@/lib/site-url'
 import { JsonLd } from '@/components/JsonLd'
 
 const SITE_URL = getSiteUrl()
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4001'
+async function fetchSectionKind(sectionPath: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/sections`, { next: { tags: ['sections'], revalidate: 60 } })
+    if (!res.ok) return null
+    const { data } = await res.json()
+    const s = (data || []).find((x: any) => x.path === sectionPath)
+    return s?.kind || null
+  } catch {
+    return null
+  }
+}
 
 interface Props {
   params: Promise<{ section: string; slug: string }>
@@ -88,7 +102,14 @@ function extractExcerpt(content: string, maxLen = 160): string {
 }
 
 export default async function ArticleDetailPage({ params }: Props) {
-  const { slug } = await params
+  const { section, slug } = await params
+
+  // 设计师作品集板块 → 渲染作品详情模板
+  const kind = await fetchSectionKind(`/${section}`)
+  if (kind === 'design_works') {
+    return <DesignWorkDetail params={params} />
+  }
+
   const article = await fetchArticle(slug)
 
   // 拉取板块级布局覆盖（供 ArticleDetailClient 解析文章页布局）

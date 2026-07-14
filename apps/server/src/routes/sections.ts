@@ -4,6 +4,7 @@ import { sections, categories } from '../db/schema.js'
 import { eq, asc, sql } from 'drizzle-orm'
 import { type AuthRequest } from '../middleware/auth.js'
 import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
+import { isTemplateValid } from '../lib/sectionTemplates.js'
 import { generateSlug } from '@tokenpress/shared'
 import { getParamAsInt } from '../utils/params.js'
 import { revalidateTag } from '../utils/revalidate.js'
@@ -35,14 +36,23 @@ function validateSectionLayouts(value: unknown): { ok: boolean; error?: string }
   return { ok: true }
 }
 
-/** 将 DB 中的 sections 行转换为 API 输出（解析 layouts JSON） */
+/** 将 DB 中的 sections 行转换为 API 输出（解析 layouts / template_config JSON） */
 function serializeSection(row: any) {
   if (!row) return row
   let layouts: unknown = null
   if (row.layouts && typeof row.layouts === 'string') {
     try { layouts = JSON.parse(row.layouts) } catch { layouts = null }
   }
-  return { ...row, layouts }
+  let templateConfig: unknown = null
+  if (row.template_config && typeof row.template_config === 'string') {
+    try { templateConfig = JSON.parse(row.template_config) } catch { templateConfig = null }
+  }
+  return {
+    ...row,
+    layouts,
+    template: row.template || 'article-list',
+    templateConfig,
+  }
 }
 
 // ===== 公共路由 =====
@@ -103,7 +113,7 @@ router.use(apiTokenOrAdmin('sections:write'))
 // POST /api/v1/sections — create section
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const { name, slug, path, description, externalUrl, sortOrder = 0, isActive = true, layouts } = req.body
+    const { name, slug, path, description, externalUrl, sortOrder = 0, isActive = true, layouts, template, templateConfig } = req.body
 
     if (!name || !path) {
       return res.status(400).json({ success: false, error: 'Name and path are required' })
@@ -140,6 +150,8 @@ router.post('/', async (req: AuthRequest, res) => {
       externalUrl: externalUrl || null,
       sortOrder,
       isActive: isActive ? 1 : 0,
+      template: isTemplateValid(template) ? template : 'article-list',
+      templateConfig: templateConfig && typeof templateConfig === 'object' ? JSON.stringify(templateConfig) : null,
     }
     // 将 layouts 序列化为 JSON 字符串存储
     if (layouts !== undefined) {
@@ -168,7 +180,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, error: 'Invalid ID' })
     }
 
-    const { name, slug, path, description, externalUrl, sortOrder, isActive, layouts } = req.body
+    const { name, slug, path, description, externalUrl, sortOrder, isActive, layouts, template, templateConfig } = req.body
 
     const existing = await db.select().from(sections).where(eq(sections.id, sectionId)).get()
     if (!existing) {
@@ -206,6 +218,16 @@ router.put('/:id', async (req: AuthRequest, res) => {
     if (externalUrl !== undefined) updates.externalUrl = externalUrl || null
     if (sortOrder !== undefined) updates.sortOrder = sortOrder
     if (isActive !== undefined) updates.isActive = isActive ? 1 : 0
+    // template：仅接受白名单值
+    if (template !== undefined) {
+      updates.template = isTemplateValid(template) ? template : 'article-list'
+    }
+    // templateConfig：对象序列化；null 表示清空
+    if (templateConfig !== undefined) {
+      updates.templateConfig = templateConfig === null
+        ? null
+        : (typeof templateConfig === 'object' ? JSON.stringify(templateConfig) : String(templateConfig))
+    }
     // layouts：null 表示清空；对象表示覆盖
     if (layouts !== undefined) {
       updates.layouts = layouts === null ? null : JSON.stringify(layouts)

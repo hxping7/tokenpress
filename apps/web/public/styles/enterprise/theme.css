@@ -1,33 +1,33 @@
 :root{
-  /* ===== 配色：极简亮白 + 稳重藏蓝强调（企业官网风） ===== */
+  /* ===== 配色：参照特赞 Tezign 企业官网风（紫罗兰主色 + 粉调渐变） ===== */
   --bg-primary:#ffffff;
-  --bg-secondary:#f5f5f7;
-  --bg-tertiary:#e8e8ed;
-  --text-primary:#1d1d1f;
-  --text-secondary:#3a3a3f;
-  --text-muted:#8a8a8f;
-  --accent-blue:#1e40af;
-  --accent-purple:#0ea5e9;
-  --accent-blue-dim:#1e3a8a;
-  --border-color:rgba(30,64,175,0.14);
-  --hover-bg:rgba(30,64,175,0.06);
-  --gradient-from:#1e40af;
-  --gradient-via:#3b5bdb;
-  --gradient-to:#0ea5e9;
-  --grid-pattern:rgba(30,64,175,0.03);
-  --selection-bg:rgba(30,64,175,0.2);
-  --scrollbar-thumb:rgba(30,64,175,0.25);
-  --scrollbar-thumb-hover:rgba(30,64,175,0.45);
-  --focus-ring:rgba(30,64,175,0.5);
-  --card-border-hover:rgba(30,64,175,0.3);
-  --section-divider:rgba(30,64,175,0.15);
-  --btn-glow-from:rgba(30,64,175,0.14);
-  --btn-glow-to:rgba(14,165,233,0.14);
+  --bg-secondary:#f9fafb;
+  --bg-tertiary:#f3f4f6;
+  --text-primary:#101828;
+  --text-secondary:#475467;
+  --text-muted:#667085;
+  --accent-blue:#5B3AFF;          /* Tezign 品牌紫（主色：按钮 / CTA / 链接） */
+  --accent-purple:#3080ff;        /* 互补蓝（用于次级渐变） */
+  --accent-blue-dim:#4B2DBF;      /* 深紫（hover / 阴影深度） */
+  --border-color:rgba(16,24,40,0.10);
+  --hover-bg:rgba(91,58,255,0.06);
+  --gradient-from:#5B3AFF;        /* 紫 → 粉 渐变（Tezign 标志性） */
+  --gradient-via:#8B5CFF;
+  --gradient-to:#FF5BB3;
+  --grid-pattern:rgba(91,58,255,0.035);
+  --selection-bg:rgba(91,58,255,0.18);
+  --scrollbar-thumb:rgba(91,58,255,0.22);
+  --scrollbar-thumb-hover:rgba(91,58,255,0.4);
+  --focus-ring:rgba(91,58,255,0.5);
+  --card-border-hover:rgba(91,58,255,0.35);
+  --section-divider:rgba(91,58,255,0.14);
+  --btn-glow-from:rgba(91,58,255,0.16);
+  --btn-glow-to:rgba(255,91,179,0.16);
   /* ===== 结构令牌 ===== */
   --content-max-width:1200px;
   --reading-max-width:720px;
   --header-height:64px;
   --brand-font:"Inter","PingFang SC",system-ui,sans-serif;
   --radius-card:12px;
-  --shadow-card:0 1px 3px rgba(0,0,0,0.08);
+  --shadow-card:0 1px 3px rgba(16,24,40,0.08);
 }

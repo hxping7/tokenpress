@@ -9,7 +9,13 @@
     "link":"/"
   },
   "nav":  { "align":"center", "style":"underline", "source":"sections", "customItems":[] },
-  "actions": [],
+  "actions": [
+    { "type":"theme", "icon":"palette", "style":"icon" },
+    { "type":"language", "icon":"globe", "style":"pill", "label":{"zh":"中文","en":"EN"} },
+    { "type":"admin", "icon":"dashboard", "style":"ghost", "showWhen":"loggedIn" },
+    { "type":"logout", "icon":"logout", "style":"ghost", "showWhen":"loggedIn" },
+    { "type":"login", "icon":"user", "style":"primary", "showWhen":"loggedOut" }
+  ],
   "background":"transparent",
   "borderBottom":"none"
 }

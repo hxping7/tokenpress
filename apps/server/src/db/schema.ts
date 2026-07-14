@@ -12,6 +12,32 @@ export const sections = sqliteTable('sections', {
   sortOrder: integer('sort_order').notNull().default(0),
   isActive: integer('is_active').notNull().default(1),
   layouts: text('layouts'), // JSON — per-section layout override (section/article/list), nullable
+  kind: text('kind', { enum: ['articles', 'design_works'] }).notNull().default('articles'), // 板块内容类型：文章流 / 设计师作品集
+  template: text('template').notNull().default('article-list'), // 板块渲染模板（文章列表/卡片网格/瀑布流/杂志/单页/链接墙/作品集画廊）
+  templateConfig: text('template_config'), // JSON — 模板配置（如列数），nullable
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
+})
+
+// ===== Design Works (设计师作品集) =====
+export const designWorks = sqliteTable('design_works', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  coverImage: text('cover_image'),
+  summary: text('summary'),
+  content: text('content'), // 详情正文（支持简单 Markdown / 纯文本）
+  authorName: text('author_name'),
+  authorAvatar: text('author_avatar'),
+  category: text('category'), // 单分类标签，用于筛选
+  tags: text('tags'), // JSON 数组字符串
+  externalUrl: text('external_url'), // 作品外链（在线演示/Behance 等）
+  galleryImages: text('gallery_images'), // JSON 数组字符串（详情页图集）
+  status: text('status', { enum: ['draft', 'published'] }).notNull().default('published'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  viewCount: integer('view_count').notNull().default(0),
+  sectionId: integer('section_id').notNull().references(() => sections.id, { onDelete: 'cascade' }),
+  publishedAt: text('published_at'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
 })
@@ -50,6 +76,8 @@ export const categories = sqliteTable('categories', {
   sectionId: integer('section_id').notNull().references(() => sections.id, { onDelete: 'cascade' }),
   description: text('description'),
   sortOrder: integer('sort_order').notNull().default(0),
+  template: text('template').notNull().default('article-list'), // 分类渲染模板（可覆盖所属板块）
+  templateConfig: text('template_config'), // JSON — 模板配置（如列数），nullable
 })
 
 // ===== Articles =====

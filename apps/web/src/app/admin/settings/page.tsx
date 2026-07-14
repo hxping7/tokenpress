@@ -45,7 +45,7 @@ interface HeroSlide {
 }
 
 type TabType = 'basic' | 'theme' | 'style' | 'logo' | 'home' | 'nav' | 'links' | 'footer' | 'backup' | 'analytics' | 'security' | 'lang' | 'engage'
-type HomeSubTab = 'hero' | 'banner'
+type HomeSubTab = 'hero' | 'banner' | 'welcome'
 
 function getSettingsNav(lang: 'zh' | 'en') {
   return [
@@ -138,6 +138,10 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
   const [homeBannerCards, setHomeBannerCards] = useState<HomeBannerCard[]>([])
   const [homeBannerImage, setHomeBannerImage] = useState<HomeBannerImage>({ url: '', link: '', target: '_self', alt: '' })
   const [homeBannerNotice, setHomeBannerNotice] = useState<HomeBannerNotice>({ text: '', link: '', target: '_self', marquee: false })
+
+  // ===== 首页欢迎页（首次访问展示） =====
+  const [welcomePageEnabled, setWelcomePageEnabled] = useState(false)
+  const [welcomePageHtml, setWelcomePageHtml] = useState('/statichtml/welcome.html')
 
   // ===== 媒体库 =====
   const [showMediaBrowser, setShowMediaBrowser] = useState(false)
@@ -424,6 +428,8 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       if (s.home_banner_cards) { try { setHomeBannerCards(JSON.parse(s.home_banner_cards)) } catch {} }
       if (s.home_banner_image) { try { setHomeBannerImage(JSON.parse(s.home_banner_image)) } catch {} }
       if (s.home_banner_notice) { try { setHomeBannerNotice(JSON.parse(s.home_banner_notice)) } catch {} }
+      if (s.welcome_page_enabled !== undefined) setWelcomePageEnabled(s.welcome_page_enabled === 'true')
+      if (s.welcome_page_html) setWelcomePageHtml(s.welcome_page_html)
       if (s.copyright_text !== undefined) setCopyrightText(s.copyright_text)
       setIcpNumber(s.icp_number || '')
       setIcpUrl(s.icp_url || 'https://beian.miit.gov.cn/')
@@ -737,6 +743,8 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       review_builtin_ai_api_key: builtinAiApiKey,
       share_config: JSON.stringify(shareConfig),
       content_max_width: contentMaxWidth,
+      welcome_page_enabled: welcomePageEnabled.toString(),
+      welcome_page_html: welcomePageHtml,
     })
   }
 
@@ -896,6 +904,16 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
             }`}
           >
             {t('settings.bannerSection', adminLocale)}
+          </button>
+          <button
+            onClick={() => setHomeSubTab('welcome')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              homeSubTab === 'welcome'
+                ? 'bg-t-accent-blue/15 text-t-accent-blue border border-t-accent-blue/30'
+                : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
+            }`}
+          >
+            欢迎页
           </button>
         </div>
       )}
@@ -1868,6 +1886,76 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
               </div>
             </div>
           )}
+        </div>
+      </div>
+      )}
+
+      {/* 首页欢迎页设置 */}
+      {activeTab === 'home' && homeSubTab === 'welcome' && (
+      <div className="bg-t-bg-primary border border-t-border rounded-xl">
+        <div className="px-6 py-4 border-b border-t-border">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Home size={18} className="text-t-accent-blue" />
+            首页欢迎页
+          </h2>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-t-text-secondary">
+            首次访问网站域名时展示的科幻欢迎页（AI 文明冲击壁垒动画）。可在本地 <code className="px-1 bg-t-bg-tertiary rounded">data/statichtml/</code> 预置 HTML，或通过 statichtml API 上传，此处填写对外路径并开关。
+          </p>
+
+          {/* 启用开关 */}
+          <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
+            <div>
+              <span className="text-sm font-medium text-t-text-secondary">启用欢迎页</span>
+              <p className="text-xs text-t-text-muted mt-1">开启后，访客首次进入首页将看到欢迎页动画，点「进入」后关闭（按浏览器记忆，关闭后不再弹出）。</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWelcomePageEnabled(!welcomePageEnabled)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${welcomePageEnabled ? 'bg-t-accent-blue' : 'bg-t-bg-tertiary'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${welcomePageEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
+          {/* 文件路径 */}
+          <div className="p-4 bg-t-bg-secondary rounded-lg space-y-3">
+            <div>
+              <label className="block text-xs text-t-text-muted mb-1">欢迎页文件路径（对外 URL 路径）</label>
+              <input
+                type="text"
+                value={welcomePageHtml}
+                onChange={(e) => setWelcomePageHtml(e.target.value)}
+                placeholder="/statichtml/welcome.html"
+                className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-t-text-muted mb-1">快速选择内置变体</label>
+              <select
+                value={welcomePageHtml}
+                onChange={(e) => setWelcomePageHtml(e.target.value)}
+                className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+              >
+                <option value="/statichtml/welcome.html">welcome.html · 基线（深空蓝·撞击绽放）</option>
+                <option value="/statichtml/welcome-minimal.html">welcome-minimal.html · 极简冷光</option>
+                <option value="/statichtml/welcome-neon.html">welcome-neon.html · 赛博霓虹</option>
+                <option value="/statichtml/welcome-ink.html">welcome-ink.html · 粒子水墨</option>
+                <option value="/statichtml/welcome-cosmic.html">welcome-cosmic.html · 深空星海</option>
+              </select>
+            </div>
+            {welcomePageEnabled && welcomePageHtml && (
+              <a
+                href={welcomePageHtml}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-t-accent-blue hover:underline"
+              >
+                预览当前欢迎页 ↗
+              </a>
+            )}
+          </div>
         </div>
       </div>
       )}

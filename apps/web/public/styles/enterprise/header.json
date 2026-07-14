@@ -9,7 +9,14 @@
     "link":"/"
   },
   "nav":  { "align":"right", "style":"pill", "source":"sections", "customItems":[] },
-  "actions": [ { "label":"联系我们", "href":"/contact", "type":"button-primary" } ],
+  "actions": [
+    { "type":"theme", "icon":"palette", "style":"icon" },
+    { "type":"language", "icon":"globe", "style":"ghost", "label":{"zh":"中文","en":"EN"} },
+    { "type":"link", "icon":"message", "label":{"zh":"联系我们","en":"Contact"}, "style":"primary", "href":"/articles" },
+    { "type":"admin", "icon":"dashboard", "style":"ghost", "showWhen":"loggedIn" },
+    { "type":"logout", "icon":"logout", "style":"ghost", "showWhen":"loggedIn" },
+    { "type":"login", "icon":"user", "style":"outline", "showWhen":"loggedOut" }
+  ],
   "background":"var(--bg-primary)",
   "borderBottom":"1px solid var(--border-color)"
 }
