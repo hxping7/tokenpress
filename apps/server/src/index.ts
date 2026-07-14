@@ -10,7 +10,9 @@ import { migrate as migrateMediaArticleId } from './db/migrations/0013_media_art
 import { migrate as migrateHeroCarouselSettings } from './db/migrations/0014_add_hero_carousel_settings.js'
 import { migrate as migrateArticlePin } from './db/migrations/0015_add_article_pin.js'
 import { migrate as migrateArticleRebuild } from './db/migrations/0016_rebuild_articles.js'
+import { migrate as migrateSectionsLayouts } from './db/migrations/0017_add_sections_layouts.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import { STYLES_DIR } from './utils/paths.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
 import { antiScrapingMiddleware, imageHotlinkProtection } from './middleware/antiScraping.js'
@@ -41,8 +43,10 @@ import aiAdsRoutes from './routes/ai-ads.js'
 import adsPublicRoutes from './routes/ads-public.js'
 import carouselArticlesRoutes from './routes/carousel-articles.js'
 import adminAdsRoutes from './routes/admin-ads.js'
+import styleRoutes from './routes/styles.js'
 import staticHtmlRoutes from './routes/statichtml.js'
 import { initProviders, loadProviderConfigFromEnv, reloadProviderFromDB } from './lib/contentReview/providers/index.js'
+import { initBuiltinStyles } from './utils/initStyles.js'
 import { startReviewWorker, stopReviewWorker, retryFailedReviews } from './workers/reviewScheduler.js'
 import { aiPatrolTick } from './workers/aiPatrol.js'
 import { adScheduler } from './workers/adScheduler.js'
@@ -94,6 +98,15 @@ app.use('/statichtml', express.static(STATIC_HTML_DIR, {
   fallthrough: true,
   setHeaders: (res, filePath) => {
     // 防止被当作可嵌入框架内容（可选）；保留正常 Content-Type
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+  },
+}))
+
+// 静态文件：styles 目录（模板包静态资源，如 preview.png / assets）
+app.use('/styles', express.static(STYLES_DIR, {
+  extensions: false,
+  fallthrough: true,
+  setHeaders: (res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff')
   },
 }))
@@ -194,6 +207,9 @@ app.use('/api/v1/ads', adsPublicRoutes)
 // Carousel articles (public)
 app.use('/api/v1/carousel-articles', carouselArticlesRoutes)
 
+// Style Packs (public /active for SSR; list/get/write gated by styles:read / styles:write)
+app.use('/api/v1/styles', styleRoutes)
+
 // Health check
 app.get('/api/v1/health', (_req, res) => {
   res.json({
@@ -221,7 +237,11 @@ async function start() {
   await migrateHeroCarouselSettings()
   await migrateArticlePin()
   await migrateArticleRebuild()
+  await migrateSectionsLayouts()
   logger.info('✅ Database ready')
+
+  // 初始化内置模板包到持久卷（仅首次 / 缺失时拷贝，不覆盖用户包）
+  await initBuiltinStyles()
 
   // Initialize login cleanup task
   initLoginCleanup()

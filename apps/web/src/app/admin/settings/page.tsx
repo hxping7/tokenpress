@@ -12,7 +12,9 @@ import type { HomeBannerType, HomeBannerPosition, HomeBannerCta, HomeBannerCard,
 import { type HeroCtaButton, type HeroCtaVariant, DEFAULT_HERO_CTA } from '@/components/HeroCarousel'
 import { StaticPagePicker } from '@/components/StaticPagePicker'
 import Image from 'next/image'
-import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image as ImageIcon, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3 } from 'lucide-react'
+import { StyleEditorModal } from '@/components/StyleEditorModal'
+import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image as ImageIcon, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3, Info, Palette, LayoutTemplate, Home, Languages, Share2, Navigation, Copyright, Shield } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useRef } from 'react'
 
 interface FriendLink {
@@ -42,8 +44,56 @@ interface HeroSlide {
   linkTarget: '_blank' | '_self'
 }
 
-type TabType = 'basic' | 'ui' | 'logo' | 'home' | 'nav' | 'links' | 'footer' | 'backup' | 'analytics' | 'security'
+type TabType = 'basic' | 'theme' | 'style' | 'logo' | 'home' | 'nav' | 'links' | 'footer' | 'backup' | 'analytics' | 'security' | 'lang' | 'engage'
 type HomeSubTab = 'hero' | 'banner'
+
+function getSettingsNav(lang: 'zh' | 'en') {
+  return [
+    {
+      label: t('settings.groupSite', lang),
+      items: [
+        { key: 'basic', label: t('settings.basicInfo', lang), icon: Info },
+        { key: 'logo', label: t('settings.logoSection', lang), icon: ImageIcon },
+      ],
+    },
+    {
+      label: t('settings.groupAppearance', lang),
+      items: [
+        { key: 'theme', label: t('settings.themeLayout', lang), icon: Palette },
+        { key: 'style', label: t('settings.styleTab', lang), icon: LayoutTemplate },
+      ],
+    },
+    {
+      label: t('settings.groupHome', lang),
+      items: [
+        { key: 'home', label: t('settings.homeSettingsGroup', lang), icon: Home },
+      ],
+    },
+    {
+      label: t('settings.groupEngagement', lang),
+      items: [
+        { key: 'lang', label: t('settings.langSettings', lang), icon: Languages },
+        { key: 'engage', label: t('settings.engageSettings', lang), icon: Share2 },
+      ],
+    },
+    {
+      label: t('settings.groupNavFooter', lang),
+      items: [
+        { key: 'nav', label: t('settings.footerNavSection', lang), icon: Navigation },
+        { key: 'links', label: t('settings.friendLinks', lang), icon: Link2 },
+        { key: 'footer', label: t('settings.footerSection', lang) || '版权信息', icon: Copyright },
+      ],
+    },
+    {
+      label: t('settings.groupSystem', lang),
+      items: [
+        { key: 'backup', label: t('backup.title', lang), icon: Database },
+        { key: 'analytics', label: t('settings.analyticsTab', lang), icon: BarChart3 },
+        { key: 'security', label: t('settings.securityTab', lang), icon: Shield },
+      ],
+    },
+  ]
+}
 
 export default function SettingsPage() {
   const queryClient = useQueryClient()
@@ -71,7 +121,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([])
   const [heroMediaBrowserTarget, setHeroMediaBrowserTarget] = useState<number | null>(null)
   const [heroEffect, setHeroEffect] = useState('fade')
-  const [heroSize, setHeroSize] = useState('default')
+  const [heroSize, setHeroSize] = useState('standard')
   const [heroCarouselUseArticles, setHeroCarouselUseArticles] = useState(false)
   const [heroCarouselArticleSource, setHeroCarouselArticleSource] = useState('latest')
   const [heroCarouselMaxItems, setHeroCarouselMaxItems] = useState(5)
@@ -585,6 +635,28 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
     },
   })
 
+  // ===== 风格 Style Pack =====
+  const { data: stylesData, isLoading: stylesLoading } = useQuery({
+    queryKey: ['styles'],
+    queryFn: () => api.getStyles(),
+  })
+  const { data: activeStyleData } = useQuery({
+    queryKey: ['active-style'],
+    queryFn: () => api.getActiveStyle(),
+  })
+  const activeStyleId = activeStyleData?.data?.activeStyle || 'blog'
+  const [editingStyle, setEditingStyle] = useState<{ id: string; builtin: boolean } | null>(null)
+
+  const activateStyleMutation = useMutation({
+    mutationFn: (id: string) => api.setActiveStyle(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-style'] })
+      queryClient.invalidateQueries({ queryKey: ['styles'] })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    },
+  })
+
   const openLinkEditor = (link?: FriendLink) => {
     if (link) {
       setEditingLink(link)
@@ -751,109 +823,55 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
         </button>
       </div>
 
-      {/* Tab 菜单 */}
-      <div className="bg-t-bg-primary border border-t-border rounded-xl p-1 flex gap-1 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('basic')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'basic'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.basicInfo', adminLocale)}
-        </button>
-        <button
-          onClick={() => setActiveTab('ui')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'ui'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.logo', adminLocale)}
-        </button>
-        <button
-          onClick={() => setActiveTab('logo')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'logo'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.logoSection', adminLocale)}
-        </button>
-        {/* 首页设置（包含子 Tab） */}
-        <button
-          onClick={() => { setActiveTab('home'); setHomeSubTab('hero'); }}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'home'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.homeSettingsGroup', adminLocale)}
-        </button>
-        <button
-          onClick={() => setActiveTab('nav')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'nav'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.footerNavSection', adminLocale)}
-        </button>
-        <button
-          onClick={() => setActiveTab('links')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'links'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.friendLinks', adminLocale)}
-        </button>
-        <button
-          onClick={() => setActiveTab('footer')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'footer'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.footerSection', adminLocale) || '版权信息'}
-        </button>
-        <button
-          onClick={() => setActiveTab('backup')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'backup'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('backup.title', adminLocale)}
-        </button>
-        <button
-          onClick={() => setActiveTab('analytics')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'analytics'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.analyticsTab', adminLocale)}
-        </button>
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-            activeTab === 'security'
-              ? 'bg-t-accent-blue text-black'
-              : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
-          }`}
-        >
-          {t('settings.securityTab', adminLocale)}
-        </button>
+      {/* 设置导航：第一行分类 + 第二行二级菜单 */}
+      <div className="space-y-2">
+        {(() => {
+          const groups = getSettingsNav(adminLocale)
+          const currentGroup = groups.find(g => g.items.some(it => it.key === activeTab)) || groups[0]
+          return (
+            <>
+              {/* 第一行：分类 */}
+              <div className="bg-t-bg-primary border border-t-border rounded-xl p-1 flex gap-1 overflow-x-auto">
+                {groups.map((group) => {
+                  const gActive = group.label === currentGroup.label
+                  return (
+                    <button
+                      key={group.label}
+                      onClick={() => {
+                        const first = group.items[0]
+                        if (first.key === 'home') { setActiveTab('home'); setHomeSubTab('hero') } else setActiveTab(first.key as TabType)
+                      }}
+                      className={`flex-1 min-w-fit px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                        gActive ? 'bg-t-accent-blue text-black' : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
+                      }`}
+                    >
+                      {group.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {/* 第二行：当前分类的二级菜单 */}
+              <div className="flex gap-1 px-1 overflow-x-auto">
+                {currentGroup.items.map((item) => {
+                  const Icon = item.icon
+                  const active = activeTab === item.key
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => item.key === 'home' ? (setActiveTab('home'), setHomeSubTab('hero')) : setActiveTab(item.key as TabType)}
+                      className={`flex items-center gap-2 min-w-fit px-3 py-2 text-sm rounded-lg transition-colors ${
+                        active ? 'text-t-accent-blue bg-t-accent-blue/10 font-medium' : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       {/* 首页设置子 Tab 导航 */}
@@ -914,17 +932,17 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       </div>
       )}
 
-      {/* UI设置 */}
-      {activeTab === 'ui' && (
+      {/* 主题与布局 / 语言设置 / 分享与互动（原「UI设置」拆分） */}
+      {(activeTab === 'theme' || activeTab === 'lang' || activeTab === 'engage') && (
       <div className="bg-t-bg-primary border border-t-border rounded-xl">
         <div className="px-6 py-4 border-b border-t-border">
           <h2 className="font-semibold flex items-center gap-2">
-            <Settings size={18} className="text-t-accent-blue" />
-            {t('settings.logo', adminLocale)}
+            <Palette size={18} className="text-t-accent-blue" />
+            {activeTab === 'theme' ? t('settings.themeLayout', adminLocale) : activeTab === 'lang' ? t('settings.langSettings', adminLocale) : t('settings.engageSettings', adminLocale)}
           </h2>
         </div>
         <div className="p-6 space-y-4">
-          <div>
+          <div className={activeTab === 'theme' ? '' : 'hidden'}>
             <label className="block text-sm font-medium mb-2">{t('settings.defaultTheme', adminLocale)}</label>
             <select
               value={defaultTheme}
@@ -938,7 +956,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
               <option value="space">{t('settings.themeSpace', adminLocale)}</option>
             </select>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${activeTab === 'lang' ? '' : 'hidden'}`}>
             <div>
               <label className="block text-sm font-medium mb-2">{t('settings.frontendLang', adminLocale)}</label>
               <select
@@ -966,7 +984,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
           </div>
 
           {/* 文章分享设置 */}
-          <div className="border-t border-t-border pt-4">
+          <div className={`border-t border-t-border pt-4 ${activeTab === 'engage' ? '' : 'hidden'}`}>
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="font-medium">文章分享设置</h3>
@@ -1051,10 +1069,10 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
             )}
 
             {/* 点赞与收藏 */}
-            <div className="mt-5 pt-5 border-t border-t-border">
-              <div className="flex items-center justify-between gap-4 mb-4">
-                <div>
-                  <h4 className="font-medium">点赞与收藏</h4>
+          <div className={`mt-5 pt-5 border-t border-t-border ${activeTab === 'engage' ? '' : 'hidden'}`}>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h4 className="font-medium">点赞与收藏</h4>
                   <p className="text-xs text-t-text-muted mt-1">配置点赞 / 收藏按钮的展示位置（可多选），收藏按钮与点赞放一块。</p>
                 </div>
                 <button
@@ -1107,7 +1125,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
           </div>
 
           {/* 全局宽屏设置 */}
-          <div className="border-t border-t-border pt-4">
+          <div className={`border-t border-t-border pt-4 ${activeTab === 'theme' ? '' : 'hidden'}`}>
             <div className="mb-4">
               <h4 className="font-medium">全局宽屏设置</h4>
               <p className="text-xs text-t-text-muted mt-1">控制全站内容容器的最大宽度。选择「全宽」可让内容占满屏幕（适合大屏 / 笔记本）。</p>
@@ -1152,6 +1170,113 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
           </div>
         </div>
       </div>
+      )}
+
+      {/* 风格 Style Pack */}
+      {activeTab === 'style' && (
+        <div className="space-y-4">
+          <div className="bg-t-bg-primary border border-t-border rounded-xl">
+            <div className="px-6 py-4 border-b border-t-border">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Columns2 size={18} className="text-t-accent-blue" />
+                风格模板包（Style Pack）
+              </h2>
+              <p className="text-xs text-t-text-muted mt-1">
+                选择一套模板包即切换全站布局骨架（Header / Footer / 板块页 / 文章页）。配色主题（同组「主题与布局」）与之正交，可单独切换。
+              </p>
+            </div>
+            <div className="p-6">
+              {stylesLoading ? (
+                <div className="text-center py-12 text-t-text-secondary">加载中...</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {(stylesData?.data || []).map((s: any) => {
+                    const isActive = s.id === activeStyleId
+                    return (
+                      <div
+                        key={s.id}
+                        className={`rounded-xl border overflow-hidden flex flex-col transition-colors ${
+                          isActive ? 'border-t-accent-blue ring-1 ring-t-accent-blue/40' : 'border-t-border'
+                        }`}
+                      >
+                        <div className="aspect-video bg-t-bg-secondary relative">
+                          {s.preview ? (
+                            <img
+                              src={s.preview}
+                              alt={s.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-t-text-muted text-sm">
+                              无预览图
+                            </div>
+                          )}
+                          {isActive && (
+                            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[11px] font-medium bg-t-accent-blue text-black">
+                              当前激活
+                            </span>
+                          )}
+                          {s.builtin && (
+                            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[11px] font-medium bg-t-bg-tertiary text-t-text-secondary">
+                              内置
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-4 flex-1 flex flex-col">
+                          <h3 className="font-medium text-t-text-primary">{s.name}</h3>
+                          <p className="text-xs text-t-text-secondary mt-1 line-clamp-2 flex-1">{s.description}</p>
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              onClick={() => setEditingStyle({ id: s.id, builtin: s.builtin })}
+                              className="flex-1 px-3 py-2 text-sm rounded-lg bg-t-bg-secondary text-t-text-primary hover:bg-t-hover transition-colors"
+                            >
+                              编辑配置
+                            </button>
+                            <button
+                              onClick={() => activateStyleMutation.mutate(s.id)}
+                              disabled={activateStyleMutation.isPending || isActive}
+                              className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                                isActive
+                                  ? 'bg-t-bg-tertiary text-t-text-muted cursor-default'
+                                  : 'bg-t-accent-blue text-black hover:opacity-90 disabled:opacity-50'
+                              }`}
+                            >
+                              {isActive ? '已激活' : activateStyleMutation.isPending ? '激活中...' : '激活此风格'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              {activateStyleMutation.isSuccess && (
+                <p className="text-sm text-t-accent-blue mt-4">
+                  已切换风格，前台页面刷新即可生效（全站布局与出厂配色即时变更，无需重建）。
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 风格模板编辑器 */}
+      {editingStyle && (
+        <StyleEditorModal
+          styleId={editingStyle.id}
+          builtin={editingStyle.builtin}
+          onClose={() => setEditingStyle(null)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['styles'] })
+            queryClient.invalidateQueries({ queryKey: ['active-style'] })
+            setEditingStyle(null)
+          }}
+          onDeleted={() => {
+            queryClient.invalidateQueries({ queryKey: ['styles'] })
+            queryClient.invalidateQueries({ queryKey: ['active-style'] })
+            setEditingStyle(null)
+          }}
+        />
       )}
 
       {/* Logo 设置 */}
@@ -1363,9 +1488,10 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
               onChange={(e) => setHeroSize(e.target.value)}
               className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
             >
-              <option value="default">{t('settings.heroSizeDefault', adminLocale)}</option>
-              <option value="wide">{t('settings.heroSizeWide', adminLocale)}</option>
-              <option value="fullscreen">{t('settings.heroSizeFullscreen', adminLocale)}</option>
+              {/* 与后台「全局宽屏设置」(WIDTH_PRESETS) 四档一一对应 */}
+              {WIDTH_PRESETS.map((p) => (
+                <option key={p.key} value={p.key}>{p.label}</option>
+              ))}
             </select>
           </div>
 

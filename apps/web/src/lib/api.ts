@@ -344,6 +344,66 @@ class ApiClient {
   async getViewStatsOverview() {
     return this.request<{ success: boolean; data: any }>('/interactions/stats/overview')
   }
+
+  // ===== Style Packs =====
+  // 公开：当前激活包配置（供 SSR 渲染）
+  async getActiveStyle() {
+    return this.request<{ success: boolean; data: any }>('/styles/active')
+  }
+
+  // 列出全部包（需 styles:read，或管理员 JWT）
+  async getStyles() {
+    return this.request<{ success: boolean; data: any[] }>('/styles')
+  }
+
+  // 取某包完整配置（需 styles:read，或管理员 JWT）
+  async getStyle(id: string) {
+    return this.request<{ success: boolean; data: any }>(`/styles/${id}`)
+  }
+
+  // 新建/上传模板包（需 styles:write）
+  async createStyle(data: {
+    id: string
+    manifest: any
+    theme?: string
+    layouts?: any
+    header?: any
+    footer?: any
+  }) {
+    return this.request<{ success: boolean; data: any }>('/styles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // 局部更新模板包（需 styles:write）
+  async updateStyle(id: string, data: {
+    manifest?: any
+    theme?: string
+    layouts?: any
+    header?: any
+    footer?: any
+  }) {
+    return this.request<{ success: boolean; data: any }>(`/styles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // 删除自定义包（需 styles:write）
+  async deleteStyle(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/styles/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // 激活某模板包（复用 site-settings 的 settings:write）
+  async setActiveStyle(id: string) {
+    return this.request<{ success: boolean; data: any }>('/site-settings', {
+      method: 'PUT',
+      body: JSON.stringify({ settings: { active_style: id } }),
+    })
+  }
 }
 
 export class ApiError extends Error {

@@ -11,6 +11,7 @@ export const sections = sqliteTable('sections', {
   externalUrl: text('external_url'), // 外部链接URL，设置后点击菜单直接跳转
   sortOrder: integer('sort_order').notNull().default(0),
   isActive: integer('is_active').notNull().default(1),
+  layouts: text('layouts'), // JSON — per-section layout override (section/article/list), nullable
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
 })

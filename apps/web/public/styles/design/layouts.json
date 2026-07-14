@@ -1,0 +1,22 @@
+{
+  "homepage": {
+    "container": "full",
+    "sections": [
+      { "component":"Hero",        "variant":"fullscreen", "props":{"showCTA":true} },
+      { "component":"Banner",      "variant":"cta" },
+      { "component":"ArticleList", "variant":"masonry",    "props":{"source":"latest","limit":8} },
+      { "component":"ArticleList", "variant":"grid-2",     "props":{"source":"featured","limit":4} }
+    ]
+  },
+  "section": {
+    "layout": "article-list",
+    "hero":   { "enabled":true, "titleFrom":"section", "showCover":true, "description":true },
+    "sidebar":{ "enabled":false },
+    "list":   { "layout":"masonry", "columns":3, "showThumbnail":true, "showExcerpt":false }
+  },
+  "article": {
+    "layout":"magazine", "showTOC":true, "showAuthor":true,
+    "sidebar":"related", "maxWidth":760
+  },
+  "list": { "layout":"masonry", "columns":3 }
+}

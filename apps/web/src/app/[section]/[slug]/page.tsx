@@ -23,6 +23,21 @@ async function fetchArticle(slug: string): Promise<any | null> {
   }
 }
 
+/** 根据 section ID 获取板块信息（含 layouts 覆盖） */
+async function fetchSection(id: number): Promise<Record<string, unknown> | null> {
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:4001'
+  try {
+    const res = await fetch(`${backendUrl}/api/v1/sections/${id}`, {
+      next: { tags: ['sections'], revalidate: 60 },
+    })
+    if (!res.ok) return null
+    const { data } = await res.json()
+    return data
+  } catch {
+    return null
+  }
+}
+
 function buildCoverAbsolute(coverImage?: string): string | undefined {
   if (!coverImage) return undefined
   return coverImage.startsWith('http') ? coverImage : SITE_URL + coverImage
@@ -76,6 +91,15 @@ export default async function ArticleDetailPage({ params }: Props) {
   const { slug } = await params
   const article = await fetchArticle(slug)
 
+  // 拉取板块级布局覆盖（供 ArticleDetailClient 解析文章页布局）
+  let sectionLayouts: Record<string, unknown> | null = null
+  if (article?.section?.id) {
+    const sectionData = await fetchSection(article.section.id)
+    if (sectionData?.layouts) {
+      sectionLayouts = sectionData.layouts as Record<string, unknown> | null
+    }
+  }
+
   let jsonLd: Record<string, unknown> | null = null
   if (article) {
     const articleUrl = SITE_URL + (article.section?.path || '') + '/' + article.slug
@@ -101,7 +125,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   return (
     <>
       {jsonLd && <JsonLd data={jsonLd} />}
-      <ArticleDetailClient params={params} />
+      <ArticleDetailClient params={params} sectionLayouts={sectionLayouts} />
     </>
   )
 }

@@ -1,0 +1,21 @@
+{
+  "homepage": {
+    "container": "boxed",
+    "sections": [
+      { "component":"Hero",        "variant":"carousel", "props":{"autoplay":true} },
+      { "component":"Banner",      "variant":"cta" },
+      { "component":"ArticleList", "variant":"grid-3",   "props":{"source":"latest","limit":9} }
+    ]
+  },
+  "section": {
+    "layout": "article-list",
+    "hero":   { "enabled":false },
+    "sidebar":{ "enabled":false },
+    "list":   { "layout":"grid", "columns":3, "showThumbnail":true, "showExcerpt":true }
+  },
+  "article": {
+    "layout":"two-column", "showTOC":true, "showAuthor":true,
+    "sidebar":"related", "maxWidth":720
+  },
+  "list": { "layout":"grid", "columns":3 }
+}

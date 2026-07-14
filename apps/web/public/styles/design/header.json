@@ -1,0 +1,15 @@
+{
+  "variant":"sticky-transparent",
+  "logo": {
+    "type":"image",
+    "src":"/logo.svg",
+    "text":"TokenPress",
+    "position":"center",
+    "height":60,
+    "link":"/"
+  },
+  "nav":  { "align":"center", "style":"underline", "source":"sections", "customItems":[] },
+  "actions": [],
+  "background":"transparent",
+  "borderBottom":"none"
+}

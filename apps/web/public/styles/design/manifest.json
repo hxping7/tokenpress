@@ -1,0 +1,11 @@
+{
+  "id": "design",
+  "name": "设计师作品集",
+  "description": "适合设计师 / 创意人的大胆布局：masonry 作品网格 + 透明悬浮 Header + 极简 Footer。",
+  "version": "1.0.0",
+  "author": "token00",
+  "preview": "/styles/design/preview.png",
+  "builtin": true,
+  "defaultTheme": "space",
+  "tags": ["design", "portfolio", "creative"]
+}

@@ -28,9 +28,22 @@ export const DEFAULT_HERO_CTA: HeroCtaButton[] = [
 
 interface HeroCarouselProps {
   slides: HeroSlide[]
-  size?: 'default' | 'fullscreen' | 'wide'
+  size?: 'standard' | 'wide' | 'ultrawide' | 'full' | 'default' | 'fullscreen'
   interval?: number // 切换间隔，单位：秒，默认5秒
   ctaButtons?: HeroCtaButton[] // 可后台配置的 CTA 按钮，未配置时回退到默认值
+}
+
+// 轮播尺寸 → 容器最大宽度 / 圆角 / 比例 / 图片 sizes。
+// 与后台「全局宽屏设置」(WIDTH_PRESETS) 四档一一对应：标准1280 / 宽屏1536 / 超宽1920 / 全宽(100%)。
+// 同时兼容历史存储值 default（=标准）、fullscreen（=全宽）。
+const HERO_SIZE_STYLES: Record<string, { container: string; inner: string; aspect: string; imgSizes: string }> = {
+  standard: { container: 'max-w-[1280px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1280px' },
+  wide: { container: 'max-w-[1536px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1536px' },
+  ultrawide: { container: 'max-w-[1920px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1920px' },
+  full: { container: 'w-full', inner: '', aspect: 'aspect-[2/1]', imgSizes: '100vw' },
+  // 历史值兼容
+  default: { container: 'max-w-[1280px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1280px' },
+  fullscreen: { container: 'w-full', inner: '', aspect: 'aspect-[2/1]', imgSizes: '100vw' },
 }
 
 const CTA_VARIANT_CLASS: Record<HeroCtaVariant, string> = {
@@ -52,6 +65,8 @@ function isHardLink(url: string): boolean {
 
 export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons }: HeroCarouselProps) {
   const ctaList = ctaButtons && ctaButtons.length > 0 ? ctaButtons : DEFAULT_HERO_CTA
+  const resolved = HERO_SIZE_STYLES[size] || HERO_SIZE_STYLES.standard
+  const isFull = size === 'full' || size === 'fullscreen'
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
@@ -77,7 +92,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
   return (
     <section
       className={`relative flex items-center justify-center overflow-hidden ${
-        size === 'fullscreen' ? 'pt-16' : 'pt-20 pb-4'
+        isFull ? 'pt-16' : 'pt-20 pb-4'
       }`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -85,25 +100,15 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
       {/* Background grid pattern */}
       <div className="absolute inset-0 grid-pattern" />
 
-      <div className={`relative z-10 text-center px-4 w-full ${
-        size === 'fullscreen' ? '' : size === 'wide' ? 'max-w-6xl mx-auto' : 'max-w-3xl mx-auto'
-      }`}>
+      <div className={`relative z-10 text-center px-4 w-full ${resolved.container}`}>
         {useDefaultSvg ? (
           // 默认 SVG Logo
           <DefaultHeroSvg />
         ) : (
           // 轮播图
-          <div className={`relative overflow-hidden border border-t-border bg-t-bg-secondary ${
-            size === 'fullscreen' ? '' : 'rounded-2xl'
-          }`}>
+          <div className={`relative overflow-hidden border border-t-border bg-t-bg-secondary ${resolved.inner}`}>
             {/* Slides */}
-            <div className={`relative ${
-              size === 'fullscreen'
-                ? 'aspect-[2/1]'
-                : size === 'wide'
-                  ? 'aspect-[16/9] md:aspect-[21/9]'
-                  : 'aspect-[16/9] md:aspect-[21/9]'
-            }`}>
+            <div className={`relative ${resolved.aspect}`}>
               {slides.map((slide, index) => {
                 const isActive = index === currentSlide
                 const isSvg = slide.imageUrl?.toLowerCase().endsWith('.svg')
@@ -118,7 +123,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
                     fill
                     className="object-cover"
                     priority={index === 0}
-                    sizes={size === 'fullscreen' ? '100vw' : '(max-width: 768px) 100vw, 800px'}
+                    sizes={resolved.imgSizes}
                     unoptimized
                   />
                 )

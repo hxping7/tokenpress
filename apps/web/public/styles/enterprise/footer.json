@@ -1,0 +1,11 @@
+{
+  "variant":"multi-column",
+  "columns":[
+    { "title":"产品", "links":[ {"label":"功能","href":"/p/features"} ] },
+    { "title":"公司", "links":[ {"label":"关于","href":"/about"} ] },
+    { "title":"资源", "links":[ {"label":"博客","href":"/blog"}, {"label":"文档","href":"/docs"} ] }
+  ],
+  "bottom": { "copyright":"© 2026 Token00 Inc.", "social":["github","wechat"], "showBackToTop":true },
+  "background":"var(--bg-secondary)",
+  "textColor":"var(--text-muted)"
+}

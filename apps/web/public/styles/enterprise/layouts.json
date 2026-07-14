@@ -1,0 +1,28 @@
+{
+  "homepage": {
+    "container": "boxed",
+    "sections": [
+      { "component":"Hero",       "variant":"split-image-right", "props":{"showStats":true} },
+      { "component":"Features",   "variant":"3-col-cards" },
+      { "component":"Banner",      "variant":"cta" },
+      { "component":"ArticleList","variant":"grid-3",            "props":{"source":"latest","limit":6} },
+      { "component":"CTA",        "variant":"banner" }
+    ]
+  },
+  "section": {
+    "layout": "page-sidebar-left",
+    "hero":   { "enabled":true, "titleFrom":"section", "showCover":true, "description":true },
+    "sidebar":{
+      "enabled":true, "position":"left",
+      "source":"categories", "title":"栏目导航", "showCounts":true, "sticky":true,
+      "customItems":[]
+    },
+    "content": { "type":"featured-article", "source":"latest", "articleSlug":"" },
+    "list":   { "layout":"grid", "columns":3, "showThumbnail":true, "showExcerpt":true }
+  },
+  "article": {
+    "layout":"single", "showTOC":false, "showAuthor":true,
+    "sidebar":"related", "maxWidth":720
+  },
+  "list": { "layout":"grid", "columns":3 }
+}

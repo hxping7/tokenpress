@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FooterLogo } from '@/components/FooterLogo'
 import { api } from '@/lib/api'
 import { useLocaleStore } from '@/stores'
+import { useStyleFooter } from '@/components/StyleProvider'
 import { t } from '@/lib/i18n'
 
 interface FriendLink {
@@ -45,6 +46,9 @@ export function Footer() {
     staleTime: 5 * 60 * 1000,
   })
 
+  // Style Pack 覆盖（必须在早期 return 前调用，遵守 Hooks 规则）
+  const fc = useStyleFooter()
+
   // Hide footer on admin and auth pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
     return null
@@ -71,6 +75,15 @@ export function Footer() {
   if (footerNav.length > 0 && !Array.isArray((footerNav as any)[0]?.links) && (footerNav as any)[0]?.html === undefined) {
     const flatItems = footerNav as unknown as NavItem[]
     footerNav = [{ title: locale === 'en' ? 'Navigation' : '导航', links: flatItems }]
+  }
+
+  // Style Pack 覆盖：若模板包 footer 配置了 columns，优先用它
+  if (fc?.columns && Array.isArray(fc.columns) && fc.columns.length > 0) {
+    footerNav = fc.columns.map((g: any) => ({
+      title: g.title || '',
+      links: (g.links || []).map((l: any) => ({ name: l.label, url: l.href })),
+      html: g.html,
+    }))
   }
 
   // Default nav groups if empty
@@ -100,8 +113,24 @@ export function Footer() {
     url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}`,
   }))
 
+  // 极简 Footer（设计师作品集包）
+  if (fc?.variant === 'minimal') {
+    return (
+      <footer className="border-t border-t-border" style={{ background: fc.background || 'transparent' }}>
+        <div className="max-w-[var(--content-max-width)] mx-auto py-10 px-4 flex flex-col items-center gap-4">
+          <FooterLogo />
+          <span className="text-sm text-t-text-muted">{fc.bottom?.copyright || copyrightText}</span>
+        </div>
+      </footer>
+    )
+  }
+
+  const footerStyle: React.CSSProperties = {}
+  if (fc?.background) footerStyle.background = fc.background
+  if (fc?.textColor) footerStyle.color = fc.textColor
+
   return (
-    <footer className="border-t border-t-border">
+    <footer className="border-t border-t-border" style={footerStyle}>
       <div className="max-w-[var(--content-max-width)] mx-auto">
         {/* 竖向多段式导航 */}
         <div className="py-8 px-4">

@@ -6,6 +6,7 @@ interface Section {
   slug: string
   path: string
   description: string | null
+  layouts: Record<string, unknown> | null
 }
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4001'
@@ -19,20 +20,9 @@ async function fetchSections(): Promise<Section[]> {
   return json.data || []
 }
 
-// ISR: 每 60 秒重新生成
-export const revalidate = 60
-
-// 生成静态参数（可选，用于预渲染）
-export async function generateStaticParams() {
-  try {
-    const sections = await fetchSections()
-    return sections.map((section) => ({
-      section: section.path.replace(/^\//, ''),
-    }))
-  } catch {
-    return []
-  }
-}
+// 根布局使用 cookies() 读取配色主题（SSR 注入防闪烁），整站已为动态渲染；
+// 此处显式声明 force-dynamic，避免运行时 static→dynamic 冲突导致 500。
+export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ section: string }>
@@ -71,6 +61,7 @@ export default async function DynamicSectionPage({ params }: Props) {
       sectionPath={section.path}
       title={section.name}
       description={section.description}
+      sectionLayouts={section.layouts}
     />
   )
 }

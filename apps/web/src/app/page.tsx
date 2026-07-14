@@ -1,12 +1,7 @@
-import Link from 'next/link'
 import { api } from '@/lib/api'
-import { Suspense } from 'react'
-import { HeroCarousel, type HeroCtaButton } from '@/components/HeroCarousel'
+import { HomeSections } from '@/components/HomeSections'
+import { type HeroCtaButton } from '@/components/HeroCarousel'
 import { HomeBanner, type HomeBannerConfig, type HomeBannerType, type HomeBannerPosition } from '@/components/HomeBanner'
-import { ArticleCard } from '@/components/ArticleCard'
-import { t } from '@/lib/i18n'
-import { ViewToggle } from '@/components/ViewToggle'
-import { SearchBar } from '@/components/SearchBar'
 
 interface HeroSlide {
   id: string
@@ -54,7 +49,7 @@ async function getHeroSlides(): Promise<HeroResult> {
     const settingsJson = await settingsRes.json()
     const settings = settingsJson.data || {}
     
-    const heroSize = settings.hero_size || 'default'
+    const heroSize = settings.hero_size || 'standard'
     const useArticles = settings.hero_carousel_use_articles === 'true'
     const interval = parseInt(settings.hero_carousel_interval) || 5
 
@@ -174,59 +169,14 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero - 宣传页图片轮播或默认 SVG */}
-      <Suspense fallback={<HeroFallback />}>
-        <HeroCarousel
-          slides={heroSlides}
-          size={heroSize as 'default' | 'fullscreen' | 'wide'}
-          interval={heroInterval}
-          ctaButtons={ctaButtons}
-        />
-      </Suspense>
-
-      {/* 中部 banner 区（位置：Hero 之后） */}
-      {homeBanner.enabled && homeBanner.position === 'after_hero' && (
-        <HomeBanner config={homeBanner} />
-      )}
-
-      {/* 搜索栏 */}
-      <section className="py-4 px-4 border-b border-t-border">
-        <div className="max-w-[var(--content-max-width)] mx-auto flex items-center justify-between gap-4">
-          <div className="flex-1" />
-          <SearchBar />
-        </div>
-      </section>
-
-      {/* 最近发布 */}
-      {recentArticles.length > 0 && (
-        <section className="py-8 px-4">
-          <div className="max-w-[var(--content-max-width)] mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-t-text-primary">最新文章</h2>
-              <div className="flex items-center gap-4">
-                <ViewToggle />
-                <Link
-                  href="/articles"
-                  className="text-sm text-t-accent-blue hover:underline"
-                >
-                  查看全部 →
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 中部 banner 区（位置：文章列表之后） */}
-      {homeBanner.enabled && homeBanner.position === 'after_articles' && (
-        <HomeBanner config={homeBanner} />
-      )}
+      <HomeSections
+        heroSlides={heroSlides}
+        heroSize={heroSize}
+        heroInterval={heroInterval}
+        ctaButtons={ctaButtons}
+        recentArticles={recentArticles}
+        homeBanner={homeBanner}
+      />
     </>
   )
 }

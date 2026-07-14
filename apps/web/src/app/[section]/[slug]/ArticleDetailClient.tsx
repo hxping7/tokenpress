@@ -14,6 +14,8 @@ import { parseShareConfig } from '@/lib/share-config'
 import { ArrowLeft, Calendar, User, Tag, Clock } from 'lucide-react'
 import Image from 'next/image'
 import { calculateReadingTime, formatReadingTime } from '@/lib/reading-time'
+import { useStyleLayouts } from '@/components/StyleProvider'
+import { resolveSectionLayout, type SectionLayoutOverride } from '@/lib/resolveLayout'
 
 const sectionLabels: Record<string, string> = {
   token_plan: 'Token 计划',
@@ -24,12 +26,24 @@ const sectionLabels: Record<string, string> = {
 
 interface Props {
   params: Promise<{ section: string; slug: string }>
+  sectionLayouts?: SectionLayoutOverride
 }
 
-export function ArticleDetailClient({ params }: Props) {
+export function ArticleDetailClient({ params, sectionLayouts }: Props) {
   const resolvedParams = useParams()
   const slug = resolvedParams.slug as string
   const section = resolvedParams.section as string
+
+  const globalLayouts = useStyleLayouts()
+  const articleCfg = resolveSectionLayout(sectionLayouts ?? null, globalLayouts, 'article')
+  const articleLayout: string = String(articleCfg.layout || 'two-column')
+  const showTOC = articleCfg.showTOC !== false
+  const sidebarType: string = String(articleCfg.sidebar || 'related')
+  const cfgMaxWidth = Number(articleCfg.maxWidth) || 720
+  const leftTOC = showTOC && articleLayout === 'two-column'
+  const rightSidebar = sidebarType === 'related'
+  const isSingle = articleLayout === 'single'
+  const isMagazine = articleLayout === 'magazine'
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['article', slug],
@@ -159,16 +173,8 @@ export function ArticleDetailClient({ params }: Props) {
 
       {/* Content with Sidebar Layout */}
       <div className="max-w-[var(--content-max-width)] mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_240px] gap-6">
-          {/* Left: Table of Contents - 桌面端固定 */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-20">
-              <TableOfContents content={article.content} />
-            </div>
-          </aside>
-
-          {/* Center: Cover Image + Article Content */}
-          <main className="min-w-0">
+        {isSingle ? (
+          <div className="mx-auto" style={{ maxWidth: cfgMaxWidth }}>
             {article.coverImage && (
               <Image
                 src={article.coverImage}
@@ -179,36 +185,100 @@ export function ArticleDetailClient({ params }: Props) {
                 priority
               />
             )}
-            <div className="max-w-[var(--reading-max-width)]">
-              <MarkdownContent content={article.content} />
-            </div>
-          </main>
+            <MarkdownContent content={article.content} />
+          </div>
+        ) : isMagazine ? (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-6">
+            {/* Magazine: 大图 + 宽正文，无左侧 TOC */}
+            <main className="min-w-0">
+              {article.coverImage && (
+                <Image
+                  src={article.coverImage}
+                  alt={article.title}
+                  width={1400}
+                  height={735}
+                  className="w-full rounded-2xl border border-t-border mb-8"
+                  priority
+                />
+              )}
+              <div className="mx-auto" style={{ maxWidth: Math.max(cfgMaxWidth, 760) }}>
+                <MarkdownContent content={article.content} />
+              </div>
+            </main>
+            {rightSidebar && (
+              <aside className="hidden lg:block">
+                <div className="sticky top-20 space-y-4">
+                  <ArticleSidebar
+                    articleId={article.id}
+                    articleTags={article.tags}
+                    sectionSlug={section}
+                  />
+                  {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
+                    <ArticleShare title={article.title} summary={article.excerpt} platforms={shareConfig.platforms} aside />
+                  )}
+                  {shareConfig.likeEnabled && shareConfig.likePositions.includes('float_right') && (
+                    <ArticleEngagement articleId={article.id} title={article.title} />
+                  )}
+                </div>
+              </aside>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_240px] gap-6">
+            {/* Left: Table of Contents - 桌面端固定 */}
+            {leftTOC && (
+              <aside className="hidden lg:block">
+                <div className="sticky top-20">
+                  <TableOfContents content={article.content} />
+                </div>
+              </aside>
+            )}
 
-          {/* Right: Sidebar */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-20 space-y-4">
-              <ArticleSidebar
-                articleId={article.id}
-                articleTags={article.tags}
-                sectionSlug={section}
-              />
-              {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
-                <ArticleShare
-                  title={article.title}
-                  summary={article.excerpt}
-                  platforms={shareConfig.platforms}
-                  aside
+            {/* Center: Cover Image + Article Content */}
+            <main className="min-w-0">
+              {article.coverImage && (
+                <Image
+                  src={article.coverImage}
+                  alt={article.title}
+                  width={1200}
+                  height={630}
+                  className="w-full rounded-2xl border border-t-border mb-8"
+                  priority
                 />
               )}
-              {shareConfig.likeEnabled && shareConfig.likePositions.includes('float_right') && (
-                <ArticleEngagement
-                  articleId={article.id}
-                  title={article.title}
-                />
-              )}
-            </div>
-          </aside>
-        </div>
+              <div className="max-w-[var(--reading-max-width)]">
+                <MarkdownContent content={article.content} />
+              </div>
+            </main>
+
+            {/* Right: Sidebar */}
+            {rightSidebar && (
+              <aside className="hidden lg:block">
+                <div className="sticky top-20 space-y-4">
+                  <ArticleSidebar
+                    articleId={article.id}
+                    articleTags={article.tags}
+                    sectionSlug={section}
+                  />
+                  {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
+                    <ArticleShare
+                      title={article.title}
+                      summary={article.excerpt}
+                      platforms={shareConfig.platforms}
+                      aside
+                    />
+                  )}
+                  {shareConfig.likeEnabled && shareConfig.likePositions.includes('float_right') && (
+                    <ArticleEngagement
+                      articleId={article.id}
+                      title={article.title}
+                    />
+                  )}
+                </div>
+              </aside>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Share — 文章正文结尾（居中显示） */}

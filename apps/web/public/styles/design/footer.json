@@ -1,0 +1,7 @@
+{
+  "variant":"minimal",
+  "columns":[],
+  "bottom": { "copyright":"© 2026 Token00", "social":["github","dribbble"], "showBackToTop":true },
+  "background":"var(--bg-secondary)",
+  "textColor":"var(--text-muted)"
+}

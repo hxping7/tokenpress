@@ -1,0 +1,33 @@
+:root{
+  /* ===== 配色：太空深蓝 + 深空蓝青→靛蓝渐变（设计师作品集风） ===== */
+  --bg-primary:#050b1a;
+  --bg-secondary:#0a1838;
+  --bg-tertiary:#122550;
+  --text-primary:#d0e0ff;
+  --text-secondary:#6080b8;
+  --text-muted:#305080;
+  --accent-blue:#0ea5e9;
+  --accent-purple:#6366f1;
+  --accent-blue-dim:#38bdf8;
+  --border-color:rgba(68,136,255,0.12);
+  --hover-bg:rgba(68,136,255,0.06);
+  --gradient-from:#0ea5e9;
+  --gradient-via:#88bbff;
+  --gradient-to:#6366f1;
+  --grid-pattern:rgba(68,136,255,0.03);
+  --selection-bg:rgba(68,136,255,0.25);
+  --scrollbar-thumb:rgba(68,136,255,0.25);
+  --scrollbar-thumb-hover:rgba(68,136,255,0.45);
+  --focus-ring:rgba(68,136,255,0.5);
+  --card-border-hover:rgba(68,136,255,0.25);
+  --section-divider:rgba(68,136,255,0.18);
+  --btn-glow-from:rgba(14,165,233,0.16);
+  --btn-glow-to:rgba(99,102,241,0.16);
+  /* ===== 结构令牌 ===== */
+  --content-max-width:1200px;
+  --reading-max-width:760px;
+  --header-height:64px;
+  --brand-font:"Inter","PingFang SC",system-ui,sans-serif;
+  --radius-card:18px;
+  --shadow-card:0 4px 18px rgba(0,0,0,0.35);
+}

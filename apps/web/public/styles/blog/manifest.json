@@ -1,0 +1,11 @@
+{
+  "id": "blog",
+  "name": "科技博客（默认）",
+  "description": "经典科技博客布局：Hero 轮播 + 文章网格 + 双栏文章页，复刻站点默认风格。",
+  "version": "1.0.0",
+  "author": "token00",
+  "preview": "/styles/blog/preview.png",
+  "builtin": true,
+  "defaultTheme": "light",
+  "tags": ["blog", "default", "tech"]
+}

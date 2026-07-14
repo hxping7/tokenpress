@@ -1,0 +1,11 @@
+{
+  "id": "enterprise",
+  "name": "企业官网风格",
+  "description": "适合 B2B 企业站的稳重布局：左二级目录板块页 + 实色吸顶 Header + 多栏 Footer。",
+  "version": "1.0.0",
+  "author": "token00",
+  "preview": "/styles/enterprise/preview.png",
+  "builtin": true,
+  "defaultTheme": "light",
+  "tags": ["enterprise", "b2b"]
+}

@@ -1,0 +1,15 @@
+{
+  "variant":"sticky-solid",
+  "logo": {
+    "type":"image",
+    "src":"/logo.svg",
+    "text":"TokenPress",
+    "position":"left",
+    "height":60,
+    "link":"/"
+  },
+  "nav":  { "align":"right", "style":"pill", "source":"sections", "customItems":[] },
+  "actions": [ { "label":"联系我们", "href":"/contact", "type":"button-primary" } ],
+  "background":"var(--bg-primary)",
+  "borderBottom":"1px solid var(--border-color)"
+}

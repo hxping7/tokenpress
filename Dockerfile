@@ -35,6 +35,8 @@ RUN npm config set registry https://registry.npmmirror.com && \
 
 COPY --from=backend-builder /app/apps/server/dist ./apps/server/dist
 COPY --from=backend-builder /app/apps/server/src/db/defaults ./apps/server/dist/db/defaults
+# 内置模板包（buildin styles）：构建期拷入镜像，运行时由 initBuiltinStyles 拷贝进持久卷
+COPY apps/web/public/styles ./apps/server/styles-builtin
 COPY --from=backend-builder /app/apps/server/package.json ./apps/server/
 COPY --from=backend-builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=backend-builder /app/packages/shared/package.json ./packages/shared/
@@ -46,7 +48,7 @@ COPY --from=backend-builder /app/pnpm-workspace.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 
 WORKDIR /app/apps/server
-RUN mkdir -p data/uploads data/statichtml
+RUN mkdir -p data/uploads data/statichtml data/styles
 
 ENV NODE_ENV=production
 ENV PORT=4001
