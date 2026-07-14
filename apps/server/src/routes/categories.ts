@@ -20,7 +20,7 @@ function serializeCategory(row: any) {
   }
   return {
     ...row,
-    template: row.template || 'article-list',
+    template: row.template === '' ? '' : (row.template || 'article-list'),
     templateConfig,
   }
 }
@@ -142,7 +142,7 @@ router.post('/', async (req: AuthRequest, res) => {
       sectionId,
       description: description || null,
       sortOrder,
-      template: isTemplateValid(template) ? template : 'article-list',
+      template: template === '' ? '' : (isTemplateValid(template) ? template : 'article-list'),
       templateConfig: templateConfig && typeof templateConfig === 'object' ? JSON.stringify(templateConfig) : null,
     }).run()
 
@@ -195,7 +195,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
     if (description !== undefined) updates.description = description
     if (sortOrder !== undefined) updates.sortOrder = sortOrder
     if (template !== undefined) {
-      updates.template = isTemplateValid(template) ? template : 'article-list'
+      updates.template = template === '' ? '' : (isTemplateValid(template) ? template : 'article-list')
     }
     if (templateConfig !== undefined) {
       updates.templateConfig = templateConfig === null

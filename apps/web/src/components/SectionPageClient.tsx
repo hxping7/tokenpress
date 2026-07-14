@@ -108,10 +108,11 @@ export function SectionPageClient({
   const activeCat = category ? (catsData?.data?.find((c: any) => c.slug === category) || null) : null
 
   // 模板解析：分类模板 > 板块模板 > 默认 article-list
+  // 分类 template 为空字符串 '' → 继承板块（不覆盖）
   const sectionTpl = template || 'article-list'
-  const templateKey = activeCat ? (activeCat.template || 'article-list') : sectionTpl
+  const templateKey = activeCat ? (activeCat.template || sectionTpl) : sectionTpl
   const config = useMemo(() => {
-    const raw = activeCat ? activeCat.templateConfig : templateConfig
+    const raw = activeCat?.template ? activeCat.templateConfig : templateConfig
     if (!raw) return {}
     if (typeof raw === 'string') {
       try { return JSON.parse(raw) } catch { return {} }
@@ -172,7 +173,7 @@ export function SectionPageClient({
   const renderMainContent = () => {
     // 特殊模板
     if (templateKey === 'single-page') {
-      return <SinglePageView description={description} />
+      return <SinglePageView description={description} config={config as Record<string, unknown> | null} />
     }
     if (templateKey === 'link-wall') {
       return <LinkWall />

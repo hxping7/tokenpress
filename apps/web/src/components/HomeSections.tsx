@@ -101,14 +101,14 @@ export function HomeSections({
   heroInterval,
   ctaButtons,
   recentArticles,
-  homeBanner,
+  homeBanners,
 }: {
   heroSlides: HeroSlide[]
   heroSize: string
   heroInterval: number
   ctaButtons: HeroCtaButton[]
   recentArticles: Article[]
-  homeBanner?: HomeBannerConfig
+  homeBanners?: HomeBannerConfig[]
 }) {
   const layouts = useStyleLayouts()
   const homepage = layouts?.homepage
@@ -147,8 +147,13 @@ export function HomeSections({
             )
           case 'CTA':
             return <CtaSection key={i} variant={sec.variant} />
-          case 'Banner':
-            return homeBanner?.enabled ? <HomeBanner key={i} config={homeBanner} /> : null
+          case 'Banner': {
+            const id = (sec as any).id as string | undefined
+            const cfg = id
+              ? homeBanners?.find((b) => b.id === id && b.enabled)
+              : homeBanners?.find((b) => b.enabled)
+            return cfg ? <HomeBanner key={i} config={cfg} /> : null
+          }
           default:
             return null
         }

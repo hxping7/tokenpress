@@ -3,7 +3,7 @@
     "container": "boxed",
     "sections": [
       { "component":"Hero",        "variant":"carousel", "props":{"autoplay":true} },
-      { "component":"Banner",      "variant":"cta" },
+      { "component":"Banner",      "variant":"cta", "id":"home_main" },
       { "component":"ArticleList", "variant":"grid-3",   "props":{"source":"latest","limit":9} }
     ]
   },

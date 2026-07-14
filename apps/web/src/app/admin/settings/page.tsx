@@ -130,14 +130,8 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
   // ===== Hero CTA 按钮（可后台配置） =====
   const [heroCtaButtons, setHeroCtaButtons] = useState<HeroCtaButton[]>(DEFAULT_HERO_CTA)
 
-  // ===== 中部 banner 区 =====
-  const [homeBannerEnabled, setHomeBannerEnabled] = useState(false)
-  const [homeBannerType, setHomeBannerType] = useState<HomeBannerType>('cta')
-  const [homeBannerPosition, setHomeBannerPosition] = useState<HomeBannerPosition>('after_hero')
-  const [homeBannerCta, setHomeBannerCta] = useState<HomeBannerCta>({ title: '', subtitle: '', buttonText: '', buttonLink: '', buttonTarget: '_self', bgImage: '', gradient: '', align: 'center' })
-  const [homeBannerCards, setHomeBannerCards] = useState<HomeBannerCard[]>([])
-  const [homeBannerImage, setHomeBannerImage] = useState<HomeBannerImage>({ url: '', link: '', target: '_self', alt: '' })
-  const [homeBannerNotice, setHomeBannerNotice] = useState<HomeBannerNotice>({ text: '', link: '', target: '_self', marquee: false })
+  // ===== 中部 banner 区（多个命名横幅，数组） =====
+  const [homeBanners, setHomeBanners] = useState<HomeBannerConfig[]>([])
 
   // ===== 首页欢迎页（首次访问展示） =====
   const [welcomePageEnabled, setWelcomePageEnabled] = useState(false)
@@ -421,13 +415,26 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
           if (Array.isArray(parsed) && parsed.length > 0) setHeroCtaButtons(parsed)
         } catch {}
       }
-      if (s.home_banner_enabled !== undefined) setHomeBannerEnabled(s.home_banner_enabled === 'true')
-      if (s.home_banner_type) setHomeBannerType(s.home_banner_type as HomeBannerType)
-      if (s.home_banner_position) setHomeBannerPosition(s.home_banner_position as HomeBannerPosition)
-      if (s.home_banner_cta) { try { setHomeBannerCta(JSON.parse(s.home_banner_cta)) } catch {} }
-      if (s.home_banner_cards) { try { setHomeBannerCards(JSON.parse(s.home_banner_cards)) } catch {} }
-      if (s.home_banner_image) { try { setHomeBannerImage(JSON.parse(s.home_banner_image)) } catch {} }
-      if (s.home_banner_notice) { try { setHomeBannerNotice(JSON.parse(s.home_banner_notice)) } catch {} }
+      // 中部 banner：新结构 home_banners 数组（含旧单条字段回退）
+      if (s.home_banners) {
+        try {
+          const arr = JSON.parse(s.home_banners)
+          if (Array.isArray(arr)) {
+            setHomeBanners(arr.map((b: any, i: number) => ({ ...b, id: b.id || `banner-${i + 1}` })))
+          }
+        } catch {}
+      } else if (s.home_banner_enabled !== undefined) {
+        // 旧结构：单条 home_banner_* 字段 → 包装成数组
+        const enabled = s.home_banner_enabled === 'true'
+        const type = (s.home_banner_type as HomeBannerType) || 'cta'
+        let cta: HomeBannerCta | undefined, cards: HomeBannerCard[] | undefined,
+          image: HomeBannerImage | undefined, notice: HomeBannerNotice | undefined
+        if (s.home_banner_cta) try { cta = JSON.parse(s.home_banner_cta) } catch {}
+        if (s.home_banner_cards) try { cards = JSON.parse(s.home_banner_cards) } catch {}
+        if (s.home_banner_image) try { image = JSON.parse(s.home_banner_image) } catch {}
+        if (s.home_banner_notice) try { notice = JSON.parse(s.home_banner_notice) } catch {}
+        setHomeBanners(enabled ? [{ id: 'default', enabled, type, cta, cards, image, notice }] : [])
+      }
       if (s.welcome_page_enabled !== undefined) setWelcomePageEnabled(s.welcome_page_enabled === 'true')
       if (s.welcome_page_html) setWelcomePageHtml(s.welcome_page_html)
       if (s.copyright_text !== undefined) setCopyrightText(s.copyright_text)
@@ -587,19 +594,8 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
     setHeroCtaButtons(heroCtaButtons.filter((_, i) => i !== index))
   }
 
-  // ===== 中部 banner 卡片处理函数 =====
-  const addBannerCard = () => {
-    if (homeBannerCards.length >= 4) return
-    setHomeBannerCards([...homeBannerCards, { title: '', desc: '', link: '', icon: '', target: '_self' }])
-  }
-  const updateBannerCard = (index: number, field: keyof HomeBannerCard, value: string) => {
-    const next = [...homeBannerCards]
-    next[index] = { ...next[index], [field]: value }
-    setHomeBannerCards(next)
-  }
-  const removeBannerCard = (index: number) => {
-    setHomeBannerCards(homeBannerCards.filter((_, i) => i !== index))
-  }
+  // ===== 中部 banner 工具函数 =====
+  const genBannerId = () => `banner-${Date.now().toString(36)}`
 
   const openHeroMediaBrowser = (index: number) => {
     setHeroMediaBrowserTarget(index)
@@ -711,13 +707,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       hero_carousel_max_items: heroCarouselMaxItems.toString(),
       hero_carousel_interval: heroCarouselInterval.toString(),
       hero_cta_buttons: JSON.stringify(heroCtaButtons),
-      home_banner_enabled: homeBannerEnabled.toString(),
-      home_banner_type: homeBannerType,
-      home_banner_position: homeBannerPosition,
-      home_banner_cta: JSON.stringify(homeBannerCta),
-      home_banner_cards: JSON.stringify(homeBannerCards),
-      home_banner_image: JSON.stringify(homeBannerImage),
-      home_banner_notice: JSON.stringify(homeBannerNotice),
+      home_banners: JSON.stringify(homeBanners),
       friend_links_columns: friendLinksColumns,
       default_theme: defaultTheme,
       frontend_locale: frontendLocale,

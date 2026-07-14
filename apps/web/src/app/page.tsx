@@ -109,18 +109,29 @@ async function getHeroSlides(): Promise<HeroResult> {
   }
 }
 
-async function getHomeBanner(): Promise<HomeBannerConfig> {
+async function getHomeBanners(): Promise<HomeBannerConfig[]> {
   try {
     const baseUrl = typeof window === 'undefined'
       ? `${process.env.BACKEND_URL || 'http://localhost:4001'}`
       : ''
     const res = await fetch(
-      `${baseUrl}/api/v1/site-settings/keys/home_banner_enabled,home_banner_type,home_banner_position,home_banner_cta,home_banner_cards,home_banner_image,home_banner_notice`,
+      `${baseUrl}/api/v1/site-settings/keys/home_banners,home_banner_enabled,home_banner_type,home_banner_position,home_banner_cta,home_banner_cards,home_banner_image,home_banner_notice`,
       { next: { revalidate: 60 } },
     )
-    if (!res.ok) return { enabled: false, type: 'cta', position: 'after_hero' }
+    if (!res.ok) return []
     const s = (await res.json()).data || {}
+    // 新结构：home_banners 为 JSON 数组
+    if (s.home_banners) {
+      try {
+        const arr = JSON.parse(s.home_banners)
+        if (Array.isArray(arr)) {
+          return arr.map((b: any, i: number) => ({ ...b, id: b.id || `banner-${i + 1}` }))
+        }
+      } catch {}
+    }
+    // 旧结构回退：单条 home_banner_* 字段
     const enabled = s.home_banner_enabled === 'true'
+    if (!enabled) return []
     const type = (s.home_banner_type as HomeBannerType) || 'cta'
     const position = (s.home_banner_position as HomeBannerPosition) || 'after_hero'
     let cta: HomeBannerConfig['cta']
@@ -131,9 +142,9 @@ async function getHomeBanner(): Promise<HomeBannerConfig> {
     if (s.home_banner_cards) try { cards = JSON.parse(s.home_banner_cards) } catch {}
     if (s.home_banner_image) try { image = JSON.parse(s.home_banner_image) } catch {}
     if (s.home_banner_notice) try { notice = JSON.parse(s.home_banner_notice) } catch {}
-    return { enabled, type, position, cta, cards, image, notice }
+    return [{ id: 'default', enabled, type, position, cta, cards, image, notice }]
   } catch {
-    return { enabled: false, type: 'cta', position: 'after_hero' }
+    return []
   }
 }
 
@@ -179,12 +190,12 @@ function HeroFallback() {
 export default async function HomePage() {
   const [
     { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons },
-    homeBanner,
+    homeBanners,
     recentArticles,
     welcomePage,
   ] = await Promise.all([
     getHeroSlides(),
-    getHomeBanner(),
+    getHomeBanners(),
     getRecentArticles(),
     getWelcomePage(),
   ])
@@ -198,7 +209,7 @@ export default async function HomePage() {
         heroInterval={heroInterval}
         ctaButtons={ctaButtons}
         recentArticles={recentArticles}
-        homeBanner={homeBanner}
+        homeBanners={homeBanners}
       />
     </>
   )

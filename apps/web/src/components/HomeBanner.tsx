@@ -40,9 +40,10 @@ export interface HomeBannerNotice {
 }
 
 export interface HomeBannerConfig {
+  id?: string
   enabled: boolean
   type: HomeBannerType
-  position: HomeBannerPosition
+  position?: HomeBannerPosition
   cta?: HomeBannerCta
   cards?: HomeBannerCard[]
   image?: HomeBannerImage

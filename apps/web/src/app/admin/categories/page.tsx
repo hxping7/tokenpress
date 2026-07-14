@@ -63,7 +63,7 @@ export default function CategoriesPage() {
   const [categoryName, setCategoryName] = useState('')
   const [categorySectionId, setCategorySectionId] = useState<number | null>(null)
   const [categoryDescription, setCategoryDescription] = useState('')
-  const [categoryTemplate, setCategoryTemplate] = useState('article-list')
+  const [categoryTemplate, setCategoryTemplate] = useState('')
   const [categoryTemplateConfig, setCategoryTemplateConfig] = useState<Record<string, unknown> | null>(null)
 
   // Section template form state
@@ -182,14 +182,14 @@ export default function CategoriesPage() {
       setCategoryName(category.name)
       setCategorySectionId(category.sectionId)
       setCategoryDescription(category.description || '')
-      setCategoryTemplate(category.template || 'article-list')
+      setCategoryTemplate(category.template || '')
       setCategoryTemplateConfig(category.templateConfig || null)
     } else {
       setEditingCategory(null)
       setCategoryName('')
       setCategorySectionId(sectionId)
       setCategoryDescription('')
-      setCategoryTemplate('article-list')
+      setCategoryTemplate('')
       setCategoryTemplateConfig(null)
     }
     setShowCategoryEditor(true)
@@ -560,6 +560,7 @@ export default function CategoriesPage() {
                     config={categoryTemplateConfig}
                     onConfigChange={setCategoryTemplateConfig}
                     exclude={catSection?.kind === 'design_works' ? undefined : (['design-gallery'] as TemplateKey[])}
+                    showInherit
                     hint="分类可覆盖所属板块的展示模板"
                   />
                 )

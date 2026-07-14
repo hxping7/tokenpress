@@ -3,7 +3,7 @@
     "container": "full",
     "sections": [
       { "component":"Hero",        "variant":"fullscreen", "props":{"showCTA":true} },
-      { "component":"Banner",      "variant":"cta" },
+      { "component":"Banner",      "variant":"cta", "id":"home_main" },
       { "component":"ArticleList", "variant":"masonry",    "props":{"source":"latest","limit":8} },
       { "component":"ArticleList", "variant":"grid-2",     "props":{"source":"featured","limit":4} }
     ]
