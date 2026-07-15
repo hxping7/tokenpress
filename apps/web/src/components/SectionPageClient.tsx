@@ -185,6 +185,7 @@ export function SectionPageClient({
           sectionPath={sectionPath}
           title={title}
           description={description}
+          mode="embedded"
         />
       )
     }
@@ -350,28 +351,32 @@ export function SectionPageClient({
 
       {/* 内容区 */}
       <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        {isSidebarLayout ? (
-          <div
-            className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8"
-            style={sidebarOnLeft ? undefined : { gridTemplateColumns: '1fr 260px' }}
-          >
-            {sidebarOnLeft ? (
-              <>
-                {renderSidebar()}
-                <div className="min-w-0">{renderMainContent()}</div>
-              </>
-            ) : (
-              <>
-                <div className="min-w-0 order-1">{renderMainContent()}</div>
-                {renderSidebar()}
-              </>
-            )}
-          </div>
+        {sidebarEnabled ? (
+          isSidebarLayout ? (
+            <div
+              className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8"
+              style={sidebarOnLeft ? undefined : { gridTemplateColumns: '1fr 260px' }}
+            >
+              {sidebarOnLeft ? (
+                <>
+                  {renderSidebar()}
+                  <div className="min-w-0">{renderMainContent()}</div>
+                </>
+              ) : (
+                <>
+                  <div className="min-w-0 order-1">{renderMainContent()}</div>
+                  {renderSidebar()}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-8">
+              <div className="min-w-0">{renderMainContent()}</div>
+              <div className="hidden lg:block">{renderSidebar()}</div>
+            </div>
+          )
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-8">
-            <div className="min-w-0">{renderMainContent()}</div>
-            {sidebarEnabled ? <div className="hidden lg:block">{renderSidebar()}</div> : null}
-          </div>
+          <div className="min-w-0">{renderMainContent()}</div>
         )}
       </div>
     </div>

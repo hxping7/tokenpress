@@ -9,9 +9,11 @@ interface Props {
   sectionPath: string
   title: string
   description: string | null
+  mode?: 'standalone' | 'embedded'
 }
 
-export function DesignWorksGallery({ section, sectionPath, title, description }: Props) {
+export function DesignWorksGallery({ section, sectionPath, title, description, mode = 'standalone' }: Props) {
+  const isEmbedded = mode === 'embedded'
   const [works, setWorks] = useState<DesignWork[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [activeCat, setActiveCat] = useState<string | null>(null)
@@ -42,15 +44,33 @@ export function DesignWorksGallery({ section, sectionPath, title, description }:
   return (
     <div className="min-h-screen bg-t-bg-primary">
       {/* 头部：标题 + 简介（sspai 风：大留白、克制） */}
-      <div className="max-w-[1200px] mx-auto px-4 pt-20 pb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-t-text-primary tracking-tight">{title}</h1>
-        {description && (
-          <p className="mt-2 text-sm text-t-text-secondary max-w-2xl">{description}</p>
-        )}
+      {!isEmbedded && (
+        <div className="max-w-[1200px] mx-auto px-4 pt-20 pb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-t-text-primary tracking-tight">{title}</h1>
+          {description && (
+            <p className="mt-2 text-sm text-t-text-secondary max-w-2xl">{description}</p>
+          )}
 
-        {/* 分类筛选（sspai 式小药丸） */}
-        {categories.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-2">
+          {/* 分类筛选（sspai 式小药丸） */}
+          {categories.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              <FilterPill active={activeCat === null} onClick={() => onSelectCat(null)}>
+                全部
+              </FilterPill>
+              {categories.map((c) => (
+                <FilterPill key={c} active={activeCat === c} onClick={() => onSelectCat(c)}>
+                  {c}
+                </FilterPill>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* embedded 模式：只保留分类筛选，紧凑顶部 */}
+      {isEmbedded && categories.length > 0 && (
+        <div className="max-w-[1200px] mx-auto px-4 pb-6">
+          <div className="flex flex-wrap gap-2">
             <FilterPill active={activeCat === null} onClick={() => onSelectCat(null)}>
               全部
             </FilterPill>
@@ -60,8 +80,8 @@ export function DesignWorksGallery({ section, sectionPath, title, description }:
               </FilterPill>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* 作品卡片网格 */}
       <div className="max-w-[1200px] mx-auto px-4 pb-16">

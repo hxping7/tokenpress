@@ -8,7 +8,7 @@ import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 import { parseShareConfig, DEFAULT_SHARE_CONFIG, SHARE_PLATFORMS, SHARE_POSITIONS, type ShareConfig } from '@/lib/share-config'
 import { WIDTH_PRESETS, DEFAULT_CONTENT_MAX_WIDTH, parseContentMaxWidth } from '@/lib/layout-config'
-import type { HomeBannerType, HomeBannerPosition, HomeBannerCta, HomeBannerCard, HomeBannerImage, HomeBannerNotice } from '@/components/HomeBanner'
+import type { HomeBannerConfig, HomeBannerType, HomeBannerPosition, HomeBannerCta, HomeBannerCard, HomeBannerImage, HomeBannerNotice } from '@/components/HomeBanner'
 import { type HeroCtaButton, type HeroCtaVariant, DEFAULT_HERO_CTA } from '@/components/HeroCarousel'
 import { StaticPagePicker } from '@/components/StaticPagePicker'
 import Image from 'next/image'
@@ -16,6 +16,159 @@ import { StyleEditorModal } from '@/components/StyleEditorModal'
 import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image as ImageIcon, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3, Info, Palette, LayoutTemplate, Home, Languages, Share2, Navigation, Copyright, Shield } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRef } from 'react'
+
+// ===== 单个横幅编辑器（被横幅列表复用） =====
+function BannerEditor({
+  config,
+  locale,
+  onChange,
+}: {
+  config: HomeBannerConfig
+  locale: string
+  onChange: (next: HomeBannerConfig) => void
+}) {
+  const type = config.type || 'cta'
+  const setType = (t: HomeBannerType) => onChange({ ...config, type: t })
+  const setField = <K extends keyof HomeBannerConfig>(k: K, v: HomeBannerConfig[K]) =>
+    onChange({ ...config, [k]: v })
+
+  const cta = config.cta || { title: '', subtitle: '', buttonText: '', buttonLink: '', buttonTarget: '_self', bgImage: '', gradient: '', align: 'center' }
+  const setCta = (patch: Partial<HomeBannerCta>) => setField('cta', { ...cta, ...patch })
+  const image = config.image || { url: '', link: '', target: '_self', alt: '' }
+  const setImage = (patch: Partial<HomeBannerImage>) => setField('image', { ...image, ...patch })
+  const notice = config.notice || { text: '', link: '', target: '_self', marquee: false }
+  const setNotice = (patch: Partial<HomeBannerNotice>) => setField('notice', { ...notice, ...patch })
+  const cards = config.cards || []
+  const setCards = (next: HomeBannerCard[]) => setField('cards', next)
+
+  const inputCls = 'w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue'
+  const labelCls = 'block text-xs text-t-text-muted mb-1'
+
+  return (
+    <div className="space-y-4">
+      {/* 类型 */}
+      <div>
+        <span className={labelCls}>{t('settings.bannerType', locale)}</span>
+        <select value={type} onChange={(e) => setType(e.target.value as HomeBannerType)} className={inputCls}>
+          <option value="cta">{t('settings.bannerTypeCta', locale)}</option>
+          <option value="cards">{t('settings.bannerTypeCards', locale)}</option>
+          <option value="image">{t('settings.bannerTypeImage', locale)}</option>
+          <option value="notice">{t('settings.bannerTypeNotice', locale)}</option>
+        </select>
+      </div>
+
+      {type === 'cta' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>{t('settings.bannerCtaTitle', locale)}</label>
+            <input type="text" value={cta.title} onChange={(e) => setCta({ title: e.target.value })} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerCtaSubtitle', locale)}</label>
+            <input type="text" value={cta.subtitle || ''} onChange={(e) => setCta({ subtitle: e.target.value })} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerCtaButtonText', locale)}</label>
+            <input type="text" value={cta.buttonText} onChange={(e) => setCta({ buttonText: e.target.value })} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerCtaButtonLink', locale)}</label>
+            <input type="text" value={cta.buttonLink} onChange={(e) => setCta({ buttonLink: e.target.value })} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerCtaAlign', locale)}</label>
+            <select value={cta.align || 'center'} onChange={(e) => setCta({ align: e.target.value as 'left' | 'center' })} className={inputCls}>
+              <option value="center">{t('settings.alignCenter', locale)}</option>
+              <option value="left">{t('settings.alignLeft', locale)}</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerCtaGradient', locale)}</label>
+            <select value={cta.gradient || ''} onChange={(e) => setCta({ gradient: e.target.value })} className={inputCls}>
+              <option value="">{t('settings.bannerGradDefault', locale)}</option>
+              <option value="linear-gradient(135deg, #0ea5e9, #7c3aed)">{t('settings.bannerGradBluePurple', locale)}</option>
+              <option value="linear-gradient(135deg, #00d4ff, #7c3aed)">{t('settings.bannerGradCyber', locale)}</option>
+              <option value="linear-gradient(135deg, #f59e0b, #ef4444)">{t('settings.bannerGradSunset', locale)}</option>
+              <option value="linear-gradient(135deg, #0f172a, #1e293b)">{t('settings.bannerGradDark', locale)}</option>
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>{t('settings.bannerCtaBgImage', locale)}</label>
+            <input type="url" value={cta.bgImage || ''} onChange={(e) => setCta({ bgImage: e.target.value })} placeholder={t('settings.bannerCtaBgImagePlaceholder', locale)} className={inputCls} />
+          </div>
+          <label className="sm:col-span-2 flex items-center gap-2 text-sm text-t-text-secondary">
+            <input type="checkbox" checked={cta.buttonTarget === '_blank'} onChange={(e) => setCta({ buttonTarget: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
+            {t('settings.ctaOpenNewTab', locale)}
+          </label>
+        </div>
+      )}
+
+      {type === 'cards' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-t-text-primary">{t('settings.bannerCards', locale)}</span>
+            <button type="button" onClick={() => cards.length < 4 && setCards([...cards, { title: '', desc: '', link: '', icon: '', target: '_self' }])} disabled={cards.length >= 4} className="px-3 py-1.5 text-xs rounded-lg bg-t-accent-blue text-black hover:opacity-90 disabled:opacity-50">
+              {t('settings.bannerAddCard', locale)}
+            </button>
+          </div>
+          {cards.length === 0 && <p className="text-t-text-muted text-sm">{t('settings.bannerNoCards', locale)}</p>}
+          {cards.map((card, idx) => (
+            <div key={idx} className="p-3 border border-t-border rounded-lg space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerCard', locale)} {idx + 1}</span>
+                <button type="button" onClick={() => setCards(cards.filter((_, i) => i !== idx))} className="p-1.5 text-t-text-secondary hover:text-red-400"><Trash2 size={16} /></button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" value={card.icon || ''} onChange={(e) => setCards(cards.map((c, i) => i === idx ? { ...c, icon: e.target.value } : c))} placeholder={t('settings.bannerCardIconPlaceholder', locale)} className={inputCls} />
+                <input type="text" value={card.title} onChange={(e) => setCards(cards.map((c, i) => i === idx ? { ...c, title: e.target.value } : c))} placeholder={t('settings.bannerCardTitle', locale)} className={inputCls} />
+                <input type="text" value={card.desc || ''} onChange={(e) => setCards(cards.map((c, i) => i === idx ? { ...c, desc: e.target.value } : c))} placeholder={t('settings.bannerCardDesc', locale)} className={inputCls} />
+                <input type="text" value={card.link} onChange={(e) => setCards(cards.map((c, i) => i === idx ? { ...c, link: e.target.value } : c))} placeholder={t('settings.bannerCardLink', locale)} className={inputCls} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {type === 'image' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>{t('settings.bannerImageUrl', locale)}</label>
+            <input type="url" value={image.url} onChange={(e) => setImage({ url: e.target.value })} placeholder={t('settings.bannerImageUrlPlaceholder', locale)} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerImageLink', locale)}</label>
+            <input type="text" value={image.link || ''} onChange={(e) => setImage({ link: e.target.value })} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerImageAlt', locale)}</label>
+            <input type="text" value={image.alt || ''} onChange={(e) => setImage({ alt: e.target.value })} className={inputCls} />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-t-text-secondary">
+            <input type="checkbox" checked={image.target === '_blank'} onChange={(e) => setImage({ target: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
+            {t('settings.ctaOpenNewTab', locale)}
+          </label>
+        </div>
+      )}
+
+      {type === 'notice' && (
+        <div className="space-y-3">
+          <div>
+            <label className={labelCls}>{t('settings.bannerNoticeText', locale)}</label>
+            <input type="text" value={notice.text} onChange={(e) => setNotice({ text: e.target.value })} placeholder={t('settings.bannerNoticeTextPlaceholder', locale)} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{t('settings.bannerNoticeLink', locale)}</label>
+            <input type="text" value={notice.link || ''} onChange={(e) => setNotice({ link: e.target.value })} className={inputCls} />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-t-text-secondary">
+            <input type="checkbox" checked={notice.marquee} onChange={(e) => setNotice({ marquee: e.target.checked })} className="w-4 h-4 rounded text-t-accent-blue" />
+            {t('settings.bannerNoticeMarquee', locale)}
+          </label>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface FriendLink {
   id: number
@@ -1667,7 +1820,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       </div>
       )}
 
-      {/* 中部 banner 区设置 */}
+      {/* 中部 banner 区设置（多个命名横幅，可在 layouts.json 任意位置引用） */}
       {activeTab === 'home' && homeSubTab === 'banner' && (
       <div className="bg-t-bg-primary border border-t-border rounded-xl">
         <div className="px-6 py-4 border-b border-t-border">
@@ -1679,203 +1832,81 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
         <div className="p-6 space-y-4">
           <p className="text-sm text-t-text-secondary">{t('settings.bannerSectionDesc', adminLocale)}</p>
 
-          {/* 启用 */}
-          <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
-            <div>
-              <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerEnabled', adminLocale)}</span>
-              <p className="text-xs text-t-text-muted mt-1">{t('settings.bannerEnabledDesc', adminLocale)}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setHomeBannerEnabled(!homeBannerEnabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${homeBannerEnabled ? 'bg-t-accent-blue' : 'bg-t-bg-tertiary'}`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${homeBannerEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
-          </div>
-
-          {/* 类型 */}
-          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
-            <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerType', adminLocale)}</span>
-            <select value={homeBannerType} onChange={(e) => setHomeBannerType(e.target.value as HomeBannerType)} className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
-              <option value="cta">{t('settings.bannerTypeCta', adminLocale)}</option>
-              <option value="cards">{t('settings.bannerTypeCards', adminLocale)}</option>
-              <option value="image">{t('settings.bannerTypeImage', adminLocale)}</option>
-              <option value="notice">{t('settings.bannerTypeNotice', adminLocale)}</option>
-            </select>
-          </div>
-
-          {/* 位置 */}
-          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
-            <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerPosition', adminLocale)}</span>
-            <select value={homeBannerPosition} onChange={(e) => setHomeBannerPosition(e.target.value as HomeBannerPosition)} className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
-              <option value="after_hero">{t('settings.bannerPosAfterHero', adminLocale)}</option>
-              <option value="after_articles">{t('settings.bannerPosAfterArticles', adminLocale)}</option>
-            </select>
-          </div>
-
-          {/* CTA 类型字段 */}
-          {homeBannerType === 'cta' && (
-            <div className="space-y-3 p-4 bg-t-bg-secondary rounded-lg">
-              <div>
-                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaTitle', adminLocale)}</label>
-                <input type="text" value={homeBannerCta.title} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, title: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-              </div>
-              <div>
-                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaSubtitle', adminLocale)}</label>
-                <input type="text" value={homeBannerCta.subtitle || ''} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, subtitle: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaButtonText', adminLocale)}</label>
-                  <input type="text" value={homeBannerCta.buttonText} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, buttonText: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                </div>
-                <div>
-                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaButtonLink', adminLocale)}</label>
-                  <input type="text" value={homeBannerCta.buttonLink} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, buttonLink: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaAlign', adminLocale)}</label>
-                  <select value={homeBannerCta.align || 'center'} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, align: e.target.value as 'left' | 'center' })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
-                    <option value="center">{t('settings.alignCenter', adminLocale)}</option>
-                    <option value="left">{t('settings.alignLeft', adminLocale)}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaGradient', adminLocale)}</label>
-                  <select value={homeBannerCta.gradient || ''} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, gradient: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue">
-                    <option value="">{t('settings.bannerGradDefault', adminLocale)}</option>
-                    <option value="linear-gradient(135deg, #0ea5e9, #7c3aed)">{t('settings.bannerGradBluePurple', adminLocale)}</option>
-                    <option value="linear-gradient(135deg, #00d4ff, #7c3aed)">{t('settings.bannerGradCyber', adminLocale)}</option>
-                    <option value="linear-gradient(135deg, #f59e0b, #ef4444)">{t('settings.bannerGradSunset', adminLocale)}</option>
-                    <option value="linear-gradient(135deg, #0f172a, #1e293b)">{t('settings.bannerGradDark', adminLocale)}</option>
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={homeBannerCta.buttonTarget === '_blank'} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, buttonTarget: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
-                    <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCtaBgImage', adminLocale)}</label>
-                <input type="url" value={homeBannerCta.bgImage || ''} onChange={(e) => setHomeBannerCta({ ...homeBannerCta, bgImage: e.target.value })} placeholder={t('settings.bannerCtaBgImagePlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-              </div>
-            </div>
+          {homeBanners.length === 0 && (
+            <p className="text-sm text-t-text-muted">{t('settings.bannerNoBanners', adminLocale)}</p>
           )}
 
-          {/* 卡片类型字段 */}
-          {homeBannerType === 'cards' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-t-text-primary">{t('settings.bannerCards', adminLocale)}</span>
-                <button
-                  type="button"
-                  onClick={addBannerCard}
-                  disabled={homeBannerCards.length >= 4}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-t-accent-blue text-black font-medium rounded-lg hover:bg-t-accent-blue/90 disabled:opacity-50"
-                >
-                  <Plus size={16} />
-                  {t('settings.bannerAddCard', adminLocale)}
-                </button>
-              </div>
-              {homeBannerCards.length === 0 ? (
-                <p className="text-t-text-muted text-sm">{t('settings.bannerNoCards', adminLocale)}</p>
-              ) : (
-                homeBannerCards.map((card, index) => (
-                  <div key={index} className="p-4 bg-t-bg-secondary rounded-lg space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-t-text-secondary">{t('settings.bannerCard', adminLocale)} {index + 1}</span>
-                      <button onClick={() => removeBannerCard(index)} className="p-1.5 text-t-text-secondary hover:text-red-400"><Trash2 size={16} /></button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardIcon', adminLocale)}</label>
-                        <input type="text" value={card.icon || ''} onChange={(e) => updateBannerCard(index, 'icon', e.target.value)} placeholder={t('settings.bannerCardIconPlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardTitle', adminLocale)}</label>
-                        <input type="text" value={card.title} onChange={(e) => updateBannerCard(index, 'title', e.target.value)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardDesc', adminLocale)}</label>
-                      <input type="text" value={card.desc || ''} onChange={(e) => updateBannerCard(index, 'desc', e.target.value)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerCardLink', adminLocale)}</label>
-                        <input type="text" value={card.link} onChange={(e) => updateBannerCard(index, 'link', e.target.value)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                      </div>
-                      <div className="flex items-end">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" checked={card.target === '_blank'} onChange={(e) => updateBannerCard(index, 'target', e.target.checked ? '_blank' : '_self')} className="w-4 h-4 rounded text-t-accent-blue" />
-                          <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
-                        </label>
-                      </div>
-                    </div>
+          <div className="space-y-4">
+            {homeBanners.map((b, idx) => (
+              <div key={b.id || idx} className="border border-t-border rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between gap-3 p-4 bg-t-bg-secondary">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-sm font-medium text-t-text-primary whitespace-nowrap">{t('settings.bannerItem', adminLocale)} {idx + 1}</span>
+                    <input
+                      type="text"
+                      value={b.id || ''}
+                      onChange={(e) => {
+                        const next = [...homeBanners]
+                        next[idx] = { ...next[idx], id: e.target.value }
+                        setHomeBanners(next)
+                      }}
+                      placeholder={t('settings.bannerSlotIdPlaceholder', adminLocale)}
+                      className="w-40 px-2 py-1.5 text-xs bg-t-bg-primary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    />
                   </div>
-                ))
-              )}
-            </div>
-          )}
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-sm text-t-text-secondary cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={b.enabled !== false}
+                        onChange={(e) => {
+                          const next = [...homeBanners]
+                          next[idx] = { ...next[idx], enabled: e.target.checked }
+                          setHomeBanners(next)
+                        }}
+                        className="w-4 h-4 rounded text-t-accent-blue"
+                      />
+                      {t('settings.bannerItemEnabled', adminLocale)}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setHomeBanners(homeBanners.filter((_, i) => i !== idx))}
+                      className="p-1.5 text-t-text-secondary hover:text-red-400"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <BannerEditor
+                    config={b}
+                    locale={adminLocale}
+                    onChange={(next) => {
+                      const arr = [...homeBanners]
+                      arr[idx] = next
+                      setHomeBanners(arr)
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
 
-          {/* 单图类型字段 */}
-          {homeBannerType === 'image' && (
-            <div className="space-y-3 p-4 bg-t-bg-secondary rounded-lg">
-              <div>
-                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerImageUrl', adminLocale)}</label>
-                <input type="url" value={homeBannerImage.url} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, url: e.target.value })} placeholder={t('settings.bannerImageUrlPlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerImageLink', adminLocale)}</label>
-                  <input type="text" value={homeBannerImage.link || ''} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, link: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                </div>
-                <div>
-                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerImageAlt', adminLocale)}</label>
-                  <input type="text" value={homeBannerImage.alt || ''} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, alt: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                </div>
-              </div>
-              <div className="flex items-end">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={homeBannerImage.target === '_blank'} onChange={(e) => setHomeBannerImage({ ...homeBannerImage, target: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
-                  <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
-                </label>
-              </div>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => setHomeBanners([...homeBanners, {
+              id: genBannerId(),
+              enabled: true,
+              type: 'cta',
+              cta: { title: '', subtitle: '', buttonText: '', buttonLink: '', buttonTarget: '_self', bgImage: '', gradient: '', align: 'center' },
+            }])}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg bg-t-accent-blue text-black hover:opacity-90"
+          >
+            <Plus size={16} />
+            {t('settings.bannerAdd', adminLocale)}
+          </button>
 
-          {/* 公告类型字段 */}
-          {homeBannerType === 'notice' && (
-            <div className="space-y-3 p-4 bg-t-bg-secondary rounded-lg">
-              <div>
-                <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerNoticeText', adminLocale)}</label>
-                <input type="text" value={homeBannerNotice.text} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, text: e.target.value })} placeholder={t('settings.bannerNoticeTextPlaceholder', adminLocale)} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-t-text-muted mb-1">{t('settings.bannerNoticeLink', adminLocale)}</label>
-                  <input type="text" value={homeBannerNotice.link || ''} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, link: e.target.value })} className="w-full px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue" />
-                </div>
-                <div className="flex items-end">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={homeBannerNotice.marquee} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, marquee: e.target.checked })} className="w-4 h-4 rounded text-t-accent-blue" />
-                    <span className="text-sm text-t-text-secondary">{t('settings.bannerNoticeMarquee', adminLocale)}</span>
-                  </label>
-                </div>
-              </div>
-              <div className="flex items-end">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={homeBannerNotice.target === '_blank'} onChange={(e) => setHomeBannerNotice({ ...homeBannerNotice, target: e.target.checked ? '_blank' : '_self' })} className="w-4 h-4 rounded text-t-accent-blue" />
-                  <span className="text-sm text-t-text-secondary">{t('settings.ctaOpenNewTab', adminLocale)}</span>
-                </label>
-              </div>
-            </div>
-          )}
+          <p className="text-xs text-t-text-muted leading-relaxed">{t('settings.bannerSlotHint', adminLocale)}</p>
         </div>
       </div>
       )}
