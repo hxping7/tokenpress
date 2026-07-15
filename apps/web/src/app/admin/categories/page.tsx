@@ -402,14 +402,14 @@ export default function CategoriesPage() {
       {showSectionEditor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={closeSectionEditor} />
-          <div className="relative w-full max-w-md bg-t-bg-primary border border-t-border rounded-2xl">
+          <div className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-t-bg-primary border border-t-border rounded-2xl">
             <div className="flex items-center justify-between px-6 py-4 border-b border-t-border">
               <h2 className="text-lg font-semibold">{editingSection ? t('sections.editSection', backendLocale) : t('sections.newSection', backendLocale)}</h2>
               <button onClick={closeSectionEditor} className="p-2 hover:bg-t-hover rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium mb-2">{t('sections.sectionName', backendLocale)}</label>
                 <input
@@ -510,14 +510,14 @@ export default function CategoriesPage() {
       {showCategoryEditor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={closeCategoryEditor} />
-          <div className="relative w-full max-w-md bg-t-bg-primary border border-t-border rounded-2xl">
+          <div className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-t-bg-primary border border-t-border rounded-2xl">
             <div className="flex items-center justify-between px-6 py-4 border-b border-t-border">
               <h2 className="text-lg font-semibold">{editingCategory ? t('sections.editCategory', backendLocale) : t('sections.newCategory', backendLocale)}</h2>
               <button onClick={closeCategoryEditor} className="p-2 hover:bg-t-hover rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium mb-2">{t('sections.categoryName', backendLocale)}</label>
                 <input
