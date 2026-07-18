@@ -261,7 +261,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // ===== API Token upload =====
-router.post('/ai', apiTokenAuth, requirePermission('media:upload'), async (req: ApiAuthRequest, res) => {
+router.post('/ai', apiTokenAuth, requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     await handleUpload(req, res, req.apiToken!.userId)
   } catch (err: any) {

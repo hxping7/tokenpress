@@ -4,6 +4,7 @@ import { apiTokens } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import { authMiddleware, adminOnly, superAdminOnly, type AuthRequest } from './auth.js'
 import { logApiUsage } from './apiToken.js'
+import { satisfiesPermission } from '@tokenpress/shared'
 
 /**
  * JWT 回退守卫工厂：
@@ -35,7 +36,7 @@ function superAdminGuard(req: Request, res: Response, next: NextFunction) {
  * 用于让后台"设置/管理"类写接口既能被管理员在后台操作，也能被持有对应权限
  * API Token 的 AI 智能体远程控制，从而实现按 Token 权限隔离。
  *
- * @param permission  要求的权限字符串，如 'settings:write'
+ * @param permission  要求的权限字符串，如 'site:write'
  * @param jwtFallback token 未命中时使用的 JWT 守卫，默认 adminGuard
  */
 export function apiTokenOrAdmin(
@@ -62,7 +63,7 @@ export function apiTokenOrAdmin(
         }
 
         const permissions: string[] = JSON.parse(tokenRecord.permissions)
-        if (!permissions.includes(permission)) {
+        if (!satisfiesPermission(permissions, permission)) {
           return res.status(403).json({
             success: false,
             error: `Missing required permission: ${permission}`,

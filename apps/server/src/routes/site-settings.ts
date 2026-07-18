@@ -27,9 +27,9 @@ router.get('/', async (_req, res) => {
 })
 
 // PUT /api/v1/site-settings — update multiple settings
-// 鉴权：apiTokenOrAdmin('settings:write') 优先用 API Token（需 settings:write 权限），
+// 鉴权：apiTokenOrAdmin('site:write') 优先用 API Token（需 site:write 权限），
 // 否则回退管理员 JWT 会话。两种方式都会注入 req.user 并写 API 用量日志，保证审计一致。
-router.put('/', apiTokenOrAdmin('settings:write'), async (req: AuthRequest, res) => {
+router.put('/', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) => {
   try {
     const raw = (req.body as { settings?: unknown }).settings
     if (!raw || typeof raw !== 'object') {

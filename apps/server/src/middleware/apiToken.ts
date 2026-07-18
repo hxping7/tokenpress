@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express'
 import { db } from '../db/index.js'
 import { apiTokens, apiLogs } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
+import { satisfiesPermission } from '@tokenpress/shared'
 
 export interface ApiAuthRequest extends Request {
   apiToken?: {
@@ -91,7 +92,7 @@ export async function apiTokenAuth(req: ApiAuthRequest, res: Response, next: Nex
 
 export function requirePermission(permission: string) {
   return (req: ApiAuthRequest, res: Response, next: NextFunction) => {
-    if (!req.apiToken?.permissions.includes(permission)) {
+    if (!satisfiesPermission(req.apiToken?.permissions ?? [], permission)) {
       return res.status(403).json({
         success: false,
         error: `Missing required permission: ${permission}`,

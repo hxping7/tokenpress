@@ -39,7 +39,7 @@ export default function TokensPage() {
 
   // Editor state
   const [name, setName] = useState('')
-  const [permissions, setPermissions] = useState<string[]>(['article:write'])
+  const [permissions, setPermissions] = useState<string[]>(['site:write'])
   const [expiresAt, setExpiresAt] = useState('')
 
   const { data: tokensData, isLoading } = useQuery({
@@ -70,7 +70,7 @@ export default function TokensPage() {
 
   const resetEditor = () => {
     setName('')
-    setPermissions(['article:write'])
+    setPermissions(['site:write'])
     setExpiresAt('')
   }
 

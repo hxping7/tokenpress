@@ -11,7 +11,7 @@ import { apiTokenOrSuperAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { eq, desc } from 'drizzle-orm'
 
 const router = Router()
-router.use(apiTokenOrSuperAdmin('backup:write'))
+router.use(apiTokenOrSuperAdmin('site:write'))
 
 const DATA_DIR = path.resolve(process.cwd(), 'data')
 const BACKUP_DIR = path.join(DATA_DIR, 'backups')

@@ -129,7 +129,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // ===== Admin routes =====
-router.use(apiTokenOrAdmin('categories:write'))
+router.use(apiTokenOrAdmin('site:write'))
 
 // POST /api/v1/categories — create category
 router.post('/', async (req: AuthRequest, res) => {

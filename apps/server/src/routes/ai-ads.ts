@@ -10,7 +10,7 @@ const router = Router()
 router.use(apiTokenAuth)
 
 // POST /api/v1/ai/ads — 创建广告
-router.post('/', requirePermission('ads:write'), async (req: ApiAuthRequest, res) => {
+router.post('/', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const {
       position,
@@ -74,7 +74,7 @@ router.post('/', requirePermission('ads:write'), async (req: ApiAuthRequest, res
 })
 
 // GET /api/v1/ai/ads — 查询广告列表
-router.get('/', requirePermission('ads:read'), async (req: ApiAuthRequest, res) => {
+router.get('/', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1)
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20))
@@ -126,7 +126,7 @@ router.get('/', requirePermission('ads:read'), async (req: ApiAuthRequest, res) 
 })
 
 // GET /api/v1/ai/ads/:id — 获取详情
-router.get('/:id', requirePermission('ads:read'), async (req: ApiAuthRequest, res) => {
+router.get('/:id', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const id = parseInt(req.params.id as string)
     if (isNaN(id)) return res.status(400).json({ success: false, error: 'Invalid id' })
@@ -151,7 +151,7 @@ router.get('/:id', requirePermission('ads:read'), async (req: ApiAuthRequest, re
 })
 
 // PUT /api/v1/ai/ads/:id — 更新广告
-router.put('/:id', requirePermission('ads:write'), async (req: ApiAuthRequest, res) => {
+router.put('/:id', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const id = parseInt(req.params.id as string)
     if (isNaN(id)) return res.status(400).json({ success: false, error: 'Invalid id' })
@@ -219,7 +219,7 @@ router.put('/:id', requirePermission('ads:write'), async (req: ApiAuthRequest, r
 })
 
 // DELETE /api/v1/ai/ads/:id — 软删除
-router.delete('/:id', requirePermission('ads:delete'), async (req: ApiAuthRequest, res) => {
+router.delete('/:id', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const id = parseInt(req.params.id as string)
     if (isNaN(id)) return res.status(400).json({ success: false, error: 'Invalid id' })
@@ -240,7 +240,7 @@ router.delete('/:id', requirePermission('ads:delete'), async (req: ApiAuthReques
 })
 
 // POST /api/v1/ai/ads/:id/toggle — 启停切换
-router.post('/:id/toggle', requirePermission('ads:write'), async (req: ApiAuthRequest, res) => {
+router.post('/:id/toggle', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const id = parseInt(req.params.id as string)
     if (isNaN(id)) return res.status(400).json({ success: false, error: 'Invalid id' })
@@ -283,7 +283,7 @@ router.post('/:id/toggle', requirePermission('ads:write'), async (req: ApiAuthRe
 })
 
 // GET /api/v1/ai/ads/stats — 统计数据
-router.get('/stats/overview', requirePermission('ads:read'), async (req: ApiAuthRequest, res) => {
+router.get('/stats/overview', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const adId = parseInt(req.query.adId as string)
     const from = req.query.from as string | undefined

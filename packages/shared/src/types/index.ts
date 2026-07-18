@@ -50,27 +50,8 @@ export interface ApiToken {
   createdAt: string
 }
 
-export type ApiPermission =
-  | 'article:write'
-  | 'media:upload'
-  | 'content:delete'
-  | 'settings:write'
-  | 'friendlinks:write'
-  | 'sections:write'
-  | 'categories:write'
-  | 'users:write'
-  | 'stats:read'
-  | 'logs:read'
-  | 'backup:write'
-  | 'reviews:write'
-  | 'keywords:write'
-  | 'ads:read'
-  | 'ads:write'
-  | 'ads:delete'
-  | 'statichtml:write'
-  | 'statichtml:read'
-  | 'styles:write'
-  | 'styles:read'
+// 全部能力合并为单一 site:write：内容发布/媒体上传/站点配置/管理运维均含于此桶。
+export type ApiPermission = 'site:write'
 
 export interface CreateApiTokenDTO {
   name: string

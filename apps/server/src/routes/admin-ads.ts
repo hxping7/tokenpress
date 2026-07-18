@@ -9,7 +9,7 @@ import { extractText } from '../lib/contentReview/extractText.js'
 import { applyAdReview } from '../lib/contentReview/statusManager.js'
 
 const router = Router()
-router.use(apiTokenOrAdmin('ads:write'))
+router.use(apiTokenOrAdmin('site:write'))
 
 // GET /api/v1/admin/ads — 所有广告列表（管理用）
 router.get('/', async (req: AuthRequest, res) => {

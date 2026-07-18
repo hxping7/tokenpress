@@ -130,7 +130,7 @@ async function testTokens() {
   // Create token
   res = await request('POST', '/tokens', {
     name: `测试Token_${Date.now()}`,
-    permissions: ['article:write', 'media:upload'],
+    permissions: ['site:write'],
   }, auth)
   log('POST /tokens', res.status === 201 && res.data.success, res.data.data?.token?.substring(0, 20) + '...')
   if (res.data.success) {
@@ -156,7 +156,7 @@ async function testTokens() {
   // Create another token for AI tests
   res = await request('POST', '/tokens', {
     name: 'AI测试Token',
-    permissions: ['article:write', 'media:upload', 'content:delete'],
+    permissions: ['site:write'],
   }, auth)
   if (res.data.success) {
     apiToken = res.data.data.token

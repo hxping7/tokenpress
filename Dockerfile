@@ -76,6 +76,10 @@ RUN rm -f .npmrc && \
 
 RUN pnpm install --frozen-lockfile
 
+# frontend 也依赖 @tokenpress/shared（tokens 等后台页直接 import），必须先在镜像内构建其 dist
+# （backend 阶段第 24 行已 build shared；frontend 阶段此前漏掉，导致 @tokenpress/shared 解析失败）
+RUN pnpm --filter @tokenpress/shared build
+
 COPY apps/web ./apps/web
 
 # 设置API相对路径为空，客户端使用相对路径走 nginx 代理

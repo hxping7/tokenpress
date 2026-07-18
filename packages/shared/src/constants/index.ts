@@ -35,28 +35,47 @@ export interface ApiPermissionDef {
   roles: string[]
 }
 
+// 全部后台能力合并为单一权限桶 `site:write`：
+// 内容发布 / 媒体上传 / 站点配置（设置·板块·分类·友链·风格包·广告·静态页·审核·敏感词）/ 管理运维（用户·备份·统计·日志）均含于此。
+// 旧token仍可用：见下方 LEGACY_PERMISSION_ALIASES。
 export const API_PERMISSION_CATALOG: ApiPermissionDef[] = [
-  { value: 'article:write', labelKey: 'tokens.permArticleWrite', roles: ['superadmin', 'admin', 'user'] },
-  { value: 'media:upload', labelKey: 'tokens.permMediaUpload', roles: ['superadmin', 'admin', 'user'] },
-  { value: 'content:delete', labelKey: 'tokens.permContentDelete', roles: ['superadmin', 'admin'] },
-  { value: 'settings:write', labelKey: 'tokens.permSettingsWrite', roles: ['superadmin', 'admin'] },
-  { value: 'friendlinks:write', labelKey: 'tokens.permFriendlinksWrite', roles: ['superadmin', 'admin'] },
-  { value: 'sections:write', labelKey: 'tokens.permSectionsWrite', roles: ['superadmin', 'admin'] },
-  { value: 'categories:write', labelKey: 'tokens.permCategoriesWrite', roles: ['superadmin', 'admin'] },
-  { value: 'users:write', labelKey: 'tokens.permUsersWrite', roles: ['superadmin'] },
-  { value: 'stats:read', labelKey: 'tokens.permStatsRead', roles: ['superadmin', 'admin'] },
-  { value: 'logs:read', labelKey: 'tokens.permLogsRead', roles: ['superadmin', 'admin'] },
-  { value: 'backup:write', labelKey: 'tokens.permBackupWrite', roles: ['superadmin', 'admin'] },
-  { value: 'reviews:write', labelKey: 'tokens.permReviewsWrite', roles: ['superadmin', 'admin'] },
-  { value: 'keywords:write', labelKey: 'tokens.permKeywordsWrite', roles: ['superadmin', 'admin'] },
-  { value: 'ads:write', labelKey: 'tokens.permAdsWrite', roles: ['superadmin', 'admin'] },
-  { value: 'ads:read', labelKey: 'tokens.permAdsRead', roles: ['superadmin', 'admin'] },
-  { value: 'ads:delete', labelKey: 'tokens.permAdsDelete', roles: ['superadmin', 'admin'] },
-  { value: 'statichtml:write', labelKey: 'tokens.permStatichtmlWrite', roles: ['superadmin', 'admin'] },
-  { value: 'statichtml:read', labelKey: 'tokens.permStatichtmlRead', roles: ['superadmin', 'admin'] },
-  { value: 'styles:write', labelKey: 'tokens.permStylesWrite', roles: ['superadmin', 'admin'] },
-  { value: 'styles:read', labelKey: 'tokens.permStylesRead', roles: ['superadmin', 'admin'] },
+  { value: 'site:write', labelKey: 'tokens.permSiteWrite', roles: ['superadmin', 'admin'] },
 ]
+
+// 旧权限别名兼容：合并为单一 site:write 后，已签发的旧 token（permissions 含下列任一旧权限）
+// 仍视为拥有 site:write，避免旧 token 立即失效。新 token 直接存 'site:write'。
+export const LEGACY_PERMISSION_ALIASES: Record<string, string[]> = {
+  'site:write': [
+    'article:write',
+    'media:upload',
+    'content:delete',
+    'settings:write',
+    'friendlinks:write',
+    'sections:write',
+    'categories:write',
+    'users:write',
+    'stats:read',
+    'logs:read',
+    'backup:write',
+    'reviews:write',
+    'keywords:write',
+    'ads:read',
+    'ads:write',
+    'ads:delete',
+    'statichtml:write',
+    'statichtml:read',
+    'styles:write',
+    'styles:read',
+    'works:write',
+  ],
+}
+
+// 判断 token 权限数组是否满足某要求权限（含旧权限别名兼容）
+export function satisfiesPermission(permissions: string[], required: string): boolean {
+  if (permissions.includes(required)) return true
+  const aliases = LEGACY_PERMISSION_ALIASES[required]
+  return aliases ? aliases.some((p) => permissions.includes(p)) : false
+}
 
 // Token 创建接口的合法权限白名单（由目录派生）
 export const ALL_API_PERMISSIONS: string[] = API_PERMISSION_CATALOG.map((p) => p.value)

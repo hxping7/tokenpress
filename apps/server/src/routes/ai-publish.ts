@@ -95,7 +95,7 @@ async function linkMediaToArticle(articleId: number, content: string, coverImage
  */
 
 // POST /api/v1/ai/publish — create or update article
-router.post('/publish', requirePermission('article:write'), async (req: ApiAuthRequest, res) => {
+router.post('/publish', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const {
       title,
@@ -399,7 +399,7 @@ router.get('/articles', async (req: ApiAuthRequest, res) => {
 
 // DELETE /api/v1/ai/articles/:slug — delete article by slug
 // ?deleteMedia=true 可选：同时删除关联的媒体文件
-router.delete('/articles/:slug', requirePermission('content:delete'), async (req: ApiAuthRequest, res) => {
+router.delete('/articles/:slug', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const slug = getParam(req.params.slug)
     if (!slug) {
@@ -476,7 +476,7 @@ router.delete('/articles/:slug', requirePermission('content:delete'), async (req
 
 // POST /api/v1/ai/articles/:slug/pin — 远程设置/取消置顶
 // 请求体: { "pinnedScope": "global" | "section" | "none" }
-router.post('/articles/:slug/pin', requirePermission('article:write'), async (req: ApiAuthRequest, res) => {
+router.post('/articles/:slug/pin', requirePermission('site:write'), async (req: ApiAuthRequest, res) => {
   try {
     const slug = getParam(req.params.slug)
     if (!slug) {
