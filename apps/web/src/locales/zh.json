@@ -489,7 +489,7 @@
     "permissions": "权限",
     "permArticleWrite": "创建/发布文章",
     "permMediaUpload": "上传媒体文件",
-    "permWorkWrite": "发布 AI 作品",
+    "permWorksWrite": "发布 AI 作品",
     "permContentDelete": "删除文章",
     "permSettingsWrite": "修改系统设置",
     "expiresAt": "过期时间（可选）",

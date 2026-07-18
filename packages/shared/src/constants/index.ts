@@ -26,7 +26,7 @@ export const CONTENT_STATUS = [
 export const API_PERMISSIONS = [
   { value: 'article:write', label: '发布/编辑文章' },
   { value: 'media:upload', label: '上传媒体文件' },
-  { value: 'work:write', label: '发布 AI 作品' },
+  { value: 'works:write', label: '发布 AI 作品' },
   { value: 'content:delete', label: '删除内容' },
   { value: 'settings:write', label: '修改系统设置' },
   { value: 'ads:read', label: '查看广告' },
@@ -36,8 +36,8 @@ export const API_PERMISSIONS = [
 
 // Per-role allowed API Token permissions
 export const ROLE_API_PERMISSIONS: Record<string, string[]> = {
-  superadmin: ['article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write', 'ads:read', 'ads:write', 'ads:delete'],
-  admin: ['article:write', 'media:upload', 'work:write', 'content:delete', 'ads:read', 'ads:write', 'ads:delete'],
+  superadmin: ['article:write', 'media:upload', 'works:write', 'content:delete', 'settings:write', 'ads:read', 'ads:write', 'ads:delete'],
+  admin: ['article:write', 'media:upload', 'works:write', 'content:delete', 'ads:read', 'ads:write', 'ads:delete'],
   user: ['article:write', 'media:upload'],
 }
 

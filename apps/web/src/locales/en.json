@@ -489,7 +489,7 @@
     "permissions": "Permissions",
     "permArticleWrite": "Create/Publish Articles",
     "permMediaUpload": "Upload Media Files",
-    "permWorkWrite": "Publish AI Works",
+    "permWorksWrite": "Publish AI Works",
     "permContentDelete": "Delete Articles",
     "permSettingsWrite": "Modify System Settings",
     "expiresAt": "Expiration (optional)",

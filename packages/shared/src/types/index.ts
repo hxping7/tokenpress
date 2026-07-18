@@ -50,7 +50,7 @@ export interface ApiToken {
   createdAt: string
 }
 
-export type ApiPermission = 'article:write' | 'media:upload' | 'work:write' | 'content:delete' | 'settings:write' | 'ads:read' | 'ads:write' | 'ads:delete'
+export type ApiPermission = 'article:write' | 'media:upload' | 'works:write' | 'content:delete' | 'settings:write' | 'ads:read' | 'ads:write' | 'ads:delete'
 
 export interface CreateApiTokenDTO {
   name: string

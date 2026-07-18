@@ -5,10 +5,11 @@ import {
   Field, TextInput, TextArea, NumberInput, SelectInput, ColorInput, Toggle, Slider, MiniGrid, MiniNav,
 } from './fields'
 import {
-  getIn, setIn, TEMPLATE_KEYS, TEMPLATE_LABELS, defaultTemplateConfig,
+  getIn, setIn, deleteIn, TEMPLATE_KEYS, TEMPLATE_LABELS, defaultTemplateConfig,
   CARD_STYLE_OPTIONS, HOVER_OPTIONS, NAV_POSITION_OPTIONS, NAV_STYLE_OPTIONS,
   NAV_ALIGN_OPTIONS, HEADER_VARIANT_OPTIONS, LOGO_POSITION_OPTIONS, NAV_COLOR_FIELDS, ASPECT_OPTIONS,
 } from './schema'
+import { WIDTH_PRESETS } from '@/lib/layout-config'
 
 export type StyleDraft = {
   manifest: { name?: string; description?: string; version?: string }
@@ -110,6 +111,20 @@ export function StylePackForm({
             </Field>
             <Field label="版本" desc="语义化版本号，如 1.0.0">
               <TextInput value={draft.manifest.version || ''} onChange={(v) => updateManifest('version', v)} />
+            </Field>
+            <Field label="全局内容宽度" desc="全站内容容器最大宽度（Header/Footer/首页/板块/文章统一生效）。留空则使用 CSS 默认 80rem（1280px）。">
+              <SelectInput
+                value={get('layouts.container.maxWidth', '')}
+                onChange={(v) =>
+                  v
+                    ? set('layouts.container.maxWidth', v)
+                    : onChange(deleteIn(draft, 'layouts.container.maxWidth'))
+                }
+                options={[
+                  { value: '', label: '默认 (80rem)' },
+                  ...WIDTH_PRESETS.map((p) => ({ value: p.value, label: p.label })),
+                ] as any}
+              />
             </Field>
           </>
         )}
