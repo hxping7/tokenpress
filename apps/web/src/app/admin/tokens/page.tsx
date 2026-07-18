@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
+import { API_PERMISSION_CATALOG } from '@tokenpress/shared'
 import { Plus, Trash2, X, Check, Copy, Key, Clock, Shield, Activity } from 'lucide-react'
 
 interface ApiToken {
@@ -19,13 +20,12 @@ interface ApiToken {
   created_at: string
 }
 
-const allPermissionOptions = [
-  { value: 'article:write', labelKey: 'tokens.permArticleWrite', roles: ['superadmin', 'admin', 'user'] },
-  { value: 'media:upload', labelKey: 'tokens.permMediaUpload', roles: ['superadmin', 'admin', 'user'] },
-  { value: 'works:write', labelKey: 'tokens.permWorksWrite', roles: ['superadmin', 'admin'] },
-  { value: 'content:delete', labelKey: 'tokens.permContentDelete', roles: ['superadmin', 'admin'] },
-  { value: 'settings:write', labelKey: 'tokens.permSettingsWrite', roles: ['superadmin'] },
-]
+// 权限选项派生自共享目录（packages/shared），与后端白名单/角色口径单一来源一致
+const allPermissionOptions = API_PERMISSION_CATALOG.map((p) => ({
+  value: p.value,
+  labelKey: p.labelKey,
+  roles: p.roles,
+}))
 
 export default function TokensPage() {
   const queryClient = useQueryClient()

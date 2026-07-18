@@ -23,23 +23,54 @@ export const CONTENT_STATUS = [
   { value: 'archived', label: '已归档' },
 ] as const
 
-export const API_PERMISSIONS = [
-  { value: 'article:write', label: '发布/编辑文章' },
-  { value: 'media:upload', label: '上传媒体文件' },
-  { value: 'works:write', label: '发布 AI 作品' },
-  { value: 'content:delete', label: '删除内容' },
-  { value: 'settings:write', label: '修改系统设置' },
-  { value: 'ads:read', label: '查看广告' },
-  { value: 'ads:write', label: '创建/编辑广告' },
-  { value: 'ads:delete', label: '删除广告' },
-] as const
+// 单一事实来源：API Token 权限目录。
+// 后台创建 Token 的 UI（前端）与 Token 创建接口（后端）均由此派生，
+// 保证「可勾选权限」与「后端接受权限」永远一致。
+// labelKey 对应 locales 中 tokens.* 的 i18n key；roles 为该权限可被授予的角色。
+import type { ApiPermission } from '../types/index.js'
 
-// Per-role allowed API Token permissions
-export const ROLE_API_PERMISSIONS: Record<string, string[]> = {
-  superadmin: ['article:write', 'media:upload', 'works:write', 'content:delete', 'settings:write', 'ads:read', 'ads:write', 'ads:delete'],
-  admin: ['article:write', 'media:upload', 'works:write', 'content:delete', 'ads:read', 'ads:write', 'ads:delete'],
-  user: ['article:write', 'media:upload'],
+export interface ApiPermissionDef {
+  value: ApiPermission
+  labelKey: string
+  roles: string[]
 }
+
+export const API_PERMISSION_CATALOG: ApiPermissionDef[] = [
+  { value: 'article:write', labelKey: 'tokens.permArticleWrite', roles: ['superadmin', 'admin', 'user'] },
+  { value: 'media:upload', labelKey: 'tokens.permMediaUpload', roles: ['superadmin', 'admin', 'user'] },
+  { value: 'content:delete', labelKey: 'tokens.permContentDelete', roles: ['superadmin', 'admin'] },
+  { value: 'settings:write', labelKey: 'tokens.permSettingsWrite', roles: ['superadmin', 'admin'] },
+  { value: 'friendlinks:write', labelKey: 'tokens.permFriendlinksWrite', roles: ['superadmin', 'admin'] },
+  { value: 'sections:write', labelKey: 'tokens.permSectionsWrite', roles: ['superadmin', 'admin'] },
+  { value: 'categories:write', labelKey: 'tokens.permCategoriesWrite', roles: ['superadmin', 'admin'] },
+  { value: 'users:write', labelKey: 'tokens.permUsersWrite', roles: ['superadmin'] },
+  { value: 'stats:read', labelKey: 'tokens.permStatsRead', roles: ['superadmin', 'admin'] },
+  { value: 'logs:read', labelKey: 'tokens.permLogsRead', roles: ['superadmin', 'admin'] },
+  { value: 'backup:write', labelKey: 'tokens.permBackupWrite', roles: ['superadmin', 'admin'] },
+  { value: 'reviews:write', labelKey: 'tokens.permReviewsWrite', roles: ['superadmin', 'admin'] },
+  { value: 'keywords:write', labelKey: 'tokens.permKeywordsWrite', roles: ['superadmin', 'admin'] },
+  { value: 'ads:write', labelKey: 'tokens.permAdsWrite', roles: ['superadmin', 'admin'] },
+  { value: 'ads:read', labelKey: 'tokens.permAdsRead', roles: ['superadmin', 'admin'] },
+  { value: 'ads:delete', labelKey: 'tokens.permAdsDelete', roles: ['superadmin', 'admin'] },
+  { value: 'statichtml:write', labelKey: 'tokens.permStatichtmlWrite', roles: ['superadmin', 'admin'] },
+  { value: 'statichtml:read', labelKey: 'tokens.permStatichtmlRead', roles: ['superadmin', 'admin'] },
+  { value: 'styles:write', labelKey: 'tokens.permStylesWrite', roles: ['superadmin', 'admin'] },
+  { value: 'styles:read', labelKey: 'tokens.permStylesRead', roles: ['superadmin', 'admin'] },
+]
+
+// Token 创建接口的合法权限白名单（由目录派生）
+export const ALL_API_PERMISSIONS: string[] = API_PERMISSION_CATALOG.map((p) => p.value)
+
+// 各角色可授予的权限集合（由目录派生，避免前后端/角色口径漂移）
+export const ROLE_API_PERMISSIONS: Record<string, string[]> = API_PERMISSION_CATALOG.reduce(
+  (acc, p) => {
+    for (const role of p.roles) {
+      ;(acc[role] ||= []).push(p.value)
+    }
+    return acc
+  },
+  {} as Record<string, string[]>,
+)
 
 // Upload limits
 export const UPLOAD_LIMITS = {
