@@ -3,660 +3,290 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TokenPress Logo Design Preview</title>
+  <title>TokenPress Logo · 多背景预览（优化版 · 无发光）</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #050a14;
+      background: #03070f;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      color: #e0e8ff;
+      color: #cfe2ff;
       min-height: 100vh;
+      padding: 40px 20px 64px;
     }
 
-    header {
-      text-align: center;
-      padding: 48px 20px 24px;
-      border-bottom: 1px solid rgba(0, 200, 255, 0.1);
-    }
+    header { text-align: center; margin-bottom: 8px; }
     header h1 {
-      font-size: 14px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: #5aafff;
-      margin-bottom: 8px;
+      font-size: 15px; letter-spacing: 4px; text-transform: uppercase;
+      color: #5ab8ff; font-weight: 600;
     }
     header p {
-      font-size: 12px;
-      color: #3a5a7a;
-      letter-spacing: 2px;
+      margin-top: 10px; font-size: 12px; letter-spacing: 1px; color: #4a6a8a;
+      line-height: 1.8;
+    }
+    header .tag {
+      display: inline-block; margin-top: 14px; padding: 5px 14px;
+      font-size: 11px; letter-spacing: 2px; color: #22d3ee;
+      border: 1px solid rgba(34,211,238,0.3); border-radius: 999px;
     }
 
+    .section-title {
+      max-width: 1180px; margin: 44px auto 16px; padding: 0 4px;
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+      color: #2a4a6a; display: flex; align-items: center; gap: 12px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,180,255,0.08); }
+
     .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-      gap: 2px;
-      padding: 2px;
+      max-width: 1180px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
     }
 
     .card {
-      background: #080f1c;
-      border: 1px solid rgba(0, 180, 255, 0.08);
-      padding: 60px 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 28px;
-      transition: border-color 0.3s;
-      position: relative;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
       overflow: hidden;
+      display: flex; flex-direction: column;
     }
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(0,200,255,0.4), transparent);
+    .swatch {
+      height: 168px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      position: relative;
     }
-    .card:hover {
-      border-color: rgba(0, 200, 255, 0.3);
-      background: #0b1525;
+    .swatch::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
     }
+    .logo { width: 100%; max-width: 220px; height: auto; display: block; }
 
-    .card-label {
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #2a4a6a;
-      position: absolute;
-      top: 16px;
-      right: 20px;
+    .meta {
+      padding: 12px 14px;
+      background: #0a121f;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
-    .card-desc {
-      font-size: 12px;
-      color: #4a6a8a;
-      text-align: center;
-      letter-spacing: 0.5px;
-      line-height: 1.8;
-    }
-    .card-desc strong { color: #7ab0e0; }
-
-    /* V1：极简发光版 */
-    .logo-v1 {
-      display: flex;
-      align-items: center;
-      filter: drop-shadow(0 0 20px rgba(0,200,255,0.5));
-    }
-    /* V2：图标 + 文字 */
-    .logo-v2 {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      filter: drop-shadow(0 0 16px rgba(80,160,255,0.4));
-    }
-    /* V3：竖排版 */
-    .logo-v3 {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-    /* V4：胶囊/badge 版 */
-    .logo-v4 {
-      display: inline-flex;
-      align-items: center;
-    }
-
-    /* Favicon 尺寸展示 */
-    .small-demos {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      padding: 32px;
-      background: #060d1a;
-      border-top: 1px solid rgba(0,180,255,0.06);
-    }
-    .small-demo-label {
-      text-align: center;
-      padding: 40px 20px 24px;
-      color: #3a5a7a;
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-    }
-    .size-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-    .size-tag {
-      font-size: 10px;
-      color: #2a4a6a;
-      letter-spacing: 2px;
-    }
+    .meta .name { font-size: 12px; color: #bcd6f5; letter-spacing: 0.5px; }
+    .meta .spec { font-size: 10px; color: #3a5a7a; letter-spacing: 1px; margin-top: 4px; font-family: ui-monospace, monospace; }
+    .meta .note { font-size: 10px; color: #6fae6f; margin-top: 6px; letter-spacing: 0.5px; }
+    .meta .note.warn { color: #d6a35a; }
 
     footer {
-      text-align: center;
-      padding: 40px;
-      color: #1a3050;
-      font-size: 11px;
-      letter-spacing: 2px;
+      max-width: 1180px; margin: 48px auto 0; text-align: center;
+      font-size: 11px; letter-spacing: 2px; color: #1a3050; line-height: 1.9;
+    }
+
+    /* 网格纹理（深） */
+    .bg-grid-dark {
+      background-color: #060c18;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.05) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .bg-grid-light {
+      background-color: #eef4fb;
+      background-image:
+        linear-gradient(rgba(10,90,160,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10,90,160,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
     }
   </style>
 </head>
 <body>
 
+<!-- ===== 可复用 logo 符号（优化版：无发光、无毛边） ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- 深色背景版：蓝→白→青渐变 -->
+    <linearGradient id="tpTextDark" x1="16" y1="0" x2="560" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5ab8ff"/>
+      <stop offset="55%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="tpInfDark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+
+    <!-- 浅色背景版：深蓝→藏青→青绿渐变 -->
+    <linearGradient id="tpTextLight" x1="16" y1="0" x2="560" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0070b8"/>
+      <stop offset="55%" stop-color="#0a2a4a"/>
+      <stop offset="100%" stop-color="#0a8aa8"/>
+    </linearGradient>
+    <linearGradient id="tpInfLight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0090cc"/>
+      <stop offset="50%" stop-color="#1e5fb0"/>
+      <stop offset="100%" stop-color="#0a8aa8"/>
+    </linearGradient>
+
+    <!-- 深色版符号 -->
+    <symbol id="logo-dark" viewBox="0 0 620 144">
+      <g transform="translate(16,0)" shape-rendering="geometricPrecision">
+        <text x="16" y="102" font-family="'Segoe UI','SF Pro Display',Arial,sans-serif" font-size="70" font-weight="700" letter-spacing="-3" fill="url(#tpTextDark)">TokenPress</text>
+        <g transform="translate(490,72)">
+          <path d="M 70 0 C 70 -36, 28 -36, 0 0 C -28 36, -70 36, -70 0 C -70 -36, -28 -36, 0 0 C 28 36, 70 36, 70 0 Z" fill="none" stroke="url(#tpInfDark)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 50 0 C 50 -24, 20 -24, 0 0 C -20 24, -50 24, -50 0 C -50 -24, -20 -24, 0 0 C 20 24, 50 24, 50 0 Z" fill="none" stroke="rgba(34,211,238,0.25)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="0" cy="0" r="4" fill="#ffffff"/>
+        </g>
+      </g>
+    </symbol>
+
+    <!-- 浅色版符号 -->
+    <symbol id="logo-light" viewBox="0 0 620 144">
+      <g transform="translate(16,0)" shape-rendering="geometricPrecision">
+        <text x="16" y="102" font-family="'Segoe UI','SF Pro Display',Arial,sans-serif" font-size="70" font-weight="700" letter-spacing="-3" fill="url(#tpTextLight)">TokenPress</text>
+        <g transform="translate(490,72)">
+          <path d="M 70 0 C 70 -36, 28 -36, 0 0 C -28 36, -70 36, -70 0 C -70 -36, -28 -36, 0 0 C 28 36, 70 36, 70 0 Z" fill="none" stroke="url(#tpInfLight)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 50 0 C 50 -24, 20 -24, 0 0 C -20 24, -50 24, -50 0 C -50 -24, -20 -24, 0 0 C 20 24, 50 24, 50 0 Z" fill="none" stroke="rgba(10,138,168,0.28)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="0" cy="0" r="4" fill="#0a2a4a"/>
+        </g>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
 <header>
-  <h1>TokenPress · Logo Design System</h1>
-  <p>TokenPress · AI Content Platform · Brand Identity 2026</p>
+  <h1>TokenPress · 多背景兼容性预览</h1>
+  <p>优化版标志（去除发光滤镜与毛边）· 同一图形在深色 / 浅色 / 渐变 / 纯色背景下的呈现</p>
+  <span class="tag">NO-GLOW · NO-ROUGH-EDGE</span>
 </header>
 
-<!-- ============ VARIANT 1：极简文字光效版 ============ -->
+<!-- ===================== 深色背景 ===================== -->
+<div class="section-title">深色背景 · Dark Surfaces</div>
 <div class="grid">
 
   <div class="card">
-    <span class="card-label">V1 · Minimal</span>
-
-    <div class="logo-v1">
-      <svg width="390" height="72" viewBox="0 0 390 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="tp-textGrad1" x1="0" y1="0" x2="390" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#5ab8ff"/>
-            <stop offset="58%" stop-color="#ffffff"/>
-            <stop offset="100%" stop-color="#22d3ee"/>
-          </linearGradient>
-          <linearGradient id="tp-infGrad1" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#00d4ff"/>
-            <stop offset="100%" stop-color="#22d3ee"/>
-          </linearGradient>
-          <filter id="tp-glow1" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <filter id="tp-glowStrong" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="5" result="blur1"/>
-            <feGaussianBlur stdDeviation="2" result="blur2"/>
-            <feMerge>
-              <feMergeNode in="blur1"/>
-              <feMergeNode in="blur2"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        <!-- TokenPress 完整字标 -->
-        <text x="6" y="52"
-          font-family="'Segoe UI', 'SF Pro Display', system-ui, sans-serif"
-          font-size="48"
-          font-weight="700"
-          letter-spacing="-1"
-          fill="url(#tp-textGrad1)"
-          filter="url(#tp-glow1)">TokenPress</text>
-
-        <!-- 无穷大符号：紧贴字标右侧，贝塞尔曲线 + 强发光 -->
-        <g transform="translate(300, 36)" filter="url(#tp-glowStrong)">
-          <path d="
-            M 38 0
-            C 38 -18, 16 -18, 0 0
-            C -16 18, -38 18, -38 0
-            C -38 -18, -16 -18, 0 0
-            C 16 18, 38 18, 38 0
-            Z"
-            fill="none"
-            stroke="url(#tp-infGrad1)"
-            stroke-width="5"
-            stroke-linecap="round"
-          />
-          <path d="
-            M 30 0
-            C 30 -12, 14 -12, 0 0
-            C -14 12, -30 12, -30 0
-            C -30 -12, -14 -12, 0 0
-            C 14 12, 30 12, 30 0
-            Z"
-            fill="none"
-            stroke="rgba(34,211,238,0.25)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-        </g>
-
-        <!-- 装饰性底部横线 -->
-        <line x1="6" y1="62" x2="384" y2="62" stroke="url(#tp-infGrad1)" stroke-width="0.5" opacity="0.3"/>
-      </svg>
+    <div class="swatch" style="background:#000000;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
     </div>
-
-    <div class="card-desc">
-      极简渐变光效 · <strong>深空蓝→白→青蓝</strong>三色渐变<br>
-      无穷大符号贝塞尔曲线 · 强发光滤镜
-    </div>
+    <div class="meta"><div class="name">纯黑</div><div class="spec">#000000</div><div class="note">对比最佳 · 强烈推荐</div></div>
   </div>
 
-  <!-- ============ VARIANT 2：图标+文字版 ============ -->
   <div class="card">
-    <span class="card-label">V2 · Icon + Text</span>
-
-    <div class="logo-v2">
-      <!-- 左侧图标：六边形内嵌∞ -->
-      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="tp-hexGrad" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#0f3460"/>
-            <stop offset="100%" stop-color="#162040"/>
-          </linearGradient>
-          <linearGradient id="tp-hexBorder" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#00d4ff"/>
-            <stop offset="100%" stop-color="#22d3ee"/>
-          </linearGradient>
-          <linearGradient id="tp-infGrad2" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#00ffea"/>
-            <stop offset="100%" stop-color="#22d3ee"/>
-          </linearGradient>
-          <filter id="tp-hexGlow">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <polygon points="36,4 64,20 64,52 36,68 8,52 8,20"
-          fill="url(#tp-hexGrad)"
-          stroke="url(#tp-hexBorder)"
-          stroke-width="1.5"/>
-        <polygon points="36,8 60,22 60,50 36,64 12,50 12,22"
-          fill="none"
-          stroke="rgba(0,212,255,0.1)"
-          stroke-width="1"/>
-        <g transform="translate(36,36)" filter="url(#tp-hexGlow)">
-          <path d="
-            M 18 0
-            C 18 -9, 7 -9, 0 0
-            C -7 9, -18 9, -18 0
-            C -18 -9, -7 -9, 0 0
-            C 7 9, 18 9, 18 0
-            Z"
-            fill="none"
-            stroke="url(#tp-infGrad2)"
-            stroke-width="3"
-            stroke-linecap="round"
-          />
-        </g>
-        <circle cx="36" cy="6" r="2" fill="#00d4ff" opacity="0.6"/>
-        <circle cx="62" cy="21" r="1.5" fill="#22d3ee" opacity="0.6"/>
-        <circle cx="62" cy="51" r="1.5" fill="#00d4ff" opacity="0.5"/>
-      </svg>
-
-      <!-- 右侧文字 -->
-      <svg width="250" height="56" viewBox="0 0 250 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="tp-textGrad2" x1="0" y1="0" x2="250" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#e0f0ff"/>
-            <stop offset="100%" stop-color="#a0c8ff"/>
-          </linearGradient>
-        </defs>
-        <text x="0" y="34"
-          font-family="'Segoe UI', system-ui, sans-serif"
-          font-size="32"
-          font-weight="700"
-          letter-spacing="0.5"
-          fill="url(#tp-textGrad2)">TokenPress</text>
-        <text x="2" y="50"
-          font-family="'Segoe UI', system-ui, sans-serif"
-          font-size="9"
-          font-weight="400"
-          letter-spacing="4"
-          fill="#2a6090">AI CONTENT PLATFORM</text>
-      </svg>
+    <div class="swatch" style="background:#050a14;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
     </div>
-
-    <div class="card-desc">
-      六边形图标 + 文字横排 · 适合<strong>导航栏/App图标</strong><br>
-      青蓝渐变 · 科技六边形蜂窝风格
-    </div>
+    <div class="meta"><div class="name">深空导航蓝（站点默认）</div><div class="spec">#050a14</div><div class="note">官网原生底色 · 推荐</div></div>
   </div>
 
-  <!-- ============ VARIANT 3：科幻圆环版 ============ -->
   <div class="card">
-    <span class="card-label">V3 · Orbital Ring</span>
-
-    <svg width="360" height="175" viewBox="0 0 360 175" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tp-ringGrad" x1="0" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#00d4ff" stop-opacity="0"/>
-          <stop offset="30%" stop-color="#00d4ff"/>
-          <stop offset="70%" stop-color="#22d3ee"/>
-          <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
-        </linearGradient>
-        <linearGradient id="tp-textGrad3" x1="0" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#60c0ff"/>
-          <stop offset="50%" stop-color="#ffffff"/>
-          <stop offset="100%" stop-color="#22d3ee"/>
-        </linearGradient>
-        <linearGradient id="tp-infGrad3" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#00d4ff"/>
-          <stop offset="100%" stop-color="#22d3ee"/>
-        </linearGradient>
-        <filter id="tp-glow3">
-          <feGaussianBlur stdDeviation="4" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="tp-textGlow3">
-          <feGaussianBlur stdDeviation="2" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      <ellipse cx="180" cy="86" rx="160" ry="62"
-        fill="none" stroke="url(#tp-ringGrad)" stroke-width="0.5" opacity="0.3"/>
-      <ellipse cx="180" cy="86" rx="142" ry="50"
-        fill="none" stroke="rgba(0,212,255,0.08)" stroke-width="1"/>
-
-      <line x1="24" y1="86" x2="64" y2="86" stroke="#00d4ff" stroke-width="0.5" opacity="0.4"/>
-      <line x1="296" y1="86" x2="336" y2="86" stroke="#22d3ee" stroke-width="0.5" opacity="0.4"/>
-      <circle cx="24" cy="86" r="2" fill="#00d4ff" opacity="0.6"/>
-      <circle cx="336" cy="86" r="2" fill="#22d3ee" opacity="0.6"/>
-
-      <!-- 主文字 TokenPress -->
-      <text x="180" y="82"
-        text-anchor="middle"
-        font-family="'Segoe UI', system-ui, sans-serif"
-        font-size="42"
-        font-weight="800"
-        letter-spacing="-0.5"
-        fill="url(#tp-textGrad3)"
-        filter="url(#tp-textGlow3)">TokenPress</text>
-
-      <!-- ∞ 符号 居中在文字下方 -->
-      <g transform="translate(180, 108)" filter="url(#tp-glow3)">
-        <path d="
-          M 38 0
-          C 38 -16, 15 -16, 0 0
-          C -15 16, -38 16, -38 0
-          C -38 -16, -15 -16, 0 0
-          C 15 16, 38 16, 38 0
-          Z"
-          fill="none"
-          stroke="url(#tp-infGrad3)"
-          stroke-width="4"
-          stroke-linecap="round"
-        />
-        <circle cx="-38" cy="0" r="3" fill="#00d4ff"/>
-        <circle cx="38" cy="0" r="3" fill="#22d3ee"/>
-        <circle cx="0" cy="0" r="2" fill="#ffffff" opacity="0.8"/>
-      </g>
-
-      <circle cx="90" cy="32" r="1" fill="#00d4ff" opacity="0.3"/>
-      <circle cx="270" cy="32" r="1" fill="#22d3ee" opacity="0.3"/>
-      <circle cx="80" cy="44" r="1" fill="#00d4ff" opacity="0.2"/>
-      <circle cx="280" cy="44" r="1" fill="#22d3ee" opacity="0.2"/>
-
-      <text x="180" y="162"
-        text-anchor="middle"
-        font-family="'Segoe UI', system-ui, sans-serif"
-        font-size="9"
-        font-weight="400"
-        letter-spacing="6"
-        fill="#1a4060"
-        opacity="0.8">AI CONTENT PLATFORM</text>
-    </svg>
-
-    <div class="card-desc">
-      轨道环形装饰 · <strong>上下叠放排版</strong><br>
-      TokenPress 主文字 + 独立∞符号 · 科幻仪表盘风格
+    <div class="swatch" style="background:#0d1a2e;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
     </div>
+    <div class="meta"><div class="name">深石板蓝</div><div class="spec">#0d1a2e</div><div class="note">导航栏 / 卡片底色</div></div>
   </div>
 
-  <!-- ============ VARIANT 4：简洁胶囊版（适合顶栏） ============ -->
   <div class="card">
-    <span class="card-label">V4 · Compact Badge</span>
-
-    <svg width="380" height="64" viewBox="0 0 380 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tp-badgeGrad" x1="0" y1="0" x2="380" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#0a1628"/>
-          <stop offset="100%" stop-color="#0d1f3c"/>
-        </linearGradient>
-        <linearGradient id="tp-badgeBorder" x1="0" y1="0" x2="380" y2="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#00d4ff"/>
-          <stop offset="50%" stop-color="#22d3ee"/>
-          <stop offset="100%" stop-color="#00d4ff"/>
-        </linearGradient>
-        <linearGradient id="tp-textGrad4" x1="14" y1="0" x2="230" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#00d4ff"/>
-          <stop offset="40%" stop-color="#ffffff"/>
-          <stop offset="100%" stop-color="#e0e8ff"/>
-        </linearGradient>
-        <linearGradient id="tp-infGrad4" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#c0e8ff"/>
-          <stop offset="100%" stop-color="#22d3ee"/>
-        </linearGradient>
-        <filter id="tp-badgeGlow">
-          <feGaussianBlur stdDeviation="2.5" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="tp-infGlow4">
-          <feGaussianBlur stdDeviation="3" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-
-      <rect x="1" y="1" width="378" height="62" rx="16" fill="url(#tp-badgeGrad)"/>
-      <rect x="1" y="1" width="378" height="62" rx="16"
-        fill="none" stroke="url(#tp-badgeBorder)" stroke-width="1.2"/>
-      <rect x="4" y="4" width="372" height="56" rx="13"
-        fill="none" stroke="rgba(0,212,255,0.06)" stroke-width="1"/>
-
-      <!-- TokenPress 完整字标，居左，和∞无缝衔接 -->
-      <text x="22" y="42"
-        font-family="'Segoe UI', 'SF Pro Display', system-ui, sans-serif"
-        font-size="28"
-        font-weight="700"
-        letter-spacing="-0.5"
-        fill="url(#tp-textGrad4)"
-        filter="url(#tp-badgeGlow)">TokenPress</text>
-
-      <!-- ∞ 符号：紧贴字标右侧 -->
-      <g transform="translate(252, 32)" filter="url(#tp-infGlow4)">
-        <path d="M 22 0 C 22 -12, 8 -12, 0 0 C -8 12, -22 12, -22 0 C -22 -12, -8 -12, 0 0 C 8 12, 22 12, 22 0 Z"
-          fill="none"
-          stroke="url(#tp-infGrad4)"
-          stroke-width="3.5"
-          stroke-linecap="round"
-        />
-        <path d="M 15 0 C 15 -8, 5 -8, 0 0 C -5 8, -15 8, -15 0 C -15 -8, -5 -8, 0 0 C 5 8, 15 8, 15 0 Z"
-          fill="none"
-          stroke="rgba(34,211,238,0.25)"
-          stroke-width="1"
-          stroke-linecap="round"
-        />
-        <circle cx="0" cy="0" r="2" fill="rgba(180,240,255,0.6)"/>
-      </g>
-
-      <circle cx="356" cy="16" r="2" fill="#00d4ff" opacity="0.35"/>
-      <circle cx="362" cy="24" r="1.5" fill="#22d3ee" opacity="0.3"/>
-    </svg>
-
-    <div class="card-desc">
-      胶囊边框 · <strong>适合导航栏/按钮</strong><br>
-      TokenPress 与∞符号<strong>无缝一体</strong> · 渐变色自然衔接
+    <div class="swatch" style="background:linear-gradient(135deg,#0a1430,#13284d);">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
     </div>
+    <div class="meta"><div class="name">午夜蓝渐变</div><div class="spec">#0a1430 → #13284d</div><div class="note">Hero 区背景</div></div>
+  </div>
+
+  <div class="card">
+    <div class="swatch" style="background:linear-gradient(135deg,#0a1f3c,#10406b);">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
+    </div>
+    <div class="meta"><div class="name">科技蓝渐变</div><div class="spec">#0a1f3c → #10406b</div><div class="note">品牌主视觉</div></div>
+  </div>
+
+  <div class="card">
+    <div class="swatch" style="background:#0a2a4a;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
+    </div>
+    <div class="meta"><div class="name">品牌深蓝（纯色）</div><div class="spec">#0a2a4a</div><div class="note">按钮 / 强调块</div></div>
+  </div>
+
+  <div class="card">
+    <div class="swatch" style="background:linear-gradient(135deg,#160a30,#2a1450);">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
+    </div>
+    <div class="meta"><div class="name">紫调暗渐变</div><div class="spec">#160a30 → #2a1450</div><div class="note">活动 / 海报背景</div></div>
+  </div>
+
+  <div class="card">
+    <div class="swatch bg-grid-dark">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
+    </div>
+    <div class="meta"><div class="name">深网格纹理</div><div class="spec">grid · 28px</div><div class="note">仪表盘 / 后台</div></div>
   </div>
 
 </div>
 
-<!-- Favicon 尺寸展示（T + ∞ 品牌字标） -->
-<div class="small-demo-label">各尺寸预览</div>
-<div class="small-demos">
+<!-- ===================== 浅色背景 ===================== -->
+<div class="section-title">浅色背景 · Light Surfaces</div>
+<div class="grid">
 
-  <!-- 32x32 -->
-  <div class="size-box">
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tp-fav32Bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#0a1628"/>
-          <stop offset="100%" stop-color="#0a2038"/>
-        </linearGradient>
-        <linearGradient id="tp-fav32Inf" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#00d4ff"/>
-          <stop offset="100%" stop-color="#22d3ee"/>
-        </linearGradient>
-        <filter id="tp-fav32Glow">
-          <feGaussianBlur stdDeviation="1.5" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <rect width="32" height="32" rx="6" fill="url(#tp-fav32Bg)"/>
-      <rect x="0.5" y="0.5" width="31" height="31" rx="5.5" fill="none" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
-      <text x="6" y="20" font-family="system-ui" font-size="15" font-weight="800" fill="#00d4ff" filter="url(#tp-fav32Glow)">T</text>
-      <g transform="translate(22,18)" filter="url(#tp-fav32Glow)">
-        <path d="M8 0 C8-5,3-5,0 0 C-3 5,-8 5,-8 0 C-8-5,-3-5,0 0 C3 5,8 5,8 0Z"
-          fill="none" stroke="url(#tp-fav32Inf)" stroke-width="2" stroke-linecap="round"/>
-      </g>
-    </svg>
-    <span class="size-tag">32×32</span>
+  <div class="card">
+    <div class="swatch" style="background:#ffffff;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-light"/></svg>
+    </div>
+    <div class="meta"><div class="name">纯白</div><div class="spec">#ffffff</div><div class="note">文档 / 打印 · 用浅色版</div></div>
   </div>
 
-  <!-- 48x48 -->
-  <div class="size-box">
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tp-fav48Bg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#0a1628"/>
-          <stop offset="100%" stop-color="#0a2038"/>
-        </linearGradient>
-        <linearGradient id="tp-fav48Inf" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#00d4ff"/>
-          <stop offset="100%" stop-color="#22d3ee"/>
-        </linearGradient>
-        <filter id="tp-fav48Glow">
-          <feGaussianBlur stdDeviation="2" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <rect width="48" height="48" rx="8" fill="url(#tp-fav48Bg)"/>
-      <rect x="0.5" y="0.5" width="47" height="47" rx="7.5" fill="none" stroke="rgba(0,212,255,0.35)" stroke-width="1"/>
-      <text x="8" y="30" font-family="system-ui" font-size="22" font-weight="800" fill="#00d4ff" filter="url(#tp-fav48Glow)">T</text>
-      <g transform="translate(34,26)" filter="url(#tp-fav48Glow)">
-        <path d="M11 0 C11-6,4-6,0 0 C-4 6,-11 6,-11 0 C-11-6,-4-6,0 0 C4 6,11 6,11 0Z"
-          fill="none" stroke="url(#tp-fav48Inf)" stroke-width="2.5" stroke-linecap="round"/>
-      </g>
-    </svg>
-    <span class="size-tag">48×48</span>
+  <div class="card">
+    <div class="swatch" style="background:#f0f3f7;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-light"/></svg>
+    </div>
+    <div class="meta"><div class="name">浅灰</div><div class="spec">#f0f3f7</div><div class="note">卡片 / 侧栏底色</div></div>
   </div>
 
-  <!-- 64x64 -->
-  <div class="size-box">
-    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tp-fav64Bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#0a1628"/>
-          <stop offset="100%" stop-color="#0a2038"/>
-        </linearGradient>
-        <linearGradient id="tp-fav64Inf" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#00d4ff"/>
-          <stop offset="100%" stop-color="#22d3ee"/>
-        </linearGradient>
-        <filter id="tp-fav64Glow">
-          <feGaussianBlur stdDeviation="2.5" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <rect width="64" height="64" rx="12" fill="url(#tp-fav64Bg)"/>
-      <rect x="0.5" y="0.5" width="63" height="63" rx="11.5" fill="none" stroke="rgba(0,212,255,0.4)" stroke-width="1.5"/>
-      <text x="10" y="42" font-family="system-ui" font-size="32" font-weight="800" fill="#00d4ff" filter="url(#tp-fav64Glow)">T</text>
-      <g transform="translate(46,36)" filter="url(#tp-fav64Glow)">
-        <path d="M13 0 C13-7,5-7,0 0 C-5 7,-13 7,-13 0 C-13-7,-5-7,0 0 C5 7,13 7,13 0Z"
-          fill="none" stroke="url(#tp-fav64Inf)" stroke-width="3" stroke-linecap="round"/>
-      </g>
-    </svg>
-    <span class="size-tag">64×64</span>
+  <div class="card">
+    <div class="swatch" style="background:#e8f4ff;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-light"/></svg>
+    </div>
+    <div class="meta"><div class="name">浅蓝</div><div class="spec">#e8f4ff</div><div class="note">登录 / 引导页</div></div>
   </div>
 
-  <!-- 128x128 -->
-  <div class="size-box">
-    <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tp-fav128Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#0a1628"/>
-          <stop offset="100%" stop-color="#0a2038"/>
-        </linearGradient>
-        <linearGradient id="tp-fav128Inf" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#00d4ff"/>
-          <stop offset="50%" stop-color="#22d3ee"/>
-          <stop offset="100%" stop-color="#00d4ff"/>
-        </linearGradient>
-        <filter id="tp-fav128Glow">
-          <feGaussianBlur stdDeviation="4" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <rect width="128" height="128" rx="24" fill="url(#tp-fav128Bg)"/>
-      <rect x="1" y="1" width="126" height="126" rx="23" fill="none" stroke="rgba(0,212,255,0.5)" stroke-width="2"/>
-      <rect x="8" y="8" width="112" height="112" rx="18" fill="none" stroke="rgba(0,212,255,0.08)" stroke-width="1"/>
-      <text x="18" y="86" font-family="system-ui" font-size="72" font-weight="900" fill="#00d4ff" filter="url(#tp-fav128Glow)">T</text>
-      <g transform="translate(92,72)" filter="url(#tp-fav128Glow)">
-        <path d="M26 0 C26-14,10-14,0 0 C-10 14,-26 14,-26 0 C-26-14,-10-14,0 0 C10 14,26 14,26 0Z"
-          fill="none" stroke="url(#tp-fav128Inf)" stroke-width="5" stroke-linecap="round"/>
-      </g>
-      <circle cx="12" cy="12" r="3" fill="#00d4ff" opacity="0.4"/>
-      <circle cx="116" cy="12" r="3" fill="#22d3ee" opacity="0.4"/>
-      <circle cx="12" cy="116" r="3" fill="#22d3ee" opacity="0.4"/>
-      <circle cx="116" cy="116" r="3" fill="#00d4ff" opacity="0.4"/>
-    </svg>
-    <span class="size-tag">128×128</span>
+  <div class="card">
+    <div class="swatch" style="background:linear-gradient(135deg,#f5fbff,#e6f2ff);">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-light"/></svg>
+    </div>
+    <div class="meta"><div class="name">品牌浅渐变</div><div class="spec">#f5fbff → #e6f2ff</div><div class="note">官网浅色区块</div></div>
   </div>
 
-  <!-- 亮色背景版 -->
-  <div class="size-box">
-    <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tp-lightBg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#f0f8ff"/>
-          <stop offset="100%" stop-color="#e8f4ff"/>
-        </linearGradient>
-        <linearGradient id="tp-lightInf" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#0090cc"/>
-          <stop offset="100%" stop-color="#0a8aa8"/>
-        </linearGradient>
-      </defs>
-      <rect width="128" height="128" rx="24" fill="url(#tp-lightBg)"/>
-      <text x="18" y="86" font-family="system-ui" font-size="72" font-weight="900" fill="#0a4080">T</text>
-      <g transform="translate(92,72)">
-        <path d="M26 0 C26-14,10-14,0 0 C-10 14,-26 14,-26 0 C-26-14,-10-14,0 0 C10 14,26 14,26 0Z"
-          fill="none" stroke="url(#tp-lightInf)" stroke-width="5" stroke-linecap="round"/>
-      </g>
-    </svg>
-    <span class="size-tag">浅色版</span>
+  <div class="card">
+    <div class="swatch" style="background:#fafaf7;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-light"/></svg>
+    </div>
+    <div class="meta"><div class="name">暖白</div><div class="spec">#fafaf7</div><div class="note">中性内容区</div></div>
+  </div>
+
+  <div class="card">
+    <div class="swatch bg-grid-light">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-light"/></svg>
+    </div>
+    <div class="meta"><div class="name">浅网格纹理</div><div class="spec">grid · 28px</div><div class="note">浅色后台</div></div>
+  </div>
+
+</div>
+
+<!-- ===================== 警示：浅色版误用 ===================== -->
+<div class="section-title">⚠ 反例 · 用错版本会怎样</div>
+<div class="grid">
+
+  <div class="card">
+    <div class="swatch" style="background:#ffffff;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-dark"/></svg>
+    </div>
+    <div class="meta"><div class="name">纯白 + 深色版 logo</div><div class="spec">#ffffff</div><div class="note warn">白→白中段消失 · 不可用</div></div>
+  </div>
+
+  <div class="card">
+    <div class="swatch" style="background:#050a14;">
+      <svg class="logo" viewBox="0 0 620 144"><use href="#logo-light"/></svg>
+    </div>
+    <div class="meta"><div class="name">深空蓝 + 浅色版 logo</div><div class="spec">#050a14</div><div class="note warn">深字在暗底看不清 · 不可用</div></div>
   </div>
 
 </div>
 
 <footer>
-  TokenPress · AI Content Platform · Logo Design System
+  TokenPress · AI Content Platform · 优化版标志预览<br>
+  深色背景使用深色版（白心渐变）· 浅色背景切换为浅色版（深蓝渐变）
 </footer>
-
-<!-- 动画效果 -->
-<style>
-  @keyframes tp-pulse-glow {
-    0%, 100% { filter: drop-shadow(0 0 20px rgba(0,200,255,0.4)); }
-    50% { filter: drop-shadow(0 0 35px rgba(34,211,238,0.6)); }
-  }
-  .logo-v1 { animation: tp-pulse-glow 3s ease-in-out infinite; }
-
-  @keyframes tp-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
-  .logo-v3 { animation: tp-float 4s ease-in-out infinite; }
-
-  .card { transition: all 0.3s ease; }
-  .card:hover .logo-v1,
-  .card:hover .logo-v2,
-  .card:hover .logo-v3,
-  .card:hover .logo-v4 {
-    filter: drop-shadow(0 0 30px rgba(0,200,255,0.7));
-  }
-</style>
 
 </body>
 </html>
