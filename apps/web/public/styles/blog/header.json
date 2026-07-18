@@ -2,7 +2,8 @@
   "variant":"sticky-solid",
   "logo": {
     "type":"image",
-    "src":"/logo.svg",
+    "src":"/logo-dark.svg",
+    "srcLight":"/logo-light.svg",
     "text":"TokenPress",
     "position":"left",
     "height":60,

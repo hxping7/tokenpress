@@ -2,7 +2,8 @@
   "variant":"sticky-transparent",
   "logo": {
     "type":"image",
-    "src":"/logo.svg",
+    "src":"/logo-dark.svg",
+    "srcLight":"/logo-light.svg",
     "text":"TokenPress",
     "position":"center",
     "height":60,

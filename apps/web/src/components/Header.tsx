@@ -483,7 +483,7 @@ function LogoBlock({ hc, theme }: { hc: any; theme?: string }) {
   const height: number = logo.height || 36
   // 亮色主题下使用深色调 logo 变体，避免发光白字在白底上隐形/发灰
   const isLight = theme === 'light'
-  const logoSrc = isLight ? (logo.srcLight || '/logo-dark.svg') : logo.src
+  const logoSrc = isLight ? (logo.srcLight || '/logo-light.svg') : (logo.src || '/logo-dark.svg')
   if (logo.type === 'text' || (!logo.src && logo.text)) {
     return (
       <span
