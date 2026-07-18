@@ -9,7 +9,7 @@ import { LocaleInitializer } from '@/components/LocaleInitializer'
 import { AnalyticsLoader } from '@/components/AnalyticsLoader'
 import { LayoutWidth } from '@/components/LayoutWidth'
 import { StyleProvider, type StyleConfig } from '@/components/StyleProvider'
-import { getThemePalette } from '@/lib/themePalettes'
+import { resolveThemePalette } from '@/lib/themePalettes'
 import { getSiteUrl } from '@/lib/site-url'
 
 // 使用系统字体，无网络依赖
@@ -34,6 +34,7 @@ async function getActiveStyleConfig(): Promise<{ config: StyleConfig; theme: str
         layouts: d.layouts || null,
         header: d.header || null,
         footer: d.footer || null,
+        themeVariants: d.manifest?.themeVariants || null,
       },
       theme: d.theme || '',
     }
@@ -103,7 +104,7 @@ export default async function RootLayout({
   try {
     const themeCookie = (await cookies()).get('token00_theme')?.value
     if (themeCookie && themeCookie !== styleConfig.defaultTheme) {
-      themeOverride = getThemePalette(themeCookie) || ''
+      themeOverride = resolveThemePalette(themeCookie, styleConfig.themeVariants) || ''
     }
   } catch {}
 

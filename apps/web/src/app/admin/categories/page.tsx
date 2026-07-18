@@ -34,6 +34,7 @@ interface Category {
   sortOrder: number
   template?: string
   templateConfig?: Record<string, unknown> | null
+  layouts?: Record<string, unknown> | null | string
   section?: Section | null
 }
 
@@ -65,6 +66,8 @@ export default function CategoriesPage() {
   const [categoryDescription, setCategoryDescription] = useState('')
   const [categoryTemplate, setCategoryTemplate] = useState('')
   const [categoryTemplateConfig, setCategoryTemplateConfig] = useState<Record<string, unknown> | null>(null)
+  const [categoryLayouts, setCategoryLayouts] = useState('')
+  const [categoryLayoutsError, setCategoryLayoutsError] = useState('')
 
   // Section template form state
   const [sectionTemplate, setSectionTemplate] = useState('article-list')
@@ -73,13 +76,20 @@ export default function CategoriesPage() {
   // Queries
   const { data: sectionsData, isLoading: sectionsLoading } = useQuery({
     queryKey: ['admin-sections'],
-    queryFn: () => api.get('/sections'),
+    queryFn: () => api.get('/sections/all'),
   })
 
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
     queryKey: ['admin-categories'],
     queryFn: () => api.get('/categories'),
   })
+
+  // 当前激活风格包的 templates 默认（用于后台展示「继承来源」与一键恢复）
+  const { data: activeStyleData } = useQuery({
+    queryKey: ['active-style'],
+    queryFn: () => api.getActiveStyle(),
+  })
+  const packTemplates = (activeStyleData?.data?.layouts?.templates as Record<string, Record<string, unknown>>) || null
 
   // Section mutations
   const createSectionMutation = useMutation({
@@ -184,6 +194,7 @@ export default function CategoriesPage() {
       setCategoryDescription(category.description || '')
       setCategoryTemplate(category.template || '')
       setCategoryTemplateConfig(category.templateConfig || null)
+      setCategoryLayouts(category.layouts ? JSON.stringify(category.layouts, null, 2) : '')
     } else {
       setEditingCategory(null)
       setCategoryName('')
@@ -191,7 +202,9 @@ export default function CategoriesPage() {
       setCategoryDescription('')
       setCategoryTemplate('')
       setCategoryTemplateConfig(null)
+      setCategoryLayouts('')
     }
+    setCategoryLayoutsError('')
     setShowCategoryEditor(true)
   }
 
@@ -222,13 +235,33 @@ export default function CategoriesPage() {
   const handleCategorySubmit = () => {
     if (!categorySectionId) return
 
-    const data = {
+    // 解析「页面结构覆盖」JSON（留空 = 交还给风格包默认）
+    let layouts: Record<string, unknown> | null = null
+    const trimmed = categoryLayouts.trim()
+    if (trimmed) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          layouts = parsed
+        } else {
+          setCategoryLayoutsError('必须是 JSON 对象，例如 {"category":{"hero":{"enabled":false}}}')
+          return
+        }
+      } catch {
+        setCategoryLayoutsError('JSON 格式错误，请检查括号与引号')
+        return
+      }
+    }
+    setCategoryLayoutsError('')
+
+    const data: Record<string, unknown> = {
       name: categoryName,
       sectionId: categorySectionId,
       description: categoryDescription || null,
       template: categoryTemplate,
       templateConfig: categoryTemplateConfig,
     }
+    if (editingCategory || layouts) data.layouts = layouts
 
     if (editingCategory) {
       updateCategoryMutation.mutate({ id: editingCategory.id, data })
@@ -472,13 +505,14 @@ export default function CategoriesPage() {
                 </div>
               </div>
               <TemplateField
-                label="模板 / 风格"
+                label="内容排版（模板）"
                 value={sectionTemplate}
                 onChange={setSectionTemplate}
                 config={sectionTemplateConfig}
                 onConfigChange={setSectionTemplateConfig}
                 exclude={editingSection?.kind === 'design_works' ? undefined : (['design-gallery'] as TemplateKey[])}
-                hint="决定板块内容如何展示（文章列表 / 卡片网格 / 瀑布流 / 杂志头条 / 单页 / 链接墙 / 作品集画廊）"
+                packTemplates={packTemplates}
+                hint="决定文章怎么排（列表 / 网格 / 瀑布流 / 杂志头条…）。列数 / 间距 / 卡片样式由当前风格包提供默认，可在此逐字段覆盖。注意：这是「内容排版」，与「页面骨架」（侧栏 / hero / 宽度）相互独立。"
               />
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -554,17 +588,39 @@ export default function CategoriesPage() {
                 const catSection = sections.find((s) => s.id === categorySectionId)
                 return (
                   <TemplateField
-                    label="模板 / 风格"
+                    label="内容排版（模板）"
                     value={categoryTemplate}
                     onChange={setCategoryTemplate}
                     config={categoryTemplateConfig}
                     onConfigChange={setCategoryTemplateConfig}
                     exclude={catSection?.kind === 'design_works' ? undefined : (['design-gallery'] as TemplateKey[])}
                     showInherit
-                    hint="分类可覆盖所属板块的展示模板"
+                    packTemplates={packTemplates}
+                    hint="分类可覆盖所属板块的展示模板；留空则跟随板块。列数 / 间距 / 卡片样式由风格包提供默认，可在此覆盖。"
                   />
                 )
               })()}
+
+              {/* 页面结构覆盖（高级）：JSON 覆盖风格包 category 默认骨架 */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  页面结构覆盖（高级）
+                  <span className="text-t-text-secondary text-xs ml-1">覆盖当前风格包的「分类页」默认骨架</span>
+                </label>
+                <textarea
+                  value={categoryLayouts}
+                  onChange={(e) => setCategoryLayouts(e.target.value)}
+                  placeholder={'{\n  "category": {\n    "hero": { "enabled": false },\n    "list": { "columns": 2 }\n  }\n}'}
+                  rows={7}
+                  className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue font-mono text-sm resize-y"
+                />
+                {categoryLayoutsError && (
+                  <p className="text-red-400 text-xs mt-1">{categoryLayoutsError}</p>
+                )}
+                <p className="text-t-text-secondary text-xs mt-1">
+                  留空则分类页完全跟随当前风格包默认。键级与风格包 layouts.json 的 category 一致：hero / sidebar / list。
+                </p>
+              </div>
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-t-border bg-t-bg-secondary">
               <button onClick={closeCategoryEditor} className="px-4 py-2 text-t-text-secondary hover:text-t-text-primary">{t('common.cancel', backendLocale)}</button>

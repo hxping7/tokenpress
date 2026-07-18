@@ -55,7 +55,7 @@ router.post('/', async (req: AuthRequest, res) => {
     }
 
     const validPermissions = [
-      'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
+      'article:write', 'media:upload', 'content:delete', 'settings:write',
       'friendlinks:write', 'sections:write', 'categories:write',
       'users:write', 'stats:read', 'logs:read', 'backup:write',
       'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
@@ -71,7 +71,7 @@ router.post('/', async (req: AuthRequest, res) => {
     const role = req.user!.role
     const allowedByRole: Record<string, string[]> = {
       superadmin: [
-        'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
+        'article:write', 'media:upload', 'content:delete', 'settings:write',
         'friendlinks:write', 'sections:write', 'categories:write',
         'users:write', 'stats:read', 'logs:read', 'backup:write',
         'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
@@ -79,7 +79,7 @@ router.post('/', async (req: AuthRequest, res) => {
         'styles:write', 'styles:read', 'works:write',
       ],
       admin: [
-        'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
+        'article:write', 'media:upload', 'content:delete', 'settings:write',
         'friendlinks:write', 'sections:write', 'categories:write',
         'stats:read', 'logs:read', 'backup:write',
         'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',

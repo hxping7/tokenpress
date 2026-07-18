@@ -2,20 +2,22 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth'
-import { useLocaleStore, useThemeStore, type ThemeName } from '@/stores'
+import { useLocaleStore, useThemeStore } from '@/stores'
 import { api } from '@/lib/api'
 import { t } from '@/lib/i18n'
 import {
   Menu, X, LogOut, LayoutDashboard, Globe, Palette, Sun, Moon, User, LogIn,
   Settings, Search, Bell, Plus, Mail, Phone, Home, BookOpen, Heart, Star,
   Image as ImageIcon, Link2, ChevronDown, Command, Zap, Sparkles, Gauge,
-  MessageSquare, Send,
+  MessageSquare, Send, Github, Bot, Code, Compass, Droplet, Waves, Newspaper,
+  Info, PenTool, Layout, Folder, Flame, Rocket,
 } from 'lucide-react'
-import { useStyleHeader } from '@/components/StyleProvider'
+import { useStyleHeader, useStyleThemeOptions } from '@/components/StyleProvider'
+import { BUILTIN_THEME_OPTIONS } from '@/lib/themePalettes'
 import { Logo } from '@/components/Logo'
 
 interface Section {
@@ -29,12 +31,17 @@ interface Section {
 
 interface HeaderNavItem {
   name: string
+  slug?: string
   path: string
   externalUrl?: string | null
 }
 
 // ===== 模板包 header.actions 类型 =====
-type ActionType = 'theme' | 'language' | 'admin' | 'login' | 'logout' | 'link'
+// 行为类型（theme/language/admin/login/logout/link/divider）。
+// 注：图标 icon 可填 lucide 名，也可填内联 SVG 字符串（模板包自定义图标，无需改代码）。
+// link 支持 target:'_blank' 新窗口打开。新增“行为”类型需改代码（安全边界），
+// 但图标/标签/链接/分隔符均已完全可配置。
+type ActionType = 'theme' | 'language' | 'admin' | 'login' | 'logout' | 'link' | 'divider'
 type ActionStyle = 'icon' | 'text' | 'ghost' | 'outline' | 'primary' | 'pill'
 
 interface HeaderAction {
@@ -46,6 +53,7 @@ interface HeaderAction {
   show?: boolean
   showWhen?: 'always' | 'loggedIn' | 'loggedOut'
   href?: string
+  target?: '_blank' | '_self'
 }
 
 // ===== 图标注册表（模板可通过 icon 字段引用）=====
@@ -56,13 +64,93 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   heart: Heart, star: Star, image: ImageIcon, link: Link2, chevronDown: ChevronDown,
   command: Command, zap: Zap, sparkles: Sparkles, gauge: Gauge, message: MessageSquare,
   send: Send, menu: Menu, x: X,
+  github: Github, bot: Bot, code: Code, compass: Compass, droplet: Droplet,
+  waves: Waves, newspaper: Newspaper, info: Info, penTool: PenTool, layout: Layout,
+  folder: Folder, flame: Flame, rocket: Rocket,
 }
 
-function Icon({ name, size = 16, className }: { name?: string; size?: number; className?: string }) {
-  const C = name ? ICON_MAP[name] : undefined
-  if (!C) return null
-  return <C size={size} className={className} />
+// 根据板块名称就近推断一个图标（前端映射，无需后端字段，作为模板包未配置时的兜底）
+const SECTION_ICON_KEYWORDS: { kw: string; icon: string }[] = [
+  { kw: 'token', icon: 'zap' }, { kw: '计划', icon: 'zap' }, { kw: 'plan', icon: 'zap' },
+  { kw: 'github', icon: 'github' },
+  { kw: 'ai', icon: 'bot' }, { kw: '编程', icon: 'code' }, { kw: 'code', icon: 'code' },
+  { kw: '作品', icon: 'palette' }, { kw: 'works', icon: 'image' }, { kw: 'design', icon: 'penTool' }, { kw: '设计', icon: 'penTool' },
+  { kw: '博客', icon: 'book' }, { kw: 'blog', icon: 'book' },
+  { kw: '资源', icon: 'compass' }, { kw: '导航', icon: 'compass' },
+  { kw: '灵感', icon: 'droplet' }, { kw: '瀑布', icon: 'waves' },
+  { kw: '杂志', icon: 'newspaper' }, { kw: 'magazine', icon: 'newspaper' },
+  { kw: '关于', icon: 'info' }, { kw: 'about', icon: 'info' },
+  { kw: '友情', icon: 'link' }, { kw: 'links', icon: 'link' },
+  { kw: '热门', icon: 'flame' }, { kw: 'rocket', icon: 'rocket' },
+]
+// 优先级：① 模板包 nav.icons[slug] ② nav.icons[name] ③ 关键词兜底 ④ 无
+function iconForSection(
+  name: string,
+  slug?: string,
+  iconMap?: Record<string, string>,
+): string | undefined {
+  if (iconMap) {
+    if (slug && iconMap[slug]) return iconMap[slug]
+    if (name && iconMap[name]) return iconMap[name]
+  }
+  const n = (name || '').toLowerCase()
+  for (const { kw, icon } of SECTION_ICON_KEYWORDS) {
+    if (n.includes(kw.toLowerCase())) return icon
+  }
+  return undefined
 }
+
+// 内联 SVG 清洗：剔除脚本与事件属性，仅保留展示性图标（模板包自定义图标用）
+function sanitizeInlineSvg(svg: string): string {
+  return svg
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/<svg/, '<svg style="width:100%;height:100%;display:block;"')
+}
+
+export function Icon({ name, size = 16, className }: { name?: string; size?: number; className?: string }) {
+  if (!name) return null
+  const C = ICON_MAP[name]
+  if (C) return <C size={size} className={className} />
+  // 模板包自定义图标：内联 SVG（无需改代码即可新增图标）
+  const t = name.trim()
+  if (t.startsWith('<svg') && t.includes('</svg>')) {
+    return (
+      <span
+        className={className}
+        style={{ display: 'inline-flex', width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
+        dangerouslySetInnerHTML={{ __html: sanitizeInlineSvg(t) }}
+      />
+    )
+  }
+  return null
+}
+
+// 由颜色亮度判断是否为“浅色文字”（用于推断导航栏深浅模式）
+function colorLuminance(c: string): number {
+  const s = (c || '').trim()
+  if (s.startsWith('#')) {
+    let hex = s
+    if (hex.length === 4) hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3]
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  }
+  const m = s.match(/rgba?\(([^)]+)\)/)
+  if (m) {
+    const p = m[1].split(',').map((x) => parseFloat(x))
+    return (0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]) / 255
+  }
+  return 0
+}
+function isLightColor(c: string): boolean {
+  return colorLuminance(c) > 0.5
+}
+
+// 深色主题集合：导航栏背景若跟随主题（透明栏 / var(--bg-primary)），则由当前主题明暗决定“深色栏”
+const DARK_THEMES = new Set<string>(['night', 'cyber', 'lava', 'space'])
 
 function resolveLabel(label: any, locale: string): string {
   if (!label) return ''
@@ -80,11 +168,30 @@ function defaultWhen(type: ActionType): 'always' | 'loggedIn' | 'loggedOut' {
 function defaultStyleFor(type: ActionType): ActionStyle {
   if (type === 'admin' || type === 'login') return 'outline'
   if (type === 'theme') return 'icon'
+  if (type === 'divider') return 'ghost'
   return 'ghost'
 }
 
-function actionClass(style: ActionStyle): string {
+function actionClass(style: ActionStyle, dark = false): string {
   const base = 'inline-flex items-center justify-center transition-colors'
+  if (dark) {
+    switch (style) {
+      case 'icon':
+        return `${base} p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10`
+      case 'text':
+        return `${base} px-2 py-2 text-sm text-slate-300 hover:text-white`
+      case 'ghost':
+        return `${base} gap-1.5 px-3 py-2 text-sm rounded-lg text-slate-300 hover:text-white hover:bg-white/10`
+      case 'outline':
+        return `${base} gap-1.5 px-3 py-2 text-sm rounded-lg text-cyan-300 border border-cyan-400/70 hover:bg-white/10`
+      case 'primary':
+        return `${base} gap-1.5 px-4 py-2 text-sm rounded-lg bg-cyan-500 text-slate-900 hover:bg-cyan-400`
+      case 'pill':
+        return `${base} gap-1.5 px-4 py-2 text-sm rounded-full text-slate-300 hover:bg-white/10`
+      default:
+        return `${base} gap-1.5 px-3 py-2 text-sm rounded-lg text-slate-300 hover:text-white hover:bg-white/10`
+    }
+  }
   switch (style) {
     case 'icon':
       return `${base} p-2 rounded-lg text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover`
@@ -127,12 +234,13 @@ function HeaderActions({
   setShowThemeMenu,
   setShowLocaleMenu,
   onItemClick,
+  dark,
 }: {
   actions: HeaderAction[]
   variant: 'desktop' | 'mobile'
   locale: string
   theme: string
-  setTheme: (t: ThemeName) => void
+  setTheme: (t: string) => void
   setLocale: (l: any) => void
   isLoggedIn: boolean
   handleLogout: () => void
@@ -141,7 +249,12 @@ function HeaderActions({
   setShowThemeMenu?: (v: boolean) => void
   setShowLocaleMenu?: (v: boolean) => void
   onItemClick?: () => void
+  dark?: boolean
 }) {
+  // 可切换配色：优先用风格包 manifest.themeOptions 声明的列表，否则回退内置 5 套
+  const packThemeOptions = useStyleThemeOptions()
+  const effectiveThemeOptions = packThemeOptions.length ? packThemeOptions : BUILTIN_THEME_OPTIONS
+
   const isDesktop = variant === 'desktop'
   const visible = actions.filter((a) => {
     if (a.show === false) return false
@@ -157,7 +270,7 @@ function HeaderActions({
         const icon = <Icon name={a.icon} size={16} />
         const label = resolveLabel(a.label, locale)
         const hasLabel = !!label
-        const cls = actionClass(a.style || defaultStyleFor(a.type))
+        const cls = actionClass(a.style || defaultStyleFor(a.type), dark)
         const resp = isDesktop ? `${cls} hidden md:inline-flex` : `${cls} w-full`
 
         if (a.type === 'theme') {
@@ -175,15 +288,15 @@ function HeaderActions({
                 {showThemeMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowThemeMenu?.(false)} />
-                    <div className="absolute right-0 mt-2 w-40 z-50 border border-t-border rounded-xl shadow-xl overflow-hidden bg-t-bg-secondary">
-                      {themeNames.map((tItem) => (
+                    <div className={`absolute right-0 mt-2 w-40 z-50 border rounded-xl shadow-xl overflow-hidden ${dark ? 'bg-slate-800 border-slate-700' : 'bg-t-bg-secondary border-t-border'}`}>
+                      {effectiveThemeOptions.map((tItem) => (
                         <button
                           key={tItem.key}
                           onClick={() => { setTheme(tItem.key); setShowThemeMenu?.(false) }}
-                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2 hover:bg-t-hover ${theme === tItem.key ? 'font-medium' : ''}`}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center gap-2 ${dark ? 'hover:bg-white/10 text-slate-200' : 'hover:bg-t-hover text-t-text-secondary'} ${theme === tItem.key ? 'font-medium' : ''}`}
                         >
                           <span className="w-3 h-3 rounded-full" style={{ backgroundColor: tItem.color }} />
-                          <span className={theme === tItem.key ? 'text-t-accent-blue' : 'text-t-text-secondary'}>
+                          <span className={theme === tItem.key ? (dark ? 'text-cyan-300' : 'text-t-accent-blue') : ''}>
                             {locale === 'en' ? tItem.labelEn : tItem.labelZh}
                           </span>
                         </button>
@@ -196,7 +309,7 @@ function HeaderActions({
           }
           return (
             <div key={i} className="flex gap-1 px-3 py-3">
-              {themeNames.map((tItem) => (
+              {effectiveThemeOptions.map((tItem) => (
                 <button
                   key={tItem.key}
                   onClick={() => { setTheme(tItem.key); onItemClick?.() }}
@@ -224,16 +337,16 @@ function HeaderActions({
                 {showLocaleMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowLocaleMenu?.(false)} />
-                    <div className="absolute right-0 mt-2 w-24 z-50 border border-t-border rounded-xl shadow-xl overflow-hidden bg-t-bg-secondary">
+                    <div className={`absolute right-0 mt-2 w-24 z-50 border rounded-xl shadow-xl overflow-hidden ${dark ? 'bg-slate-800 border-slate-700' : 'bg-t-bg-secondary border-t-border'}`}>
                       <button
                         onClick={() => { setLocale('zh'); setShowLocaleMenu?.(false) }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-t-hover ${locale === 'zh' ? 'font-medium text-t-accent-blue' : 'text-t-text-secondary'}`}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${dark ? 'hover:bg-white/10 text-slate-200' : 'hover:bg-t-hover text-t-text-secondary'} ${locale === 'zh' ? 'font-medium text-t-accent-blue' : ''}`}
                       >
                         中文
                       </button>
                       <button
                         onClick={() => { setLocale('en'); setShowLocaleMenu?.(false) }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-t-hover ${locale === 'en' ? 'font-medium text-t-accent-blue' : 'text-t-text-secondary'}`}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${dark ? 'hover:bg-white/10 text-slate-200' : 'hover:bg-t-hover text-t-text-secondary'} ${locale === 'en' ? 'font-medium text-t-accent-blue' : ''}`}
                       >
                         English
                       </button>
@@ -282,9 +395,21 @@ function HeaderActions({
             </button>
           )
         }
+        if (a.type === 'divider') {
+          return isDesktop
+            ? <div key={i} className="w-px h-6 bg-t-border mx-1 self-center" />
+            : <div key={i} className="h-px w-full bg-t-border my-2" />
+        }
         // link
         return (
-          <Link key={i} href={a.href || '#'} onClick={onItemClick} className={resp}>
+          <Link
+            key={i}
+            href={a.href || '#'}
+            onClick={onItemClick}
+            className={resp}
+            target={a.target === '_blank' ? '_blank' : undefined}
+            rel={a.target === '_blank' ? 'noopener noreferrer' : undefined}
+          >
             {icon}
             {hasLabel && <span>{label}</span>}
           </Link>
@@ -309,39 +434,37 @@ function NavItemLink({
   item,
   className,
   onClick,
+  icon,
 }: {
   item: HeaderNavItem
   className: string
   onClick?: () => void
+  icon?: string
 }) {
+  const iconEl = icon ? <Icon name={icon} size={16} className="shrink-0" /> : null
   if (item.externalUrl) {
     return (
       <a href={item.externalUrl} onClick={onClick} className={className}>
-        {item.name}
+        {iconEl}
+        <span>{item.name}</span>
       </a>
     )
   }
   if (isHardLink(item.path)) {
     return (
       <a href={item.path} onClick={onClick} className={className}>
-        {item.name}
+        {iconEl}
+        <span>{item.name}</span>
       </a>
     )
   }
   return (
     <Link href={item.path} onClick={onClick} className={className}>
-      {item.name}
+      {iconEl}
+      <span>{item.name}</span>
     </Link>
   )
 }
-
-const themeNames: { key: ThemeName; labelZh: string; labelEn: string; color: string }[] = [
-  { key: 'night', labelZh: '暗夜蓝紫', labelEn: 'Night Blue', color: '#00d4ff' },
-  { key: 'cyber', labelZh: '赛博青绿', labelEn: 'Cyber Green', color: '#00ff88' },
-  { key: 'lava', labelZh: '熔岩橙红', labelEn: 'Lava Orange', color: '#ff6b35' },
-  { key: 'light', labelZh: '极简亮白', labelEn: 'Minimal Light', color: '#f5c542' },
-  { key: 'space', labelZh: '太空深蓝', labelEn: 'Space Blue', color: '#4488ff' },
-]
 
 function navItemClass(style?: string): string {
   const base = 'px-3 py-2 text-sm transition-colors'
@@ -355,9 +478,12 @@ function navItemClass(style?: string): string {
   return `${base} rounded-lg text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover`
 }
 
-function LogoBlock({ hc }: { hc: any }) {
+function LogoBlock({ hc, theme }: { hc: any; theme?: string }) {
   const logo = hc?.logo || {}
   const height: number = logo.height || 36
+  // 亮色主题下使用深色调 logo 变体，避免发光白字在白底上隐形/发灰
+  const isLight = theme === 'light'
+  const logoSrc = isLight ? (logo.srcLight || '/logo-dark.svg') : logo.src
   if (logo.type === 'text' || (!logo.src && logo.text)) {
     return (
       <span
@@ -372,10 +498,10 @@ function LogoBlock({ hc }: { hc: any }) {
   if (logo.type === 'component') {
     return <Logo asLink={false} size="normal" />
   }
-  if (logo.src) {
+  if (logoSrc) {
     return (
       <Image
-        src={logo.src}
+        src={logoSrc}
         alt="Logo"
         width={200}
         height={height}
@@ -416,17 +542,55 @@ export function Header() {
   // 模板包定义的操作按钮（未定义时回退经典集合）
   const actionDefs: HeaderAction[] = Array.isArray(hc.actions) ? hc.actions : CLASSIC_ACTIONS
 
+  // 导航颜色：组装为 CSS 变量，注入到导航根，供 .nav-item 读取
+  const navColors = hc.nav?.colors || {}
+  const navVarStyle: React.CSSProperties = {
+    // @ts-ignore 自定义属性
+    '--nav-text': navColors.text || '',
+    '--nav-hover-bg': navColors.hoverBg || '',
+    '--nav-hover-text': navColors.hoverText || '',
+    '--nav-active-bg': navColors.activeBg || '',
+    '--nav-active-text': navColors.activeText || '',
+    '--nav-bar-bg': navColors.barBg || '',
+    '--nav-bar-text': navColors.barText || '',
+  }
+  const navHeight: number = Number(hc.nav?.height || 56)
+  const navWidth: number = Number(hc.nav?.width || 220)
+  const navPosition: string = hc.nav?.position || 'top'
+
+  // 左侧导航：令整站主内容右移（离开页面时复位）
+  useEffect(() => {
+    if (navPosition === 'left') {
+      document.body.style.paddingLeft = `${navWidth}px`
+    } else {
+      document.body.style.paddingLeft = ''
+    }
+    return () => {
+      document.body.style.paddingLeft = ''
+    }
+  }, [navPosition, navWidth])
+
+  function navItemCls(active: boolean): string {
+    const r = navStyle === 'pill' ? 'pill' : navStyle === 'plain' ? 'plain' : ''
+    return `nav-item ${active ? 'is-active' : ''} ${r}`.trim()
+  }
+  const isActiveNav = (path: string) =>
+    pathname === path || (path !== '/' && pathname?.startsWith(path))
+
   // Fetch sections from API
   const { data: sectionsData } = useQuery({
     queryKey: ['sections'],
     queryFn: () => api.get('/sections'),
   })
 
+  const navIcons: Record<string, string> =
+    navCfg.icons && typeof navCfg.icons === 'object' ? navCfg.icons : {}
   const sectionItems: HeaderNavItem[] =
     navCfg.source === 'custom' && Array.isArray(navCfg.customItems)
       ? navCfg.customItems
       : ((sectionsData?.data || []) as Section[]).map((s) => ({
           name: s.name,
+          slug: s.slug,
           path: s.path,
           externalUrl: s.externalUrl,
         }))
@@ -449,18 +613,43 @@ export function Header() {
     router.push('/')
   }
 
-  // 容器背景/边框（由模板包配置，可空 → 走默认）
-  const headerStyle: React.CSSProperties = {}
-  if (hc.background) headerStyle.background = hc.background
-  if (hc.borderBottom) headerStyle.borderBottom = hc.borderBottom
+  // 导航栏是否为“深色栏”：背景来源有三种 ——
+  // ① 透明栏（sticky-transparent，透出主题 / 英雄区）→ 由当前主题明暗决定；
+  // ② 固定深色背景（如博客深空渐变）→ 恒定深色栏；
+  // ③ 跟随主题的背景（var(--bg-primary)）→ 由当前主题明暗决定。
+  // 这样无论切换哪套主题，导航文字 / 按钮都能与栏背景保持足够对比度。
+  const DARK_BAR_BG = 'linear-gradient(90deg, #020810 0%, #0a1c33 52%, #020810 100%)'
+  const bgFollowsTheme = !hc.background || hc.background === 'var(--bg-primary)'
+  const isDarkBar = isTransparent
+    ? DARK_THEMES.has(theme)
+    : bgFollowsTheme
+      ? DARK_THEMES.has(theme)
+      : !isLightColor(hc.background)
+
+  // 实体栏背景：优先用模板包 background；未显式设置时按主题明暗回退
+  let barBackground: string
+  if (isTransparent) barBackground = 'transparent'
+  else if (hc.background && hc.background !== 'var(--bg-primary)') barBackground = hc.background
+  else barBackground = isDarkBar ? DARK_BAR_BG : 'var(--bg-primary)'
+
+  // 边框：深色栏用青蓝描边，浅色栏用模板包 border（默认细线）
+  const barBorder = isTransparent
+    ? 'none'
+    : isDarkBar
+      ? '1px solid rgba(0,212,255,0.22)'
+      : (hc.borderBottom || '1px solid var(--border-color)')
+
+  // 容器背景/边框
+  const headerStyle: React.CSSProperties = { ...navVarStyle, background: barBackground, borderBottom: barBorder }
 
   const DesktopNav = (
-    <nav className={`hidden md:flex items-center gap-1 ${navAlign === 'left' ? 'justify-start' : navAlign === 'center' ? 'justify-center flex-1' : 'justify-end'}`}>
+    <nav className={`hidden md:flex items-center gap-1.5 ${navAlign === 'left' ? 'justify-start' : navAlign === 'center' ? 'justify-center flex-1' : 'justify-end'}`}>
       {sectionItems.map((item) => (
         <NavItemLink
           key={item.path + item.name}
           item={item}
-          className={navItemClass(navStyle)}
+          icon={iconForSection(item.name, item.slug, navIcons)}
+          className={navItemCls(isActiveNav(item.path))}
         />
       ))}
     </nav>
@@ -481,10 +670,11 @@ export function Header() {
         showLocaleMenu={showLocaleMenu}
         setShowThemeMenu={setShowThemeMenu}
         setShowLocaleMenu={setShowLocaleMenu}
+        dark={isDarkBar}
       />
       {/* Mobile hamburger */}
       <button
-        className="md:hidden p-2 text-t-text-secondary"
+        className={`md:hidden p-2 ${isDarkBar ? 'text-slate-300' : 'text-t-text-secondary'}`}
         onClick={() => setMobileOpen(!mobileOpen)}
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -492,7 +682,57 @@ export function Header() {
     </div>
   )
 
-  const logoEl = <LogoBlock hc={hc} />
+  const logoEl = <LogoBlock hc={hc} theme={theme} />
+
+  // 左侧竖向导航：固定左侧栏，主内容由 body.paddingLeft 右移
+  if (navPosition === 'left') {
+    const leftBg = barBackground
+    const leftBorder = barBorder
+    return (
+      <header
+        className="fixed left-0 top-0 bottom-0 z-50 border-r flex flex-col"
+        style={{
+          width: navWidth,
+          ...navVarStyle,
+          background: leftBg,
+          borderColor: leftBorder,
+        }}
+      >
+        <div className="h-16 flex items-center justify-center px-3 border-b" style={{ borderColor: leftBorder }}>
+          <Link href={hc.logo?.link || '/'} className="flex items-center">
+            <LogoBlock hc={hc} theme={theme} />
+          </Link>
+        </div>
+        <nav className="flex-1 flex flex-col gap-1 p-3 overflow-y-auto">
+          {sectionItems.map((item) => (
+            <NavItemLink
+              key={item.path + item.name}
+              item={item}
+              icon={iconForSection(item.name, item.slug, navIcons)}
+              className={`${navItemCls(isActiveNav(item.path))} w-full`}
+            />
+          ))}
+        </nav>
+        <div className="border-t p-3" style={{ borderColor: leftBorder }}>
+          <HeaderActions
+            actions={actionDefs}
+            variant="desktop"
+            locale={locale}
+            theme={theme}
+            setTheme={setTheme}
+            setLocale={setLocale}
+            isLoggedIn={isLoggedIn}
+            handleLogout={handleLogout}
+            showThemeMenu={showThemeMenu}
+            showLocaleMenu={showLocaleMenu}
+            setShowThemeMenu={setShowThemeMenu}
+            setShowLocaleMenu={setShowLocaleMenu}
+            dark={isDarkBar}
+          />
+        </div>
+      </header>
+    )
+  }
 
   // Logo 居中布局：上排 Logo、下排导航
   if (logoPosition === 'center') {
@@ -502,7 +742,7 @@ export function Header() {
         style={headerStyle}
       >
         <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center h-16">
+          <div className="flex items-center justify-center h-16" style={{ height: navHeight }}>
             <Link href={hc.logo?.link || '/'} className="flex items-center">{logoEl}</Link>
           </div>
           <div className="flex items-center justify-center pb-3">
@@ -522,6 +762,8 @@ export function Header() {
             isLoggedIn={isLoggedIn}
             handleLogout={handleLogout}
             actions={actionDefs}
+            navIcons={navIcons}
+            dark={isDarkBar}
           />
         )}
       </header>
@@ -536,7 +778,7 @@ export function Header() {
       style={{ ...headerStyle, backdropFilter: isTransparent ? 'none' : 'blur(20px)' }}
     >
       <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16" style={{ height: navHeight }}>
           <div className="flex items-center gap-8">
             {!logoOnRight && <Link href={hc.logo?.link || '/'} className="flex items-center">{logoEl}</Link>}
             {!logoOnRight && DesktopNav}
@@ -560,6 +802,7 @@ export function Header() {
           isLoggedIn={isLoggedIn}
           handleLogout={handleLogout}
           actions={actionDefs}
+          navIcons={navIcons}
         />
       )}
     </header>
@@ -577,30 +820,35 @@ function MobileNav({
   isLoggedIn,
   handleLogout,
   actions,
+  navIcons,
+  dark,
 }: {
   sectionItems: HeaderNavItem[]
   navStyle: string
   onClose: () => void
   locale: string
   theme: string
-  setTheme: (t: ThemeName) => void
+  setTheme: (t: string) => void
   setLocale: (l: any) => void
   isLoggedIn: boolean
   handleLogout: () => void
   actions: HeaderAction[]
+  navIcons?: Record<string, string>
+  dark?: boolean
 }) {
   return (
-    <div className="md:hidden border-t border-t-border bg-t-bg-primary">
+    <div className={`md:hidden border-t ${dark ? 'bg-slate-900 border-slate-700' : 'border-t-border bg-t-bg-primary'}`}>
       <nav className="flex flex-col p-4 gap-1">
         {sectionItems.map((item) => (
           <NavItemLink
             key={item.path + item.name}
             item={item}
+            icon={iconForSection(item.name, item.slug, navIcons)}
             className={navItemClass(navStyle) + ' px-3 py-3'}
             onClick={onClose}
           />
         ))}
-        <div className="border-t border-t-border pt-3 mt-1">
+        <div className={`border-t pt-3 mt-1 ${dark ? 'border-slate-700' : 'border-t-border'}`}>
           <HeaderActions
             actions={actions}
             variant="mobile"
@@ -611,6 +859,7 @@ function MobileNav({
             isLoggedIn={isLoggedIn}
             handleLogout={handleLogout}
             onItemClick={onClose}
+            dark={dark}
           />
         </div>
       </nav>

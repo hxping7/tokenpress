@@ -1,12 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { Fragment } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { HeroCarousel, type HeroCtaButton } from '@/components/HeroCarousel'
 import { ArticleCard } from '@/components/ArticleCard'
 import { SearchBar } from '@/components/SearchBar'
 import { ViewToggle } from '@/components/ViewToggle'
 import { HomeBanner, type HomeBannerConfig } from '@/components/HomeBanner'
+import { Icon } from '@/components/Header'
 import { api } from '@/lib/api'
 import { t } from '@/lib/i18n'
 import { useLocaleStore } from '@/stores'
@@ -54,25 +56,56 @@ function FeaturesSection({ variant }: { variant?: string }) {
   )
 }
 
-function ArticleListSection({ articles, columns = 3, limit, showViewToggle = true }: {
-  articles: Article[]; columns?: number; limit?: number; showViewToggle?: boolean
+function ArticleListSection({ articles, columns = 3, limit, showViewToggle = true, variant, source }: {
+  articles: Article[]; columns?: number; limit?: number; showViewToggle?: boolean; variant?: string; source?: string
 }) {
   const { locale } = useLocaleStore()
-  const list = limit ? articles.slice(0, limit) : articles
-  const colClass = columns === 2 ? 'md:grid-cols-2' : columns === 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2 lg:grid-cols-3'
+  // source:featured → 仅取精选；无精选时回退到全部，避免空白
+  const sourceFiltered = source === 'featured'
+    ? articles.filter((a) => (a as any).featured)
+    : articles
+  const list = sourceFiltered.length > 0 ? sourceFiltered : articles
+  const shown = limit ? list.slice(0, limit) : list
+
+  const isMasonry = variant === 'masonry'
+  const colCount = variant === 'grid-2' ? 2 : variant === 'grid-4' ? 4 : columns
+
+  const heading = (
+    <div className="flex items-center justify-between mb-8">
+      <h2 className="text-2xl font-bold text-t-text-primary">{locale === 'en' ? 'Latest articles' : '最新文章'}</h2>
+      <div className="flex items-center gap-4">
+        <SearchBar />
+        {showViewToggle && <ViewToggle />}
+        <Link href="/articles" className="text-sm text-t-accent-blue hover:underline">{locale === 'en' ? 'View all →' : '查看全部 →'}</Link>
+      </div>
+    </div>
+  )
+
+  // 瀑布流：CSS 多列，卡片不被截断
+  if (isMasonry) {
+    return (
+      <section className="py-8 px-4">
+        <div className="max-w-[var(--content-max-width)] mx-auto">
+          {heading}
+          <div className="w-full" style={{ columnCount: colCount, columnGap: '1.5rem' }}>
+            {shown.map((a) => (
+              <div key={a.id} className="break-inside-avoid mb-6">
+                <ArticleCard article={a} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  const colClass = colCount === 2 ? 'md:grid-cols-2' : colCount === 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2 lg:grid-cols-3'
   return (
     <section className="py-8 px-4">
       <div className="max-w-[var(--content-max-width)] mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-t-text-primary">{locale === 'en' ? 'Latest articles' : '最新文章'}</h2>
-          <div className="flex items-center gap-4">
-            <SearchBar />
-            {showViewToggle && <ViewToggle />}
-            <Link href="/articles" className="text-sm text-t-accent-blue hover:underline">{locale === 'en' ? 'View all →' : '查看全部 →'}</Link>
-          </div>
-        </div>
+        {heading}
         <div className={`grid grid-cols-1 ${colClass} gap-6`}>
-          {list.map((a) => <ArticleCard key={a.id} article={a} />)}
+          {shown.map((a) => <ArticleCard key={a.id} article={a} />)}
         </div>
       </div>
     </section>
@@ -95,6 +128,137 @@ function CtaSection({ variant }: { variant?: string }) {
   )
 }
 
+// ===== 声明式自定义区块（CustomBlock）=====
+// 纯 JSON 驱动，AI agent / 用户无需改代码即可拼装全新首页段落：
+//   eyebrow / title / intro / columns / background
+//   items: [{ icon, title, text, href }]
+//   cta:   { label, href, style }
+function sanitizeHref(href?: string): string {
+  if (!href || typeof href !== 'string') return '#'
+  const h = href.trim()
+  if (h.startsWith('/') || h.startsWith('http://') || h.startsWith('https://') || h.startsWith('//') || h.startsWith('#')) {
+    return h
+  }
+  return '#'
+}
+
+function resolveLabel(label: any, locale: string): string {
+  if (!label) return ''
+  if (typeof label === 'string') return label
+  if (typeof label === 'object') return locale === 'en' ? (label.en ?? label.zh ?? '') : (label.zh ?? label.en ?? '')
+  return ''
+}
+
+function CustomBlockSection({ block }: { block: any }) {
+  const { locale } = useLocaleStore()
+  const p = block || {}
+  const columns = Math.min(4, Math.max(2, Number(p.columns || 3)))
+  const colClass = columns === 2 ? 'md:grid-cols-2' : columns === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'
+  const items: any[] = Array.isArray(p.items) ? p.items : []
+  const cta = p.cta && typeof p.cta === 'object' ? p.cta : null
+  const bg = typeof p.background === 'string' && p.background.trim() ? p.background : undefined
+
+  return (
+    <section className="py-12 px-4" style={bg ? { background: bg } : undefined}>
+      <div className="max-w-[var(--content-max-width)] mx-auto">
+        {(p.eyebrow || p.title || p.intro) && (
+          <div className="text-center mb-10">
+            {p.eyebrow && (
+              <div className="text-xs font-semibold tracking-widest uppercase text-t-accent-blue mb-2">{p.eyebrow}</div>
+            )}
+            {p.title && <h2 className="text-2xl md:text-3xl font-bold text-t-text-primary">{p.title}</h2>}
+            {p.intro && <p className="mt-3 text-t-text-secondary max-w-2xl mx-auto">{p.intro}</p>}
+            {cta && (
+              <div className="mt-6 flex justify-center">
+                <Link
+                  href={sanitizeHref(cta.href)}
+                  className={`inline-flex items-center gap-1.5 px-6 py-3 rounded-lg font-medium transition-opacity hover:opacity-90 ${
+                    cta.style === 'outline'
+                      ? 'border border-t-accent-blue/80 text-t-accent-blue'
+                      : 'bg-t-accent-blue text-white'
+                  }`}
+                >
+                  {resolveLabel(cta.label, locale)}
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+        {items.length > 0 && (
+          <div className={`grid grid-cols-1 ${colClass} gap-6`}>
+            {items.map((it, i) => {
+              const href = sanitizeHref(it.href)
+              const inner = (
+                <>
+                  {it.icon && (
+                    <div className="mb-3 text-t-accent-blue">
+                      <Icon name={it.icon} size={28} />
+                    </div>
+                  )}
+                  {it.title && <div className="text-lg font-semibold text-t-text-primary mb-1">{it.title}</div>}
+                  {it.text && <div className="text-sm text-t-text-secondary">{it.text}</div>}
+                </>
+              )
+              return href === '#' ? (
+                <div key={i} className="card-surface card-surface-hover rounded-2xl p-6 block transition-all">
+                  {inner}
+                </div>
+              ) : (
+                <Link key={i} href={href} className="card-surface card-surface-hover rounded-2xl p-6 block transition-all" target={it.target === '_blank' ? '_blank' : undefined} rel={it.target === '_blank' ? 'noopener noreferrer' : undefined}>
+                  {inner}
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ===== 首页组件插件式注册表 =====
+// 渲染器按组件名动态装配；新增类型只需在此登记（或经后端白名单扩展）。
+interface HomeCtx {
+  heroSlides: HeroSlide[]
+  heroSize: string
+  heroInterval: number
+  ctaButtons: HeroCtaButton[]
+  recentArticles: Article[]
+  homeBanners?: HomeBannerConfig[]
+}
+
+const HOMEPAGE_REGISTRY: Record<string, (sec: any, ctx: HomeCtx) => JSX.Element | null> = {
+  Hero: (sec, ctx) => (
+    <HeroSection
+      slides={ctx.heroSlides}
+      size={sec.props?.size || (sec.variant === 'fullscreen' ? 'fullscreen' : ctx.heroSize)}
+      interval={ctx.heroInterval}
+      ctaButtons={ctx.ctaButtons}
+      variant={sec.variant}
+    />
+  ),
+  Features: (sec) => <FeaturesSection variant={sec.variant} />,
+  ArticleList: (sec, ctx) => (
+    <ArticleListSection
+      articles={ctx.recentArticles}
+      columns={sec.props?.columns || 3}
+      limit={sec.props?.limit}
+      showViewToggle={sec.props?.showViewToggle !== false}
+      variant={sec.variant}
+      source={sec.props?.source}
+    />
+  ),
+  CTA: (sec) => <CtaSection variant={sec.variant} />,
+  Banner: (sec, ctx) => {
+    const id = sec.id as string | undefined
+    const cfg = id
+      ? ctx.homeBanners?.find((b) => b.id === id && b.enabled)
+      : ctx.homeBanners?.find((b) => b.enabled)
+    return cfg ? <HomeBanner config={cfg} /> : null
+  },
+  CustomBlock: (sec) => <CustomBlockSection block={sec.props || {}} />,
+}
+
 export function HomeSections({
   heroSlides,
   heroSize,
@@ -113,8 +277,10 @@ export function HomeSections({
   const layouts = useStyleLayouts()
   const homepage = layouts?.homepage
   const sections = homepage?.sections as
-    | { component: string; variant?: string; props?: any }[]
+    | { component: string; variant?: string; props?: any; id?: string }[]
     | undefined
+
+  const ctx: HomeCtx = { heroSlides, heroSize, heroInterval, ctaButtons, recentArticles, homeBanners }
 
   // 无配置时回退到经典布局（保持向后兼容）
   if (!sections || sections.length === 0) {
@@ -129,34 +295,11 @@ export function HomeSections({
   return (
     <>
       {sections.map((sec, i) => {
-        const p = sec.props || {}
-        switch (sec.component) {
-          case 'Hero':
-            return <HeroSection key={i} slides={heroSlides} size={p.size || heroSize} interval={heroInterval} ctaButtons={ctaButtons} variant={sec.variant} />
-          case 'Features':
-            return <FeaturesSection key={i} variant={sec.variant} />
-          case 'ArticleList':
-            return (
-              <ArticleListSection
-                key={i}
-                articles={recentArticles}
-                columns={p.columns || 3}
-                limit={p.limit}
-                showViewToggle={p.showViewToggle !== false}
-              />
-            )
-          case 'CTA':
-            return <CtaSection key={i} variant={sec.variant} />
-          case 'Banner': {
-            const id = (sec as any).id as string | undefined
-            const cfg = id
-              ? homeBanners?.find((b) => b.id === id && b.enabled)
-              : homeBanners?.find((b) => b.enabled)
-            return cfg ? <HomeBanner key={i} config={cfg} /> : null
-          }
-          default:
-            return null
-        }
+        const Renderer = HOMEPAGE_REGISTRY[sec.component]
+        if (!Renderer) return null
+        // 注册表渲染器签名为 (sec, ctx)，必须作为函数调用传入两个参数；
+        // 若用 JSX <Renderer sec ctx />，React 只会把二者合并为单个 props 传入，导致 ctx 丢失。
+        return <Fragment key={i}>{Renderer(sec, ctx)}</Fragment>
       })}
     </>
   )

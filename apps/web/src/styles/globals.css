@@ -10,6 +10,48 @@
   :root {
     --content-max-width: 80rem; /* 站点级内容容器最大宽度，默认 1280px（兼容旧 max-w-7xl） */
     --reading-max-width: 48rem; /* 文章正文阅读列最大宽度，保证长文可读性 */
+
+    /* 导航菜单颜色（可被风格包 header.nav.colors 逐实例覆盖） */
+    --nav-text: var(--text-secondary);
+    --nav-hover-bg: var(--hover-bg);
+    --nav-hover-text: var(--text-primary);
+    --nav-active-bg: var(--accent-blue);
+    --nav-active-text: #ffffff;
+    --nav-bar-bg: transparent;
+    --nav-bar-text: var(--text-primary);
+  }
+
+  /* ===== 导航菜单项（由风格包 header.nav.colors 驱动） ===== */
+  .nav-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0.5rem 0.75rem; /* = px-3 py-2 */
+    font-size: 0.875rem;     /* = text-sm */
+    line-height: 1.25rem;
+    white-space: nowrap;
+    color: var(--nav-text);
+    border-radius: 0.5rem;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    cursor: default;
+  }
+  /* 左侧竖向导航：占满整行 */
+  .nav-item.w-full {
+    width: 100%;
+  }
+  .nav-item:hover {
+    color: var(--nav-hover-text);
+    background-color: var(--nav-hover-bg);
+  }
+  .nav-item.is-active {
+    color: var(--nav-active-text);
+    background-color: var(--nav-active-bg);
+  }
+  .nav-item.pill {
+    border-radius: 9999px;
+  }
+  .nav-item.plain {
+    border-radius: 0;
   }
 
   /* ===== 暗夜蓝紫（默认） ===== */
@@ -335,4 +377,17 @@
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+/* 作品集画廊：由风格包 templates.design-gallery 的 columns/gap 驱动（响应式收拢） */
+.design-grid {
+  display: grid;
+  gap: var(--dg-gap, 1.5rem);
+  grid-template-columns: repeat(var(--dg-cols, 3), minmax(0, 1fr));
+}
+@media (max-width: 1023px) {
+  .design-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+  .design-grid { grid-template-columns: 1fr; }
 }

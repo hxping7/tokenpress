@@ -18,6 +18,11 @@ export function SinglePageView({
   config?: Record<string, unknown> | null
 }) {
   const articleId = config?.articleId ? Number(config.articleId) : undefined
+  const cfg = config || {}
+  const maxWidth = cfg.maxWidth ? Number(cfg.maxWidth) : null
+  const centered = cfg.centered !== false
+  const wrapStyle = maxWidth ? { maxWidth: `${maxWidth}px` } : undefined
+  const wrapClass = `bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-10 max-w-[var(--reading-max-width)] ${centered ? 'mx-auto' : ''}`
   const [article, setArticle] = useState<any | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -48,7 +53,7 @@ export function SinglePageView({
       return <div className="text-center py-20 text-t-text-secondary">文章未找到（ID: {articleId}）</div>
     }
     return (
-      <article className="bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-10 max-w-[var(--reading-max-width)] mx-auto">
+      <article className={wrapClass} style={wrapStyle}>
         <h1
           className="text-heading-2 text-t-text-primary mb-4"
           dangerouslySetInnerHTML={{ __html: article.title }}
@@ -67,7 +72,7 @@ export function SinglePageView({
     )
   }
   return (
-    <article className="bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-10 max-w-[var(--reading-max-width)] mx-auto">
+    <article className={wrapClass} style={wrapStyle}>
       <MarkdownContent content={description} />
     </article>
   )

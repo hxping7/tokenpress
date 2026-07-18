@@ -2,9 +2,13 @@
  * 板块 / 分类 模板注册表（前端）
  *
  * 与后端 apps/server/src/lib/sectionTemplates.ts 的 VALID_TEMPLATES 保持一致。
- * template 决定板块/分类的内容渲染形态：
- * - 文章流类（family: 'article'）：article-list / article-grid / article-masonry / magazine
- * - 特殊类（family: 'special'）：single-page / link-wall / design-gallery
+ *
+ * ⚠️ 概念区分（避免与「页面骨架 layouts」混淆）：
+ * - 本文件 template = 「内容排版」：决定文章怎么排（列表 / 网格 / 瀑布流 / 杂志头条…）。
+ *   每种模板的**具体默认样式**（列数 / 间距 / 卡片样式 / 封面比例）由当前风格包
+ *   layouts.json 的 `templates[templateKey]` 提供，用户配置（分类 > 板块）逐字段覆盖。
+ * - layouts = 「页面骨架」：决定页面结构（有无侧栏 / hero / 内容区宽度），由风格包
+ *   layouts.json 的 section/article/list 提供。两者正交、互不影响。
  */
 
 export type TemplateKey =
@@ -33,8 +37,8 @@ const frame = (inner: string) =>
 export const TEMPLATES: TemplateMeta[] = [
   {
     key: 'article-list',
-    label: '文章列表',
-    description: '经典文章流，支持网格/列表切换与侧栏筛选',
+    label: '文章列表（内容排版）',
+    description: '经典文章流；列数/间距/卡片样式由风格包默认，可逐字段覆盖',
     family: 'article',
     hasConfig: false,
     previewSvg: frame(
@@ -43,8 +47,8 @@ export const TEMPLATES: TemplateMeta[] = [
   },
   {
     key: 'article-grid',
-    label: '卡片网格',
-    description: '统一卡片网格，强制多列展示（可配列数）',
+    label: '卡片网格（内容排版）',
+    description: '统一卡片网格；列数/间距/封面比例由风格包默认，可覆盖',
     family: 'article',
     hasConfig: true,
     previewSvg: frame(
@@ -53,8 +57,8 @@ export const TEMPLATES: TemplateMeta[] = [
   },
   {
     key: 'article-masonry',
-    label: '瀑布流',
-    description: '错落瀑布流，适合图片为主的文章（可配列数）',
+    label: '瀑布流（内容排版）',
+    description: '错落瀑布流；列数/间距由风格包默认，可覆盖',
     family: 'article',
     hasConfig: true,
     previewSvg: frame(
@@ -63,8 +67,8 @@ export const TEMPLATES: TemplateMeta[] = [
   },
   {
     key: 'magazine',
-    label: '杂志头条',
-    description: '大图头条 + 网格，适合资讯/杂志（可配列数）',
+    label: '杂志头条（内容排版）',
+    description: '大图头条 + 网格；列数/间距由风格包默认，可覆盖',
     family: 'article',
     hasConfig: true,
     previewSvg: frame(
@@ -73,7 +77,7 @@ export const TEMPLATES: TemplateMeta[] = [
   },
   {
     key: 'single-page',
-    label: '单页',
+    label: '单页（内容排版）',
     description: '渲染板块简介为单页，无文章列表',
     family: 'special',
     hasConfig: false,
@@ -83,7 +87,7 @@ export const TEMPLATES: TemplateMeta[] = [
   },
   {
     key: 'link-wall',
-    label: '链接墙',
+    label: '链接墙（内容排版）',
     description: '以卡片墙展示友链 / 外部链接',
     family: 'special',
     hasConfig: false,
@@ -93,7 +97,7 @@ export const TEMPLATES: TemplateMeta[] = [
   },
   {
     key: 'design-gallery',
-    label: '作品集画廊',
+    label: '作品集画廊（内容排版）',
     description: '设计师作品集卡片流（需板块类型为作品集）',
     family: 'special',
     hasConfig: false,

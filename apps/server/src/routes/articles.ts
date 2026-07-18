@@ -54,6 +54,7 @@ router.get('/', async (req, res) => {
       coverImage: articles.coverImage,
       sectionId: articles.sectionId,
       status: articles.status,
+      meta: articles.meta,
       publishedAt: articles.publishedAt,
       createdAt: articles.createdAt,
       updatedAt: articles.updatedAt,
@@ -165,6 +166,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Article not found' })
     }
 
+    // 可选：公开详情浏览量 +1（作品集详情页用于统计，普通文章历史走 articleViews 表，不传 view 即不重复计数）
+    if (req.query.view === '1') {
+      await db.update(articles)
+        .set({ viewCount: (article.viewCount || 0) + 1, updatedAt: new Date().toISOString() })
+        .where(eq(articles.id, article.id))
+        .run()
+    }
+
     const author = await db.select({
       id: users.id, username: users.username, displayName: users.displayName, avatarUrl: users.avatarUrl,
     }).from(users).where(eq(users.id, article.authorId)).get()
@@ -179,9 +188,22 @@ router.get('/:id', async (req, res) => {
       .where(eq(articleTags.articleId, article.id))
       .all()
 
+    // 解析文章模板配置（template_config 为 JSON 字符串）
+    let templateConfig: Record<string, unknown> | null = null
+    if (article.templateConfig) {
+      try { templateConfig = JSON.parse(article.templateConfig) } catch { templateConfig = null }
+    }
+
     res.json({
       success: true,
-      data: { ...article, author, category, tags: articleTags_.map((t) => t.name) },
+      data: {
+        ...article,
+        articleTemplate: article.articleTemplate || 'standard',
+        templateConfig,
+        author,
+        category,
+        tags: articleTags_.map((t) => t.name),
+      },
     })
   } catch (err) {
     console.error('Get article error:', err)

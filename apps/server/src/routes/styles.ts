@@ -7,12 +7,29 @@ import { siteSettings } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { STYLES_DIR } from '../utils/paths.js'
+import { BUILTIN_SOURCE } from '../utils/initStyles.js'
 
 const router = Router()
 
 // 已注册的首页 section 组件名（防止渲染未知组件）
-const REGISTERED_HOMEPAGE_COMPONENTS = ['Hero', 'Features', 'ArticleList', 'CTA', 'Banner'] as const
+// CustomBlock：声明式自定义区块（纯 JSON 驱动，无需改代码即可拼装新首页段落）
+const REGISTERED_HOMEPAGE_COMPONENTS = ['Hero', 'Features', 'ArticleList', 'CTA', 'Banner', 'CustomBlock'] as const
 type HomepageComponent = (typeof REGISTERED_HOMEPAGE_COMPONENTS)[number]
+
+// manifest.themeVariants：包可声明的多套可切换配色（key -> :root{...} CSS）
+function validateThemeVariants(manifest: any): { ok: boolean; error?: string } {
+  const tv = manifest?.themeVariants
+  if (tv === undefined || tv === null) return { ok: true }
+  if (typeof tv !== 'object' || Array.isArray(tv)) {
+    return { ok: false, error: 'manifest.themeVariants 必须是对象（key -> CSS 字符串）' }
+  }
+  for (const [k, v] of Object.entries(tv)) {
+    if (typeof v !== 'string') return { ok: false, error: `themeVariants.${k} 必须是 CSS 字符串` }
+    const r = validateTheme(v)
+    if (!r.ok) return { ok: false, error: `themeVariants.${k}: ${r.error}` }
+  }
+  return { ok: true }
+}
 
 // ===== 校验工具 =====
 function validateId(id: string): { ok: boolean; error?: string } {
@@ -40,6 +57,28 @@ function validateHeader(obj: any): { ok: boolean; error?: string } {
   if (src !== undefined) {
     if (typeof src !== 'string' || !src.startsWith('/') || src.includes('..') || src.includes('://') || src.includes('<')) {
       return { ok: false, error: 'header.logo.src 仅允许同源相对路径' }
+    }
+  }
+  const nav = obj?.nav
+  if (nav !== undefined) {
+    if (nav.position !== undefined && !['top', 'left'].includes(nav.position)) {
+      return { ok: false, error: 'header.nav.position 仅允许 top | left' }
+    }
+    if (nav.height !== undefined && (typeof nav.height !== 'number' || nav.height < 32 || nav.height > 160)) {
+      return { ok: false, error: 'header.nav.height 须为 32~160 的数字(px)' }
+    }
+    if (nav.width !== undefined && (typeof nav.width !== 'number' || nav.width < 140 || nav.width > 400)) {
+      return { ok: false, error: 'header.nav.width 须为 140~400 的数字(px)' }
+    }
+    const colors = nav.colors
+    if (colors !== undefined) {
+      if (typeof colors !== 'object' || Array.isArray(colors)) return { ok: false, error: 'header.nav.colors 必须是对象' }
+      for (const [k, v] of Object.entries(colors)) {
+        if (typeof v !== 'string') return { ok: false, error: `header.nav.colors.${k} 必须是字符串` }
+        if (/<|javascript:|url\(|@import/i.test(v)) {
+          return { ok: false, error: `header.nav.colors.${k} 包含不允许的内容` }
+        }
+      }
     }
   }
   return { ok: true }
@@ -258,6 +297,8 @@ router.post('/', apiTokenOrAdmin('styles:write'), async (req, res) => {
       const hv = validateHeader(toJson(header))
       if (!hv.ok) return res.status(400).json({ success: false, error: hv.error })
     }
+    const tv = validateThemeVariants(manifest)
+    if (!tv.ok) return res.status(400).json({ success: false, error: tv.error })
 
     fs.mkdirSync(dir, { recursive: true })
     await fsp.writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ ...manifest, id, builtin: false }, null, 2))
@@ -298,6 +339,10 @@ router.put('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
       const hv = validateHeader(toJson(header))
       if (!hv.ok) return res.status(400).json({ success: false, error: hv.error })
     }
+    if (manifest !== undefined && typeof manifest === 'object') {
+      const tv = validateThemeVariants(manifest)
+      if (!tv.ok) return res.status(400).json({ success: false, error: tv.error })
+    }
 
     if (manifest !== undefined && typeof manifest === 'object') {
       const cur = parseJsonFile(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'))
@@ -312,6 +357,43 @@ router.put('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
   } catch (err) {
     console.error('Update style error:', err)
     res.status(500).json({ success: false, error: 'Failed to update style' })
+  }
+})
+
+// POST /api/v1/styles/:id/restore — 恢复内置模板包到出厂默认（需 styles:write）
+// 仅对 builtin 包有效：从镜像内置源 styles-builtin/<id> 重新拷贝覆盖当前磁盘文件，
+// 丢弃用户对布局/配色/导航等的全部个人修改。当前激活状态不变。
+router.post('/:id/restore', apiTokenOrAdmin('styles:write'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+
+    const targetDir = path.join(STYLES_DIR, id)
+    if (!fs.existsSync(path.join(targetDir, 'manifest.json'))) {
+      return res.status(404).json({ success: false, error: 'Style pack not found' })
+    }
+    const curManifest = parseJsonFile(fs.readFileSync(path.join(targetDir, 'manifest.json'), 'utf8'))
+    if (!curManifest?.builtin) {
+      return res.status(400).json({
+        success: false,
+        error: '只有内置模板包支持恢复默认；自定义包请直接删除后重建',
+      })
+    }
+
+    const sourceDir = path.join(BUILTIN_SOURCE, id)
+    if (!fs.existsSync(path.join(sourceDir, 'manifest.json'))) {
+      return res.status(404).json({ success: false, error: `未找到内置源模板包：${id}` })
+    }
+
+    // 重新拷贝：先清后拷，确保与出厂源完全一致（含被用户删除的文件复原）
+    fs.rmSync(targetDir, { recursive: true, force: true })
+    fs.cpSync(sourceDir, targetDir, { recursive: true })
+
+    res.json({ success: true, data: { id, message: 'Style pack restored to default' } })
+  } catch (err) {
+    console.error('Restore style error:', err)
+    res.status(500).json({ success: false, error: 'Failed to restore style' })
   }
 })
 

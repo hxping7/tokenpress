@@ -13,6 +13,8 @@ import { type HeroCtaButton, type HeroCtaVariant, DEFAULT_HERO_CTA } from '@/com
 import { StaticPagePicker } from '@/components/StaticPagePicker'
 import Image from 'next/image'
 import { StyleEditorModal } from '@/components/StyleEditorModal'
+import { NewStyleModal } from '@/components/NewStyleModal'
+import { ConfirmDialog } from '@/components/ui'
 import { Plus, Edit, Trash2, X, Check, Link2, Settings, Image as ImageIcon, Menu, Columns2, Save, Upload, FolderOpen, Database, Download, RotateCcw, Clock, HardDrive, FileText, BarChart3, Info, Palette, LayoutTemplate, Home, Languages, Share2, Navigation, Copyright, Shield } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useRef } from 'react'
@@ -801,6 +803,7 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
   })
   const activeStyleId = activeStyleData?.data?.activeStyle || 'blog'
   const [editingStyle, setEditingStyle] = useState<{ id: string; builtin: boolean } | null>(null)
+  const [creatingStyle, setCreatingStyle] = useState(false)
 
   const activateStyleMutation = useMutation({
     mutationFn: (id: string) => api.setActiveStyle(id),
@@ -809,6 +812,22 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       queryClient.invalidateQueries({ queryKey: ['styles'] })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
+    },
+  })
+
+  // 恢复内置模板包到出厂默认（会丢弃个人修改，需二次确认）
+  const [restoreTarget, setRestoreTarget] = useState<{ id: string; name: string } | null>(null)
+  const restoreStyleMutation = useMutation({
+    mutationFn: (id: string) => api.restoreStyle(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-style'] })
+      queryClient.invalidateQueries({ queryKey: ['styles'] })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      setRestoreTarget(null)
+    },
+    onError: () => {
+      setRestoreTarget(null)
     },
   })
 
@@ -1337,14 +1356,22 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       {activeTab === 'style' && (
         <div className="space-y-4">
           <div className="bg-t-bg-primary border border-t-border rounded-xl">
-            <div className="px-6 py-4 border-b border-t-border">
-              <h2 className="font-semibold flex items-center gap-2">
-                <Columns2 size={18} className="text-t-accent-blue" />
-                风格模板包（Style Pack）
-              </h2>
-              <p className="text-xs text-t-text-muted mt-1">
-                选择一套模板包即切换全站布局骨架（Header / Footer / 板块页 / 文章页）。配色主题（同组「主题与布局」）与之正交，可单独切换。
-              </p>
+            <div className="px-6 py-4 border-b border-t-border flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-semibold flex items-center gap-2">
+                  <Columns2 size={18} className="text-t-accent-blue" />
+                  风格模板包（Style Pack）
+                </h2>
+                <p className="text-xs text-t-text-muted mt-1">
+                  选择一套模板包即切换全站布局骨架（Header / Footer / 板块页 / 文章页）。配色主题（同组「主题与布局」）与之正交，可单独切换。
+                </p>
+              </div>
+              <button
+                onClick={() => setCreatingStyle(true)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg bg-t-accent-blue text-black hover:opacity-90 transition-opacity"
+              >
+                <Plus size={15} /> 新建风格包
+              </button>
             </div>
             <div className="p-6">
               {stylesLoading ? (
@@ -1405,6 +1432,14 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
                               {isActive ? '已激活' : activateStyleMutation.isPending ? '激活中...' : '激活此风格'}
                             </button>
                           </div>
+                          {s.builtin && (
+                            <button
+                              onClick={() => setRestoreTarget({ id: s.id, name: s.name })}
+                              className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border border-t-border text-t-text-secondary hover:border-red-500/40 hover:text-red-500 transition-colors"
+                            >
+                              <RotateCcw size={14} /> 恢复默认
+                            </button>
+                          )}
                         </div>
                       </div>
                     )
@@ -1439,6 +1474,41 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
           }}
         />
       )}
+
+      {/* 新建风格包 */}
+      {creatingStyle && (
+        <NewStyleModal
+          onClose={() => setCreatingStyle(false)}
+          onCreated={(id) => {
+            queryClient.invalidateQueries({ queryKey: ['styles'] })
+            queryClient.invalidateQueries({ queryKey: ['active-style'] })
+            setCreatingStyle(false)
+            // 创建后直接进入编辑，方便立即配置
+            setEditingStyle({ id, builtin: false })
+          }}
+        />
+      )}
+
+      {/* 恢复内置模板包默认 — 二次确认 */}
+      <ConfirmDialog
+        open={!!restoreTarget}
+        title="恢复出厂默认"
+        danger
+        loading={restoreStyleMutation.isPending}
+        confirmText="恢复默认"
+        cancelText="取消"
+        onCancel={() => !restoreStyleMutation.isPending && setRestoreTarget(null)}
+        onConfirm={() => restoreTarget && restoreStyleMutation.mutate(restoreTarget.id)}
+        message={
+          <>
+            确定将模板包「<span className="font-medium text-t-text-primary">{restoreTarget?.name}</span>」恢复为出厂默认状态吗？
+            <br />
+            <span className="mt-2 block text-t-text-muted">
+              此操作会<span className="text-red-500 font-medium">丢弃你对该模板包的全部个人修改</span>（布局、配色、导航、首页区块等），且不可撤销。当前激活状态保持不变。
+            </span>
+          </>
+        }
+      />
 
       {/* Logo 设置 */}
       {activeTab === 'logo' && (

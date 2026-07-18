@@ -71,6 +71,20 @@ router.get('/', async (_req, res) => {
   }
 })
 
+// GET /api/v1/sections/all — 受保护，返回全部板块（含未启用），供后台管理界面使用
+// 必须定义在 GET /:id 之前，否则会被 /:id 吞掉（getParamAsInt('all') 返回 falsy → 400）
+router.get('/all', apiTokenOrAdmin('sections:write'), async (_req, res) => {
+  try {
+    const all = await db.select().from(sections)
+      .orderBy(asc(sections.sortOrder), asc(sections.id))
+      .all()
+    res.json({ success: true, data: all.map(serializeSection) })
+  } catch (err) {
+    console.error('List all sections error:', err)
+    res.status(500).json({ success: false, error: 'Failed to list sections' })
+  }
+})
+
 // GET /api/v1/sections/:id — public
 router.get('/:id', async (req, res) => {
   try {

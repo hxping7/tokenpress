@@ -18,5 +18,20 @@
     "layout":"magazine", "showTOC":true, "showAuthor":true,
     "sidebar":"related", "maxWidth":760
   },
-  "list": { "layout":"masonry", "columns":3 }
+  "list": { "layout":"masonry", "columns":3 },
+  "category": {
+    "layout": "article-list",
+    "hero":   { "enabled":true, "titleFrom":"category", "showCover":true, "description":true },
+    "sidebar":{ "enabled":false },
+    "list":   { "layout":"masonry", "columns":3, "showThumbnail":true, "showExcerpt":false }
+  },
+  "templates": {
+    "article-list":    { "columns":1, "gap":"1rem",   "showThumbnail":true,  "showExcerpt":true,  "cardStyle":"clean" },
+    "article-grid":    { "columns":3, "gap":"1rem",   "aspectRatio":"1/1",   "showThumbnail":true,  "showExcerpt":false, "cardStyle":"zoom" },
+    "article-masonry": { "columns":2, "gap":"1rem",   "aspectRatio":"auto",  "showThumbnail":true,  "showExcerpt":false, "cardStyle":"clean" },
+    "magazine":        { "columns":3, "gap":"1rem",   "showThumbnail":true,  "showExcerpt":false, "cardStyle":"zoom" },
+    "single-page":     { "maxWidth":760, "centered":true },
+    "link-wall":       { "columns":4, "gap":"1rem",   "pill":false },
+    "design-gallery":  { "columns":3, "gap":"1.25rem", "aspectRatio":"1/1",   "cardStyle":"zoom" }
+  }
 }

@@ -24,7 +24,6 @@ import {
   Shield,
   ShieldAlert,
   Megaphone,
-  Palette,
 } from 'lucide-react'
 import { useState } from 'react'
 import { t } from '@/lib/i18n'
@@ -39,7 +38,6 @@ function useMenuItems() {
     { key: '/admin/articles', label: t('admin.articles', backendLocale), icon: FileText, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/media', label: t('admin.media', backendLocale), icon: FolderOpen, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/categories', label: t('admin.categories', backendLocale), icon: Layers, roles: ['superadmin', 'admin'] },
-    { key: '/admin/design-works', label: '作品管理', icon: Palette, roles: ['superadmin', 'admin'] },
     { key: '/admin/users', label: t('admin.users', backendLocale), icon: Users, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/tokens', label: t('admin.tokens', backendLocale), icon: Key, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/stats', label: t('admin.stats', backendLocale), icon: BarChart3, roles: ['superadmin', 'admin'] },

@@ -11,6 +11,7 @@ export function MagazineView({
   featured,
   rest,
   columns,
+  gap,
   sectionPath,
   pagination,
   page,
@@ -19,6 +20,7 @@ export function MagazineView({
   featured: any
   rest: any[]
   columns: number
+  gap?: string
   sectionPath: string
   pagination?: any
   page: number
@@ -58,7 +60,10 @@ export function MagazineView({
       )}
 
       {rest.length > 0 && (
-        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        <div
+          className="grid"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: typeof gap === 'string' && gap ? gap : '1rem' }}
+        >
           {rest.map((a: any) => (
             <ArticleCard key={a.id} article={a} forceView="grid" />
           ))}

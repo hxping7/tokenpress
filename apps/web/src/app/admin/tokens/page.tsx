@@ -22,7 +22,7 @@ interface ApiToken {
 const allPermissionOptions = [
   { value: 'article:write', labelKey: 'tokens.permArticleWrite', roles: ['superadmin', 'admin', 'user'] },
   { value: 'media:upload', labelKey: 'tokens.permMediaUpload', roles: ['superadmin', 'admin', 'user'] },
-  { value: 'work:write', labelKey: 'tokens.permWorkWrite', roles: ['superadmin', 'admin'] },
+  { value: 'works:write', labelKey: 'tokens.permWorksWrite', roles: ['superadmin', 'admin'] },
   { value: 'content:delete', labelKey: 'tokens.permContentDelete', roles: ['superadmin', 'admin'] },
   { value: 'settings:write', labelKey: 'tokens.permSettingsWrite', roles: ['superadmin'] },
 ]

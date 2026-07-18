@@ -12,17 +12,28 @@ interface Props {
   /** 分类编辑器专属：增加「继承板块」选项（value=''，前端解析时回退到板块模板） */
   showInherit?: boolean
   hint?: string
+  /** 当前激活风格包的 templates[模板] 默认配置，用于展示「继承来源」与一键恢复 */
+  packTemplates?: Record<string, Record<string, unknown>> | null
+}
+
+const CARD_STYLE_LABEL: Record<string, string> = {
+  bordered: '描边',
+  clean: '简洁',
+  shadow: '阴影',
+  zoom: '缩放',
 }
 
 /**
  * 模板选择字段：下拉 + 实时 SVG 预览 + 可选配置（列数 / 文章 ID）。
  * 用于后台「板块 / 分类」编辑表单。
  */
-export function TemplateField({ label, value, onChange, config, onConfigChange, exclude, showInherit, hint }: Props) {
+export function TemplateField({ label, value, onChange, config, onConfigChange, exclude, showInherit, hint, packTemplates }: Props) {
   const meta = getTemplate(value)
   const options = TEMPLATES.filter((t) => !exclude?.includes(t.key))
   const columns = Number(config?.columns) || 3
   const articleId = config?.articleId ? Number(config.articleId) : undefined
+  const packDefault = value ? (packTemplates?.[value] as Record<string, unknown> | undefined) : undefined
+  const hasUserOverride = !!config && Object.keys(config).length > 0
 
   const handleTemplateChange = (v: string) => {
     onChange(v)
@@ -100,6 +111,39 @@ export function TemplateField({ label, value, onChange, config, onConfigChange, 
             className="w-28 px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue text-sm"
           />
           <span className="text-xs text-t-text-muted">留空则展示板块描述；填入数字展示对应文章正文</span>
+        </div>
+      )}
+
+      {/* 风格包默认（继承来源） + 一键恢复 */}
+      {meta.hasConfig && packDefault && (
+        <div className="mt-3 rounded-lg border border-t-border bg-t-bg-secondary/50 px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-t-text-muted">
+              风格包默认：
+              {[
+                packDefault.columns != null ? `列数 ${packDefault.columns}` : null,
+                typeof packDefault.gap === 'string' ? `间距 ${packDefault.gap}` : null,
+                typeof packDefault.cardStyle === 'string'
+                  ? `卡片 ${CARD_STYLE_LABEL[packDefault.cardStyle as string] || (packDefault.cardStyle as string)}`
+                  : null,
+                typeof packDefault.aspectRatio === 'string' ? `封面 ${packDefault.aspectRatio}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || '（无额外默认）'}
+            </span>
+            {hasUserOverride && onConfigChange && (
+              <button
+                type="button"
+                onClick={() => onConfigChange({})}
+                className="shrink-0 px-2 py-0.5 rounded text-xs text-t-accent-blue hover:bg-t-accent-blue/10"
+              >
+                恢复默认
+              </button>
+            )}
+          </div>
+          {!hasUserOverride && (
+            <p className="mt-1 text-xs text-t-text-muted">当前即使用风格包默认，无需额外配置。</p>
+          )}
         </div>
       )}
     </div>

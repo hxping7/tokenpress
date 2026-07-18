@@ -65,3 +65,27 @@ export const THEME_PALETTES: Record<ThemeName, string> = {
 export function getThemePalette(theme: string): string | null {
   return (THEME_PALETTES as Record<string, string>)[theme] || null
 }
+
+// 内置 5 套配色的切换项（作为风格包未声明 themeOptions 时的回退）
+export const BUILTIN_THEME_OPTIONS: { key: string; labelZh: string; labelEn: string; color: string }[] = [
+  { key: 'night', labelZh: '暗夜蓝紫', labelEn: 'Night Blue', color: '#00d4ff' },
+  { key: 'cyber', labelZh: '赛博青绿', labelEn: 'Cyber Green', color: '#00ff88' },
+  { key: 'lava', labelZh: '熔岩橙红', labelEn: 'Lava Orange', color: '#ff6b35' },
+  { key: 'light', labelZh: '极简亮白', labelEn: 'Minimal Light', color: '#f5c542' },
+  { key: 'space', labelZh: '太空深蓝', labelEn: 'Space Blue', color: '#4488ff' },
+]
+
+// 解析某配色主题的 CSS：优先内置 5 套，其次风格包自定义 themeVariants
+export function resolveThemePalette(
+  theme: string | null,
+  themeVariants?: Record<string, string> | null,
+): string | null {
+  if (!theme) return null
+  const builtin = getThemePalette(theme)
+  if (builtin) return builtin
+  if (themeVariants && typeof themeVariants === 'object') {
+    const v = themeVariants[theme]
+    if (typeof v === 'string' && v.trim()) return v
+  }
+  return null
+}

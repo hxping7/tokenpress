@@ -11,7 +11,7 @@ import { MarkdownContent } from './MarkdownContent'
 import { LayoutGrid, List } from 'lucide-react'
 import { useLayoutStore } from '@/stores/layout'
 import { useStyleLayouts } from '@/components/StyleProvider'
-import { resolveSectionLayout, type SectionLayoutOverride } from '@/lib/resolveLayout'
+import { resolveSectionLayout, resolveTemplateConfig, mergeLayoutConfigs, extractSectionLayouts, type SectionLayoutOverride } from '@/lib/resolveLayout'
 import { isArticleTemplate } from '@/lib/templates'
 import { SinglePageView } from './templates/SinglePageView'
 import { LinkWall } from './templates/LinkWall'
@@ -42,6 +42,12 @@ function ArticleListView({
   const columns = Math.min(Math.max(Number(listCfg?.columns) || 3, 1), 4)
   const showThumbnail = listCfg?.showThumbnail !== false
   const showExcerpt = listCfg?.showExcerpt !== false
+  // 间距 / 卡片样式：来自 风格包 templates 默认 或 用户覆盖
+  const gap = typeof listCfg?.gap === 'string' && listCfg.gap ? (listCfg.gap as string) : '1rem'
+  const cardStyle = listCfg?.cardStyle
+  const cardWrapClass =
+    cardStyle === 'shadow' ? 'shadow-lg shadow-black/5' :
+    cardStyle === 'zoom' ? 'group overflow-hidden rounded-xl' : ''
 
   if (articles.length === 0) {
     return (
@@ -63,10 +69,10 @@ function ArticleListView({
 
   if (listLayout === 'masonry') {
     return (
-      <div className="w-full" style={{ columnCount: columns, columnGap: '1rem' }}>
+      <div className="w-full" style={{ columnCount: columns, columnGap: gap }}>
         {articles.map((a: any) => (
-          <div key={a.id} className="break-inside-avoid mb-4">
-            <ArticleCard key={a.id} article={a} showThumbnail={showThumbnail} showExcerpt={showExcerpt} forceView="grid" />
+          <div key={a.id} className={`break-inside-avoid mb-4 ${cardWrapClass}`} style={{ marginBottom: gap }}>
+            <ArticleCard key={a.id} article={a} showThumbnail={showThumbnail} showExcerpt={showExcerpt} forceView="grid" aspectRatio={listCfg?.aspectRatio || listCfg?.aspect} />
           </div>
         ))}
       </div>
@@ -75,9 +81,11 @@ function ArticleListView({
 
   // grid
   return (
-    <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+    <div className="grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap }}>
       {articles.map((a: any) => (
-        <ArticleCard key={a.id} article={a} showThumbnail={showThumbnail} showExcerpt={showExcerpt} forceView="grid" />
+        <div key={a.id} className={cardWrapClass}>
+          <ArticleCard key={a.id} article={a} showThumbnail={showThumbnail} showExcerpt={showExcerpt} forceView="grid" aspectRatio={listCfg?.aspectRatio || listCfg?.aspect} />
+        </div>
       ))}
     </div>
   )
@@ -111,11 +119,11 @@ export function SectionPageClient({
   // 分类 template 为空字符串 '' → 继承板块（不覆盖）
   const sectionTpl = template || 'article-list'
   const templateKey = activeCat ? (activeCat.template || sectionTpl) : sectionTpl
-  const config = useMemo(() => {
+  const userCfg = useMemo(() => {
     const raw = activeCat?.template ? activeCat.templateConfig : templateConfig
-    if (!raw) return {}
+    if (!raw) return null
     if (typeof raw === 'string') {
-      try { return JSON.parse(raw) } catch { return {} }
+      try { return JSON.parse(raw) } catch { return null }
     }
     return raw as Record<string, unknown>
   }, [activeCat, templateConfig])
@@ -127,20 +135,40 @@ export function SectionPageClient({
   const isMagazine = templateKey === 'magazine'
 
   const globalLayouts = useStyleLayouts()
-  const sectionCfg = resolveSectionLayout(sectionLayouts ?? null, globalLayouts, 'section')
-  const layout: string = String(sectionCfg.layout || 'article-list')
-  const heroCfg: any = sectionCfg.hero || {}
-  const sidebarCfg: any = sectionCfg.sidebar || {}
-  const listCfg: any = sectionCfg.list || {}
+  const packTemplates: Record<string, Record<string, unknown>> =
+    (globalLayouts?.templates as Record<string, Record<string, unknown>>) || {}
+  // 分类页：基线取 pack['category']（无则回退 pack['section']），叠加 categories.layouts 覆盖；
+  // 板块页：基线取 pack['section']，叠加 sections.layouts 覆盖。
+  const categoryLayouts = activeCat ? extractSectionLayouts(activeCat) : null
+  const pageCfg = resolveSectionLayout(
+    sectionLayouts ?? null,
+    globalLayouts,
+    activeCat ? 'category' : 'section',
+    categoryLayouts ?? undefined,
+  )
+  const layout: string = String(pageCfg.layout || 'article-list')
+  const heroCfg: any = pageCfg.hero || {}
+  const sidebarCfg: any = pageCfg.sidebar || {}
+  const listCfg: any = pageCfg.list || {}
+  const heroTitle = heroCfg.titleFrom === 'section'
+    ? title
+    : heroCfg.titleFrom === 'category'
+      ? (activeCat?.name || title)
+      : (heroCfg.title || title)
+  const heroDescription = activeCat?.description || description
   const isSidebarLayout = layout === 'page-sidebar-left' || layout === 'page-sidebar-right'
   const sidebarOnLeft = layout === 'page-sidebar-left'
 
-  // 模板生效的列表配置
-  const effectiveListCfg: any = { ...listCfg }
-  if (isGridTpl) { effectiveListCfg.layout = 'grid'; effectiveListCfg.columns = Number(config?.columns) || 3 }
-  else if (isMasonryTpl) { effectiveListCfg.layout = 'masonry'; effectiveListCfg.columns = Number(config?.columns) || 2 }
-  else if (isMagazine) { effectiveListCfg.layout = 'grid'; effectiveListCfg.columns = Number(config?.columns) || 3 }
-  const magCols = Number(config?.columns) || 3
+  // 内容模板生效配置：
+  // 风格包 templates[templateKey] = 出厂默认（列数/间距/卡片样式等）
+  // 用户配置（分类 > 板块）= 逐字段覆盖
+  const tplCfg: any = resolveTemplateConfig(packTemplates, templateKey, userCfg)
+  // 骨架级 list 默认 + 内容模板默认 + 用户配置（字段级合并）
+  const effectiveListCfg: any = mergeLayoutConfigs(listCfg, tplCfg)
+  if (isGridTpl) effectiveListCfg.layout = 'grid'
+  else if (isMasonryTpl) effectiveListCfg.layout = 'masonry'
+  else if (isMagazine) effectiveListCfg.layout = 'grid'
+  const magCols = Number(effectiveListCfg.columns) || 3
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['articles', section, page, search, category],
@@ -173,21 +201,22 @@ export function SectionPageClient({
   const renderMainContent = () => {
     // 特殊模板
     if (templateKey === 'single-page') {
-      return <SinglePageView description={description} config={config as Record<string, unknown> | null} />
+      return <SinglePageView description={description} config={tplCfg as Record<string, unknown> | null} />
     }
     if (templateKey === 'link-wall') {
-      return <LinkWall />
+      return <LinkWall config={tplCfg} />
     }
     if (templateKey === 'design-gallery' || sectionKind === 'design_works') {
-      return (
-        <DesignWorksGallery
-          section={section}
-          sectionPath={sectionPath}
-          title={title}
-          description={description}
-          mode="embedded"
-        />
-      )
+        return (
+          <DesignWorksGallery
+            section={section}
+            sectionPath={sectionPath}
+            title={title}
+            description={description}
+            mode="embedded"
+            config={tplCfg}
+          />
+        )
     }
 
     // 杂志头条
@@ -200,6 +229,7 @@ export function SectionPageClient({
           featured={articles[0]}
           rest={articles.slice(1)}
           columns={magCols}
+          gap={effectiveListCfg.gap}
           sectionPath={sectionPath}
           pagination={data?.pagination}
           page={page}
@@ -213,7 +243,7 @@ export function SectionPageClient({
       // 网站子页形态（page-sidebar-*）：有分类筛选时显示列表，否则显示首篇精选正文
       if (isSidebarLayout) {
         if (category) {
-          return <ArticleListView articles={articles} listCfg={listCfg} category={category} />
+          return <ArticleListView articles={articles} listCfg={effectiveListCfg} category={category} />
         }
         const featured = featuredData?.data?.[0]
         if (!featured) {
@@ -265,7 +295,7 @@ export function SectionPageClient({
                 </div>
               </article>
             )}
-            <ArticleListView articles={articles} listCfg={listCfg} />
+            <ArticleListView articles={articles} listCfg={effectiveListCfg} />
             {data && data.pagination.totalPages > 1 && (
               <Pagination page={page} totalPages={data.pagination.totalPages} onPageChange={setPage} />
             )}
@@ -313,9 +343,9 @@ export function SectionPageClient({
         <section className="relative py-16 px-4 border-b border-t-border">
           <div className="absolute inset-0 grid-pattern opacity-50" />
           <div className="relative max-w-[var(--content-max-width)] mx-auto text-center">
-            <h1 className="text-heading-1 gradient-text mb-4">{heroCfg.titleFrom === 'section' ? title : (heroCfg.title || title)}</h1>
-            {heroCfg.description && description ? (
-              <p className="text-t-text-secondary text-lg max-w-2xl mx-auto">{description}</p>
+            <h1 className="text-heading-1 gradient-text mb-4">{heroTitle}</h1>
+            {heroCfg.description && heroDescription ? (
+              <p className="text-t-text-secondary text-lg max-w-2xl mx-auto">{heroDescription}</p>
             ) : null}
           </div>
         </section>
@@ -364,7 +394,7 @@ export function SectionPageClient({
                 </>
               ) : (
                 <>
-                  <div className="min-w-0 order-1">{renderMainContent()}</div>
+                  <div className="min-w-0">{renderMainContent()}</div>
                   {renderSidebar()}
                 </>
               )}

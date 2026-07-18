@@ -25,5 +25,20 @@
     "layout":"single", "showTOC":false, "showAuthor":true,
     "sidebar":"related", "maxWidth":720
   },
-  "list": { "layout":"grid", "columns":3 }
+  "list": { "layout":"grid", "columns":3 },
+  "category": {
+    "layout": "page-sidebar-left",
+    "hero":   { "enabled":true, "titleFrom":"category", "showCover":true, "description":true },
+    "sidebar":{ "enabled":true, "position":"left", "source":"categories", "title":"栏目导航", "showCounts":true, "sticky":true },
+    "list":   { "layout":"grid", "columns":3, "showThumbnail":true, "showExcerpt":true }
+  },
+  "templates": {
+    "article-list":    { "columns":1, "gap":"0.75rem", "showThumbnail":true,  "showExcerpt":true,  "cardStyle":"bordered" },
+    "article-grid":    { "columns":3, "gap":"1.25rem", "aspectRatio":"4/3",   "showThumbnail":true,  "showExcerpt":true,  "cardStyle":"shadow" },
+    "article-masonry": { "columns":3, "gap":"1rem",   "aspectRatio":"auto",  "showThumbnail":true,  "showExcerpt":false, "cardStyle":"clean" },
+    "magazine":        { "columns":3, "gap":"1.25rem", "showThumbnail":true,  "showExcerpt":true,  "cardStyle":"shadow" },
+    "single-page":     { "maxWidth":820, "centered":true },
+    "link-wall":       { "columns":5, "gap":"0.75rem", "pill":true },
+    "design-gallery":  { "columns":4, "gap":"1rem",   "aspectRatio":"1/1",   "cardStyle":"zoom" }
+  }
 }

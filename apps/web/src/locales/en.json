@@ -832,5 +832,17 @@
     "viewGrid": "Grid view",
     "viewList": "List view",
     "error": "Failed to load, please try again"
+  },
+  "designWorks": {
+    "all": "All",
+    "categories": {
+      "品牌设计": "Brand Design",
+      "UI/UX": "UI/UX",
+      "插画": "Illustration",
+      "网页设计": "Web Design",
+      "摄影": "Photography",
+      "字体设计": "Typography",
+      "包装设计": "Packaging Design"
+    }
   }
 }

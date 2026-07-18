@@ -27,9 +27,11 @@ interface ArticleCardProps {
   showExcerpt?: boolean
   /** 强制视图类型，覆盖全局 useLayoutStore（用于风格包配置） */
   forceView?: 'grid' | 'list'
+  /** 网格/瀑布流缩略图比例（来自风格包 templates.aspectRatio），'auto' 表示不强制 */
+  aspectRatio?: string
 }
 
-export function ArticleCard({ article, showThumbnail = true, showExcerpt = true, forceView }: ArticleCardProps) {
+export function ArticleCard({ article, showThumbnail = true, showExcerpt = true, forceView, aspectRatio }: ArticleCardProps) {
   const { view } = useLayoutStore()
   const effectiveView = forceView || view
   const readingTime = article.content
@@ -120,7 +122,10 @@ export function ArticleCard({ article, showThumbnail = true, showExcerpt = true,
     >
       {/* 缩略图 */}
       {showThumbnail && (
-        <div className="aspect-video bg-t-bg-secondary overflow-hidden">
+        <div
+          className={`bg-t-bg-secondary overflow-hidden ${aspectRatio && aspectRatio !== 'auto' ? '' : 'aspect-video'}`}
+          style={aspectRatio && aspectRatio !== 'auto' ? { aspectRatio } : undefined}
+        >
           {article.coverImage ? (
             <Image
               src={article.coverImage}

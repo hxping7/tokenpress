@@ -5,7 +5,7 @@ import { STYLES_DIR } from './paths.js'
 import logger from './logger.js'
 
 // 镜像内置模板包来源目录（Dockerfile 在构建期 COPY 进镜像）
-const BUILTIN_SOURCE = path.resolve(process.cwd(), 'styles-builtin')
+export const BUILTIN_SOURCE = path.resolve(process.cwd(), 'styles-builtin')
 
 /**
  * 首次启动将内置三包（blog/enterprise/design）拷贝进 STYLES_DIR（持久卷）。

@@ -4,18 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import { MarkdownContent } from '@/components/MarkdownContent'
-import { TableOfContents } from '@/components/TableOfContents'
-import { ArticleSidebar } from '@/components/ArticleSidebar'
-import { ArticleEngagement } from '@/components/ArticleEngagement'
-import { ArticleViewTracker } from '@/components/ArticleViewTracker'
-import { ArticleShare } from '@/components/ArticleShare'
 import { parseShareConfig } from '@/lib/share-config'
-import { ArrowLeft, Calendar, User, Tag, Clock } from 'lucide-react'
-import Image from 'next/image'
-import { calculateReadingTime, formatReadingTime } from '@/lib/reading-time'
 import { useStyleLayouts } from '@/components/StyleProvider'
 import { resolveSectionLayout, type SectionLayoutOverride } from '@/lib/resolveLayout'
+import { ArticleViewTracker } from '@/components/ArticleViewTracker'
+import { ArticleTemplateRenderer } from '@/components/article/ArticleTemplateRenderer'
+import { isArticleTemplateKey, type ArticleTemplateKey } from '@/lib/articleTemplates'
 
 const sectionLabels: Record<string, string> = {
   token_plan: 'Token 计划',
@@ -36,14 +30,12 @@ export function ArticleDetailClient({ params, sectionLayouts }: Props) {
 
   const globalLayouts = useStyleLayouts()
   const articleCfg = resolveSectionLayout(sectionLayouts ?? null, globalLayouts, 'article')
-  const articleLayout: string = String(articleCfg.layout || 'two-column')
-  const showTOC = articleCfg.showTOC !== false
-  const sidebarType: string = String(articleCfg.sidebar || 'related')
-  const cfgMaxWidth = Number(articleCfg.maxWidth) || 720
-  const leftTOC = showTOC && articleLayout === 'two-column'
-  const rightSidebar = sidebarType === 'related'
-  const isSingle = articleLayout === 'single'
-  const isMagazine = articleLayout === 'magazine'
+  const layout = {
+    layout: String(articleCfg.layout || 'two-column'),
+    showTOC: articleCfg.showTOC !== false,
+    sidebar: String(articleCfg.sidebar || 'related'),
+    maxWidth: Number(articleCfg.maxWidth) || 720,
+  }
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['article', slug],
@@ -83,224 +75,19 @@ export function ArticleDetailClient({ params, sectionLayouts }: Props) {
   }
 
   const article = data.data
-  const readingTime = article.content
-    ? calculateReadingTime(article.content)
-    : 1
+  // 文章模板：article.articleTemplate > 回退标准
+  const template: ArticleTemplateKey = isArticleTemplateKey(article.articleTemplate)
+    ? article.articleTemplate
+    : 'standard'
 
   return (
-    <article className="min-h-screen pt-16">
-      <ArticleViewTracker articleId={article.id} />
-      {/* Header */}
-      <header className="relative py-16 px-4 border-b border-t-border">
-        <div className="absolute inset-0 grid-pattern opacity-30" />
-        <div className="relative max-w-4xl mx-auto">
-          {/* Breadcrumb */}
-          <Link
-            href={`/${section}`}
-            className="inline-flex items-center gap-1.5 text-sm text-t-text-secondary hover:text-t-text-primary transition-colors mb-6"
-          >
-            <ArrowLeft size={14} />
-            {sectionLabels[section] || section}
-          </Link>
-
-          <h1
-            className="text-heading-1 text-t-text-primary mb-4"
-            dangerouslySetInnerHTML={{ __html: article.title }}
-          />
-
-          {/* Meta */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-t-text-secondary">
-            {article.author && (
-              <span className="inline-flex items-center gap-1.5">
-                <User size={14} />
-                {article.author.displayName || article.author.username}
-              </span>
-            )}
-            {article.publishedAt && (
-              <span className="inline-flex items-center gap-1.5">
-                <Calendar size={14} />
-                {new Date(article.publishedAt).toLocaleDateString('zh-CN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5">
-              <Clock size={14} />
-              {formatReadingTime(readingTime)}
-            </span>
-            {article.category && (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-t-bg-tertiary rounded-full text-xs">
-                {article.category.name}
-              </span>
-            )}
-          </div>
-
-          {/* Tags */}
-          {article.tags && article.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mt-4">
-              <Tag size={12} className="text-t-text-muted" />
-              {article.tags.map((tag: string) => (
-                <span
-                  key={tag}
-                  className="px-2 py-0.5 text-xs bg-t-bg-tertiary text-t-text-secondary rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* 点赞 + 收藏 — 文章正文上方 */}
-          {shareConfig.likeEnabled && shareConfig.likePositions.includes('article_top') && (
-            <ArticleEngagement
-              articleId={article.id}
-              title={article.title}
-            />
-          )}
-
-          {/* Share — 文章正文上方 */}
-          {shareConfig.enabled && shareConfig.positions.includes('article_top') && (
-            <ArticleShare
-              title={article.title}
-              summary={article.excerpt}
-              platforms={shareConfig.platforms}
-            />
-          )}
-        </div>
-      </header>
-
-      {/* Content with Sidebar Layout */}
-      <div className="max-w-[var(--content-max-width)] mx-auto px-4 py-12">
-        {isSingle ? (
-          <div className="mx-auto" style={{ maxWidth: cfgMaxWidth }}>
-            {article.coverImage && (
-              <Image
-                src={article.coverImage}
-                alt={article.title}
-                width={1200}
-                height={630}
-                className="w-full rounded-2xl border border-t-border mb-8"
-                priority
-              />
-            )}
-            <MarkdownContent content={article.content} />
-          </div>
-        ) : isMagazine ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-6">
-            {/* Magazine: 大图 + 宽正文，无左侧 TOC */}
-            <main className="min-w-0">
-              {article.coverImage && (
-                <Image
-                  src={article.coverImage}
-                  alt={article.title}
-                  width={1400}
-                  height={735}
-                  className="w-full rounded-2xl border border-t-border mb-8"
-                  priority
-                />
-              )}
-              <div className="mx-auto" style={{ maxWidth: Math.max(cfgMaxWidth, 760) }}>
-                <MarkdownContent content={article.content} />
-              </div>
-            </main>
-            {rightSidebar && (
-              <aside className="hidden lg:block">
-                <div className="sticky top-20 space-y-4">
-                  <ArticleSidebar
-                    articleId={article.id}
-                    articleTags={article.tags}
-                    sectionSlug={section}
-                  />
-                  {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
-                    <ArticleShare title={article.title} summary={article.excerpt} platforms={shareConfig.platforms} aside />
-                  )}
-                  {shareConfig.likeEnabled && shareConfig.likePositions.includes('float_right') && (
-                    <ArticleEngagement articleId={article.id} title={article.title} />
-                  )}
-                </div>
-              </aside>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_240px] gap-6">
-            {/* Left: Table of Contents - 桌面端固定 */}
-            {leftTOC && (
-              <aside className="hidden lg:block">
-                <div className="sticky top-20">
-                  <TableOfContents content={article.content} />
-                </div>
-              </aside>
-            )}
-
-            {/* Center: Cover Image + Article Content */}
-            <main className="min-w-0">
-              {article.coverImage && (
-                <Image
-                  src={article.coverImage}
-                  alt={article.title}
-                  width={1200}
-                  height={630}
-                  className="w-full rounded-2xl border border-t-border mb-8"
-                  priority
-                />
-              )}
-              <div className="max-w-[var(--reading-max-width)]">
-                <MarkdownContent content={article.content} />
-              </div>
-            </main>
-
-            {/* Right: Sidebar */}
-            {rightSidebar && (
-              <aside className="hidden lg:block">
-                <div className="sticky top-20 space-y-4">
-                  <ArticleSidebar
-                    articleId={article.id}
-                    articleTags={article.tags}
-                    sectionSlug={section}
-                  />
-                  {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
-                    <ArticleShare
-                      title={article.title}
-                      summary={article.excerpt}
-                      platforms={shareConfig.platforms}
-                      aside
-                    />
-                  )}
-                  {shareConfig.likeEnabled && shareConfig.likePositions.includes('float_right') && (
-                    <ArticleEngagement
-                      articleId={article.id}
-                      title={article.title}
-                    />
-                  )}
-                </div>
-              </aside>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Share — 文章正文结尾（居中显示） */}
-      {shareConfig.enabled && shareConfig.positions.includes('article_bottom') && (
-        <div className="max-w-[var(--content-max-width)] mx-auto px-4 pb-6 flex justify-center">
-          <ArticleShare
-            title={article.title}
-            summary={article.excerpt}
-            platforms={shareConfig.platforms}
-          />
-        </div>
-      )}
-
-      {/* 点赞 + 收藏 — 文章正文结尾（居中显示） */}
-      {shareConfig.likeEnabled && shareConfig.likePositions.includes('article_bottom') && (
-        <div className="max-w-[var(--content-max-width)] mx-auto px-4 pb-12 flex justify-center">
-          <ArticleEngagement
-            articleId={article.id}
-            title={article.title}
-          />
-        </div>
-      )}
-    </article>
+    <ArticleTemplateRenderer
+      template={template}
+      article={article}
+      section={section}
+      sectionLabel={sectionLabels[section] || section}
+      shareConfig={shareConfig}
+      layout={layout}
+    />
   )
 }

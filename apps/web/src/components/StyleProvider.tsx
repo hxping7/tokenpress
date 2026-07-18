@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { getThemePalette } from '@/lib/themePalettes'
+import { resolveThemePalette } from '@/lib/themePalettes'
 import { useThemeStore } from '@/stores'
 
 export interface StyleConfig {
@@ -11,6 +11,8 @@ export interface StyleConfig {
   layouts: any
   header: any
   footer: any
+  // 风格包自定义可切换配色（key -> :root{...} CSS）
+  themeVariants?: Record<string, string> | null
 }
 
 const DEFAULT_CONFIG: StyleConfig = {
@@ -20,6 +22,7 @@ const DEFAULT_CONFIG: StyleConfig = {
   layouts: null,
   header: null,
   footer: null,
+  themeVariants: null,
 }
 
 const StyleContext = createContext<StyleConfig>(DEFAULT_CONFIG)
@@ -33,7 +36,7 @@ function readThemeCookie(): string | null {
   return m ? decodeURIComponent(m[1]) : null
 }
 
-function applyThemeOverride(theme: string | null, defaultTheme: string) {
+function applyThemeOverride(theme: string | null, defaultTheme: string, themeVariants?: Record<string, string> | null) {
   if (typeof document === 'undefined') return
   let el = document.getElementById(OVERRIDE_ID) as HTMLStyleElement | null
   const effective = theme || ''
@@ -42,7 +45,7 @@ function applyThemeOverride(theme: string | null, defaultTheme: string) {
     if (el) el.remove()
     return
   }
-  const palette = getThemePalette(effective)
+  const palette = resolveThemePalette(effective, themeVariants)
   if (!palette) return
   if (!el) {
     el = document.createElement('style')
@@ -70,12 +73,12 @@ export function StyleProvider({
     // 避免 store 初始默认值 'night' 与真实 cookie 主题不一致造成的误判。
     const cookieTheme = readThemeCookie()
     setActiveTheme(cookieTheme)
-    applyThemeOverride(cookieTheme, config.defaultTheme)
+    applyThemeOverride(cookieTheme, config.defaultTheme, config.themeVariants)
     // 同步 data-theme 供遗留组件读取
     if (typeof document !== 'undefined') {
       document.documentElement.dataset.theme = cookieTheme || config.defaultTheme
     }
-  }, [theme, config.defaultTheme])
+  }, [theme, config.defaultTheme, config.themeVariants])
 
   const value: StyleConfig = {
     ...config,
@@ -101,4 +104,17 @@ export function useStyleHeader(): any {
 
 export function useStyleFooter(): any {
   return useContext(StyleContext).footer
+}
+
+// 风格包声明的可切换配色列表（未声明则用内置 5 套）
+export function useStyleThemeOptions(): { key: string; labelZh: string; labelEn: string; color: string }[] {
+  const manifest = useContext(StyleContext).manifest
+  return manifest?.themeOptions && Array.isArray(manifest.themeOptions) && manifest.themeOptions.length > 0
+    ? manifest.themeOptions
+    : []
+}
+
+// 风格包自定义配色 CSS（key -> CSS）
+export function useStyleThemeVariants(): Record<string, string> | null {
+  return useContext(StyleContext).themeVariants || null
 }

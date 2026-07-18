@@ -8,7 +8,16 @@
     "height":60,
     "link":"/"
   },
-  "nav":  { "align":"right", "style":"pill", "source":"sections", "customItems":[] },
+  "nav":  { "align":"right", "style":"pill", "source":"sections", "customItems":[],
+    "colors": {
+      "text":"var(--text-primary)",
+      "hoverBg":"var(--hover-bg)",
+      "hoverText":"var(--text-primary)",
+      "activeBg":"#4f46e5",
+      "activeText":"#ffffff",
+      "barBg":"transparent",
+      "barText":"var(--text-primary)"
+    } },
   "actions": [
     { "type":"theme", "icon":"palette", "style":"icon" },
     { "type":"language", "icon":"globe", "style":"ghost", "label":{"zh":"中文","en":"EN"} },
