@@ -213,7 +213,7 @@ app.use('/api/v1/ads', adsPublicRoutes)
 // Carousel articles (public)
 app.use('/api/v1/carousel-articles', carouselArticlesRoutes)
 
-// Style Packs (public /active for SSR; list/get/write gated by site:write / site:write)
+// Style Packs (public /active for SSR; list/get/write gated by styles:read / styles:write)
 app.use('/api/v1/styles', styleRoutes)
 
 // Health check

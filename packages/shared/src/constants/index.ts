@@ -29,53 +29,42 @@ export const CONTENT_STATUS = [
 // labelKey 对应 locales 中 tokens.* 的 i18n key；roles 为该权限可被授予的角色。
 import type { ApiPermission } from '../types/index.js'
 
+export type ApiPermissionCategory = 'content' | 'site' | 'moderation' | 'admin'
+
 export interface ApiPermissionDef {
   value: ApiPermission
   labelKey: string
   roles: string[]
+  category: ApiPermissionCategory
 }
 
-// 全部后台能力合并为单一权限桶 `site:write`：
-// 内容发布 / 媒体上传 / 站点配置（设置·板块·分类·友链·风格包·广告·静态页·审核·敏感词）/ 管理运维（用户·备份·统计·日志）均含于此。
-// 旧token仍可用：见下方 LEGACY_PERMISSION_ALIASES。
+// 前端 UI 按 category 分组展示（后端仍按细粒度 value 鉴权）。
+// 顺序即 UI 分组顺序。
 export const API_PERMISSION_CATALOG: ApiPermissionDef[] = [
-  { value: 'site:write', labelKey: 'tokens.permSiteWrite', roles: ['superadmin', 'admin'] },
+  // 内容发布
+  { value: 'article:write', labelKey: 'tokens.permArticleWrite', roles: ['superadmin', 'admin', 'user'], category: 'content' },
+  { value: 'media:upload', labelKey: 'tokens.permMediaUpload', roles: ['superadmin', 'admin', 'user'], category: 'content' },
+  { value: 'content:delete', labelKey: 'tokens.permContentDelete', roles: ['superadmin', 'admin'], category: 'content' },
+  // 站点与外观
+  { value: 'settings:write', labelKey: 'tokens.permSettingsWrite', roles: ['superadmin', 'admin'], category: 'site' },
+  { value: 'sections:write', labelKey: 'tokens.permSectionsWrite', roles: ['superadmin', 'admin'], category: 'site' },
+  { value: 'categories:write', labelKey: 'tokens.permCategoriesWrite', roles: ['superadmin', 'admin'], category: 'site' },
+  { value: 'friendlinks:write', labelKey: 'tokens.permFriendlinksWrite', roles: ['superadmin', 'admin'], category: 'site' },
+  { value: 'styles:write', labelKey: 'tokens.permStylesWrite', roles: ['superadmin', 'admin'], category: 'site' },
+  // 运营与审核
+  { value: 'reviews:write', labelKey: 'tokens.permReviewsWrite', roles: ['superadmin', 'admin'], category: 'moderation' },
+  { value: 'keywords:write', labelKey: 'tokens.permKeywordsWrite', roles: ['superadmin', 'admin'], category: 'moderation' },
+  { value: 'ads:write', labelKey: 'tokens.permAdsWrite', roles: ['superadmin', 'admin'], category: 'moderation' },
+  { value: 'ads:read', labelKey: 'tokens.permAdsRead', roles: ['superadmin', 'admin'], category: 'moderation' },
+  { value: 'ads:delete', labelKey: 'tokens.permAdsDelete', roles: ['superadmin', 'admin'], category: 'moderation' },
+  { value: 'statichtml:write', labelKey: 'tokens.permStatichtmlWrite', roles: ['superadmin', 'admin'], category: 'moderation' },
+  { value: 'statichtml:read', labelKey: 'tokens.permStatichtmlRead', roles: ['superadmin', 'admin'], category: 'moderation' },
+  // 管理与运维
+  { value: 'users:write', labelKey: 'tokens.permUsersWrite', roles: ['superadmin'], category: 'admin' },
+  { value: 'backup:write', labelKey: 'tokens.permBackupWrite', roles: ['superadmin', 'admin'], category: 'admin' },
+  { value: 'stats:read', labelKey: 'tokens.permStatsRead', roles: ['superadmin', 'admin'], category: 'admin' },
+  { value: 'logs:read', labelKey: 'tokens.permLogsRead', roles: ['superadmin', 'admin'], category: 'admin' },
 ]
-
-// 旧权限别名兼容：合并为单一 site:write 后，已签发的旧 token（permissions 含下列任一旧权限）
-// 仍视为拥有 site:write，避免旧 token 立即失效。新 token 直接存 'site:write'。
-export const LEGACY_PERMISSION_ALIASES: Record<string, string[]> = {
-  'site:write': [
-    'article:write',
-    'media:upload',
-    'content:delete',
-    'settings:write',
-    'friendlinks:write',
-    'sections:write',
-    'categories:write',
-    'users:write',
-    'stats:read',
-    'logs:read',
-    'backup:write',
-    'reviews:write',
-    'keywords:write',
-    'ads:read',
-    'ads:write',
-    'ads:delete',
-    'statichtml:write',
-    'statichtml:read',
-    'styles:write',
-    'styles:read',
-    'works:write',
-  ],
-}
-
-// 判断 token 权限数组是否满足某要求权限（含旧权限别名兼容）
-export function satisfiesPermission(permissions: string[], required: string): boolean {
-  if (permissions.includes(required)) return true
-  const aliases = LEGACY_PERMISSION_ALIASES[required]
-  return aliases ? aliases.some((p) => permissions.includes(p)) : false
-}
 
 // Token 创建接口的合法权限白名单（由目录派生）
 export const ALL_API_PERMISSIONS: string[] = API_PERMISSION_CATALOG.map((p) => p.value)
@@ -90,6 +79,15 @@ export const ROLE_API_PERMISSIONS: Record<string, string[]> = API_PERMISSION_CAT
   },
   {} as Record<string, string[]>,
 )
+
+// 前端 UI 分组展示用的分类元数据（顺序即分组顺序；labelKey 对应 locales tokens.*）
+export const API_PERMISSION_CATEGORY_ORDER: ApiPermissionCategory[] = ['content', 'site', 'moderation', 'admin']
+export const API_PERMISSION_CATEGORY_LABELS: Record<ApiPermissionCategory, string> = {
+  content: 'tokens.catContent',
+  site: 'tokens.catSite',
+  moderation: 'tokens.catModeration',
+  admin: 'tokens.catAdmin',
+}
 
 // Upload limits
 export const UPLOAD_LIMITS = {

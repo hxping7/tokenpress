@@ -7,7 +7,7 @@ import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import logger from '../utils/logger.js'
 
 const router = Router()
-router.use(apiTokenOrAdmin('site:write'))
+router.use(apiTokenOrAdmin('keywords:write'))
 
 // GET /api/v1/admin/sensitive-keywords — list keywords
 router.get('/', async (req: AuthRequest, res) => {

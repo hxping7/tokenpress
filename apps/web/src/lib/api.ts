@@ -358,17 +358,17 @@ class ApiClient {
     return this.request<{ success: boolean; data: any }>('/styles/active')
   }
 
-  // 列出全部包（需 site:write，或管理员 JWT）
+  // 列出全部包（需 styles:read，或管理员 JWT）
   async getStyles() {
     return this.request<{ success: boolean; data: any[] }>('/styles')
   }
 
-  // 取某包完整配置（需 site:write，或管理员 JWT）
+  // 取某包完整配置（需 styles:read，或管理员 JWT）
   async getStyle(id: string) {
     return this.request<{ success: boolean; data: any }>(`/styles/${id}`)
   }
 
-  // 新建/上传模板包（需 site:write）
+  // 新建/上传模板包（需 styles:write）
   async createStyle(data: {
     id: string
     manifest: any
@@ -383,7 +383,7 @@ class ApiClient {
     })
   }
 
-  // 局部更新模板包（需 site:write）
+  // 局部更新模板包（需 styles:write）
   async updateStyle(id: string, data: {
     manifest?: any
     theme?: string
@@ -397,21 +397,21 @@ class ApiClient {
     })
   }
 
-  // 删除自定义包（需 site:write）
+  // 删除自定义包（需 styles:write）
   async deleteStyle(id: string) {
     return this.request<{ success: boolean; message: string }>(`/styles/${id}`, {
       method: 'DELETE',
     })
   }
 
-  // 恢复内置模板包到出厂默认（需 site:write）：从镜像内置源重新拷贝覆盖个人修改
+  // 恢复内置模板包到出厂默认（需 styles:write）：从镜像内置源重新拷贝覆盖个人修改
   async restoreStyle(id: string) {
     return this.request<{ success: boolean; data: any }>(`/styles/${id}/restore`, {
       method: 'POST',
     })
   }
 
-  // 激活某模板包（复用 site-settings 的 site:write）
+  // 激活某模板包（复用 site-settings 的 settings:write）
   async setActiveStyle(id: string) {
     return this.request<{ success: boolean; data: any }>('/site-settings', {
       method: 'PUT',

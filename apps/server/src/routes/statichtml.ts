@@ -121,7 +121,7 @@ function listFiles(dir: string, relBase: string): FileNode[] {
 }
 
 // ===== Read: tree (folders + files) =====
-router.get('/tree', apiTokenOrAdmin('site:write'), (_req, res) => {
+router.get('/tree', apiTokenOrAdmin('statichtml:read'), (_req, res) => {
   try {
     const tree = buildTree(STATIC_HTML_DIR, '')
     res.json({ success: true, data: { tree } })
@@ -132,7 +132,7 @@ router.get('/tree', apiTokenOrAdmin('site:write'), (_req, res) => {
 })
 
 // ===== Read: flat list (files only, for pickers) =====
-router.get('/list', apiTokenOrAdmin('site:write'), (_req, res) => {
+router.get('/list', apiTokenOrAdmin('statichtml:read'), (_req, res) => {
   try {
     const files = listFiles(STATIC_HTML_DIR, '')
     res.json({ success: true, data: files })
@@ -143,7 +143,7 @@ router.get('/list', apiTokenOrAdmin('site:write'), (_req, res) => {
 })
 
 // ===== Write: create folder =====
-router.post('/folder', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
+router.post('/folder', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
     const { path: folderPath } = req.body as { path?: string }
     if (!folderPath || typeof folderPath !== 'string' || !folderPath.trim()) {
@@ -170,7 +170,7 @@ router.post('/folder', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) =>
 })
 
 // ===== Write: delete folder (recursive) =====
-router.delete('/folder', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
+router.delete('/folder', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
     const { path: folderPath } = req.body as { path?: string }
     if (!folderPath || typeof folderPath !== 'string' || !folderPath.trim()) {
@@ -191,7 +191,7 @@ router.delete('/folder', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) 
 })
 
 // ===== Write: rename folder =====
-router.patch('/folder', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
+router.patch('/folder', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
     const { path: folderPath, newName } = req.body as { path?: string; newName?: string }
     if (!folderPath || typeof folderPath !== 'string' || !folderPath.trim()) {
@@ -225,7 +225,7 @@ router.patch('/folder', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) =
 })
 
 // ===== Write: upload / create file =====
-router.post('/file', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
+router.post('/file', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
     const { folder, filename, content, file, mimeType } = req.body as {
       folder?: string
@@ -295,7 +295,7 @@ router.post('/file', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
 })
 
 // ===== Write: replace file content =====
-router.put('/file', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
+router.put('/file', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
     const { relPath, content, file, mimeType } = req.body as {
       relPath?: string
@@ -336,7 +336,7 @@ router.put('/file', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
 })
 
 // ===== Write: rename file =====
-router.patch('/file', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
+router.patch('/file', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
     const { relPath, newName } = req.body as { relPath?: string; newName?: string }
     if (!relPath || typeof relPath !== 'string' || !relPath.trim()) {
@@ -373,7 +373,7 @@ router.patch('/file', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => 
 })
 
 // ===== Write: delete file =====
-router.delete('/file', apiTokenOrAdmin('site:write'), (req: AuthRequest, res) => {
+router.delete('/file', apiTokenOrAdmin('statichtml:write'), (req: AuthRequest, res) => {
   try {
     const { relPath } = req.body as { relPath?: string }
     if (!relPath || typeof relPath !== 'string') {

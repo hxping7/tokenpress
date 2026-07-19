@@ -23,8 +23,8 @@ router.get('/', async (_req, res) => {
   }
 })
 
-// ===== Admin routes (API Token site:write 或 JWT 管理员) =====
-router.use(apiTokenOrAdmin('site:write'))
+// ===== Admin routes (API Token friendlinks:write 或 JWT 管理员) =====
+router.use(apiTokenOrAdmin('friendlinks:write'))
 
 // POST /api/v1/friend-links — create link
 router.post('/', async (req: AuthRequest, res) => {

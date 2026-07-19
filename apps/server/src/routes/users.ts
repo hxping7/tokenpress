@@ -43,7 +43,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // POST /api/v1/users — admin+ 可创建用户
-router.post('/', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) => {
+router.post('/', apiTokenOrAdmin('users:write'), async (req: AuthRequest, res) => {
   try {
     const { username, password, displayName, role = 'user' } = req.body
     if (!username || !password) {
@@ -75,7 +75,7 @@ router.post('/', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) =>
 })
 
 // PUT /api/v1/users/:id — admin+ 可编辑用户
-router.put('/:id', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) => {
+router.put('/:id', apiTokenOrAdmin('users:write'), async (req: AuthRequest, res) => {
   try {
     const userId = getParamAsInt(req.params.id)
     if (!userId) {
@@ -125,7 +125,7 @@ router.put('/:id', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) 
 })
 
 // PATCH /api/v1/users/:id/reset-password — admin+ 重置他人密码
-router.patch('/:id/reset-password', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) => {
+router.patch('/:id/reset-password', apiTokenOrAdmin('users:write'), async (req: AuthRequest, res) => {
   try {
     const userId = getParamAsInt(req.params.id)
     if (!userId) {
@@ -198,7 +198,7 @@ router.post('/me/change-password', authMiddleware, async (req: AuthRequest, res)
 })
 
 // DELETE /api/v1/users/:id — admin+ 可删除用户
-router.delete('/:id', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) => {
+router.delete('/:id', apiTokenOrAdmin('users:write'), async (req: AuthRequest, res) => {
   try {
     const userId = getParamAsInt(req.params.id)
     if (!userId) {

@@ -73,7 +73,7 @@ router.get('/', async (_req, res) => {
 
 // GET /api/v1/sections/all — 受保护，返回全部板块（含未启用），供后台管理界面使用
 // 必须定义在 GET /:id 之前，否则会被 /:id 吞掉（getParamAsInt('all') 返回 falsy → 400）
-router.get('/all', apiTokenOrAdmin('site:write'), async (_req, res) => {
+router.get('/all', apiTokenOrAdmin('sections:write'), async (_req, res) => {
   try {
     const all = await db.select().from(sections)
       .orderBy(asc(sections.sortOrder), asc(sections.id))
@@ -121,8 +121,8 @@ router.get('/:id/categories', async (req, res) => {
   }
 })
 
-// ===== Admin routes (API Token site:write 或 JWT 管理员) =====
-router.use(apiTokenOrAdmin('site:write'))
+// ===== Admin routes (API Token sections:write 或 JWT 管理员) =====
+router.use(apiTokenOrAdmin('sections:write'))
 
 // POST /api/v1/sections — create section
 router.post('/', async (req: AuthRequest, res) => {

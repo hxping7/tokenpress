@@ -6,7 +6,7 @@ import { type AuthRequest } from '../middleware/auth.js'
 import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 
 const router = Router()
-router.use(apiTokenOrAdmin('site:write'))
+router.use(apiTokenOrAdmin('stats:read'))
 
 // GET /api/v1/stats — get API usage statistics
 router.get('/', async (req: AuthRequest, res) => {

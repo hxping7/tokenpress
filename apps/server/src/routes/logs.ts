@@ -99,7 +99,7 @@ router.get('/login', authMiddleware, async (req: AuthRequest, res) => {
 })
 
 // ===== API Logs =====
-router.get('/api', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) => {
+router.get('/api', apiTokenOrAdmin('logs:read'), async (req: AuthRequest, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1)
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20))
@@ -153,7 +153,7 @@ router.get('/api', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) 
 })
 
 // ===== System Events =====
-router.get('/system', apiTokenOrAdmin('site:write'), async (req: AuthRequest, res) => {
+router.get('/system', apiTokenOrAdmin('logs:read'), async (req: AuthRequest, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1)
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20))

@@ -167,7 +167,7 @@ DELETE /api/v1/ai/articles/:slug
 Authorization: Bearer t00_sk_xxxxx
 ```
 
-> 需要权限：`site:write`
+> 需要权限：`content:delete`
 
 **成功响应**
 ```json
@@ -219,7 +219,7 @@ Authorization: Bearer t00_sk_xxxxx
 ```json
 {
   "success": false,
-  "error": "Missing required permission: site:write"
+  "error": "Missing required permission: article:write"
 }
 ```
 
@@ -251,9 +251,9 @@ Authorization: Bearer t00_sk_xxxxx
 
 | 权限 | 说明 |
 |------|------|
-| site:write | 发布/更新文章 |
-| site:write | 删除文章 |
-| site:write | 上传媒体文件 |
+| article:write | 发布/更新文章 |
+| content:delete | 删除文章 |
+| media:upload | 上传媒体文件 |
 
 ## 使用示例
 

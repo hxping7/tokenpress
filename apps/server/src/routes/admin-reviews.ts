@@ -9,7 +9,7 @@ import { reviewContent } from '../lib/contentReview/index.js'
 import logger from '../utils/logger.js'
 
 const router = Router()
-router.use(apiTokenOrAdmin('site:write'))
+router.use(apiTokenOrAdmin('reviews:write'))
 
 // GET /api/v1/admin/reviews — list reviews with filters
 router.get('/', async (req: AuthRequest, res) => {

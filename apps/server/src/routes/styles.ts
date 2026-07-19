@@ -209,8 +209,8 @@ router.get('/active', async (_req, res) => {
   }
 })
 
-// GET /api/v1/styles — 列出全部包（需 site:write）
-router.get('/', apiTokenOrAdmin('site:write'), async (_req, res) => {
+// GET /api/v1/styles — 列出全部包（需 styles:read）
+router.get('/', apiTokenOrAdmin('styles:read'), async (_req, res) => {
   try {
     const activeId = await getActiveStyleId()
     if (!fs.existsSync(STYLES_DIR)) {
@@ -241,8 +241,8 @@ router.get('/', apiTokenOrAdmin('site:write'), async (_req, res) => {
   }
 })
 
-// GET /api/v1/styles/:id — 取某包完整配置（需 site:write）
-router.get('/:id', apiTokenOrAdmin('site:write'), async (req, res) => {
+// GET /api/v1/styles/:id — 取某包完整配置（需 styles:read）
+router.get('/:id', apiTokenOrAdmin('styles:read'), async (req, res) => {
   try {
     const id = String(req.params.id)
     const v = validateId(id)
@@ -266,8 +266,8 @@ router.get('/:id', apiTokenOrAdmin('site:write'), async (req, res) => {
   }
 })
 
-// POST /api/v1/styles — 新建/上传模板包（需 site:write）
-router.post('/', apiTokenOrAdmin('site:write'), async (req, res) => {
+// POST /api/v1/styles — 新建/上传模板包（需 styles:write）
+router.post('/', apiTokenOrAdmin('styles:write'), async (req, res) => {
   try {
     const { id, manifest, theme, layouts, header, footer } = req.body || {}
     const v = validateId(id)
@@ -314,8 +314,8 @@ router.post('/', apiTokenOrAdmin('site:write'), async (req, res) => {
   }
 })
 
-// PUT /api/v1/styles/:id — 局部更新（需 site:write）
-router.put('/:id', apiTokenOrAdmin('site:write'), async (req, res) => {
+// PUT /api/v1/styles/:id — 局部更新（需 styles:write）
+router.put('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
   try {
     const id = String(req.params.id)
     const v = validateId(id)
@@ -360,10 +360,10 @@ router.put('/:id', apiTokenOrAdmin('site:write'), async (req, res) => {
   }
 })
 
-// POST /api/v1/styles/:id/restore — 恢复内置模板包到出厂默认（需 site:write）
+// POST /api/v1/styles/:id/restore — 恢复内置模板包到出厂默认（需 styles:write）
 // 仅对 builtin 包有效：从镜像内置源 styles-builtin/<id> 重新拷贝覆盖当前磁盘文件，
 // 丢弃用户对布局/配色/导航等的全部个人修改。当前激活状态不变。
-router.post('/:id/restore', apiTokenOrAdmin('site:write'), async (req, res) => {
+router.post('/:id/restore', apiTokenOrAdmin('styles:write'), async (req, res) => {
   try {
     const id = String(req.params.id)
     const v = validateId(id)
@@ -397,8 +397,8 @@ router.post('/:id/restore', apiTokenOrAdmin('site:write'), async (req, res) => {
   }
 })
 
-// DELETE /api/v1/styles/:id — 删除自定义包（需 site:write）
-router.delete('/:id', apiTokenOrAdmin('site:write'), async (req, res) => {
+// DELETE /api/v1/styles/:id — 删除自定义包（需 styles:write）
+router.delete('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
   try {
     const id = String(req.params.id)
     const v = validateId(id)

@@ -6,7 +6,7 @@ import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
-import { API_PERMISSION_CATALOG } from '@tokenpress/shared'
+import { API_PERMISSION_CATALOG, API_PERMISSION_CATEGORY_ORDER, API_PERMISSION_CATEGORY_LABELS } from '@tokenpress/shared'
 import { Plus, Trash2, X, Check, Copy, Key, Clock, Shield, Activity } from 'lucide-react'
 
 interface ApiToken {
@@ -25,6 +25,7 @@ const allPermissionOptions = API_PERMISSION_CATALOG.map((p) => ({
   value: p.value,
   labelKey: p.labelKey,
   roles: p.roles,
+  category: p.category,
 }))
 
 export default function TokensPage() {
@@ -33,13 +34,19 @@ export default function TokensPage() {
   const { backendLocale } = useLocaleStore()
   const currentRole = currentUser?.role || 'user'
   const permissionOptions = allPermissionOptions.filter(opt => opt.roles.includes(currentRole))
+  // 按分类分组（仅保留当前角色可授予的权限），用于前端 UI 分组展示
+  const permissionGroups = API_PERMISSION_CATEGORY_ORDER.map((cat) => ({
+    category: cat,
+    labelKey: API_PERMISSION_CATEGORY_LABELS[cat],
+    options: permissionOptions.filter((opt) => opt.category === cat),
+  })).filter((g) => g.options.length > 0)
   const [showEditor, setShowEditor] = useState(false)
   const [showToken, setShowToken] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
 
   // Editor state
   const [name, setName] = useState('')
-  const [permissions, setPermissions] = useState<string[]>(['site:write'])
+  const [permissions, setPermissions] = useState<string[]>(['article:write'])
   const [expiresAt, setExpiresAt] = useState('')
 
   const { data: tokensData, isLoading } = useQuery({
@@ -70,7 +77,7 @@ export default function TokensPage() {
 
   const resetEditor = () => {
     setName('')
-    setPermissions(['site:write'])
+    setPermissions(['article:write'])
     setExpiresAt('')
   }
 
@@ -231,23 +238,32 @@ export default function TokensPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{t('tokens.permissions', backendLocale)}</label>
-                <div className="space-y-2">
-                  {permissionOptions.map((opt) => (
-                    <label key={opt.value} className="flex items-center gap-3 p-3 bg-t-bg-secondary rounded-lg cursor-pointer hover:bg-t-hover">
-                      <input
-                        type="checkbox"
-                        checked={permissions.includes(opt.value)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setPermissions([...permissions, opt.value])
-                          } else {
-                            setPermissions(permissions.filter(p => p !== opt.value))
-                          }
-                        }}
-                        className="w-4 h-4 rounded text-t-accent-blue"
-                      />
-                      <span>{t(opt.labelKey, backendLocale)}</span>
-                    </label>
+                <div className="space-y-4">
+                  {permissionGroups.map((group) => (
+                    <div key={group.category}>
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-t-text-secondary mb-2">
+                        {t(group.labelKey, backendLocale)}
+                      </h4>
+                      <div className="space-y-2">
+                        {group.options.map((opt) => (
+                          <label key={opt.value} className="flex items-center gap-3 p-3 bg-t-bg-secondary rounded-lg cursor-pointer hover:bg-t-hover">
+                            <input
+                              type="checkbox"
+                              checked={permissions.includes(opt.value)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setPermissions([...permissions, opt.value])
+                                } else {
+                                  setPermissions(permissions.filter(p => p !== opt.value))
+                                }
+                              }}
+                              className="w-4 h-4 rounded text-t-accent-blue"
+                            />
+                            <span>{t(opt.labelKey, backendLocale)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
