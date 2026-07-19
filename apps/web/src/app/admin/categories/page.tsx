@@ -510,7 +510,7 @@ export default function CategoriesPage() {
                 onChange={setSectionTemplate}
                 config={sectionTemplateConfig}
                 onConfigChange={setSectionTemplateConfig}
-                exclude={editingSection?.kind === 'design_works' ? undefined : (['design-gallery'] as TemplateKey[])}
+                exclude={editingSection?.kind === 'design_works' ? undefined : []}
                 packTemplates={packTemplates}
                 hint="决定文章怎么排（列表 / 网格 / 瀑布流 / 杂志头条…）。列数 / 间距 / 卡片样式由当前风格包提供默认，可在此逐字段覆盖。注意：这是「内容排版」，与「页面骨架」（侧栏 / hero / 宽度）相互独立。"
               />
@@ -593,7 +593,7 @@ export default function CategoriesPage() {
                     onChange={setCategoryTemplate}
                     config={categoryTemplateConfig}
                     onConfigChange={setCategoryTemplateConfig}
-                    exclude={catSection?.kind === 'design_works' ? undefined : (['design-gallery'] as TemplateKey[])}
+                    exclude={catSection?.kind === 'design_works' ? undefined : []}
                     showInherit
                     packTemplates={packTemplates}
                     hint="分类可覆盖所属板块的展示模板；留空则跟随板块。列数 / 间距 / 卡片样式由风格包提供默认，可在此覆盖。"
