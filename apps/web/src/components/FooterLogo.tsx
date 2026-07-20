@@ -111,7 +111,7 @@ export function FooterLogo() {
           letterSpacing="6"
           fill="#1a4a6a"
         >
-          TOKEN00.COM
+          PRESS
         </text>
       </svg>
     </Link>
