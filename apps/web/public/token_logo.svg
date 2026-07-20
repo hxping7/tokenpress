@@ -29,8 +29,8 @@
     </g>
   </g>
 
-  <!-- 分隔线（中间粗、两头尖） -->
-  <path d="M 200 158 Q 280 153 360 158 Q 280 163 200 158 Z" fill="url(#logoDivGrad)"/>
+  <!-- 分隔线（中间粗、两头尖，位于字标与副标题正中） -->
+  <path d="M 200 134 Q 280 129 360 134 Q 280 139 200 134 Z" fill="url(#logoDivGrad)"/>
 
   <!-- 副标题 -->
   <text x="280" y="200" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif" font-size="46" font-weight="700" letter-spacing="7" font-style="italic" fill="#5ab8ff">词元笔记</text>
