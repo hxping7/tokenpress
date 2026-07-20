@@ -1,16 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="390" height="72" viewBox="0 0 390 72" fill="none" role="img" aria-label="TokenPress">
+<svg xmlns="http://www.w3.org/2000/svg" width="248" height="72" viewBox="0 0 248 72" fill="none" role="img" aria-label="Token00">
   <defs>
-    <linearGradient id="vp-text" x1="6" y1="0" x2="384" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#5ab8ff"/>
-      <stop offset="55%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#22d3ee"/>
+    <linearGradient id="t00-text" x1="6" y1="0" x2="242" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="50%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
     </linearGradient>
-    <linearGradient id="vp-line" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="t00-line" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#22d3ee"/>
       <stop offset="50%" stop-color="#3b82f6"/>
       <stop offset="100%" stop-color="#22d3ee"/>
     </linearGradient>
   </defs>
-  <text x="6" y="52" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" letter-spacing="-1" fill="url(#vp-text)">TokenPress</text>
-  <line x1="6" y1="62" x2="384" y2="62" stroke="url(#vp-line)" stroke-width="0.5" opacity="0.3"/>
+  <text x="6" y="52" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="-1" fill="url(#t00-text)">Token00</text>
+  <line x1="6" y1="62" x2="242" y2="62" stroke="url(#t00-line)" stroke-width="1.5" opacity="0.55"/>
 </svg>
