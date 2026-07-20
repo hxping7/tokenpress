@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
-import { api } from '@/lib/api'
 import { useThemeStore } from '@/stores'
+import { useSiteSettings } from '@/lib/useSiteSettings'
 
 export function Logo({
   size = 'normal',
@@ -19,12 +18,8 @@ export function Logo({
     large: 'w-40 sm:w-64', // 160 / 256
   }[size]
 
-  // Fetch custom logo from settings
-  const { data: settingsData } = useQuery({
-    queryKey: ['site-settings', 'header_logo'],
-    queryFn: () => api.get('/site-settings/keys/header_logo'),
-    staleTime: 5 * 60 * 1000,
-  })
+  // Fetch custom logo from settings（与全站设置共用去重后的单一请求）
+  const { data: settingsData } = useSiteSettings()
 
   const customLogo = settingsData?.data?.header_logo
   const heightMap = { small: 28, normal: 36, large: 56 }

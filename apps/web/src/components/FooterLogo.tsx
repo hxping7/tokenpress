@@ -2,16 +2,11 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { useSiteSettings } from '@/lib/useSiteSettings'
 
 export function FooterLogo() {
-  // Fetch custom footer logo from settings
-  const { data: settingsData } = useQuery({
-    queryKey: ['site-settings', 'footer_logo'],
-    queryFn: () => api.get('/site-settings/keys/footer_logo'),
-    staleTime: 5 * 60 * 1000,
-  })
+  // Fetch custom footer logo from settings（与全站设置共用去重后的单一请求）
+  const { data: settingsData } = useSiteSettings()
 
   const customLogo = settingsData?.data?.footer_logo
 

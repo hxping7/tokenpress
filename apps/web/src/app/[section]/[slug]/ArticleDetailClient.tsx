@@ -10,6 +10,7 @@ import { resolveSectionLayout, type SectionLayoutOverride } from '@/lib/resolveL
 import { ArticleViewTracker } from '@/components/ArticleViewTracker'
 import { ArticleTemplateRenderer } from '@/components/article/ArticleTemplateRenderer'
 import { isArticleTemplateKey, type ArticleTemplateKey } from '@/lib/articleTemplates'
+import { useSiteSettings } from '@/lib/useSiteSettings'
 
 const sectionLabels: Record<string, string> = {
   token_plan: 'Token 计划',
@@ -43,14 +44,8 @@ export function ArticleDetailClient({ params, sectionLayouts }: Props) {
     enabled: !!slug,
   })
 
-  // 分享功能后台配置（公开接口，无需鉴权）
-  const { data: shareRaw } = useQuery({
-    queryKey: ['share-config'],
-    queryFn: () =>
-      api.get<{ success: boolean; data: Record<string, string> }>(
-        '/site-settings/keys/share_config'
-      ),
-  })
+  // 分享功能后台配置（公开接口，无需鉴权；与全站设置共用去重后的单一请求）
+  const { data: shareRaw } = useSiteSettings()
   const shareConfig = parseShareConfig(shareRaw?.data?.share_config)
 
   if (isLoading) {

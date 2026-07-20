@@ -1,15 +1,10 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
 import Script from 'next/script'
-import { api } from '@/lib/api'
+import { useSiteSettings } from '@/lib/useSiteSettings'
 
 export function AnalyticsLoader() {
-  const { data } = useQuery({
-    queryKey: ['site-settings', 'analytics_code'],
-    queryFn: () => api.get('/site-settings/keys/analytics_code'),
-    staleTime: 10 * 60 * 1000,
-  })
+  const { data } = useSiteSettings()
 
   const analyticsCode = data?.data?.analytics_code || ''
 

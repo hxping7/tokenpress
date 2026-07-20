@@ -137,9 +137,14 @@ app.use((req, res, next) => {
 })
 
 // Rate limiting
+// 全局限流：60s 窗口内最多 300 个请求 / IP。
+// 此前设为 100，但前端是组件化 SPA，首页单次加载就会并发拉取
+// 站点设置 / 板块 / 友链等多个只读接口；用户快速导航或多标签页时
+// 极易在 1 分钟内打满 100 而返回 429，进而使站点设置加载失败、
+// 布局回退到默认窄宽度。300 对正常用户宽松，仍能挡住暴力爬取。
 const limiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 300,
   message: { success: false, error: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,

@@ -8,6 +8,7 @@ import { api } from '@/lib/api'
 import { useLocaleStore } from '@/stores'
 import { useStyleFooter } from '@/components/StyleProvider'
 import { t } from '@/lib/i18n'
+import { useSiteSettings } from '@/lib/useSiteSettings'
 
 interface FriendLink {
   id: number
@@ -32,12 +33,8 @@ export function Footer() {
   const pathname = usePathname()
   const { locale } = useLocaleStore()
 
-  // Fetch footer settings
-  const { data: settingsData } = useQuery({
-    queryKey: ['site-settings', 'footer_nav,footer_nav_columns,powered_by,copyright_text,icp_number,icp_url'],
-    queryFn: () => api.get('/site-settings/keys/footer_nav,footer_nav_columns,powered_by,copyright_text,icp_number,icp_url'),
-    staleTime: 5 * 60 * 1000,
-  })
+  // Fetch footer settings（与全站设置共用去重后的单一请求）
+  const { data: settingsData } = useSiteSettings()
 
   // Fetch friend links
   const { data: linksData } = useQuery({
