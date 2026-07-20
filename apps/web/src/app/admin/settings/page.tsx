@@ -1579,8 +1579,8 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
           {/* 启用文章轮播图 */}
           <div className="flex items-center justify-between p-4 bg-t-bg-secondary rounded-lg">
             <div>
-              <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselUseArticles', adminLocale) || '启用文章轮播图'}</span>
-              <p className="text-xs text-t-text-muted mt-1">{t('settings.heroCarouselUseArticlesDesc', adminLocale) || '使用文章封面图作为轮播图，而不是自定义图片'}</p>
+              <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselUseArticles', adminLocale) || '启用文章封面填补'}</span>
+              <p className="text-xs text-t-text-muted mt-1">{t('settings.heroCarouselUseArticlesDesc', adminLocale) || '启用后，用文章封面图填补轮播剩余名额（手动添加的宣传图始终排在最前）'}</p>
             </div>
             <button
               type="button"
@@ -1612,64 +1612,64 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
             </div>
           )}
 
-          {/* 轮播数量设置 - 只有启用了文章轮播图才显示 */}
-          {heroCarouselUseArticles && (
-            <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
-              <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselMaxItems', adminLocale) || '轮播数量'}</span>
+          {/* 轮播参数：数量 / 切换间隔 / 效果 / 尺寸 合并一行 */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 p-4 bg-t-bg-secondary rounded-lg">
+            {/* 轮播总数量：手动宣传图 + 文章封面合计上限，始终生效 */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-t-text-secondary whitespace-nowrap">{t('settings.heroCarouselMaxItems', adminLocale) || '轮播数量'}</label>
               <select
                 value={heroCarouselMaxItems}
                 onChange={(e) => setHeroCarouselMaxItems(parseInt(e.target.value))}
-                className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+                className="px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
             </div>
-          )}
 
-          {/* 轮播切换间隔时间设置 */}
-          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
-            <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroCarouselInterval', adminLocale) || '切换间隔（秒）'}</span>
-            <input
-              type="number"
-              min={1}
-              max={60}
-              value={heroCarouselInterval}
-              onChange={(e) => setHeroCarouselInterval(parseInt(e.target.value) || 5)}
-              className="w-20 px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue text-center"
-            />
-            <span className="text-xs text-t-text-muted">{t('settings.heroCarouselIntervalDesc', adminLocale) || '每张幻灯片显示的时间'}</span>
-          </div>
+            {/* 切换间隔（秒） */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-t-text-secondary whitespace-nowrap">{t('settings.heroCarouselInterval', adminLocale) || '切换间隔（秒）'}</label>
+              <input
+                type="number"
+                min={1}
+                max={60}
+                value={heroCarouselInterval}
+                onChange={(e) => setHeroCarouselInterval(parseInt(e.target.value) || 5)}
+                className="w-16 px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue text-center"
+              />
+            </div>
 
-          {/* 轮播效果选择 */}
-          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
-            <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroEffect', adminLocale)}</span>
-            <select
-              value={heroEffect}
-              onChange={(e) => setHeroEffect(e.target.value)}
-              className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
-            >
-              <option value="fade">{t('settings.heroEffectFade', adminLocale)}</option>
-              <option value="slide">{t('settings.heroEffectSlide', adminLocale)}</option>
-              <option value="zoom">{t('settings.heroEffectZoom', adminLocale)}</option>
-              <option value="flip">{t('settings.heroEffectFlip', adminLocale)}</option>
-            </select>
-          </div>
+            {/* 轮播效果 */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-t-text-secondary whitespace-nowrap">{t('settings.heroEffect', adminLocale)}</label>
+              <select
+                value={heroEffect}
+                onChange={(e) => setHeroEffect(e.target.value)}
+                className="px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+              >
+                <option value="fade">{t('settings.heroEffectFade', adminLocale)}</option>
+                <option value="slide">{t('settings.heroEffectSlide', adminLocale)}</option>
+                <option value="zoom">{t('settings.heroEffectZoom', adminLocale)}</option>
+                <option value="flip">{t('settings.heroEffectFlip', adminLocale)}</option>
+              </select>
+            </div>
 
-          {/* 轮播尺寸选择 */}
-          <div className="flex items-center gap-4 p-4 bg-t-bg-secondary rounded-lg">
-            <span className="text-sm font-medium text-t-text-secondary">{t('settings.heroSize', adminLocale)}</span>
-            <select
-              value={heroSize}
-              onChange={(e) => setHeroSize(e.target.value)}
-              className="px-4 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
-            >
-              {/* 与后台「全局宽屏设置」(WIDTH_PRESETS) 四档一一对应 */}
-              {WIDTH_PRESETS.map((p) => (
-                <option key={p.key} value={p.key}>{p.label}</option>
-              ))}
-            </select>
+            {/* 轮播尺寸 */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-t-text-secondary whitespace-nowrap">{t('settings.heroSize', adminLocale)}</label>
+              <select
+                value={heroSize}
+                onChange={(e) => setHeroSize(e.target.value)}
+                className="px-3 py-2 bg-t-bg-primary border border-t-border rounded-lg text-sm focus:outline-none focus:border-t-accent-blue"
+              >
+                {/* 与后台「全局宽屏设置」(WIDTH_PRESETS) 四档一一对应 */}
+                {WIDTH_PRESETS.map((p) => (
+                  <option key={p.key} value={p.key}>{p.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {heroSlides.length === 0 ? (

@@ -39,20 +39,21 @@ async function getHeroSlides(): Promise<HeroResult> {
   try {
     // 服务器端：使用 BACKEND_URL（Docker内网）或默认地址
     // 客户端：使用空字符串（相对路径，走 nginx 代理）
-    const baseUrl = typeof window === 'undefined' 
+    const baseUrl = typeof window === 'undefined'
       ? `${process.env.BACKEND_URL || 'http://localhost:4001'}`
       : ''
-    
+
     // 获取所有相关的设置项
     const settingsRes = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size,hero_carousel_use_articles,hero_carousel_article_source,hero_carousel_max_items,hero_carousel_interval,hero_cta_buttons`, { next: { revalidate: 60 } })
     if (!settingsRes.ok) return { slides: [], size: 'default', interval: 5, ctaButtons: [] }
-    
+
     const settingsJson = await settingsRes.json()
     const settings = settingsJson.data || {}
-    
+
     const heroSize = settings.hero_size || 'standard'
     const useArticles = settings.hero_carousel_use_articles === 'true'
     const interval = parseInt(settings.hero_carousel_interval) || 5
+    const maxItems = Math.min(10, Math.max(1, parseInt(settings.hero_carousel_max_items) || 5))
 
     // 解析可配置的 CTA 按钮
     let ctaButtons: HeroCtaButton[] = []
@@ -64,45 +65,46 @@ async function getHeroSlides(): Promise<HeroResult> {
         ctaButtons = []
       }
     }
-    
-      // 如果启用了文章轮播图，从API获取文章封面图
-      if (useArticles) {
-        const source = settings.hero_carousel_article_source || 'latest'
-        const limit = parseInt(settings.hero_carousel_max_items) || 5
-        
-        const articlesRes = await fetch(`${baseUrl}/api/v1/carousel-articles?source=${source}&limit=${limit}`, { next: { revalidate: 60 } })
-      if (!articlesRes.ok) return { slides: [], size: heroSize, interval, ctaButtons }
-      
-      const articlesJson = await articlesRes.json()
-      const articles = articlesJson.data || []
-      
-      // 将文章数据转换为HeroSlide格式
-      const slides: HeroSlide[] = articles.map((article: any) => ({
-        id: `article-${article.id}`,
-        imageUrl: article.coverImage,
-        linkUrl: `${article.section?.path || '/blog'}/${article.slug}`,
-        linkTarget: '_blank' as const,  // 在新窗口打开
-      }))
-      
-      return { slides, size: heroSize, interval, ctaButtons }
-    }
-    
-    // 否则，使用自定义的轮播图设置
-    const heroSlidesValue = settings.hero_slides
-    let slides: HeroSlide[] = []
-    if (heroSlidesValue) {
+
+    // 手动添加的宣传图（hero_slides）：始终优先、始终包含
+    let manualSlides: HeroSlide[] = []
+    if (settings.hero_slides) {
       try {
-        const parsedSlides = JSON.parse(heroSlidesValue)
-        // 为每个 slide 添加默认的 linkTarget（如果没有设置）
-        slides = parsedSlides.map((slide: any) => ({
-          ...slide,
-          linkTarget: slide.linkTarget || '_blank',  // 默认在新窗口打开
-        }))
+        const parsedSlides = JSON.parse(settings.hero_slides)
+        if (Array.isArray(parsedSlides)) {
+          manualSlides = parsedSlides.map((slide: any) => ({
+            ...slide,
+            linkTarget: slide.linkTarget || '_blank',
+          }))
+        }
       } catch {
-        slides = []
+        manualSlides = []
       }
     }
-    
+
+    // 剩余名额用于文章封面图
+    const remaining = Math.max(0, maxItems - manualSlides.length)
+
+    let articleSlides: HeroSlide[] = []
+    if (useArticles && remaining > 0) {
+      const source = settings.hero_carousel_article_source || 'latest'
+      const articlesRes = await fetch(`${baseUrl}/api/v1/carousel-articles?source=${source}&limit=${remaining}`, { next: { revalidate: 60 } })
+      if (articlesRes.ok) {
+        const articlesJson = await articlesRes.json()
+        const articles = articlesJson.data || []
+        // 将文章数据转换为 HeroSlide 格式（排在手动宣传图之后）
+        articleSlides = articles.map((article: any) => ({
+          id: `article-${article.id}`,
+          imageUrl: article.coverImage,
+          linkUrl: `${article.section?.path || '/blog'}/${article.slug}`,
+          linkTarget: '_blank',
+        }))
+      }
+    }
+
+    // 手动宣传图在前，文章封面填补剩余名额，总数不超过 maxItems
+    const slides = [...manualSlides, ...articleSlides].slice(0, maxItems)
+
     return { slides, size: heroSize, interval, ctaButtons }
   } catch {
     return { slides: [], size: 'default', interval: 5, ctaButtons: [] }

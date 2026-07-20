@@ -494,9 +494,11 @@ function LogoBlock({ hc, theme }: { hc: any; theme?: string }) {
       </span>
     )
   }
-  // 渲染项目内置真实品牌标（与加 style 功能前的博客 logo 一致）
-  if (logo.type === 'component') {
-    return <Logo asLink={false} size="normal" />
+  // 渲染项目内置自适应 Logo（随主题配色变化）。
+  // 风格包未提供专属 logo 图片（落到内置 /logo-dark|light.svg）或显式声明 component 时，
+  // 统一走内置 Logo 组件；仅当风格包显式配置其它图片 src 时才用静态图。
+  if (logo.type === 'component' || logoSrc === '/logo-dark.svg' || logoSrc === '/logo-light.svg') {
+    return <Logo asLink={false} height={height} />
   }
   if (logoSrc) {
     return (
