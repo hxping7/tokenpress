@@ -100,13 +100,13 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
       {/* Background grid pattern */}
       <div className="absolute inset-0 grid-pattern" />
 
-      <div className={`relative z-10 text-center px-4 w-full ${resolved.container}`}>
+      <div className={`relative z-10 text-center w-full ${isFull ? 'px-0' : 'px-4'} ${resolved.container}`}>
         {useDefaultSvg ? (
           // 默认 SVG Logo
           <DefaultHeroSvg />
         ) : (
           // 轮播图
-          <div className={`relative overflow-hidden border border-t-border bg-t-bg-secondary ${resolved.inner}`}>
+          <div className={`relative overflow-hidden bg-t-bg-secondary ${isFull ? '' : 'border border-t-border'} ${resolved.inner}`}>
             {/* Slides */}
             <div className={`relative ${resolved.aspect}`}>
               {slides.map((slide, index) => {
