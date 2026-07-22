@@ -227,6 +227,19 @@ export function TemplateField({ label, value, onChange, config, onConfigChange, 
             )}
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm text-t-text-secondary">内容宽度</label>
+            <select
+              value={(config?.contentWidth as string) || 'wide'}
+              onChange={(e) => onConfigChange({ ...(config || {}), contentWidth: e.target.value })}
+              className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue text-sm"
+            >
+              <option value="reading">阅读（768px，适合长文）</option>
+              <option value="wide">宽屏（960px，默认展示页）</option>
+              <option value="full">撑满内容区</option>
+            </select>
+          </div>
+
           <div>
             <label className="flex items-center gap-2 text-sm text-t-text-secondary cursor-pointer">
               <input

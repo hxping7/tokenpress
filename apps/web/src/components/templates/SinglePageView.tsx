@@ -33,7 +33,18 @@ export function SinglePageView({
   const maxWidth = cfg.maxWidth ? Number(cfg.maxWidth) : null
   const centered = cfg.centered !== false
   const wrapStyle = maxWidth ? { maxWidth: `${maxWidth}px` } : undefined
-  const wrapClass = `bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-10 max-w-[var(--reading-max-width)] ${centered ? 'mx-auto' : ''}`
+  // 单页内容宽度：reading=768px 阅读列（长文友好）；wide=960px 展示页（默认）；
+  // full=占满外层内容区（由 --content-max-width 控制，后台可开宽屏）。
+  // 文章详情页仍用 768px 阅读宽，单页作为板块展示页默认更宽以免大屏下显得窄。
+  const contentWidth: 'reading' | 'wide' | 'full' =
+    (cfg.contentWidth as 'reading' | 'wide' | 'full') || 'wide'
+  const maxWClass =
+    contentWidth === 'reading'
+      ? 'max-w-[var(--reading-max-width)]'
+      : contentWidth === 'full'
+        ? ''
+        : 'max-w-[60rem]'
+  const wrapClass = `bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-10 ${maxWClass} ${centered ? 'mx-auto' : ''}`.trim()
 
   const showLatest = cfg.showLatest !== false
   const latestCount = Number(cfg.showLatestCount) || 6
