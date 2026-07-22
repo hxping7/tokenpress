@@ -44,8 +44,8 @@ function serializeSection(row: any) {
     try { layouts = JSON.parse(row.layouts) } catch { layouts = null }
   }
   let templateConfig: unknown = null
-  if (row.template_config && typeof row.template_config === 'string') {
-    try { templateConfig = JSON.parse(row.template_config) } catch { templateConfig = null }
+  if (row.templateConfig && typeof row.templateConfig === 'string') {
+    try { templateConfig = JSON.parse(row.templateConfig) } catch { templateConfig = null }
   }
   return {
     ...row,

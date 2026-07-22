@@ -60,6 +60,7 @@ router.get('/', async (req, res) => {
       updatedAt: articles.updatedAt,
       pinnedAt: articles.pinnedAt,
       pinnedScope: articles.pinnedScope,
+      viewCount: articles.viewCount,
       author: { id: users.id, username: users.username, displayName: users.displayName },
       category: { id: categories.id, name: categories.name, slug: categories.slug },
       section: { id: sections.id, name: sections.name, slug: sections.slug, path: sections.path },

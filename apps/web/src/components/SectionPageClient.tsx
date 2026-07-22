@@ -9,10 +9,10 @@ import { Pagination } from './Pagination'
 import { SectionSidebar } from './SectionSidebar'
 import { MarkdownContent } from './MarkdownContent'
 import { LayoutGrid, List } from 'lucide-react'
-import { useLayoutStore } from '@/stores/layout'
 import { useStyleLayouts } from '@/components/StyleProvider'
 import { resolveSectionLayout, resolveTemplateConfig, mergeLayoutConfigs, extractSectionLayouts, type SectionLayoutOverride } from '@/lib/resolveLayout'
 import { isArticleTemplate } from '@/lib/templates'
+import { isDesignGallerySection } from '@/lib/sections'
 import { SinglePageView } from './templates/SinglePageView'
 import { LinkWall } from './templates/LinkWall'
 import { MagazineView } from './templates/MagazineView'
@@ -33,12 +33,15 @@ function ArticleListView({
   articles,
   listCfg,
   category,
+  view,
 }: {
   articles: any[]
   listCfg: any
   category?: string
+  view?: 'grid' | 'list'
 }) {
-  const listLayout = listCfg?.layout || 'grid'
+  // view 优先（来自文章列表的 grid/list 切换按钮），否则用风格包配置的 listCfg.layout
+  const listLayout = view || listCfg?.layout || 'grid'
   const columns = Math.min(Math.max(Number(listCfg?.columns) || 3, 1), 4)
   const showThumbnail = listCfg?.showThumbnail !== false
   const showExcerpt = listCfg?.showExcerpt !== false
@@ -104,7 +107,8 @@ export function SectionPageClient({
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const { view, setView } = useLayoutStore()
+  // 文章列表视图偏好（grid/list）：仅 article-list 模板使用，默认「列表」(左缩略图+右标题描述)
+  const [view, setView] = useState<'grid' | 'list'>('list')
   const searchParams = useSearchParams()
   const category = searchParams.get('category') || undefined
 
@@ -169,17 +173,27 @@ export function SectionPageClient({
   else if (isMasonryTpl) effectiveListCfg.layout = 'masonry'
   else if (isMagazine) effectiveListCfg.layout = 'grid'
   const magCols = Number(effectiveListCfg.columns) || 3
+  const magazineLayout: 'top' | 'left' = (tplCfg?.magazineLayout as 'top' | 'left') || 'top'
+  const featuredArticleId = tplCfg?.featuredArticleId ? Number(tplCfg.featuredArticleId) : undefined
+  const headlineBasis: 'smart' | 'latest' | 'hot' = (tplCfg?.headlineBasis as 'smart' | 'latest' | 'hot') || 'smart'
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['articles', section, page, search, category],
     queryFn: () => api.getArticles({ section, page, limit: 12, search: search || undefined, category }),
-    enabled: articleFamily,
+    enabled: articleFamily || templateKey === 'single-page',
   })
 
   const { data: featuredData } = useQuery({
     queryKey: ['section-featured', section],
     queryFn: () => api.getArticles({ section, limit: 1 }),
-    enabled: (isSidebarLayout || layout === 'landing') && isArticleListTpl,
+    enabled: layout === 'landing' && isArticleListTpl,
+  })
+
+  // 杂志头条「指定文章」：若指定 ID 不在当前列表（如较旧文章被分页），单独拉取
+  const { data: specifiedArticleData } = useQuery({
+    queryKey: ['magazine-featured-article', section, featuredArticleId],
+    queryFn: () => api.getArticle(featuredArticleId as number),
+    enabled: isMagazine && !!featuredArticleId,
   })
 
   const handleSearch = (value: string) => {
@@ -201,12 +215,18 @@ export function SectionPageClient({
   const renderMainContent = () => {
     // 特殊模板
     if (templateKey === 'single-page') {
-      return <SinglePageView description={description} config={tplCfg as Record<string, unknown> | null} />
+      return (
+        <SinglePageView
+          description={description}
+          config={tplCfg as Record<string, unknown> | null}
+          articles={articles}
+        />
+      )
     }
     if (templateKey === 'link-wall') {
       return <LinkWall config={tplCfg} />
     }
-    if (templateKey === 'design-gallery' || sectionKind === 'design_works') {
+    if (isDesignGallerySection({ template: templateKey, kind: sectionKind })) {
         return (
           <DesignWorksGallery
             section={section}
@@ -224,67 +244,52 @@ export function SectionPageClient({
       if (isLoading) return loadingState
       if (error) return errorState
       if (articles.length === 0) return emptyState
+      // 头条优先级：指定 → 置顶 → 最新 → 热门
+      let featured: any = null
+      if (featuredArticleId) {
+        featured =
+          articles.find((a) => a.id === featuredArticleId) ||
+          (specifiedArticleData?.data ?? null)
+      } else if (headlineBasis === 'hot') {
+        featured = articles.reduce(
+          (best: any, a: any) => (!best || (a.viewCount || 0) > (best.viewCount || 0) ? a : best),
+          null as any,
+        )
+      } else if (headlineBasis === 'latest') {
+        featured = articles[0] || null
+      } else {
+        // smart：置顶优先（后端已置顶上浮，取第一篇置顶）；无置顶则取最新
+        const pinned = articles.filter(
+          (a: any) => a.pinnedScope === 'global' || a.pinnedScope === 'section',
+        )
+        featured = pinned[0] || articles[0] || null
+      }
+      const rest = featured ? articles.filter((a) => a.id !== featured.id) : articles
       return (
         <MagazineView
-          featured={articles[0]}
-          rest={articles.slice(1)}
+          featured={featured}
+          rest={rest}
           columns={magCols}
           gap={effectiveListCfg.gap}
           sectionPath={sectionPath}
           pagination={data?.pagination}
           page={page}
           onPageChange={setPage}
+          layout={magazineLayout}
         />
       )
     }
 
     // 文章列表（含旧版 layout 模式）
     if (isArticleListTpl) {
-      // 网站子页形态（page-sidebar-*）：有分类筛选时显示列表，否则显示首篇精选正文
-      if (isSidebarLayout) {
-        if (category) {
-          return <ArticleListView articles={articles} listCfg={effectiveListCfg} category={category} />
-        }
-        const featured = featuredData?.data?.[0]
-        if (!featured) {
-          return (
-            <div className="text-center py-20 text-t-text-secondary">
-              {featuredData ? '该板块暂无文章' : '加载中...'}
-            </div>
-          )
-        }
-        return (
-          <article className="bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-8">
-            <h2
-              className="text-heading-2 text-t-text-primary mb-3"
-              dangerouslySetInnerHTML={{ __html: featured.title }}
-            />
-            {featured.publishedAt && (
-              <div className="text-sm text-t-text-muted mb-6">
-                {new Date(featured.publishedAt).toLocaleDateString('zh-CN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </div>
-            )}
-            <div className="max-w-[var(--reading-max-width)]">
-              <MarkdownContent content={featured.content || featured.excerpt || ''} />
-            </div>
-            <div className="mt-8 pt-6 border-t border-t-border">
-              <a
-                href={`${featured.section?.path ?? sectionPath}/${featured.slug}`}
-                className="inline-flex items-center gap-1.5 text-sm text-t-accent-blue hover:underline"
-              >
-                阅读全文 →
-              </a>
-            </div>
-          </article>
-        )
-      }
-
-      if (layout === 'landing') {
-        const featured = featuredData?.data?.[0]
+      // 文章列表内容模板：主内容区始终渲染「板块下全部文章」（分页）。
+      // 侧栏（page-sidebar-*）仅作为分类筛选导航，不再把主区收窄为单篇精选；
+      // landing 形态额外在列表上方展示首篇精选头条。
+      if (isSidebarLayout || layout === 'landing') {
+        if (isLoading) return loadingState
+        if (error) return errorState
+        if (articles.length === 0) return emptyState
+        const featured = layout === 'landing' ? featuredData?.data?.[0] : null
         return (
           <div className="space-y-10">
             {featured && (
@@ -295,7 +300,7 @@ export function SectionPageClient({
                 </div>
               </article>
             )}
-            <ArticleListView articles={articles} listCfg={effectiveListCfg} />
+            <ArticleListView articles={articles} listCfg={effectiveListCfg} category={category} view={view} />
             {data && data.pagination.totalPages > 1 && (
               <Pagination page={page} totalPages={data.pagination.totalPages} onPageChange={setPage} />
             )}
@@ -310,7 +315,12 @@ export function SectionPageClient({
     if (articles.length === 0) return emptyState
     return (
       <>
-        <ArticleListView articles={articles} listCfg={effectiveListCfg} category={category} />
+        <ArticleListView
+          articles={articles}
+          listCfg={effectiveListCfg}
+          category={category}
+          {...(isArticleListTpl ? { view } : {})}
+        />
         <Pagination page={page} totalPages={data?.pagination?.totalPages || 1} onPageChange={setPage} />
       </>
     )

@@ -62,6 +62,11 @@ CMD ["node", "dist/index.js"]
 # ===== Frontend =====
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
+
+# better-sqlite3 在 hoisted monorepo 下会随 pnpm install 一并编译原生模块，
+# 预编译二进制下载失败时需源码编译（python3 + 构建工具），故 builder 阶段必须可用
+RUN apk add --no-cache python3 make g++ libc-dev
+
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install -g pnpm@9.15.0
 

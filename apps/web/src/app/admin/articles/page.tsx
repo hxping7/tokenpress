@@ -10,6 +10,7 @@ import { useLocaleStore } from '@/stores'
 import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { t } from '@/lib/i18n'
 import { parseArticleMeta } from '@/lib/articleMeta'
+import { isDesignGallerySection } from '@/lib/sections'
 import { ARTICLE_TEMPLATES, getArticleTemplate } from '@/lib/articleTemplates'
 import { toast } from '@/components/ui/Toast'
 import {
@@ -102,7 +103,7 @@ export default function ArticlesPage() {
   const [articleStatus, setArticleStatus] = useState<'draft' | 'published' | 'scheduled' | 'pending_review'>('draft')
   const [scheduledAt, setScheduledAt] = useState('')
   const [tags, setTags] = useState('')
-  // 作品集模式（编辑中的 section.kind === 'design_works'）专属字段
+  // 作品集模式（isDesignGallerySection：template==='design-gallery' 或 kind==='design_works'）专属字段
   const [workSummary, setWorkSummary] = useState('')
   const [workAuthorName, setWorkAuthorName] = useState('')
   const [workAuthorAvatar, setWorkAuthorAvatar] = useState('')
@@ -525,11 +526,12 @@ export default function ArticlesPage() {
     editorSection ? c.section?.slug === editorSection : true
   ) || []
 
-  // 作品集模式判定
+  // 作品集模式判定：统一走 lib/sections.isDesignGallerySection
+  // （板块 template==='design-gallery' 或 历史 kind==='design_works' 均视为作品集）。
   const editingSectionObj = sectionsData?.data?.find((s: Section) => s.slug === editorSection)
-  const isWorkMode = !!editingSectionObj && editingSectionObj.kind === 'design_works'
+  const isWorkMode = isDesignGallerySection(editingSectionObj)
   const listSectionObj = sectionsData?.data?.find((s: Section) => s.slug === section)
-  const listIsWork = !!listSectionObj && listSectionObj.kind === 'design_works'
+  const listIsWork = isDesignGallerySection(listSectionObj)
 
   return (
     <div className="space-y-6">

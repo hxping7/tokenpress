@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, X, Check, GripVertical, ChevronDown, ChevronRight, 
 import { StaticPagePicker } from '@/components/StaticPagePicker'
 import { TemplateField } from '@/components/TemplateField'
 import { type TemplateKey, getTemplate } from '@/lib/templates'
+import { isDesignGallerySection } from '@/lib/sections'
 
 interface Section {
   id: number
@@ -510,8 +511,9 @@ export default function CategoriesPage() {
                 onChange={setSectionTemplate}
                 config={sectionTemplateConfig}
                 onConfigChange={setSectionTemplateConfig}
-                exclude={editingSection?.kind === 'design_works' ? undefined : []}
+                exclude={isDesignGallerySection(editingSection) ? undefined : []}
                 packTemplates={packTemplates}
+                sectionSlug={editingSection?.path}
                 hint="决定文章怎么排（列表 / 网格 / 瀑布流 / 杂志头条…）。列数 / 间距 / 卡片样式由当前风格包提供默认，可在此逐字段覆盖。注意：这是「内容排版」，与「页面骨架」（侧栏 / hero / 宽度）相互独立。"
               />
               <div>
@@ -593,9 +595,10 @@ export default function CategoriesPage() {
                     onChange={setCategoryTemplate}
                     config={categoryTemplateConfig}
                     onConfigChange={setCategoryTemplateConfig}
-                    exclude={catSection?.kind === 'design_works' ? undefined : []}
+                    exclude={isDesignGallerySection(catSection) ? undefined : []}
                     showInherit
                     packTemplates={packTemplates}
+                    sectionSlug={catSection?.path}
                     hint="分类可覆盖所属板块的展示模板；留空则跟随板块。列数 / 间距 / 卡片样式由风格包提供默认，可在此覆盖。"
                   />
                 )

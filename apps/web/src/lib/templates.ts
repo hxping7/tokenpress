@@ -34,6 +34,18 @@ export interface TemplateMeta {
 const frame = (inner: string) =>
   `<svg viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto"><rect width="160" height="100" rx="8" fill="#0f172a"/><rect x="6" y="6" width="148" height="14" rx="3" fill="#1e293b"/>${inner}</svg>`
 
+/**
+ * 杂志头条预览图：按布局生成（top=上下 / left=左右），与杂志实际渲染一致。
+ */
+export const magazinePreviewSvg = (layout: 'top' | 'left' = 'top') =>
+  layout === 'left'
+    ? frame(
+        `<rect x="10" y="28" width="86" height="64" rx="3" fill="#475569"/><rect x="104" y="28" width="46" height="18" rx="2" fill="#334155"/><rect x="104" y="50" width="46" height="18" rx="2" fill="#334155"/><rect x="104" y="72" width="46" height="18" rx="2" fill="#334155"/>`,
+      )
+    : frame(
+        `<rect x="10" y="28" width="140" height="34" rx="3" fill="#475569"/><rect x="10" y="68" width="44" height="22" rx="2" fill="#334155"/><rect x="58" y="68" width="44" height="22" rx="2" fill="#334155"/><rect x="106" y="68" width="44" height="22" rx="2" fill="#334155"/>`,
+      )
+
 export const TEMPLATES: TemplateMeta[] = [
   {
     key: 'article-list',
@@ -68,17 +80,15 @@ export const TEMPLATES: TemplateMeta[] = [
   {
     key: 'magazine',
     label: '杂志头条（内容排版）',
-    description: '大图头条 + 网格；列数/间距由风格包默认，可覆盖',
+    description: '大图头条 + 网格；可切换「上下」或「左右」版式，并可指定头条文章（优先级：指定>置顶>最新>热门）',
     family: 'article',
     hasConfig: true,
-    previewSvg: frame(
-      `<rect x="10" y="28" width="86" height="64" rx="3" fill="#334155"/><rect x="104" y="28" width="46" height="18" rx="2" fill="#475569"/><rect x="104" y="50" width="46" height="18" rx="2" fill="#475569"/><rect x="104" y="72" width="46" height="18" rx="2" fill="#475569"/>`,
-    ),
+    previewSvg: magazinePreviewSvg('top'),
   },
   {
     key: 'single-page',
     label: '单页（内容排版）',
-    description: '渲染板块简介为单页，无文章列表',
+    description: '渲染板块简介为单页，并在下方列出最新文章',
     family: 'special',
     hasConfig: false,
     previewSvg: frame(
