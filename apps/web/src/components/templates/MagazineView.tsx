@@ -41,7 +41,7 @@ export function MagazineView({
     >
       <div
         className={`relative overflow-hidden bg-t-bg-secondary ${
-          layout === 'left' ? 'aspect-[4/5] md:aspect-[3/4]' : 'aspect-[21/9]'
+          layout === 'left' ? 'aspect-[4/3]' : 'aspect-[21/9]'
         }`}
       >
         {featured.coverImage ? (
@@ -49,10 +49,10 @@ export function MagazineView({
           <img
             src={featured.coverImage}
             alt={featured.title}
-            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+            className="absolute inset-0 h-full w-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full grid place-items-center text-t-text-muted">无封面</div>
+          <div className="absolute inset-0 grid place-items-center text-t-text-muted">无封面</div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -77,20 +77,29 @@ export function MagazineView({
     </div>
   ) : null
 
-  // 左右版式：头条居左（占约 5/12），其余网格居右
+  // 左右版式：头条居左（占约 5/12），右侧导读 2 列 + 其余在下方整宽网格
   if (layout === 'left') {
+    const sideRest = rest.slice(0, 4)
+    const belowRest = rest.slice(4)
     return (
       <div className="space-y-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5">{featuredBlock}</div>
+          <div className="lg:col-span-5 lg:self-start">{featuredBlock}</div>
           <div className="lg:col-span-7">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {rest.map((a: any) => (
+              {sideRest.map((a: any) => (
                 <ArticleCard key={a.id} article={a} forceView="grid" />
               ))}
             </div>
           </div>
         </div>
+        {belowRest.length > 0 && (
+          <div className="grid" style={gridStyle}>
+            {belowRest.map((a: any) => (
+              <ArticleCard key={a.id} article={a} forceView="grid" />
+            ))}
+          </div>
+        )}
         {pagination && pagination.totalPages > 1 && (
           <Pagination page={page} totalPages={pagination.totalPages} onPageChange={onPageChange} />
         )}
