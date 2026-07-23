@@ -8,6 +8,7 @@ import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
 import { reloadProviderFromDB } from '../lib/contentReview/providers/index.js'
 import { revalidatePath } from '../utils/revalidate.js'
+import { refreshRateLimits } from '../lib/rateLimitConfig.js'
 
 const router = Router()
 
@@ -66,6 +67,12 @@ router.put('/', apiTokenOrAdmin('settings:write'), async (req: AuthRequest, res)
     const reviewKeys = Object.keys(settingsObj).filter(k => k.startsWith('review_'))
     if (reviewKeys.length > 0) {
       await reloadProviderFromDB()
+    }
+
+    // 限流阈值变更后立即刷新缓存，无需重启即生效
+    const rateLimitKeys = Object.keys(settingsObj).filter(k => k.startsWith('rate_limit_'))
+    if (rateLimitKeys.length > 0) {
+      await refreshRateLimits()
     }
 
     // Revalidate homepage ISR cache so hero_size etc. take effect immediately

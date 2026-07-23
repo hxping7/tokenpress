@@ -57,6 +57,7 @@ import { startReviewWorker, stopReviewWorker, retryFailedReviews } from './worke
 import { aiPatrolTick } from './workers/aiPatrol.js'
 import { adScheduler } from './workers/adScheduler.js'
 import { cleanupExpiredLocks } from './lib/cronLock.js'
+import { refreshRateLimits, getRateLimitMax } from './lib/rateLimitConfig.js'
 import cron from 'node-cron'
 
 const app = express()
@@ -137,14 +138,12 @@ app.use((req, res, next) => {
 })
 
 // Rate limiting
-// 全局限流：60s 窗口内最多 300 个请求 / IP。
-// 此前设为 100，但前端是组件化 SPA，首页单次加载就会并发拉取
-// 站点设置 / 板块 / 友链等多个只读接口；用户快速导航或多标签页时
-// 极易在 1 分钟内打满 100 而返回 429，进而使站点设置加载失败、
-// 布局回退到默认窄宽度。300 对正常用户宽松，仍能挡住暴力爬取。
+// 阈值集中在 lib/rateLimitConfig.ts，可由 Web 后台「安全 → 限流保护」实时配置，
+// 保存后经 refreshRateLimits() 刷新缓存，无需重启立即生效。未配置时回落默认值。
+// 全局限流：60s 窗口内最多 rate_limit_global 个请求 / IP（兜底，实际策略由各子接口限流定义）。
 const limiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 300,
+  max: () => getRateLimitMax('rate_limit_global'),
   message: { success: false, error: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -154,7 +153,7 @@ app.use('/api/', limiter)
 // Auth rate limit
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: () => getRateLimitMax('rate_limit_auth'),
   message: { success: false, error: 'Too many login attempts' },
 })
 app.use('/api/v1/auth/login', authLimiter)
@@ -162,7 +161,7 @@ app.use('/api/v1/auth/login', authLimiter)
 // Articles API rate limit (防爬虫)
 const articlesLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: () => getRateLimitMax('rate_limit_articles'),
   message: { success: false, error: 'Too many requests' },
 })
 app.use('/api/v1/articles', articlesLimiter)
@@ -170,7 +169,7 @@ app.use('/api/v1/articles', articlesLimiter)
 // AI publish rate limit
 const aiPublishLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: () => getRateLimitMax('rate_limit_ai_publish'),
   message: { success: false, error: 'Too many publish requests' },
 })
 
@@ -189,7 +188,7 @@ app.use('/api/v1/tags', tagsRoutes)
 
 const interactionLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: () => getRateLimitMax('rate_limit_interactions'),
   message: { success: false, error: 'Too many requests' },
 })
 app.use('/api/v1/interactions', interactionLimiter, articleInteractionRoutes)
@@ -255,6 +254,9 @@ async function start() {
   await migrateArticleTemplate()
   await migrateCategoryLayouts()
   logger.info('✅ Database ready')
+
+  // 初始化限流阈值缓存（后台可在「安全 → 限流保护」中实时调整，无需重启）
+  await refreshRateLimits()
 
   // 初始化内置模板包到持久卷（仅首次 / 缺失时拷贝，不覆盖用户包）
   await initBuiltinStyles()

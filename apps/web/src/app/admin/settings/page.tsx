@@ -250,6 +250,37 @@ function getSettingsNav(lang: 'zh' | 'en') {
   ]
 }
 
+// 限流阈值单字段：数字输入 + 说明
+function RateLimitField({
+  label,
+  hint,
+  value,
+  onChange,
+  min = 1,
+}: {
+  label: string
+  hint?: string
+  value: number
+  onChange: (v: number) => void
+  min?: number
+}) {
+  return (
+    <div className="p-4 bg-t-bg-secondary rounded-lg space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium text-sm">{label}</span>
+        <input
+          type="number"
+          min={min}
+          value={value}
+          onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+          className="w-24 px-2 py-1 bg-t-bg-primary border border-t-border rounded-lg text-sm text-right focus:outline-none focus:border-t-accent-blue"
+        />
+      </div>
+      {hint && <p className="text-xs text-t-text-secondary">{hint}</p>}
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const queryClient = useQueryClient()
   const { token } = useAuthStore()
@@ -382,6 +413,14 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
   const [baiduSecretKey, setBaiduSecretKey] = useState('')
   const [builtinAiApiUrl, setBuiltinAiApiUrl] = useState('')
   const [builtinAiApiKey, setBuiltinAiApiKey] = useState('')
+
+  // ===== 限流保护（阈值由后端 rateLimitConfig 读取，可经后台实时调整） =====
+  const [rateLimitGlobal, setRateLimitGlobal] = useState(1000)
+  const [rateLimitAuth, setRateLimitAuth] = useState(30)
+  const [rateLimitArticles, setRateLimitArticles] = useState(150)
+  const [rateLimitInteractions, setRateLimitInteractions] = useState(150)
+  const [rateLimitAiPublish, setRateLimitAiPublish] = useState(30)
+  const [rateLimitAds, setRateLimitAds] = useState(120)
 
   const { data: backupSettingsData } = useQuery({
     queryKey: ['backup-settings'],
@@ -612,6 +651,13 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       } else {
         setShareConfig(DEFAULT_SHARE_CONFIG)
       }
+      // 限流阈值
+      if (s.rate_limit_global) setRateLimitGlobal(parseInt(s.rate_limit_global) || 1000)
+      if (s.rate_limit_auth) setRateLimitAuth(parseInt(s.rate_limit_auth) || 30)
+      if (s.rate_limit_articles) setRateLimitArticles(parseInt(s.rate_limit_articles) || 150)
+      if (s.rate_limit_interactions) setRateLimitInteractions(parseInt(s.rate_limit_interactions) || 150)
+      if (s.rate_limit_ai_publish) setRateLimitAiPublish(parseInt(s.rate_limit_ai_publish) || 30)
+      if (s.rate_limit_ads) setRateLimitAds(parseInt(s.rate_limit_ads) || 120)
     }
   }, [settingsData])
 
@@ -897,6 +943,12 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
       share_config: JSON.stringify(shareConfig),
       welcome_page_enabled: welcomePageEnabled.toString(),
       welcome_page_html: welcomePageHtml,
+      rate_limit_global: rateLimitGlobal.toString(),
+      rate_limit_auth: rateLimitAuth.toString(),
+      rate_limit_articles: rateLimitArticles.toString(),
+      rate_limit_interactions: rateLimitInteractions.toString(),
+      rate_limit_ai_publish: rateLimitAiPublish.toString(),
+      rate_limit_ads: rateLimitAds.toString(),
     })
   }
 
@@ -2993,6 +3045,69 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
               )}
             </div>
           </div>
+
+          {/* 限流保护 */}
+          <div className="bg-t-bg-primary border border-t-border rounded-xl">
+            <div className="px-6 py-4 border-b border-t-border">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Shield size={18} className="text-t-accent-blue" />
+                {adminLocale === 'zh' ? '限流保护' : 'Rate Limiting'}
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-t-text-secondary">
+                {adminLocale === 'zh'
+                  ? '设置各接口的最大请求数。全局为每分钟、登录为每 15 分钟，其余为每分钟。保存后立即生效，无需重启。数值越大越宽松；过低可能导致正常浏览触发 429。'
+                  : 'Max requests per IP. Global = per minute, login = per 15 min, others = per minute. Changes apply immediately without restart. Higher is more permissive; too low may trigger 429 on normal browsing.'}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <RateLimitField
+                  label={adminLocale === 'zh' ? '全局请求（/api）' : 'Global (/api)'}
+                  hint={adminLocale === 'zh' ? '兜底上限，每分钟' : 'Backstop, per minute'}
+                  value={rateLimitGlobal}
+                  onChange={setRateLimitGlobal}
+                />
+                <RateLimitField
+                  label={adminLocale === 'zh' ? '登录尝试' : 'Login attempts'}
+                  hint={adminLocale === 'zh' ? '每 15 分钟' : 'Per 15 min'}
+                  value={rateLimitAuth}
+                  onChange={setRateLimitAuth}
+                />
+                <RateLimitField
+                  label={adminLocale === 'zh' ? '文章接口（/articles）' : 'Articles (/articles)'}
+                  hint={adminLocale === 'zh' ? '每分钟' : 'Per minute'}
+                  value={rateLimitArticles}
+                  onChange={setRateLimitArticles}
+                />
+                <RateLimitField
+                  label={adminLocale === 'zh' ? '互动接口（/interactions）' : 'Interactions (/interactions)'}
+                  hint={adminLocale === 'zh' ? '每分钟' : 'Per minute'}
+                  value={rateLimitInteractions}
+                  onChange={setRateLimitInteractions}
+                />
+                <RateLimitField
+                  label={adminLocale === 'zh' ? 'AI 发布（/ai）' : 'AI Publish (/ai)'}
+                  hint={adminLocale === 'zh' ? '每分钟' : 'Per minute'}
+                  value={rateLimitAiPublish}
+                  onChange={setRateLimitAiPublish}
+                />
+                <RateLimitField
+                  label={adminLocale === 'zh' ? '广告接口（/ads）' : 'Ads (/ads)'}
+                  hint={adminLocale === 'zh' ? '每分钟' : 'Per minute'}
+                  value={rateLimitAds}
+                  onChange={setRateLimitAds}
+                />
+              </div>
+              <div className="p-3 bg-t-bg-secondary rounded-lg border border-t-border">
+                <p className="text-xs text-t-text-secondary">
+                  {adminLocale === 'zh'
+                    ? '说明：全局限流为兜底上限，文章 / 互动 / 广告 / AI 发布等子接口限流会与之叠加计算。留空或填 0 表示使用系统默认值。'
+                    : 'Note: global limit is a backstop; per-endpoint limits (articles/interactions/ads/ai) stack on top of it. Empty or 0 means use the system default.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
         </div>
       )}
 
