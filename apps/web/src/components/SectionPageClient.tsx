@@ -416,8 +416,17 @@ export function SectionPageClient({
         </div>
       )}
 
-      {/* 内容区：single-page 时解除 max-w 约束，使其「全屏」档可占满视口 */}
-      <div className={`${templateKey === 'single-page' ? 'mx-auto px-4 sm:px-6 lg:px-8 pb-16' : 'max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 pb-16'}`}>
+      {/* 内容区：
+          - single-page 解除 max-w 约束（占满外层容器）；
+          - 其中「full」档再额外去掉左右内边距，做到真正 edge-to-edge 占满视口；
+          - 其余模板保留 max-w-[var(--content-max-width)] 居中内容区。 */}
+      <div className={`${
+        templateKey === 'single-page'
+          ? String(tplCfg?.contentWidth || 'default') === 'full'
+            ? 'mx-auto pb-16'
+            : 'mx-auto px-4 sm:px-6 lg:px-8 pb-16'
+          : 'max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 pb-16'
+      }`}>
         {sidebarEnabled ? (
           isSidebarLayout ? (
             <div
