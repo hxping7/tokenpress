@@ -16,6 +16,7 @@ import { isDesignGallerySection } from '@/lib/sections'
 import { SinglePageView } from './templates/SinglePageView'
 import { LinkWall } from './templates/LinkWall'
 import { MagazineView } from './templates/MagazineView'
+import { CarouselView } from './templates/CarouselView'
 import { DesignWorksGallery } from './DesignWorksGallery'
 
 interface SectionPageClientProps {
@@ -137,6 +138,7 @@ export function SectionPageClient({
   const isGridTpl = templateKey === 'article-grid'
   const isMasonryTpl = templateKey === 'article-masonry'
   const isMagazine = templateKey === 'magazine'
+  const isCarousel = templateKey === 'carousel'
 
   const globalLayouts = useStyleLayouts()
   const packTemplates: Record<string, Record<string, unknown>> =
@@ -176,6 +178,10 @@ export function SectionPageClient({
   const magazineLayout: 'top' | 'left' = (tplCfg?.magazineLayout as 'top' | 'left') || 'top'
   const featuredArticleId = tplCfg?.featuredArticleId ? Number(tplCfg.featuredArticleId) : undefined
   const headlineBasis: 'smart' | 'latest' | 'hot' = (tplCfg?.headlineBasis as 'smart' | 'latest' | 'hot') || 'smart'
+  const carouselCount = Number(tplCfg?.carouselCount) || 5
+  const carouselAutoplay = tplCfg?.carouselAutoplay !== false
+  const carouselInterval = Number(tplCfg?.carouselInterval) || 5000
+  const carouselColumns = Number(effectiveListCfg.columns) || 3
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['articles', section, page, search, category],
@@ -276,6 +282,27 @@ export function SectionPageClient({
           page={page}
           onPageChange={setPage}
           layout={magazineLayout}
+        />
+      )
+    }
+
+    // 轮播：顶部轮播精选 + 下方卡片网格
+    if (isCarousel) {
+      if (isLoading) return loadingState
+      if (error) return errorState
+      if (articles.length === 0) return emptyState
+      return (
+        <CarouselView
+          articles={articles}
+          carouselCount={carouselCount}
+          autoplay={carouselAutoplay}
+          interval={carouselInterval}
+          columns={carouselColumns}
+          gap={effectiveListCfg.gap}
+          sectionPath={sectionPath}
+          pagination={data?.pagination}
+          page={page}
+          onPageChange={setPage}
         />
       )
     }
@@ -389,8 +416,8 @@ export function SectionPageClient({
         </div>
       )}
 
-      {/* 内容区 */}
-      <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      {/* 内容区：single-page 时解除 max-w 约束，使其「全屏」档可占满视口 */}
+      <div className={`${templateKey === 'single-page' ? 'mx-auto px-4 sm:px-6 lg:px-8 pb-16' : 'max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 pb-16'}`}>
         {sidebarEnabled ? (
           isSidebarLayout ? (
             <div

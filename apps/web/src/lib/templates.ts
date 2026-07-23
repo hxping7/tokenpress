@@ -19,6 +19,7 @@ export type TemplateKey =
   | 'single-page'
   | 'link-wall'
   | 'design-gallery'
+  | 'carousel'
 
 export interface TemplateMeta {
   key: TemplateKey
@@ -112,12 +113,22 @@ export const TEMPLATES: TemplateMeta[] = [
     family: 'special',
     hasConfig: false,
     previewSvg: frame(
-      `<rect x="10" y="28" width="42" height="40" rx="3" fill="#6366f1"/><rect x="59" y="28" width="42" height="40" rx="3" fill="#8b5cf6"/><rect x="108" y="28" width="42" height="40" rx="3" fill="#ec4899"/><rect x="10" y="72" width="42" height="20" rx="3" fill="#334155"/><rect x="59" y="72" width="42" height="20" rx="3" fill="#334155"/><rect x="108" y="72" width="42" height="20" rx="3" fill="#334155"/>`,
+      `<rect x="10" y="28" width="42" height="40" rx="3" fill="#6366f1"/><rect x="59" y="28" width="42" height="40" rx="3" fill="#8b5cf6"/><rect x="108" y="28" width="42" height="40" rx="3" fill="#ec4899"/><rect x="10" y="72" width="42" height="20" rx="3" fill="#334155"/><rect x="59" y="72" width="42" height="20" rx="3" fill="#334155"/>      <rect x="108" y="72" width="42" height="20" rx="3" fill="#334155"/>`,
+    ),
+  },
+  {
+    key: 'carousel',
+    label: '轮播（内容排版）',
+    description: '顶部轮播精选文章，下方卡片网格列表；可设轮播数量、自动播放与切换间隔',
+    family: 'article',
+    hasConfig: true,
+    previewSvg: frame(
+      `<rect x="10" y="26" width="140" height="34" rx="3" fill="#475569"/><circle cx="18" cy="43" r="2.5" fill="#cbd5e1"/><circle cx="26" cy="43" r="2.5" fill="#64748b"/><rect x="10" y="68" width="44" height="22" rx="2" fill="#334155"/><rect x="58" y="68" width="44" height="22" rx="2" fill="#334155"/><rect x="106" y="68" width="44" height="22" rx="2" fill="#334155"/>`,
     ),
   },
 ]
 
-export const ARTICLE_TEMPLATES: TemplateKey[] = ['article-list', 'article-grid', 'article-masonry', 'magazine']
+export const ARTICLE_TEMPLATES: TemplateKey[] = ['article-list', 'article-grid', 'article-masonry', 'magazine', 'carousel']
 
 export function getTemplate(key: string | null | undefined): TemplateMeta {
   return TEMPLATES.find((t) => t.key === key) || TEMPLATES[0]

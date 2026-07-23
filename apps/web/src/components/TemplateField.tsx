@@ -186,6 +186,57 @@ export function TemplateField({ label, value, onChange, config, onConfigChange, 
         </div>
       )}
 
+      {/* 配置：carousel 轮播数量 / 自动播放 / 间隔 */}
+      {value === 'carousel' && onConfigChange && (
+        <div className="mt-3 space-y-3">
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-t-text-secondary">轮播数量</label>
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={Number(config?.carouselCount) || 5}
+              onChange={(e) =>
+                onConfigChange({
+                  ...(config || {}),
+                  carouselCount: Math.min(Math.max(Number(e.target.value) || 5, 1), 10),
+                })
+              }
+              className="w-20 px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+            />
+            <span className="text-xs text-t-text-muted">张（取板块文章前 N 篇）</span>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-t-text-secondary cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config?.carouselAutoplay !== false}
+              onChange={(e) => onConfigChange({ ...(config || {}), carouselAutoplay: e.target.checked })}
+              className="accent-t-accent-blue"
+            />
+            自动播放
+          </label>
+          {config?.carouselAutoplay !== false && (
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-t-text-secondary">切换间隔</label>
+              <input
+                type="number"
+                min={2000}
+                step={500}
+                value={Number(config?.carouselInterval) || 5000}
+                onChange={(e) =>
+                  onConfigChange({
+                    ...(config || {}),
+                    carouselInterval: Math.max(2000, Number(e.target.value) || 5000),
+                  })
+                }
+                className="w-24 px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+              />
+              <span className="text-xs text-t-text-muted">毫秒</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 配置：single-page 绑定文章 ID + 最新文章列表 */}
       {value === 'single-page' && onConfigChange && (
         <div className="mt-3 space-y-3">
@@ -230,13 +281,14 @@ export function TemplateField({ label, value, onChange, config, onConfigChange, 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm text-t-text-secondary">内容宽度</label>
             <select
-              value={(config?.contentWidth as string) || 'wide'}
+              value={(config?.contentWidth as string) || 'default'}
               onChange={(e) => onConfigChange({ ...(config || {}), contentWidth: e.target.value })}
               className="w-full px-3 py-2 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue text-sm"
             >
-              <option value="reading">阅读（768px，适合长文）</option>
-              <option value="wide">宽屏（960px，默认展示页）</option>
-              <option value="full">撑满内容区</option>
+              <option value="default">默认（1280px）</option>
+              <option value="wide">宽屏（1440px）</option>
+              <option value="xwide">超宽屏（1760px）</option>
+              <option value="full">全屏（占满视口）</option>
             </select>
           </div>
 

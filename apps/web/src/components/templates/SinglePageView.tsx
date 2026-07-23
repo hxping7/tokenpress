@@ -30,21 +30,30 @@ export function SinglePageView({
     !explicitArticleId && articles && articles.length ? articles[0].id : undefined
   const targetId = explicitArticleId ?? autoLatestId
 
-  const maxWidth = cfg.maxWidth ? Number(cfg.maxWidth) : null
   const centered = cfg.centered !== false
-  const wrapStyle = maxWidth ? { maxWidth: `${maxWidth}px` } : undefined
-  // 单页内容宽度：reading=768px 阅读列（长文友好）；wide=960px 展示页（默认）；
-  // full=占满外层内容区（由 --content-max-width 控制，后台可开宽屏）。
-  // 文章详情页仍用 768px 阅读宽，单页作为板块展示页默认更宽以免大屏下显得窄。
-  const contentWidth: 'reading' | 'wide' | 'full' =
-    (cfg.contentWidth as 'reading' | 'wide' | 'full') || 'wide'
-  const maxWClass =
-    contentWidth === 'reading'
-      ? 'max-w-[var(--reading-max-width)]'
-      : contentWidth === 'full'
-        ? ''
-        : 'max-w-[60rem]'
-  const wrapClass = `bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-10 ${maxWClass} ${centered ? 'mx-auto' : ''}`.trim()
+  // 单页整体宽度（正文 + 下方最新列表统一受控）：
+  //  default = 跟随站点内容区（=列表页宽度，后台开宽屏同步变宽）
+  //  wide    = 1440px
+  //  xwide   = 1760px
+  //  full    = 占满视口（需 SectionPageClient 对 single-page 解除外层 max-w 约束）
+  // 单页作为板块展示页，绝不应被文章阅读列宽(768px)压窄，故默认即占满内容区。
+  const contentWidth: 'default' | 'wide' | 'xwide' | 'full' =
+    (cfg.contentWidth as 'default' | 'wide' | 'xwide' | 'full') || 'default'
+  // 用固定 px 值（非 rem）：站点把 html font-size 设为 62.5%(10px/rem)，
+  // 导致 rem 单位被腰斩（75rem 实际≈750px）；且不依赖 var(--content-max-width)
+  // （被风格包/后台「全局宽屏」覆盖，实测运行成 760px）。px 值独立可控、不受字体基准绑架。
+  // 直接走内联 style（不依赖 Tailwind arbitrary 值，避免 JIT 漏生成对应 CSS 规则导致宽度失效）。
+  const widthPx =
+    contentWidth === 'wide' ? 1440 : contentWidth === 'xwide' ? 1760 : contentWidth === 'full' ? null : 1280
+  // 完全由 contentWidth 四档控制宽度（default=1280/wide=1440/xwide=1760/full=占满）。
+  // 不再读 cfg.maxWidth：风格包 single-page 出厂默认带 maxWidth:760（旧阅读列宽），
+  // 若优先会覆盖用户在下拉里选的 wide/xwide，导致「宽度设置不生效」。后台 UI 也只暴露 4 档下拉。
+  const outerStyle: { maxWidth: string } = widthPx
+    ? { maxWidth: `${widthPx}px` }
+    : { maxWidth: 'none' }
+  const outerClass = `${centered ? 'mx-auto' : ''}`.trim()
+  // 正文卡片本身不设宽度，由外层 outerStyle 统一控制
+  const wrapClass = `bg-t-bg-primary border border-t-border rounded-xl p-6 sm:p-10`.trim()
 
   const showLatest = cfg.showLatest !== false
   const latestCount = Number(cfg.showLatestCount) || 6
@@ -100,32 +109,36 @@ export function SinglePageView({
       return <div className="text-center py-20 text-t-text-secondary">文章未找到（ID: {targetId}）</div>
     }
     return (
-      <div className="space-y-10">
-        <article className={wrapClass} style={wrapStyle}>
-          <h1
-            className="text-heading-2 text-t-text-primary mb-4"
-            dangerouslySetInnerHTML={{ __html: article.title }}
-          />
-          <MarkdownContent content={article.content || article.excerpt || ''} />
-        </article>
-        {latestSection}
+      <div className={outerClass} style={outerStyle}>
+        <div className="space-y-10">
+          <article className={wrapClass}>
+            <h1
+              className="text-heading-2 text-t-text-primary mb-4"
+              dangerouslySetInnerHTML={{ __html: article.title }}
+            />
+            <MarkdownContent content={article.content || article.excerpt || ''} />
+          </article>
+          {latestSection}
+        </div>
       </div>
     )
   }
 
   // 默认：板块描述 + 最新文章
   return (
-    <div className="space-y-10">
-      {description ? (
-        <article className={wrapClass} style={wrapStyle}>
-          <MarkdownContent content={description} />
-        </article>
-      ) : (
-        <div className="text-center py-20 text-t-text-secondary">
-          该板块暂无单页内容（请在板块「描述」中填写展示内容，或绑定一篇文章 ID）
-        </div>
-      )}
-      {latestSection}
+    <div className={outerClass} style={outerStyle}>
+      <div className="space-y-10">
+        {description ? (
+          <article className={wrapClass}>
+            <MarkdownContent content={description} />
+          </article>
+        ) : (
+          <div className="text-center py-20 text-t-text-secondary">
+            该板块暂无单页内容（请在板块「描述」中填写展示内容，或绑定一篇文章 ID）
+          </div>
+        )}
+        {latestSection}
+      </div>
     </div>
   )
 }
