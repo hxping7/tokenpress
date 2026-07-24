@@ -114,12 +114,31 @@ function ArticleListSection({ articles, columns = 3, limit, showViewToggle = tru
 
 function CtaSection({ variant }: { variant?: string }) {
   const { locale } = useLocaleStore()
+  // banner 变体：实色 accent 底（去渐变），白字 + 白底反色按钮
+  if (variant === 'banner') {
+    return (
+      <section className="py-10 px-4">
+        <div className="max-w-[var(--content-max-width)] mx-auto">
+          <div className="rounded-2xl p-10 text-center bg-t-accent-blue">
+            <h2 className="text-2xl font-bold text-white mb-4">{locale === 'en' ? 'Ready to start?' : '准备好了吗？'}</h2>
+            <Link
+              href="/blog"
+              className="inline-flex items-center px-6 py-3 bg-white text-t-accent-blue font-medium hover:opacity-90 transition-opacity"
+              style={{ borderRadius: 'var(--btn-radius)' }}
+            >
+              {locale === 'en' ? 'Read the blog' : '阅读博客'}
+            </Link>
+          </div>
+        </div>
+      </section>
+    )
+  }
   return (
     <section className="py-10 px-4">
       <div className="max-w-[var(--content-max-width)] mx-auto">
-        <div className={`card-surface rounded-2xl p-10 text-center ${variant === 'banner' ? 'bg-gradient-accent' : ''}`}>
+        <div className="card-surface rounded-2xl p-10 text-center">
           <h2 className="text-2xl font-bold text-t-text-primary mb-4">{locale === 'en' ? 'Ready to start?' : '准备好了吗？'}</h2>
-          <Link href="/blog" className="inline-flex items-center px-6 py-3 rounded-lg bg-t-accent-blue text-white font-medium hover:opacity-90 transition-opacity">
+          <Link href="/blog" className="btn-pack-primary px-6 py-3">
             {locale === 'en' ? 'Read the blog' : '阅读博客'}
           </Link>
         </div>
@@ -156,30 +175,48 @@ function CustomBlockSection({ block }: { block: any }) {
   const colClass = columns === 2 ? 'md:grid-cols-2' : columns === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3'
   const items: any[] = Array.isArray(p.items) ? p.items : []
   const cta = p.cta && typeof p.cta === 'object' ? p.cta : null
+  // cta2：可选第二按钮（企业官网风：主按钮 + 次按钮并排）
+  const cta2 = p.cta2 && typeof p.cta2 === 'object' ? p.cta2 : null
   const bg = typeof p.background === 'string' && p.background.trim() ? p.background : undefined
+  // size:'hero' → 超大标题首屏（企业官网风，参考 Tezign 居中超大黑标题）
+  const isHero = p.size === 'hero'
 
   return (
-    <section className="py-12 px-4" style={bg ? { background: bg } : undefined}>
+    <section className={`${isHero ? 'pt-24 pb-20 md:pt-32 md:pb-28' : 'py-12'} px-4`} style={bg ? { background: bg } : undefined}>
       <div className="max-w-[var(--content-max-width)] mx-auto">
         {(p.eyebrow || p.title || p.intro) && (
-          <div className="text-center mb-10">
+          <div className={`text-center ${isHero ? 'mb-0' : 'mb-10'}`}>
             {p.eyebrow && (
               <div className="text-xs font-semibold tracking-widest uppercase text-t-accent-blue mb-2">{p.eyebrow}</div>
             )}
-            {p.title && <h2 className="text-2xl md:text-3xl font-bold text-t-text-primary">{p.title}</h2>}
-            {p.intro && <p className="mt-3 text-t-text-secondary max-w-2xl mx-auto">{p.intro}</p>}
-            {cta && (
-              <div className="mt-6 flex justify-center">
-                <Link
-                  href={sanitizeHref(cta.href)}
-                  className={`inline-flex items-center gap-1.5 px-6 py-3 rounded-lg font-medium transition-opacity hover:opacity-90 ${
-                    cta.style === 'outline'
-                      ? 'border border-t-accent-blue/80 text-t-accent-blue'
-                      : 'bg-t-accent-blue text-white'
-                  }`}
-                >
-                  {resolveLabel(cta.label, locale)}
-                </Link>
+            {p.title && (
+              <h2 className={`font-bold text-t-text-primary ${isHero ? 'text-4xl md:text-6xl tracking-tight leading-tight max-w-4xl mx-auto' : 'text-2xl md:text-3xl'}`}>
+                {p.title}
+              </h2>
+            )}
+            {p.intro && (
+              <p className={`text-t-text-secondary mx-auto ${isHero ? 'mt-6 text-base md:text-lg max-w-2xl' : 'mt-3 max-w-2xl'}`}>
+                {p.intro}
+              </p>
+            )}
+            {(cta || cta2) && (
+              <div className={`flex justify-center gap-3 flex-wrap ${isHero ? 'mt-10' : 'mt-6'}`}>
+                {cta && (
+                  <Link
+                    href={sanitizeHref(cta.href)}
+                    className={`px-6 py-3 ${cta.style === 'outline' ? 'btn-pack-outline' : 'btn-pack-primary'}`}
+                  >
+                    {resolveLabel(cta.label, locale)}
+                  </Link>
+                )}
+                {cta2 && (
+                  <Link
+                    href={sanitizeHref(cta2.href)}
+                    className={`px-6 py-3 ${cta2.style === 'primary' ? 'btn-pack-primary' : 'btn-pack-outline'}`}
+                  >
+                    {resolveLabel(cta2.label, locale)}
+                  </Link>
+                )}
               </div>
             )}
           </div>

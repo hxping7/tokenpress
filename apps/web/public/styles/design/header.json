@@ -1,31 +1,31 @@
 {
-  "variant":"sticky-transparent",
+  "variant":"sticky-solid",
   "logo": {
     "type":"image",
     "src":"/logo-dark.svg",
     "srcLight":"/logo-light.svg",
     "text":"TokenPress",
-    "position":"center",
-    "height":60,
+    "position":"left",
+    "height":36,
     "link":"/"
   },
-  "nav":  { "align":"center", "style":"underline", "source":"sections", "customItems":[],
+  "nav":  { "align":"left", "style":"underline", "source":"sections", "customItems":[],
     "colors": {
-      "text":"var(--text-primary)",
-      "hoverBg":"var(--hover-bg)",
-      "hoverText":"var(--text-primary)",
-      "activeBg":"#ec4899",
-      "activeText":"#ffffff",
+      "text":"#595959",
+      "hoverBg":"rgba(0,0,0,0.04)",
+      "hoverText":"#1a1a1a",
+      "activeBg":"transparent",
+      "activeText":"#d71920",
       "barBg":"transparent",
-      "barText":"var(--text-primary)"
+      "barText":"#1a1a1a"
     } },
   "actions": [
     { "type":"theme", "icon":"palette", "style":"icon" },
-    { "type":"language", "icon":"globe", "style":"pill", "label":{"zh":"中文","en":"EN"} },
+    { "type":"language", "icon":"globe", "style":"ghost", "label":{"zh":"中文","en":"EN"} },
     { "type":"admin", "icon":"dashboard", "style":"ghost", "showWhen":"loggedIn" },
     { "type":"logout", "icon":"logout", "style":"ghost", "showWhen":"loggedIn" },
-    { "type":"login", "icon":"user", "style":"primary", "showWhen":"loggedOut" }
+    { "type":"login", "icon":"user", "style":"outline", "showWhen":"loggedOut" }
   ],
-  "background":"transparent",
-  "borderBottom":"none"
+  "background":"#ffffff",
+  "borderBottom":"1px solid rgba(0,0,0,0.06)"
 }

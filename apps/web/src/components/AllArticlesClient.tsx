@@ -33,9 +33,8 @@ export function AllArticlesClient() {
     <div className="min-h-screen pt-16">
       {/* Header */}
       <section className="relative py-16 px-4 border-b border-t-border">
-        <div className="absolute inset-0 grid-pattern opacity-50" />
         <div className="relative max-w-[var(--content-max-width)] mx-auto text-center">
-          <h1 className="text-heading-1 gradient-text mb-4">{t('blog.title', locale)}</h1>
+          <h1 className="text-heading-1 text-t-text-primary mb-4">{t('blog.title', locale)}</h1>
           <p className="text-t-text-secondary text-lg max-w-2xl mx-auto">
             {t('blog.subtitle', locale)}
           </p>

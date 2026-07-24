@@ -2,12 +2,17 @@
   "homepage": {
     "container": "boxed",
     "sections": [
-      { "component":"Hero",       "variant":"split-image-right", "props":{"showStats":true} },
+      { "component":"CustomBlock", "props":{
+          "size":"hero",
+          "title":"以内容驱动业务持续增长",
+          "intro":"聚合团队的知识、作品与洞察，让分散的内容资产变成可被理解、推理并持续产生价值的系统。",
+          "cta":  { "label":{"zh":"浏览全部内容","en":"Explore content"}, "href":"/articles", "style":"primary" },
+          "cta2": { "label":{"zh":"阅读博客","en":"Read the blog"},       "href":"/blog",     "style":"outline" }
+      } },
       { "component":"Features",   "variant":"3-col-cards" },
       { "component":"Banner",      "variant":"cta", "id":"home_main" },
-      { "component":"ArticleList","variant":"grid-3",            "props":{"source":"latest","limit":6} },
-      { "component":"CTA",        "variant":"banner" },
-      { "component":"Banner",      "variant":"cta", "id":"home_bottom" }
+      { "component":"ArticleList","variant":"grid-3", "props":{"source":"latest","limit":6} },
+      { "component":"CTA",        "variant":"banner" }
     ]
   },
   "section": {

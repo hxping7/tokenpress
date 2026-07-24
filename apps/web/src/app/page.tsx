@@ -181,7 +181,6 @@ async function getWelcomePage(): Promise<{ enabled: boolean; htmlPath: string }>
 function HeroFallback() {
   return (
     <section className="relative pt-8 pb-4 flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 grid-pattern" />
       <div className="relative z-10 text-center px-4 w-full max-w-3xl mx-auto">
         <div className="h-64 bg-t-bg-tertiary rounded-xl animate-pulse" />
       </div>

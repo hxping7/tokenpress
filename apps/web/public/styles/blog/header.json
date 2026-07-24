@@ -6,7 +6,7 @@
     "srcLight":"/logo-light.svg",
     "text":"TokenPress",
     "position":"left",
-    "height":60,
+    "height":36,
     "link":"/"
   },
   "nav":  { "align":"left", "style":"underline", "source":"sections", "customItems":[],
@@ -22,13 +22,13 @@
       "design-works": "penTool"
     },
     "colors": {
-      "text":"#9fb0c8",
-      "hoverBg":"rgba(0,212,255,0.14)",
-      "hoverText":"#ffffff",
-      "activeBg":"#00d4ff",
-      "activeText":"#020810",
+      "text":"#3a3a3f",
+      "hoverBg":"rgba(14,165,233,0.08)",
+      "hoverText":"#1d1d1f",
+      "activeBg":"#0ea5e9",
+      "activeText":"#ffffff",
       "barBg":"transparent",
-      "barText":"#e0e8ff"
+      "barText":"#1d1d1f"
     } },
   "actions": [
     { "type":"theme", "icon":"palette", "style":"icon" },
@@ -37,6 +37,6 @@
     { "type":"logout", "icon":"logout", "style":"ghost", "showWhen":"loggedIn" },
     { "type":"login", "icon":"user", "style":"outline", "showWhen":"loggedOut" }
   ],
-  "background":"linear-gradient(90deg, #020810 0%, #0a1c33 52%, #020810 100%)",
-  "borderBottom":"1px solid rgba(0,212,255,0.22)"
+  "background":"#ffffff",
+  "borderBottom":"1px solid rgba(0,0,0,0.08)"
 }

@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {sidebarOpen ? (
             <>
               <Link href="/admin" className="flex items-center gap-2 flex-1">
-                <span className="text-xl font-bold gradient-text">TokenPress</span>
+                <span className="text-xl font-bold text-t-text-primary">TokenPress</span>
                 <span className="text-sm text-t-text-secondary">Admin</span>
               </Link>
               <button
@@ -189,7 +189,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <aside className="absolute left-0 top-0 bottom-0 w-64 bg-t-bg-primary border-r border-t-border">
             <div className="h-16 flex items-center justify-between px-4 border-b border-t-border">
               <Link href="/admin" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-                <span className="text-xl font-bold gradient-text">TokenPress</span>
+                <span className="text-xl font-bold text-t-text-primary">TokenPress</span>
                 <span className="text-sm text-t-text-secondary">Admin</span>
               </Link>
               <button onClick={() => setMobileOpen(false)} className="p-2 text-t-text-secondary">
@@ -240,7 +240,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={() => setMobileOpen(true)} className="p-2 text-t-text-secondary">
             <Menu size={24} />
           </button>
-          <span className="font-bold gradient-text">TokenPress Admin</span>
+          <span className="font-bold text-t-text-primary">TokenPress Admin</span>
           <div className="flex items-center gap-1">
             <Link href="/" className="p-2 text-t-text-secondary hover:text-t-accent-blue">
               <Home size={20} />

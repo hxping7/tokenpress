@@ -1,33 +1,35 @@
 :root{
-  /* ===== 配色：参照特赞 Tezign 企业官网风（紫罗兰主色 + 粉调渐变） ===== */
+  /* ===== 配色：黑白极简企业官网风（参考特赞 tezign.com） ===== */
   --bg-primary:#ffffff;
-  --bg-secondary:#f9fafb;
-  --bg-tertiary:#f3f4f6;
-  --text-primary:#101828;
-  --text-secondary:#475467;
-  --text-muted:#667085;
-  --accent-blue:#5B3AFF;          /* Tezign 品牌紫（主色：按钮 / CTA / 链接） */
-  --accent-purple:#3080ff;        /* 互补蓝（用于次级渐变） */
-  --accent-blue-dim:#4B2DBF;      /* 深紫（hover / 阴影深度） */
-  --border-color:rgba(16,24,40,0.10);
-  --hover-bg:rgba(91,58,255,0.06);
-  --gradient-from:#5B3AFF;        /* 紫 → 粉 渐变（Tezign 标志性） */
-  --gradient-via:#8B5CFF;
-  --gradient-to:#FF5BB3;
-  --grid-pattern:rgba(91,58,255,0.035);
-  --selection-bg:rgba(91,58,255,0.18);
-  --scrollbar-thumb:rgba(91,58,255,0.22);
-  --scrollbar-thumb-hover:rgba(91,58,255,0.4);
-  --focus-ring:rgba(91,58,255,0.5);
-  --card-border-hover:rgba(91,58,255,0.35);
-  --section-divider:rgba(91,58,255,0.14);
-  --btn-glow-from:rgba(91,58,255,0.16);
-  --btn-glow-to:rgba(255,91,179,0.16);
+  --bg-secondary:#fafafa;
+  --bg-tertiary:#f0f0f0;
+  --text-primary:#0a0a0a;
+  --text-secondary:#525252;
+  --text-muted:#8a8a8a;
+  --accent-blue:#111111;         /* 纯黑主色：按钮 / CTA / 链接 hover */
+  --accent-purple:#111111;
+  --accent-blue-dim:#000000;
+  --border-color:rgba(0,0,0,0.10);
+  --hover-bg:rgba(0,0,0,0.05);
+  /* 去 AI 风：渐变 / 网格 / 光晕全部中和 */
+  --gradient-from:#111111;
+  --gradient-via:#111111;
+  --gradient-to:#111111;
+  --grid-pattern:transparent;
+  --selection-bg:rgba(0,0,0,0.14);
+  --scrollbar-thumb:rgba(0,0,0,0.2);
+  --scrollbar-thumb-hover:rgba(0,0,0,0.35);
+  --focus-ring:rgba(0,0,0,0.4);
+  --card-border-hover:rgba(0,0,0,0.25);
+  --section-divider:rgba(0,0,0,0.10);
+  --btn-glow-from:transparent;
+  --btn-glow-to:transparent;
   /* ===== 结构令牌 ===== */
   --content-max-width:1200px;
   --reading-max-width:720px;
   --header-height:64px;
   --brand-font:"Inter","PingFang SC",system-ui,sans-serif;
   --radius-card:12px;
-  --shadow-card:0 1px 3px rgba(16,24,40,0.08);
+  --btn-radius:999px;            /* 特赞标志性黑色胶囊按钮 */
+  --shadow-card:0 1px 3px rgba(0,0,0,0.06);
 }

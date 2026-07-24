@@ -154,7 +154,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full btn-glow py-2.5 bg-gradient-accent text-white font-medium rounded-lg text-sm transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full btn-pack-primary py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <LogIn size={16} />
         {loading ? '登录中...' : '登录'}
@@ -169,7 +169,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold gradient-text">
+          <Link href="/" className="text-3xl font-bold text-t-text-primary">
             TokenPress
           </Link>
           <p className="text-sm text-t-text-secondary mt-2">登录管理后台</p>

@@ -200,9 +200,9 @@ function actionClass(style: ActionStyle, dark = false): string {
     case 'ghost':
       return `${base} gap-1.5 px-3 py-2 text-sm rounded-lg text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover`
     case 'outline':
-      return `${base} gap-1.5 px-3 py-2 text-sm rounded-lg text-t-accent-blue border border-t-accent-blue/80 opacity-80 hover:bg-t-hover`
+      return 'btn-pack-outline opacity-90'
     case 'primary':
-      return `${base} gap-1.5 px-4 py-2 text-sm rounded-lg bg-t-accent-blue text-white hover:opacity-90`
+      return 'btn-pack-primary'
     case 'pill':
       return `${base} gap-1.5 px-4 py-2 text-sm rounded-full text-t-text-secondary hover:bg-t-hover`
     default:
@@ -487,7 +487,7 @@ function LogoBlock({ hc, theme }: { hc: any; theme?: string }) {
   if (logo.type === 'text' || (!logo.src && logo.text)) {
     return (
       <span
-        className="text-xl font-extrabold tracking-tight gradient-text leading-none"
+        className="text-xl font-extrabold tracking-tight text-t-text-primary leading-none"
         style={{ height }}
       >
         {logo.text || 'Token00'}
@@ -515,7 +515,7 @@ function LogoBlock({ hc, theme }: { hc: any; theme?: string }) {
   }
   // 无配置：默认文字 Logo
   return (
-    <span className="text-xl font-extrabold tracking-tight gradient-text leading-none" style={{ height }}>
+    <span className="text-xl font-extrabold tracking-tight text-t-text-primary leading-none" style={{ height }}>
       Token00
     </span>
   )

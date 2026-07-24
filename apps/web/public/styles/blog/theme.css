@@ -14,15 +14,16 @@
   --gradient-from:#0ea5e9;
   --gradient-via:#38bdf8;
   --gradient-to:#6366f1;
-  --grid-pattern:rgba(14,165,233,0.03);
+  /* 去 AI 风：网格 / 光晕中和（渐变令牌仅供遗留类使用，内置组件已不引用） */
+  --grid-pattern:transparent;
   --selection-bg:rgba(14,165,233,0.2);
   --scrollbar-thumb:rgba(14,165,233,0.25);
   --scrollbar-thumb-hover:rgba(14,165,233,0.45);
   --focus-ring:rgba(14,165,233,0.5);
   --card-border-hover:rgba(14,165,233,0.3);
   --section-divider:rgba(14,165,233,0.15);
-  --btn-glow-from:rgba(14,165,233,0.14);
-  --btn-glow-to:rgba(99,102,241,0.14);
+  --btn-glow-from:transparent;
+  --btn-glow-to:transparent;
   /* ===== 结构令牌（可被子主题 defaultTheme 之外的配色覆盖） ===== */
   --content-max-width:1200px;
   --reading-max-width:720px;

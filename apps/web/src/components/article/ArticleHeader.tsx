@@ -23,7 +23,6 @@ export function ArticleHeader({ article, section, sectionLabel, shareConfig }: P
 
   return (
     <header className="relative py-16 px-4 border-b border-t-border">
-      <div className="absolute inset-0 grid-pattern opacity-30" />
       <div className="relative max-w-4xl mx-auto">
         <Link
           href={`/${section}`}

@@ -46,10 +46,11 @@ const HERO_SIZE_STYLES: Record<string, { container: string; inner: string; aspec
   fullscreen: { container: 'w-full', inner: '', aspect: 'aspect-[2/1]', imgSizes: '100vw' },
 }
 
+// CTA 按钮：实色令牌化（去 AI 风渐变/发光），圆角随 --btn-radius
 const CTA_VARIANT_CLASS: Record<HeroCtaVariant, string> = {
-  primary: 'btn-glow px-6 py-3 bg-gradient-accent text-white font-medium rounded-xl text-sm transition-transform hover:scale-105',
-  secondary: 'px-6 py-3 border border-t-border text-t-text-primary font-medium rounded-xl text-sm hover:border-t-accent-blue/30 transition-all',
-  ghost: 'px-6 py-3 text-t-text-secondary font-medium rounded-xl text-sm hover:text-t-text-primary hover:bg-t-hover transition-all',
+  primary: 'btn-pack-primary px-6 py-3 text-sm',
+  secondary: 'px-6 py-3 border border-t-border text-t-text-primary font-medium text-sm hover:border-t-accent-blue/50 transition-all [border-radius:var(--btn-radius)]',
+  ghost: 'px-6 py-3 text-t-text-secondary font-medium text-sm hover:text-t-text-primary hover:bg-t-hover transition-all [border-radius:var(--btn-radius)]',
 }
 
 // 需要硬跳转（非 Next.js 客户端路由）的链接：静态页面、上传资源、外链
@@ -97,9 +98,6 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Background grid pattern */}
-      <div className="absolute inset-0 grid-pattern" />
-
       <div className={`relative z-10 text-center w-full ${isFull ? 'px-0' : 'px-4'} ${resolved.container}`}>
         {useDefaultSvg ? (
           // 默认 SVG Logo
@@ -250,7 +248,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
   )
 }
 
-// 默认 Hero SVG 组件
+// 默认 Hero SVG 组件（令牌化配色，去霓虹渐变/发光，随风格包主题变化）
 function DefaultHeroSvg() {
   return (
     <svg
@@ -259,74 +257,28 @@ function DefaultHeroSvg() {
       xmlns="http://www.w3.org/2000/svg"
       className="w-full h-auto"
     >
-      <defs>
-        <linearGradient id="heroRingGrad" x1="0" y1="0" x2="560" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00d4ff" stopOpacity="0" />
-          <stop offset="25%" stopColor="#00d4ff" />
-          <stop offset="75%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="heroTextGrad" x1="80" y1="0" x2="480" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#60c0ff" />
-          <stop offset="45%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#b088ff" />
-        </linearGradient>
-        <linearGradient id="heroInfGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#00d4ff" />
-          <stop offset="50%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#00d4ff" />
-        </linearGradient>
-        <filter id="heroTextGlow">
-          <feGaussianBlur stdDeviation="4" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-        <filter id="heroInfGlow">
-          <feGaussianBlur stdDeviation="7" result="blur1" />
-          <feGaussianBlur stdDeviation="3" result="blur2" />
-          <feMerge>
-            <feMergeNode in="blur1" />
-            <feMergeNode in="blur2" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* 轨道椭圆 */}
-      <ellipse cx="280" cy="155" rx="248" ry="110" fill="none" stroke="url(#heroRingGrad)" strokeWidth="0.8" opacity="0.4" />
-      <ellipse cx="280" cy="155" rx="228" ry="95" fill="none" stroke="rgba(0,212,255,0.06)" strokeWidth="1.2" />
-      <ellipse cx="280" cy="155" rx="208" ry="80" fill="none" stroke="rgba(124,58,237,0.05)" strokeWidth="0.8" />
-
-      {/* 扫描线 */}
-      <line x1="10" y1="155" x2="80" y2="155" stroke="#00d4ff" strokeWidth="0.8" opacity="0.5" />
-      <line x1="480" y1="155" x2="550" y2="155" stroke="#7c3aed" strokeWidth="0.8" opacity="0.5" />
-      <circle cx="10" cy="155" r="3.5" fill="#00d4ff" opacity="0.7" />
-      <circle cx="550" cy="155" r="3.5" fill="#7c3aed" opacity="0.7" />
-
       {/* Token 文字 */}
       <text
-        x="280" y="148"
+        x="280" y="158"
         textAnchor="middle"
         fontFamily="var(--font-inter), 'Segoe UI', Arial, sans-serif"
         fontSize="88"
         fontWeight="800"
         letterSpacing="-2"
-        fill="url(#heroTextGrad)"
-        filter="url(#heroTextGlow)"
+        fill="var(--text-primary)"
       >
         Token
       </text>
 
-      {/* ∞ 符号 */}
-      <g transform="translate(280, 202)" filter="url(#heroInfGlow)">
+      {/* ∞ 符号（accent 单色） */}
+      <g transform="translate(280, 208)">
         <path
           d="M 68 0 C 68 -34, 26 -34, 0 0 C -26 34, -68 34, -68 0 C -68 -34, -26 -34, 0 0 C 26 34, 68 34, 68 0 Z"
           fill="none"
-          stroke="url(#heroInfGrad)"
+          stroke="var(--accent-blue)"
           strokeWidth="8"
           strokeLinecap="round"
         />
-        <circle cx="-68" cy="0" r="5" fill="#00d4ff" opacity="0.9" />
-        <circle cx="68" cy="0" r="5" fill="#7c3aed" opacity="0.9" />
       </g>
 
       {/* 域名 */}
@@ -337,8 +289,7 @@ function DefaultHeroSvg() {
         fontSize="13"
         fontWeight="400"
         letterSpacing="8"
-        fill="#1a4060"
-        opacity="0.9"
+        fill="var(--text-muted)"
       >
         TOKEN00.COM
       </text>

@@ -378,9 +378,8 @@ export function SectionPageClient({
       {/* Hero — 按模板包配置 */}
       {heroCfg.enabled && (
         <section className="relative py-16 px-4 border-b border-t-border">
-          <div className="absolute inset-0 grid-pattern opacity-50" />
           <div className="relative max-w-[var(--content-max-width)] mx-auto text-center">
-            <h1 className="text-heading-1 gradient-text mb-4">{heroTitle}</h1>
+            <h1 className="text-heading-1 text-t-text-primary mb-4">{heroTitle}</h1>
             {heroCfg.description && heroDescription ? (
               <p className="text-t-text-secondary text-lg max-w-2xl mx-auto">{heroDescription}</p>
             ) : null}

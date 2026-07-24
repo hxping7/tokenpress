@@ -133,13 +133,12 @@ function SectionBlock({ component, layouts, navVars }: { component: string; layo
     case 'Hero':
       return (
         <div className="relative py-20 px-6 text-center border-b border-[var(--border-color)] overflow-hidden">
-          <div className="absolute inset-0 opacity-30" style={{ background: 'linear-gradient(135deg, var(--gradient-from), var(--gradient-to))' }} />
           <div className="relative max-w-2xl mx-auto">
-            <h1 className="text-4xl font-extrabold gradient-text mb-4">Token 力量无限放大</h1>
+            <h1 className="text-4xl font-extrabold text-[var(--text-primary)] mb-4">Token 力量无限放大</h1>
             <p className="text-[var(--text-secondary)] text-lg">AI 赋能的综合内容平台 · 聚焦 Token 计划、AI 编程、作品与技术博客</p>
             <div className="mt-6 flex gap-3 justify-center">
-              <span className="px-5 py-2 rounded-lg bg-[var(--accent-blue)] text-black text-sm font-medium">开始探索</span>
-              <span className="px-5 py-2 rounded-lg border border-[var(--border-color)] text-sm">了解更多</span>
+              <span className="px-5 py-2 bg-[var(--accent-blue)] text-white text-sm font-medium" style={{ borderRadius: 'var(--btn-radius, 0.5rem)' }}>开始探索</span>
+              <span className="px-5 py-2 border border-[var(--border-color)] text-sm" style={{ borderRadius: 'var(--btn-radius, 0.5rem)' }}>了解更多</span>
             </div>
           </div>
         </div>
