@@ -18,6 +18,8 @@
 | 标签列表 | `GET` | `/api/v1/tags` | — |
 | 系统设置 | `GET` / `PUT` | `/api/v1/site-settings` | 需 Token / PUT 需 `settings:write` |
 | 设置/取消置顶 | `POST` | `/api/v1/ai/articles/:slug/pin` | `article:write` |
+| 创建分类 | `POST` | `/api/v1/ai/categories` | `article:write`（隐含分类管理） |
+| 修改分类 | `PUT` | `/api/v1/ai/categories/:id` | `article:write`（隐含分类管理） |
 | 静态页（读取） | `GET` | `/api/v1/statichtml/tree`、`/api/v1/statichtml/list` | `statichtml:read` |
 | 静态页（文件夹） | `POST`/`DELETE`/`PATCH` | `/api/v1/statichtml/folder` | `statichtml:write` |
 | 静态页（文件） | `POST`/`PUT`/`DELETE`/`PATCH` | `/api/v1/statichtml/file` | `statichtml:write` |
@@ -427,6 +429,28 @@ print(f"更新结果: action={result['data']['action']}")
 
 ---
 
+### 分类更新规则（重要）
+
+`category` / `categoryId` 参数在**创建和更新时都生效**，可用于把文章归入（或移出）分类——这正是「重发同一 slug 即可挪动分类」的用法：
+
+- **更新时传 `category`（slug 或名称）或 `categoryId`（数字）** → 文章分类被同步修改为该值。
+- **更新时传 `category: null` 或 `categoryId: null`（或空串）** → 显式清空分类（文章变为无分类）。
+- **更新时不传 `category` / `categoryId`** → 保持文章原有分类不变（不会因重发而被清空或重置）。
+- **传入不存在的分类 slug / id** → 返回 **400**，不再像旧版本那样静默丢弃（调用方据此感知参数错误并重试）。
+
+> 因此，要把那 14 篇文章从「AI 教程」挪到新分类，只需用相同的 `slug` 重新 `POST /ai/publish` 并带上目标 `category`（或 `categoryId`）即可，无需任何管理员后台权限。
+
+### 远程创建/修改分类
+
+`article:write` 权限**隐含**分类管理能力，持有发布 Token 的 Agent 可不经管理员后台直接创建或修改分类（与 `/api/v1/categories` 后台接口同源，但鉴权走 API Token 且字段受限）：
+
+- **创建** `POST /api/v1/ai/categories`：必填 `name`，必填 `section`（板块 slug）或 `sectionId`（板块 id）；可选 `slug`（缺省按 name 自动生成）、`description`、`sortOrder`、`template`、`templateConfig`、`layouts`。分类 slug 冲突返回 `409`。
+- **修改** `PUT /api/v1/ai/categories/:id`：按 id 更新上述任意字段；`id` 不存在返回 `404`，`slug` 改成已存在值返回 `409`。
+
+> 典型用法：Agent 发布文章前若目标分类尚不存在，先 `POST /ai/categories` 建好，再用其 `slug`/`id` 通过 `POST /ai/publish` 的 `category`/`categoryId` 关联。
+
+---
+
 ### 工作流 D：纯文字文章（无图片）
 
 最简流程，单次请求即可完成：
@@ -480,7 +504,7 @@ curl -X POST https://your-domain.com/api/v1/ai/publish \
 | title | string | ✅ | 文章标题，支持 HTML 格式化 | 见下方「标题格式化」说明 |
 | content | string | ✅ | Markdown 格式的文章正文 | 图片引用使用已上传的 URL 或公网 URL |
 | section | string | ✅ | 板块 slug | **必须先用 GET /sections 获取有效值** |
-| category | string | ❌ | 分类 slug 或名称 | 可用 GET /categories?section=xxx 查看 |
+| category | string | ❌ | 分类 slug 或名称 | 可用 GET /categories?section=xxx 查看。**创建与更新均生效**：更新已有文章时若传入此字段，文章分类会被同步修改（不再静默丢弃）；传入 `null`/空串显式清空分类；传入不存在的分类则返回 400 |
 | tags | string[] | ❌ | 标签数组（最多建议 5 个） | 不存在的标签会自动创建 |
 | coverImageUrl | string | ❌ | 封面图片 URL | **必须是完整 URL**（上传所得或公网地址），不支持本地路径 |
 | status | string | ❌ | `draft`、`published` 或 `archived`，默认 `draft` | ⚠️ 当提交 `published` 时，若内容审核已开启，文章将先进入 `pending_review` 状态，审核通过后才变为 `published`；建议重要文章先 draft 再改 published |

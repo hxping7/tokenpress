@@ -350,6 +350,8 @@ PUT /api/v1/site-settings
 `PUT /api/v1/categories/:id` — 更新
 `DELETE /api/v1/categories/:id` — 删除
 
+> **远程（AI Token）路径：** 发布流程内创建/修改分类走 `POST /api/v1/ai/categories` 与 `PUT /api/v1/ai/categories/:id`（`article:write` 隐含分类管理，字段受限），详见 `docs/ai-publish-api.md`「远程创建/修改分类」。
+
 **新增请求体：**
 
 ```json
