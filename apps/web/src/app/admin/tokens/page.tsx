@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { t } from '@/lib/i18n'
 import { API_PERMISSION_CATALOG, API_PERMISSION_CATEGORY_ORDER, API_PERMISSION_CATEGORY_LABELS } from '@tokenpress/shared'
-import { Plus, Trash2, X, Check, Copy, Key, Clock, Shield, Activity } from 'lucide-react'
+import { Plus, Trash2, X, Check, Copy, Key, Clock, Shield, Activity, ChevronDown } from 'lucide-react'
 
 interface ApiToken {
   id: number
@@ -48,6 +48,8 @@ export default function TokensPage() {
   const [name, setName] = useState('')
   const [permissions, setPermissions] = useState<string[]>(['article:write'])
   const [expiresAt, setExpiresAt] = useState('')
+  // 大类勾选视图：每组细项默认收起，点「展开细项」微调
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({})
 
   const { data: tokensData, isLoading } = useQuery({
     queryKey: ['admin-tokens'],
@@ -103,9 +105,29 @@ export default function TokensPage() {
     return new Date(date).toLocaleDateString('zh-CN')
   }
 
-  const getPermissionLabel = (value: string) => {
-    const opt = permissionOptions.find(p => p.value === value)
-    return opt ? t(opt.labelKey, backendLocale) : value
+  // 列表徽标聚合：整类权限齐全 → 折叠为「分类 · 全部」一个大徽标；否则逐项展示
+  const renderPermissionChips = (perms: string[]) => {
+    const chips: { key: string; label: string; title?: string; full: boolean }[] = []
+    for (const cat of API_PERMISSION_CATEGORY_ORDER) {
+      const catOpts = allPermissionOptions.filter((o) => o.category === cat)
+      if (!catOpts.length) continue
+      const owned = catOpts.filter((o) => perms.includes(o.value))
+      if (!owned.length) continue
+      const catLabel = t(API_PERMISSION_CATEGORY_LABELS[cat], backendLocale)
+      if (owned.length === catOpts.length) {
+        chips.push({
+          key: `cat:${cat}`,
+          label: catLabel,
+          full: true,
+          title: `${catLabel} · ${t('tokens.catFull', backendLocale)}：${owned.map((o) => t(o.labelKey, backendLocale)).join('、')}`,
+        })
+      } else {
+        for (const o of owned) {
+          chips.push({ key: o.value, label: t(o.labelKey, backendLocale), full: false, title: catLabel })
+        }
+      }
+    }
+    return chips
   }
 
   return (
@@ -202,9 +224,18 @@ export default function TokensPage() {
               {/* Permissions */}
               <div className="mt-4 pt-4 border-t border-t-border">
                 <div className="flex flex-wrap gap-2">
-                  {tokenItem.permissions.map((perm) => (
-                    <span key={perm} className="px-2 py-1 bg-t-bg-secondary text-sm text-t-text-secondary rounded-lg">
-                      {getPermissionLabel(perm)}
+                  {renderPermissionChips(tokenItem.permissions).map((chip) => (
+                    <span
+                      key={chip.key}
+                      title={chip.title}
+                      className={`px-2 py-1 text-sm rounded-lg ${
+                        chip.full
+                          ? 'bg-t-accent-blue/15 text-t-accent-blue font-medium'
+                          : 'bg-t-bg-secondary text-t-text-secondary'
+                      }`}
+                    >
+                      {chip.label}
+                      {chip.full && <span className="ml-1 opacity-70 text-xs">{t('tokens.catFull', backendLocale)}</span>}
                     </span>
                   ))}
                 </div>
@@ -237,34 +268,70 @@ export default function TokensPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">{t('tokens.permissions', backendLocale)}</label>
-                <div className="space-y-4">
-                  {permissionGroups.map((group) => (
-                    <div key={group.category}>
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-t-text-secondary mb-2">
-                        {t(group.labelKey, backendLocale)}
-                      </h4>
-                      <div className="space-y-2">
-                        {group.options.map((opt) => (
-                          <label key={opt.value} className="flex items-center gap-3 p-3 bg-t-bg-secondary rounded-lg cursor-pointer hover:bg-t-hover">
+                <label className="block text-sm font-medium mb-1">{t('tokens.permissions', backendLocale)}</label>
+                <p className="text-xs text-t-text-secondary mb-3">{t('tokens.permissionsHint', backendLocale)}</p>
+                <div className="space-y-2.5">
+                  {permissionGroups.map((group) => {
+                    const groupValues: string[] = group.options.map((o) => o.value)
+                    const selectedCount = group.options.filter((o) => permissions.includes(o.value)).length
+                    const allChecked = group.options.length > 0 && selectedCount === group.options.length
+                    const expanded = !!expandedCats[group.category]
+                    return (
+                      <div key={group.category} className="border border-t-border rounded-xl overflow-hidden">
+                        <div className="flex items-center justify-between gap-2 pl-3 pr-1.5 py-2.5 bg-t-bg-secondary">
+                          <label className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer select-none">
                             <input
                               type="checkbox"
-                              checked={permissions.includes(opt.value)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setPermissions([...permissions, opt.value])
-                                } else {
-                                  setPermissions(permissions.filter(p => p !== opt.value))
-                                }
-                              }}
-                              className="w-4 h-4 rounded text-t-accent-blue"
+                              checked={allChecked}
+                              onChange={() =>
+                                setPermissions((prev) =>
+                                  allChecked
+                                    ? prev.filter((p) => !groupValues.includes(p))
+                                    : Array.from(new Set([...prev, ...groupValues])),
+                                )
+                              }
+                              className="w-4 h-4 rounded text-t-accent-blue shrink-0"
                             />
-                            <span>{t(opt.labelKey, backendLocale)}</span>
+                            <span className="font-medium text-sm">{t(group.labelKey, backendLocale)}</span>
+                            <span className="text-xs text-t-text-secondary shrink-0">
+                              {selectedCount}/{group.options.length}
+                            </span>
                           </label>
-                        ))}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedCats((prev) => ({ ...prev, [group.category]: !prev[group.category] }))
+                            }
+                            className="flex items-center gap-0.5 text-xs text-t-text-secondary hover:text-t-accent-blue shrink-0 px-1.5 py-0.5 rounded"
+                          >
+                            {expanded ? t('tokens.collapseDetails', backendLocale) : t('tokens.expandDetails', backendLocale)}
+                            <ChevronDown size={13} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                          </button>
+                        </div>
+                        {expanded && (
+                          <div className="p-2 space-y-0.5">
+                            {group.options.map((opt) => (
+                              <label key={opt.value} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-t-hover">
+                                <input
+                                  type="checkbox"
+                                  checked={permissions.includes(opt.value)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setPermissions((prev) => [...prev, opt.value])
+                                    } else {
+                                      setPermissions(prev => prev.filter(p => p !== opt.value))
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded text-t-accent-blue"
+                                />
+                                <span className="text-sm text-t-text-secondary">{t(opt.labelKey, backendLocale)}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
               <div>
