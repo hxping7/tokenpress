@@ -124,6 +124,8 @@
 | `ads:write` | 广告 | `GET /admin/ads`、`/pending`、`/:id` | `POST` / `:id/approve` / `:id/reject` / `:id/toggle` | admin / superadmin |
 | `statichtml:read` | 静态页面 | `GET /statichtml/tree`、`GET /statichtml/list` | — | admin / superadmin |
 | `statichtml:write` | 静态页面 | — | `POST`/`DELETE`/`PATCH /statichtml/folder`、`POST`/`PUT`/`DELETE`/`PATCH /statichtml/file` | admin / superadmin |
+| `styles:read` | 风格包（读） | `GET /styles`、`/styles/:id`、`/:id/schema`、`/:id/playbook`、`/:id/diff`（`/styles/active` 公开，无需 token） | — | admin / superadmin |
+| `styles:write` | 风格包（写） | — | `POST /styles`、`PUT /styles/:id`、`PATCH /styles/:id`、`PATCH /:id/homepage-sections`、`POST /:id/scheme`、`/activate`、`/preview`、`/restore`、`DELETE /:id` | admin / superadmin |
 
 > **角色可签发的权限**：`superadmin` 全部（含 `users:write`）；`admin` 除 `users:write` 外全部；`user` 仅 `article:write`、`media:upload`（见 `ai-publish-api.md`）。
 
@@ -484,6 +486,70 @@ POST /api/v1/statichtml/file
 
 ---
 
+### 13. 风格包 styles（需 `styles:read` / `styles:write`）
+
+风格包 = 站点「模板」单文件配置（布局骨架 + 设计语言 + 全站可定制字段）。每包以 `style.json` 存于持久卷 `tokenpress-styles`（Docker 卷），内置包出厂源打包进镜像，旧多文件格式（manifest.json/theme.css/header.json/footer.json/layouts.json）在首次读取时被**一次性确定性迁移**合并落盘 `style.json`，此后一律以 `style.json` 为准（无回退路径）。字段级 schema 经 `GET /styles/:id/schema` 获取（返回 `style-json.schema.json`）；AI 设计约束见 `GET /styles/:id/playbook`。
+
+**端点点表：**
+
+| 方法 | 路径 | 权限 | 说明 |
+|---|---|---|---|
+| GET | `/api/v1/styles/active` | 公开（SSR） | 当前激活包完整配置 |
+| GET | `/api/v1/styles` | `styles:read` | 列全部包元数据 + 是否激活 |
+| GET | `/api/v1/styles/:id` | `styles:read` | 单包完整配置 |
+| GET | `/api/v1/styles/:id/schema` | `styles:read` | JSON Schema（可配置字段 + 校验规则） |
+| GET | `/api/v1/styles/:id/playbook` | `styles:read` | `ai-playbook.md` 原文（Agent 设计约束） |
+| GET | `/api/v1/styles/:id/diff?target=<id2>` | `styles:read` | 两包差异（对比根：site/design/header/footer/layouts/hero/features） |
+| PATCH | `/api/v1/styles/:id` | `styles:write` | 单字段 / 批量原子修改 |
+| PATCH | `/api/v1/styles/:id/homepage-sections` | `styles:write` | 首页组件数组增删改移 |
+| POST | `/api/v1/styles` | `styles:write` | 新建包（201；id 已存在或撞内置包 → 409） |
+| POST | `/api/v1/styles/:id/scheme` | `styles:write` | 配色批量重算（`mode`/`accent`/`accentAlt`） |
+| POST | `/api/v1/styles/:id/activate` | `styles:write` | 激活为当前风格包（写 `site_settings.active_style`） |
+| POST | `/api/v1/styles/:id/preview` | `styles:write` | 渲染预览图（依赖 playwright-core + 系统 Chrome，未安装 501；非破坏，临时切换后回滚） |
+| PUT | `/api/v1/styles/:id` | `styles:write` | 整包 `{style:{...}}` 替换 或 旧字段局部更新（theme/manifest/layouts/header/footer/site/hero/features） |
+| POST | `/api/v1/styles/:id/restore` | `styles:write` | 内置包恢复出厂默认（从镜像内 builtin 源整目录重拷） |
+| DELETE | `/api/v1/styles/:id` | `styles:write` | 删除自定义包（内置包受保护 → 403） |
+
+**读取契约（重要）**：GET 返回体中**顶层 `site` 是已与全局 `site_settings` 深合并的解析值**（未覆盖字段回落全局）；原始覆盖在 `data.style.site`（`null` = 跟随后台）。回写/编辑一律改 `data.style.site`，**禁止写顶层 `site`**（会把全局配置冻结进该包）。Agent 首选整体读写 `data.style`（style.json 完整对象）。
+
+**style.json 顶层键**：`$`(元数据) `design` `site` `header` `hero` `layouts` `footer` `features`。可 PATCH 根白名单：`site | design | header | footer | layouts | hero | features`（`$` 禁改）。常用覆盖字段：
+
+| 根 | 子字段 |
+|---|---|
+| `site` | `name` `description` `titleFormat` `copyright` `icp` `icpUrl` `poweredBy` `footerLogo` |
+| `hero` | `enabled` `size` `interval` `autoplay` `variant` `position` `height` `transition` `showCTA` `ctaButtons[]`（`{label:{zh,en},href,style}`）`overlay` |
+| `features` | `readingProgressBar` `backToTop` `welcomeOverlay` `languageSwitcher` `submenuEnabled` |
+| `footer.friendLinks` | `show` `source(table\|custom)` `maxItems` `columns` `items[]` |
+| `layouts.section.subcategory` | `enabled` `position(sidebar\|top\|tab\|none)` `style(pill\|card\|list\|grid)` `showCount` `columns` |
+
+**写示例：**
+
+```json
+// PATCH 单字段
+{ "path": "site.titleFormat", "value": "%s | MyBrand" }
+
+// PATCH 批量（原子，任一失败整体拒绝）
+{ "patch": [
+    { "path": "hero.enabled", "value": false },
+    { "path": "hero.interval", "value": 5 }
+] }
+
+// 批量中删除字段
+{ "patch": [ { "path": "site.poweredBy", "op": "delete" } ] }
+
+// 首页组件数组：在 index 2 插入命名 Banner
+PATCH /api/v1/styles/blog/homepage-sections
+{ "op": "insert", "index": 2, "element": { "component": "Banner", "id": "banner-1" } }
+
+// 整包 style 替换（保留 id 与元数据）
+PUT /api/v1/styles/:id
+{ "style": { "$": { "name": "..." }, "design": { "tokens": { ... } }, "header": { ... }, "layouts": { ... } } }
+```
+
+**安全**：包 id 正则 `^[a-z0-9-]+$`（防路径穿越）；PATCH 分根字段校验（header/layouts/footer/site/design）；所有写端点（create/update/patch/homepage-sections/scheme/activate/preview/restore/delete）均写 `audit_logs`（action `style_pack`，detail 含 `[id]` 与变更路径）。`site.*` 属「风格包级展示覆盖」（默认 null 由全局兜底），由 `styles:write` 管理，不越权 `settings:write`。
+
+---
+
 ## 客户端校验规则（token00-settings 脚本内置）
 
 - **enum**：非法值直接拒绝并提示可取值（如 `default_theme` ∉ 枚举）。
@@ -527,6 +593,12 @@ call("POST", "/statichtml/file", {
     "folder": "item1", "filename": "test1.html",
     "content": "<h1>Hello Static</h1>", "mimeType": "text/html"
 })
+
+# 风格包：列包 / 读单包 schema / 批量补丁 / 激活（需 styles:read|write）
+print(call("GET", "/styles"))
+print(call("GET", "/styles/blog/schema"))
+call("PATCH", "/styles/blog", {"patch": [{"path": "site.titleFormat", "value": "%s | MyBrand"}]})
+call("POST", "/styles/blog/activate", {})
 ```
 
 ---
@@ -547,3 +619,4 @@ call("POST", "/statichtml/file", {
 5. **用户操作需 superadmin**：`users:write` 仅 superadmin 可签发；创建用户 `role` 只能取 `user`。
 6. **value 一律字符串**：KV 表的 value 是字符串；JSON 结构设置请直接传 JSON 文本（脚本原样存储）。
 7. **未知 key 谨慎**：`PUT /site-settings` 会原样 upsert 任意 key，仅做 JSON 合法性提示；写入未知 key 前先确认命名。
+8. **风格包写入收敛**：改风格包前先 `GET /styles/:id` 备份当前 `style`；多字段改动用 PATCH `patch[]` 数组原子提交；`site.*` 仅在需要覆盖全局时才写入（默认 null 由全局 `site_settings` 兜底）；不要回写 GET 返回的顶层合并 `site`，只写 `style.site`。

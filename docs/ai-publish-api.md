@@ -1540,6 +1540,57 @@ requests.post(
 
 ---
 
+### 10. 风格包 styles（模板 AI 设置化，需 `styles:read` / `styles:write`）
+
+风格包 = 全站模板单文件配置（`style.json`：布局骨架 + 设计语言 + 全站可定制字段），每包另含 `ai-playbook.md`（设计约束说明书）。AI 经本组接口与后台可视化编辑等价地改模板。完整端点与字段表见 `docs/admin-api.md`「13. 风格包 styles」。
+
+**推荐读写序列（Agent 改包时照此执行）：**
+
+1. `GET /api/v1/styles`（`styles:read`）— 查看有哪些包、当前激活哪个
+2. `GET /api/v1/styles/:id/schema` — 读 JSON Schema，理解可配置字段与校验规则（勿凭记忆猜字段）
+3. `GET /api/v1/styles/:id/playbook` — 读该包 AI 设计约束（品牌调性/禁止项）
+4. `GET /api/v1/styles/:id` — 读当前完整配置。**原始覆盖在 `data.style.*`；顶层 `site` 是已与全局合并的解析值，禁止回写**
+5. 修改：`PATCH /:id`（`{patch:[{path,value},...]}` 批量原子）或 `PUT /:id`（`{style:{...}}` 整包替换）
+6. 验证：`GET /:id` 确认落盘 → `POST /:id/preview`（home/section 预览图）→ 确需全站生效再 `POST /:id/activate`
+
+**可 PATCH 根白名单**：`site | design | header | footer | layouts | hero | features`（`$` 元数据不可改）。`site.*` 默认 `null` = 跟随后台全局设置，仅在需要覆盖某字段时写入（titleFormat/footerLogo/copyright/icp/poweredBy…）。功能开关在 `features` 根（readingProgressBar/backToTop/welcomeOverlay/languageSwitcher/submenuEnabled）。Hero CTA 的 label 为双语对象：`{"label": {"zh": "...", "en": "..."}, "href": "/path", "style": "primary|outline|ghost"}`。
+
+**Python 示例：**
+
+```python
+import requests
+
+API_BASE = "https://your-domain.com/api/v1"
+TOKEN = "t00_sk_xxxxx"   # 需勾选 styles:read + styles:write
+H = {"Content-Type": "application/json", "Authorization": f"Bearer {TOKEN}"}
+
+# 1) 读 schema + 当前包
+print(requests.get(f"{API_BASE}/styles/blog/schema", headers=H).json())
+cur = requests.get(f"{API_BASE}/styles/blog", headers=H).json()["data"]
+
+# 2) 批量补丁：换 Hero CTA + 停阅读进度条（原子提交）
+r = requests.patch(f"{API_BASE}/styles/blog", headers=H, json={"patch": [
+    {"path": "hero.ctaButtons", "value": [
+        {"label": {"zh": "查看 AI 作品", "en": "View AI Works"}, "href": "/ai-works", "style": "primary"}
+    ]},
+    {"path": "features.readingProgressBar", "value": False},
+]})
+print(r.json())   # → {'success': True, 'data': {'id': 'blog', 'applied': 2, 'style': {...}}}
+
+# 3) 渲染预览图验证（可选；依赖服务器 playwright-core + Chrome）
+print(requests.post(f"{API_BASE}/styles/blog/preview", headers=H,
+                    json={"view": "home", "patches": [{"path": "features.readingProgressBar", "value": False}]}).json())
+# → {'success': True, 'data': {'imageUrl': '/styles/_preview/...png'}}
+
+# 4) 确认无误后激活生效
+print(requests.post(f"{API_BASE}/styles/blog/activate", headers=H).json())
+# → {'success': True, 'data': {'id': 'blog', 'message': '已激活风格包：blog'}}
+```
+
+> 改包动作全部记录 `audit_logs`；`site.*` 属风格包级展示覆盖（默认 null 由全局兜底），不构成越权。恢复出厂：`POST /styles/:id/restore`（仅内置包）。
+
+---
+
 ## 标题格式化
 
 标题支持 HTML 标签实现视觉增强效果：
@@ -1565,6 +1616,8 @@ requests.post(
 | `settings:write` | 修改系统设置 | 一般不需要 |
 | `statichtml:read` | 读取静态页面树/列表 | 一般不需要 |
 | `statichtml:write` | 创建/更新/删除/重命名静态页面文件与文件夹 | 发布配套静态资源时需要 |
+| `styles:read` | 读取风格包列表/单包配置/schema/playbook/diff | 改模板前读字段定义时需要 |
+| `styles:write` | 修改/新建/激活/预览/恢复风格包 | 模板 AI 设置化（改布局/配色/全站覆盖字段）时需要 |
 
 > **角色与所有权：** 即使拥有对应权限，`user` 角色的 Token 只能操作自己创建的文章（更新/删除）。`admin` / `superadmin` 角色可操作所有文章。
 >
@@ -1582,3 +1635,4 @@ requests.post(
 6. **Windows 环境**：使用 Node.js `fetch` 发送请求，避免 curl 中文乱码
 7. **错误恢复**：上传失败检查 `error` + `detail` 字段；400 类错误修正参数即可重试，500 类错误稍后重试
 8. **批量上传**：多张图片使用 `Promise.all` 并行上传，再统一发布文章
+9. **改包先读 schema**：改风格包前先 `GET /styles/:id/schema` + `/playbook`；多字段用 PATCH `patch[]` 原子提交；回写只动 `data.style.*`（顶层 `site` 是合并值，勿写）；`site.*` 仅在覆盖全局时才写，其余保持 null 兜底

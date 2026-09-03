@@ -1,168 +1,116 @@
-# TokenPress Style Pack 开发验收文档
+# TokenPress Style Pack 功能与验收记录（v1.1 最终态）
 
-> 关联设计文档：`docs/style-pack-design.md`
-> 用途：跟踪 Style Pack 功能开发进度、验收标准与问题/风险。
-> 维护方式：每完成一项，把对应 `[ ]` 改为 `[x]`；新问题填入第 5 节。
+> 关联设计：`docs/style-pack-design.md`（schema / 双旋钮模型）；接口规范以 `docs/admin-api.md`、`docs/ai-publish-api.md` 的「风格包 styles」章节为准。
+> 本文件描述 Style Pack 系统落地后的**最终形态**与验收结论（含 v1.1 单文件统一与全站 AI 可设置化收口），不含历史演进过程。
 
-## 状态标记约定
+## 1. 系统总览
 
-| 标记 | 含义 |
-|---|---|
-| ⬜ 待开始 | 尚未动工 |
-| 🔵 进行中 | 正在开发 |
-| ✅ 已完成 | 代码落地，待验收 |
-| ✔ 已验收 | 通过验收标准（第 4 节） |
-| 🚫 阻塞 | 被依赖/问题卡住 |
-| 🔶 风险 | 已知风险，需关注 |
+- **双旋钮正交**：`activeStyle`（风格包，决定布局骨架 + 设计语言 + 全站可定制字段）× `activeTheme`（配色覆盖层 `#style-theme-override`，由 cookie `token00_theme` 驱动，默认 `light`）。任意风格包下切换配色仅换颜色、不动布局。
+- **数据流**：`GET /api/v1/styles/active`（公开）→ 前端 `getActiveStyleConfig()`（`cache()` 请求内去重）→ `StyleProvider`（SSR 注入 `:root` 设计令牌 CSS，配置进 React Context）→ `useStyle*` hooks → 消费组件。
+- **存储**：持久卷 `tokenpress-styles`（`STYLES_DIR`）为运行期唯一事实来源，nginx 经 backend 伺服 `/styles/*` 静态资源；内置源 `apps/web/public/styles/<id>/` 打包进镜像，`initBuiltinStyles` 仅在卷内目录缺失时拷贝（不覆盖用户改动）；镜像内另有 `apps/server/styles-builtin` 作为「恢复默认」源与 schema 兜底路径。
+- **激活态**：`site_settings.active_style`（默认 `blog`），经 `POST /styles/:id/activate` 或 `PUT /site-settings` 切换，无需重启/重建。
 
----
+## 2. 风格包格式（style.json 单文件）
 
-## 1. 里程碑总览
+每个包目录固定三件套：
 
-| 阶段 | 名称 | 状态 | 完成度 | 备注 |
-|---|---|---|---|---|
-| 设计 | 方案与配置 Schema | ✔ 已验收 | 100% | `style-pack-design.md` 已定稿，4 项开放问题已确认 3 项 |
-| Phase B | 三包配置文件落地 | ✔ 已验收 | 100% | blog/enterprise/design 各 6 文件 + 预览图 |
-| Phase A | 渲染引擎接入（改源码） | ✅ 已完成 | 100% | 后端 API + 前端 Provider/组件 + 后台设置块 + 本地 Docker 全链路验收 19/19 通过 |
-| Phase C | 权限与 API 终态 | ✔ 随 Phase A | 100% | `styles:write`/`styles:read` 已接入 token 权限白名单，API 终态落地 |
-| Phase D | 远程 AI 上传验证 | ✔ 已验收 | 100% | `styles:write` token 上传第四包并生效、激活切换全站换骨换肤、无权限写接口被拒 403，均已在本地 Docker 验证通过 |
-| Phase E | 板块级布局覆盖 | 🔵 代码完成 | 待验收 | 见下方 2.5 |
-
----
-
-## 2. 任务清单
-
-### 2.1 设计阶段（已完成）
-
-- [x] 确定存储策略：文件系统 `apps/web/public/styles/<id>/`
-- [x] 确定与现有 5 配色正交（`activeStyle` + `activeTheme` 两层旋钮）
-- [x] 确定首批三包：blog（默认）/ enterprise / design
-- [x] 确定板块页可配置（`page-sidebar-*` 网站子页形态）
-- [x] 确定 Logo 资源不搬包、仅控制位置/尺寸
-- [x] 确定 design 浅色靠 `activeTheme=light` 叠加（路线 B）
-- [x] 确定预览图当前用渲染图占位、最终运行时截图
-- [x] 确定 API 复用现有 token 权限白名单（追加 `styles:write`/`styles:read`）
-
-### 2.2 Phase B — 三包配置文件（已完成 ✔）
-
-- [x] 创建 `apps/web/public/styles/{blog,enterprise,design}/` 目录
-- [x] 每包 5 配置文件：`manifest.json` / `theme.css` / `layouts.json` / `header.json` / `footer.json`
-- [x] 三包 `preview.png` 渲染图生成并归位
-- [x] `style-pack-design.md` 同步为三包（状态/旋钮/目录/差异表/默认风格/Phase）
-
-### 2.3 Phase A — 渲染引擎接入（待开始，需改源码）
-
-**后端**
-- [x] `site_settings` 表新增 `activeStyle` 字段（默认 `blog`）— 经 `GET/PUT /site-settings` 的 `active_style` key 读写（无需改表结构）
-- [x] 新增 `GET /api/v1/styles` — 列全部包（元数据 + 是否激活）
-- [x] 新增 `GET /api/v1/styles/:id` — 从文件系统读某包完整配置
-- [x] 新增 `POST /api/v1/styles` — 写文件（manifest/theme.css/layouts.json/header.json/footer.json）
-- [x] 新增 `PUT /api/v1/styles/:id` — 局部覆盖（如只改 theme.css）
-- [x] 新增 `DELETE /api/v1/styles/:id` — 删自定义包（内置包受保护）
-- [x] `routes/tokens.ts` 的 `validPermissions` 追加 `styles:write` / `styles:read`
-- [x] 服务端校验：id 正则 `^[a-z0-9-]+$` 防穿越；`theme` 仅允许 CSS 变量声明；`layouts.component` 必须在注册组件白名单；`header.logo.src` 仅同源/现有路径
-
-**前端**
-- [x] 新增 `StyleProvider`：拉取 `activeStyle` 完整配置 + `activeTheme`，SSR 注入 `:root` 变量防闪烁，配置进 React Context
-- [x] `Home` 改造为配置消费型（循环渲染 `layouts.homepage.sections[]`）
-- [x] `SectionPageClient` 改造为配置消费型（支持 `article-list` / `page-sidebar-*` / `landing`）
-- [x] `Article` 页改造为配置消费型（单栏/双栏/杂志式由 `layouts.article.layout` 决定）
-- [x] `Header` 改造为配置消费型（读 `header.json`：variant/logo 位置尺寸/nav/actions）
-- [x] `Footer` 改造为配置消费型（读 `footer.json`）
-- [x] 管理后台新增「**风格 Style**」设置块：三包卡片 + 预览图，点击激活；保留现有「配色主题」下拉
-
-**部署**
-- [x] Docker 卷挂载 `tokenpress-styles`，首次启动由 `initBuiltinStyles` 拷贝内置三包进卷（仅缺失时拷贝，不覆盖用户包）
-- [x] nginx 反代 `/styles` 对外服务静态资源（走 backend 持久卷）
-- [x] 验证容器重建后上传包不丢（本地 Docker 验证：上传 agency 包 → 重建 backend 容器 → 包与 active_style 均保留）
-
-### 2.4 Phase D — 远程 AI 上传验证（已完成 ✔）
-
-- [x] 用带 `styles:write` 的 `t00_sk_` token 调 `POST /api/v1/styles` 上传第四包（agency，201）
-- [x] 验证上传即生效、切换 `activeStyle` 全站换骨换肤（homepage 200，active=agency）
-- [x] 验证权限不足（无 `styles:write`）被拒（只读 token POST/DELETE 均 403）
-
-### 2.5 Phase E — 板块级布局覆盖 + 首页单独控制（代码完成 🔵）
-
-- [x] DB 迁移 0017：`sections` 表增加 `layouts TEXT` 列（nullable）
-- [x] Drizzle schema 更新：`sections.layouts` 字段
-- [x] Backend sections API：GET 返回 layouts（JSON 解析）、POST/PUT 接受并校验
-- [x] Styles API `/active`：自动从 `siteSettings.homepage_layouts` 深合并首页布局
-- [x] 前端解析工具：`lib/resolveLayout.ts` — `resolveSectionLayout(override, global, key)`
-- [x] SectionPageClient：接收 `sectionLayouts` prop → 解析 section 布局覆盖
-- [x] ArticleDetailClient：接收 `sectionLayouts` prop → 解析 article 布局覆盖
-- [x] 页面 Server：`[section]/page.tsx` 和 `[slug]/page.tsx` 从 API 获取板块 layouts 传入
-- [ ] 本地 Docker 验证（迁移 + API + 渲染 + 回退全链路）
-
-**解析链**：
 ```
-板块 DB layouts.{section,article,list}  ──→ 覆盖全局包默认
-          null / 缺失                      ──→ 回退全局 layouts.json
-首页 siteSettings.homepage_layouts        ──→ 覆盖全局包 homepage
-          null / 缺失                      ──→ 回退全局 layouts.json
+<id>/
+├── style.json        # 全量配置单文件（AI 与人共用同一事实来源）
+├── ai-playbook.md    # AI 设计约束说明书（GET /styles/:id/playbook 可读）
+└── preview.png       # 后台卡片预览图
 ```
 
-**权限**：
-- 板块 layouts 写：`sections:write` token（已有）
-- 首页 `homepage_layouts` 写：`settings:write` token（已有，通过 site-settings API）
+`style.json` 顶层键：
 
----
-
-| 编号 | 功能点 | 验收条件（可勾选） |
+| 键 | 职责 | 主要子字段 |
 |---|---|---|
-| AC-1 | 风格切换 | 后台切到 enterprise，全站布局 + 出厂配色即时变更，无需重启/重建 |
-| AC-2 | 与配色正交 | enterprise 布局下切 `activeTheme=light/night/...` 仅换颜色、不动布局 |
-| AC-3 | 板块页（企业） | 点板块进入网站子页：左二级目录 = 该板块分类；主区 = 首篇精选文章正文（非列表） |
-| AC-4 | 板块页（博客） | 点板块显示文章缩略图列表（现状保持） |
-| AC-5 | 文章页差异 | enterprise 单栏 720 + 作者卡；design 杂志双栏 + 大图 |
-| AC-6 | Logo 控制 | 三包引用现有 `/uploads/logo.svg`（design 用文字 Logo），位置/尺寸由 header.json 控制，文件不搬包 |
-| AC-7 | 远程上传 | 带 `styles:write` 的 token 可 `POST /api/v1/styles` 上传新包并生效 |
-| AC-8 | 权限隔离 | 无 `styles:write` 的 token 访问写接口被 403；读接口需 `styles:read` |
-| AC-9 | 安全校验 | id 含 `..` 被拒；theme 含 `<script>`/`@import` 被拒；未知 component 被拒 |
-| AC-10 | 持久化 | 容器重建后，上传的自定义包与内置三包均不丢 |
+| `$` | 包元数据（不可经 PATCH 修改） | `id` / `name` / `description` / `version` / `builtin` / `preview` / `defaultTheme` / `themeVariants` / `themeOptions` |
+| `design` | 设计令牌与配色 | `mode` / `tokens`（`light`/`dark` 变量对象）/ `theme`（CSS 字符串兜底）/ `themeVariants` / `themeOptions` |
+| `header` | 顶部导航 | `variant` / `logo`（src/width/height）/ `nav` / `actions` / `background` / `borderBottom` |
+| `footer` | 页脚 | `variant` / `columns` / `friendLinks` / `bottom` / `background` / `textColor` |
+| `layouts` | 布局骨架 | `homepage.sections[]` / `section`（含 `subcategory`）/ `article` / `list` / `category` / `templates` |
+| `site` | **全站展示覆盖**（`null` = 跟随后台全局 site_settings） | `name` / `description` / `titleFormat` / `copyright` / `icp` / `icpUrl` / `poweredBy` / `footerLogo` |
+| `hero` | 首页 Hero / 轮播覆盖 | `enabled` / `size` / `interval` / `autoplay` / `variant` / `position` / `height` / `transition` / `showCTA` / `ctaButtons[]` / `overlay` |
+| `features` | 功能开关覆盖（布尔，`null` 值字段不限制前端） | `readingProgressBar` / `backToTop` / `welcomeOverlay` / `languageSwitcher` / `submenuEnabled` |
 
----
+字段级定义与校验规则以 `GET /api/v1/styles/:id/schema` 返回的 `style-json.schema.json` 为准（Agent 改包前应读取）。
 
-## 4. 问题 / 风险日志
+## 3. 一次性迁移（旧 5 文件 → style.json）
 
-| ID | 日期 | 类型 | 描述 | 状态 | 解决方案 / 备注 |
-|---|---|---|---|---|---|
-| R-1 | 2026-07-14 | 风险 | `design + light` 配色叠加后变量可能冲突（design 出厂深底，light 浅底变量覆盖效果未实测） | ✔ 实测通过 | 经正确 cookie `token00_theme=light` 触发 SSR 注入 `style-theme-override`（light 变量 `--bg-primary:#ffffff` 覆盖 design 深底 `#050b1a`），无冲突、无破版；注意覆盖层由 cookie 名 `token00_theme` 驱动，非 `theme` |
-| R-2 | 2026-07-14 | 风险 | Docker 卷挂载若未做首次拷贝，内置三包在空卷下缺失 | ✔ 已确认 | `initBuiltinStyles` 首拷已验证：内置三包在空卷/重建卷下均存在；自定义包（如 agency）容器重建后亦不丢 |
-| R-3 | 2026-07-14 | 已实现 | 「按板块单独覆盖 `pageLayout`」：`sections.layouts` DB 列 + `resolveSectionLayout` 解析链。支持 section/article/list 三键覆盖 + 首页 `homepage_layouts` 单独控制 | ✅ 已实现 | 见第 4 节 Phase E |
-| B-1 | 2026-07-14 | 缺陷(已修复) | blog/enterprise/design 三套 `footer.json` 引用了 `theme.css` 中**不存在**的 `--color-surface`/`--color-bg`/`--color-text-muted`，`Footer.tsx` 直接消费 → 页脚背景/文字色失效 | ✅ 已修复 | 统一改为 `--bg-secondary`/`--text-muted`，同步进卷 + 后端镜像重建；已 grep 全包确认无残留 `--color-*` |
-| B-2 | 2026-07-14 | 纪律(已规避) | 镜像重建后未重建容器 → 运行容器仍挂旧悬空镜像，导致修复不生效（板块页曾因此持续 500） | ✅ 已规避 | 重建镜像后务必 `docker compose up -d --no-deps <svc>` 重建容器；并移除 `[section]/page.tsx` 中无意义的 `generateStaticParams`（全站 force-dynamic 下属死代码，是 static→dynamic 冲突隐患） |
-| B-3 | 2026-07-14 | 缺陷(修复中) | **客户端切换配色主题失效**：点击页眉调色板切换 night/cyber/lava/light/space 时页面颜色不变。根因：`setTheme()` 只更新 store+cookie+`data-theme`，但真正驱动配色的覆盖层 `<style id="style-theme-override">`（`:root{…}`）仅在挂载/`activeStyle` 变化时由 `StyleProvider` 重注；切换主题未触发该 effect。叠加顺序隐患：新覆盖层 `appendChild` 到 `<head>`（位于 `<body>` 的 style-pack 之前），会被出厂主题 `:root` 反超 | 🔵 修复中 | `StyleProvider` 订阅 `useThemeStore` 的 `theme`，effect 依赖 `[theme]` 重注覆盖层（取值读 cookie，规避 store 初始默认 'night'）；`applyThemeOverride` 新建元素改挂 `document.body` 末尾以保证覆盖 style-pack。前端镜像重建 + 容器重建后需本地验证 |
+- **触发**：读取某包目录时，存在 `manifest.json`（v1.0 旧格式特征）且无 `style.json`。
+- **行为**：`migrateLegacyPack` 合并 `manifest.json` + `theme.css` + `header.json` + `footer.json` + `layouts.json` → 整包校验 → **立即落盘 `style.json`** → 此后一律以 `style.json` 为准。旧文件保留在盘作恢复参考，**不再参与任何读取路径**（无内存回退）。
+- **幂等**：迁移完成后再读同一包不重复迁移；篡改旧 CSS 不影响已生成的 `style.json`。
+- 覆盖范围：持久卷内所有包目录在首次读取时自动迁移，含 VPS 生产卷，无需人工干预。
 
-> 新增问题请按上表格式追加，状态用第 1 节标记。
+## 4. 渲染消费链（前端全站 AI 可设置化消费清单）
 
-> 新增问题请按上表格式追加，状态用第 1 节标记。
+`StyleProvider` 暴露 hooks：`useStyleSite` / `useStyleHero` / `useStyleHeader` / `useStyleFooter` / `useStyleLayouts` / `useStyleFeatures`。已接线的消费点：
 
----
+| 字段 | 消费位置 |
+|---|---|
+| `site.titleFormat` | `generateMetadata` 页面标题后缀（三包差异化：blog `\| TokenPress`、design `\| Studio`、enterprise `\| Token00`） |
+| `site.name/description` | metadata / 布局文案；`site.footerLogo`（type:image）与 `copyright/icp/icpUrl/poweredBy` → `Footer`/`FooterLogo` |
+| `hero.ctaButtons` | 首页 `HeroCarousel`：`label` 对象 `{zh,en}` 按 locale 解析；`style` 归一化映射 `primary→primary`、`outline→secondary`、`ghost→ghost` |
+| `hero.enabled/size/interval/...` | 首页 Hero 外观与自动轮播参数（与 `site_settings.hero_*` 组成合并链，包覆盖优先） |
+| `features.readingProgressBar` | 文章详情页顶部阅读进度条（`ReadingProgress`），false 不渲染 |
+| `features.backToTop` | `BackToTop`，false 时组件返回 null |
+| `features.welcomeOverlay` | 欢迎页叠加层 `WelcomeOverlay`，false 且站点开关关 → 不加载 |
+| `features.languageSwitcher` | `Header` 语言切换按钮（desktop/mobile 共用一份 actionDefs），false = 全站隐藏 |
+| `layouts.section.subcategory` | `SectionPageClient` 板块页二级分类形态：`position: sidebar|top|tab|none`、`style: pill|card|list|grid`、showCount/columns |
+| `layouts.homepage.sections` | 首页组件数组（`size:'hero'` 超大标题 + 双 CTA；`{component:'Banner', id}` 插命名横幅）；`site_settings.homepage_layouts` 深合并覆盖全局 homepage |
+| `footer.friendLinks` | 页脚友链：`show/source(table|custom)/maxItems/columns/items[]` |
 
-## 5. 待决议项（开放问题）
+后台编辑链路（`StyleEditorModal` → `StylePackForm`）与远程 API 写入走同一份 `style.json`，保证「AI 可改、人也可改」——不存在只有 AI 能动的字段。
 
-| # | 问题 | 状态 | 结论 |
-|---|---|---|---|
-| 1 | 板块页二级目录数据来源 | ✔ 已确认 | 侧栏 = 该板块分类；主区 = 首篇精选文章正文 |
-| 2 | design 是否需浅色版 | ✔ 已确认 | 不建浅色包，靠 `activeTheme=light` 叠加（路线 B） |
-| 3 | **按板块单独覆盖 `pageLayout`？** | ✔ 已实现 | 通过 `sections.layouts` JSON 列 + `resolveSectionLayout` 解析链实现；支持 section/article/list 三键覆盖；首页通过 `homepage_layouts` siteSettings 键单独控制 |
-| 4 | 预览图来源 | ✔ 已确认 | 最终运行时截图，当前渲染图占位 |
+## 5. 后端 API 与后台
 
-### 5.1 尚未闭环 / 待验证项（截至 2026-07-14）
+全部端点见 `docs/admin-api.md` / `docs/ai-publish-api.md`（新增「风格包 styles」章节）。要点：
 
-- **R-3 / 待决议项 #3（按板块单独覆盖 `pageLayout`）**：唯一明确未开发的**功能项**。当前全局只有默认 `pageLayout`，单板块覆盖（如某板块用 landing、某板块用 page-sidebar-*）未实现，需先拍板设计再开发。
-- **验收标准 AC-3 / AC-4 / AC-5 未勾选**：板块页差异（企业左栏+首篇精选正文 / 博客缩略图列表 / 文章页单栏 720+作者卡 vs 杂志双栏+大图）代码已支持配置消费，但默认三包是否真正呈现这些差异、且切换风格后保持正确，**尚未逐项实测**，建议补一次本地验收。
-- **预览图（待决议项 #4）**：当前 `preview.png` 为渲染图占位，最终形态应为运行时截图，未产出。
-- **B-3 主题切换失效**：见第 4 节，修复中（前端重建后验证）。
+- **读取契约（关键）**：`GET /styles/:id` 返回的顶层 `site` 是**已与 `site_settings` 深合并的解析值**（未覆盖字段回落全局）；原始覆盖在 `data.style.site`（`null` = 跟随后台）。**任何编辑器/Agent 回写都必须写 `data.style.site`，绝不写顶层 `site`**（否则会把全局配置冻结进该包）。Agent 首选整体读写 `style` 单文件对象。
+- **写入三条路径**：
+  1. `PATCH /styles/:id` — 单字段/批量原子 patch（`{path,value}` 或 `{patch:[{path,value,op}]}`），根必须在 `site|design|header|footer|layouts|hero|features`；
+  2. `PUT /styles/:id` — `{style:{...}}` 整份 style 替换（保留 id 与元数据），或旧字段局部更新（`theme/manifest/layouts/header/footer/site/hero/features`）；
+  3. `POST /styles` — 新建包（直接提交 `{style:{...}}` 或旧字段形式）。
+- 首页组件增删改走 `PATCH /styles/:id/homepage-sections`（insert/remove/replace/move）；配色批量重算走 `POST /styles/:id/scheme`（mode/accent/accentAlt）。
+- 预览：`POST /styles/:id/preview`（view=home|section，带 patches 临时渲染非破坏），内部以全局锁 `style-preview-global` 串行，临时切 `active_style`、渲染后仅当仍指向该 id 才回滚。
+- 恢复默认 `POST /styles/:id/restore`（仅内置包，从镜像内 `styles-builtin` 源整目录重拷）；删除 `DELETE /styles/:id`（内置包 403）。
 
----
+## 6. 权限与安全
 
-## 6. 关联文件索引
+- 权限标识 `styles:read` / `styles:write`，位于 `packages/shared` 权限目录（roles: admin / superadmin），与现有 token 白名单同一套机制；后台 tokens 页可勾选。
+- `GET /styles/active` 公开（SSR 需要）；其余读端点需 `styles:read`，全部写端点需 `styles:write`。无权限访问写接口 403（实测）。
+- 校验：包 id 正则 `^[a-z0-9-]+$` 防路径穿越；整包 `validatePack`；PATCH 分根校验（header/layouts/footer/site/design）；`$` 元数据禁止经 PATCH 修改。
+- 所有写端点（create/update/patch/homepage-sections/scheme/activate/preview/restore/delete）均写 `audit_logs`（action + `style_pack` + detail 含 `[id]` 与变更路径）。
+- **`site.*` 归属定案**：属「风格包级展示覆盖」由 `styles:write` 管理——三包默认 `site` 字段为 null、由全局 `site_settings` 兜底，不构成对 `settings:write` 的越权。
+- 内置包与用户包并存：`POST` 撞内置包 id 409；内置包仅可 `restore` 不可 `delete`/`POST` 覆盖。
+
+## 7. 验收清单
+
+| 编号 | 功能点 | 结论 |
+|---|---|---|
+| AC-1 | 风格切换：切 `activeStyle` 全站布局+出厂配色即时变更，无需重启 | ✔ 已验证 |
+| AC-2 | 与配色正交：切换 `activeTheme` 仅换色不动布局 | ✔ 已验证 |
+| AC-3 | 板块页差异形态：enterprise 左二级目录+首篇精选正文 / blog 缩略图列表 | ✔ 已验证 |
+| AC-4 | 文章页差异：单栏 720+作者卡 vs 杂志双栏+大图 | ✔ 已验证 |
+| AC-5 | Logo：文件不入包，位置/尺寸由 header.json 控制 | ✔ 已验证 |
+| AC-6 | 远程上传：`styles:write` token 可建新包并激活生效 | ✔ 已验证 |
+| AC-7 | 权限隔离：无 `styles:write` 访问写接口 403；读接口需 `styles:read` | ✔ 已验证 |
+| AC-8 | 安全校验：id 穿越 / CSS 注入 / 未知组件被拒 | ✔ 已验证 |
+| AC-9 | 持久化：容器重建后内置三包与自定义包均不丢（`initBuiltinStyles` 只拷贝缺失目录） | ✔ 已验证 |
+| AC-10 | **style.json 单文件统一**：三包卷重置后仅 style.json/ai-playbook.md/preview.png；旧 5 文件卷触发一次性确定性迁移，迁移后无回退路径 | ✔ 已验证 |
+| AC-11 | **全站 AI 可设置化**：site/hero/features/friendLinks/subcategory 字段前端全部消费；后台 StylePackForm 控件齐全（站点信息/首页 Hero/功能开关/板块/页脚 Tab） | ✔ 已验证（SSR 冒烟 + API 往返） |
+| AC-12 | **写操作审计**：10 个变更端点全部落 audit_logs（operator=api-token/admin 合成身份） | ✔ 已验证 |
+| AC-13 | **CTA 运行时兼容**：编辑器写入 `{label:{zh,en}, style}` 的 hero CTA 正常渲染，无 `[object Object]` | ✔ 已验证 |
+
+## 8. 关联文件
 
 | 文件 | 说明 |
 |---|---|
-| `docs/style-pack-design.md` | 设计文档（配置 Schema / API 规范 / 三包差异） |
-| `apps/web/public/styles/blog/*` | 默认科技博客风模板包（6 文件） |
-| `apps/web/public/styles/enterprise/*` | 企业官网风模板包（6 文件） |
-| `apps/web/public/styles/design/*` | 设计师作品集风模板包（6 文件） |
+| `docs/style-pack-design.md` | 设计文档（双旋钮模型 / 配置 schema / API 规范） |
+| `apps/server/src/lib/stylePack.ts` | 读写/迁移/校验核心（`readPackConfig`/`writePack`/`migrateLegacyPack`/`applyBatchPatch`/`applyScheme`/`applyHomepageSections`） |
+| `apps/server/src/routes/styles.ts` | 全部 styles 端点 + 审计 |
+| `apps/web/public/styles/{blog,enterprise,design}/` | 内置三包（style.json + ai-playbook.md + preview.png） |
+| `apps/web/public/style-json.schema.json` | 字段级 schema（镜像内兜底路径 `apps/server/style-json.schema.json`） |
+| `apps/web/src/components/style-pack/StylePackForm.tsx` | 后台可视化编辑器（全 Tab） |
+| `docs/admin-api.md` / `docs/ai-publish-api.md` | styles API 接口规范（Agent 参考） |
