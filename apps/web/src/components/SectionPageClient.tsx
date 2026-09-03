@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { api } from '@/lib/api'
 import { ArticleCard } from './ArticleCard'
 import { Pagination } from './Pagination'
@@ -95,6 +96,66 @@ function ArticleListView({
   )
 }
 
+// ===== 二级分类导航（由风格包 section.subcategory 配置位置/样式）=====
+function SubcategoryNav({
+  sectionPath,
+  activeCategory,
+  categories,
+  config,
+}: {
+  sectionPath: string
+  activeCategory?: string
+  categories: any[]
+  config: any
+}) {
+  if (!categories || categories.length === 0) return null
+  const position = config.position || 'none'
+  // sidebar 位置在侧栏渲染，此处只处理 top / tab 行内导航
+  if (position !== 'top' && position !== 'tab') return null
+  const style = config.style || 'pill'
+  const showCount = config.showCount !== false
+
+  const linkCls = (isActive: boolean) => {
+    const base = 'transition-colors'
+    if (style === 'pill') {
+      return `${base} px-4 py-1.5 rounded-full text-sm ${
+        isActive ? 'bg-t-accent-blue text-white' : 'bg-t-bg-tertiary text-t-text-secondary hover:bg-t-hover hover:text-t-text-primary'
+      }`
+    }
+    if (style === 'card') {
+      return `${base} px-4 py-3 rounded-xl border ${
+        isActive ? 'border-t-accent-blue bg-t-accent-blue/10 text-t-accent-blue' : 'border-t-border bg-t-bg-secondary text-t-text-secondary hover:text-t-text-primary'
+      }`
+    }
+    // list / grid 默认线性
+    return `${base} px-3 py-1.5 rounded-lg text-sm ${
+      isActive ? 'text-t-accent-blue bg-t-accent-blue/10' : 'text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover'
+    }`
+  }
+
+  return (
+    <div className={`max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8 ${position === 'tab' ? 'pt-6' : 'pt-4'}`}>
+      <div className={`flex flex-wrap gap-2 ${style === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : ''}`}>
+        <Link href={sectionPath} className={linkCls(!activeCategory)}>
+          <span>{'全部'}</span>
+        </Link>
+        {categories.map((cat: any) => {
+          const catSlug = String(cat.slug || cat.id)
+          const isActive = activeCategory === catSlug
+          return (
+            <Link key={cat.id} href={`${sectionPath}?category=${catSlug}`} className={linkCls(isActive)}>
+              <span>{cat.name}</span>
+              {showCount && cat.articleCount !== undefined && (
+                <span className={`ml-1.5 text-xs ${isActive ? 'opacity-80' : 'text-t-text-muted'}`}>({cat.articleCount})</span>
+              )}
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function SectionPageClient({
   section,
   sectionPath,
@@ -156,6 +217,8 @@ export function SectionPageClient({
   const heroCfg: any = pageCfg.hero || {}
   const sidebarCfg: any = pageCfg.sidebar || {}
   const listCfg: any = pageCfg.list || {}
+  // 二级分类配置（风格包 section.subcategory：位置 sidebar/top/tab/none，样式 pill/card/list/grid）
+  const subcategoryCfg: any = pageCfg.subcategory || {}
   const heroTitle = heroCfg.titleFrom === 'section'
     ? title
     : heroCfg.titleFrom === 'category'
@@ -413,6 +476,16 @@ export function SectionPageClient({
             </div>
           </div>
         </div>
+      )}
+
+      {/* 二级分类导航（风格包 section.subcategory.position: top/tab） */}
+      {subcategoryCfg.enabled !== false && (
+        <SubcategoryNav
+          sectionPath={sectionPath}
+          activeCategory={category}
+          categories={catsData?.data || []}
+          config={subcategoryCfg}
+        />
       )}
 
       {/* 内容区：

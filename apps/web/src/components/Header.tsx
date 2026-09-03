@@ -16,7 +16,7 @@ import {
   MessageSquare, Send, Github, Bot, Code, Compass, Droplet, Waves, Newspaper,
   Info, PenTool, Layout, Folder, Flame, Rocket,
 } from 'lucide-react'
-import { useStyleHeader, useStyleThemeOptions } from '@/components/StyleProvider'
+import { useStyleHeader, useStyleSite, useStyleThemeOptions, useStyleFeatures } from '@/components/StyleProvider'
 import { BUILTIN_THEME_OPTIONS } from '@/lib/themePalettes'
 import { Logo } from '@/components/Logo'
 
@@ -88,11 +88,16 @@ function iconForSection(
   name: string,
   slug?: string,
   iconMap?: Record<string, string>,
+  showIcons = true,
 ): string | undefined {
-  if (iconMap) {
+  if (!showIcons) return undefined
+  // 模板包显式配置了 nav.icons：仅用其指定图标，不再走关键词兜底（避免不合时宜的自动图标）
+  if (iconMap && Object.keys(iconMap).length > 0) {
     if (slug && iconMap[slug]) return iconMap[slug]
     if (name && iconMap[name]) return iconMap[name]
+    return undefined
   }
+  // 未配置 nav.icons 的回退：按板块名关键词推断
   const n = (name || '').toLowerCase()
   for (const { kw, icon } of SECTION_ICON_KEYWORDS) {
     if (n.includes(kw.toLowerCase())) return icon
@@ -533,6 +538,7 @@ export function Header() {
   const isLoggedIn = !!user
 
   const hc = useStyleHeader() || {}
+  const site = useStyleSite() || {}
   const variant: string = hc.variant || 'sticky-solid'
   const navCfg = hc.nav || {}
   const navStyle: string = navCfg.style || 'underline'
@@ -542,7 +548,12 @@ export function Header() {
   const logoPosition: string = hc.logo?.position || 'left'
 
   // 模板包定义的操作按钮（未定义时回退经典集合）
-  const actionDefs: HeaderAction[] = Array.isArray(hc.actions) ? hc.actions : CLASSIC_ACTIONS
+  // features.languageSwitcher === false → 从全部渲染位点（桌面/移动）剔除语言切换按钮
+  const styleFeatures = useStyleFeatures() || {}
+  const langActionOn = styleFeatures.languageSwitcher !== false
+  const actionDefs: HeaderAction[] = (Array.isArray(hc.actions) ? (hc.actions as HeaderAction[]) : CLASSIC_ACTIONS).filter(
+    (a: HeaderAction) => !(a.type === 'language' && !langActionOn),
+  )
 
   // 导航颜色：组装为 CSS 变量，注入到导航根，供 .nav-item 读取
   const navColors = hc.nav?.colors || {}
@@ -597,13 +608,13 @@ export function Header() {
           externalUrl: s.externalUrl,
         }))
 
-  // Fetch site name from settings
+  // Fetch site name from settings（风格包 site.name 覆盖优先）
   const { data: siteSettingsData } = useQuery({
     queryKey: ['site-settings'],
     queryFn: () => api.get('/site-settings'),
     staleTime: 5 * 60 * 1000,
   })
-  const siteName = siteSettingsData?.data?.site_name
+  const siteName = site.name ?? siteSettingsData?.data?.site_name
 
   // Hide header on admin pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
@@ -641,8 +652,9 @@ export function Header() {
       ? '1px solid rgba(0,212,255,0.22)'
       : (hc.borderBottom || '1px solid var(--border-color)')
 
-  // 容器背景/边框
-  const headerStyle: React.CSSProperties = { ...navVarStyle, background: barBackground, borderBottom: barBorder }
+  // 容器背景/边框；非透明栏时顶部加一道风格包强调色细线，让不同风格包的导航条一眼可辨
+  const headerTopAccent: string | undefined = isTransparent ? undefined : '3px solid var(--accent-blue)'
+  const headerStyle: React.CSSProperties = { ...navVarStyle, background: barBackground, borderBottom: barBorder, borderTop: headerTopAccent }
 
   const DesktopNav = (
     <nav className={`hidden md:flex items-center gap-1.5 ${navAlign === 'left' ? 'justify-start' : navAlign === 'center' ? 'justify-center flex-1' : 'justify-end'}`}>
@@ -698,6 +710,7 @@ export function Header() {
           ...navVarStyle,
           background: leftBg,
           borderColor: leftBorder,
+          borderTop: '3px solid var(--accent-blue)',
         }}
       >
         <div className="h-16 flex items-center justify-center px-3 border-b" style={{ borderColor: leftBorder }}>

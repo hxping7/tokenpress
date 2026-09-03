@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useStyleFeatures } from '@/components/StyleProvider'
 
 const SEEN_KEY = 'token00_welcome_seen'
 
@@ -12,20 +13,23 @@ interface WelcomeOverlayProps {
 /**
  * 首页欢迎页遮罩：首次访问（按浏览器 localStorage 记忆）展示科幻欢迎页。
  * 欢迎页内点「进入」会通过 postMessage({type:'welcome:close'}) 通知此处关闭。
+ * 需同时满足：站点设置 welcome 开启 且 风格包 features.welcomeOverlay !== false。
  */
 export function WelcomeOverlay({ enabled, htmlPath }: WelcomeOverlayProps) {
   const [show, setShow] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const closedByUser = useRef(false)
+  const features = useStyleFeatures() || {}
+  const featureOn = features.welcomeOverlay !== false
 
   useEffect(() => {
-    if (!enabled || !htmlPath) return
+    if (!enabled || !featureOn || !htmlPath) return
     let seen = false
     try {
       seen = localStorage.getItem(SEEN_KEY) === '1'
     } catch {}
     if (!seen && !closedByUser.current) setShow(true)
-  }, [enabled, htmlPath])
+  }, [enabled, featureOn, htmlPath])
 
   useEffect(() => {
     const onMsg = (e: MessageEvent) => {

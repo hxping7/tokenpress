@@ -51,6 +51,7 @@ export const API_PERMISSION_CATALOG: ApiPermissionDef[] = [
   { value: 'categories:write', labelKey: 'tokens.permCategoriesWrite', roles: ['superadmin', 'admin'], category: 'site' },
   { value: 'friendlinks:write', labelKey: 'tokens.permFriendlinksWrite', roles: ['superadmin', 'admin'], category: 'site' },
   { value: 'styles:write', labelKey: 'tokens.permStylesWrite', roles: ['superadmin', 'admin'], category: 'site' },
+  { value: 'styles:read', labelKey: 'tokens.permStylesRead', roles: ['superadmin', 'admin'], category: 'site' },
   // 运营与审核
   { value: 'reviews:write', labelKey: 'tokens.permReviewsWrite', roles: ['superadmin', 'admin'], category: 'moderation' },
   { value: 'keywords:write', labelKey: 'tokens.permKeywordsWrite', roles: ['superadmin', 'admin'], category: 'moderation' },

@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FooterLogo } from '@/components/FooterLogo'
 import { api } from '@/lib/api'
 import { useLocaleStore } from '@/stores'
-import { useStyleFooter } from '@/components/StyleProvider'
+import { useStyleFooter, useStyleSite } from '@/components/StyleProvider'
 import { t } from '@/lib/i18n'
 import { useSiteSettings } from '@/lib/useSiteSettings'
 
@@ -45,6 +45,8 @@ export function Footer() {
 
   // Style Pack 覆盖（必须在早期 return 前调用，遵守 Hooks 规则）
   const fc = useStyleFooter()
+  // 站点信息覆盖（风格包 site + site_settings 全局默认合并结果）
+  const site = useStyleSite() || {}
 
   // Hide footer on admin and auth pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
@@ -55,10 +57,10 @@ export function Footer() {
   const settings = settingsData?.data || {}
   const footerNavStr = settings.footer_nav
   const footerNavColumns = parseInt(settings.footer_nav_columns || '4', 10)
-  const poweredBy = settings.powered_by || ''
-  const copyrightText = settings.copyright_text || `© ${new Date().getFullYear()} TokenPress. All rights reserved.`
-  const icpNumber = settings.icp_number
-  const icpUrl = settings.icp_url || 'https://beian.miit.gov.cn/'
+  const poweredBy = site.poweredBy ?? settings.powered_by ?? ''
+  const copyrightText = site.copyright ?? settings.copyright_text ?? `© ${new Date().getFullYear()} TokenPress. All rights reserved.`
+  const icpNumber = site.icp ?? settings.icp_number
+  const icpUrl = site.icpUrl ?? settings.icp_url ?? 'https://beian.miit.gov.cn/'
 
   // Parse footer nav from settings (grouped format)
   let footerNav: FooterNavGroup[] = []
@@ -105,10 +107,22 @@ export function Footer() {
     ]
   }
 
-  const activeFriendLinks = friendLinks.filter((l) => l.isActive && l.name && l.url).map((l) => ({
-    ...l,
-    url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}`,
-  }))
+  const activeFriendLinks = (() => {
+    // 风格包 footer.friendLinks 控制是否展示/数据源/自定义
+    const fl = fc?.friendLinks || {}
+    if (fl.show === false) return []
+    if (fl.source === 'custom' && Array.isArray(fl.items)) {
+      return fl.items
+        .filter((l: any) => l && l.name && l.url)
+        .slice(0, fl.maxItems || 20)
+        .map((l: any) => ({ id: `custom-${l.url}`, name: l.name, url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}` }))
+    }
+    // 默认：读 friend_links 表
+    return friendLinks
+      .filter((l) => l.isActive && l.name && l.url)
+      .slice(0, fl.maxItems || 20)
+      .map((l) => ({ ...l, url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}` }))
+  })()
 
   // 极简 Footer（设计师作品集包）
   if (fc?.variant === 'minimal') {
@@ -184,7 +198,7 @@ export function Footer() {
           {activeFriendLinks.length > 0 && (
             <div className="mt-8 pt-6 border-t border-t-border">
               <div className="flex flex-wrap gap-x-6 gap-y-2">
-                {activeFriendLinks.map((link) => (
+                {activeFriendLinks.map((link: { id: string; name: string; url: string }) => (
                   <a
                     key={link.id}
                     href={link.url}

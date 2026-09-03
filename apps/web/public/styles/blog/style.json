@@ -1,0 +1,214 @@
+{
+  "$": {
+    "id": "blog",
+    "name": "科技博客（默认）",
+    "description": "经典科技博客布局：毛玻璃吸顶 Header、左文右图 Hero、文章网格 + 右侧栏板块、双栏文章页。",
+    "version": "1.1.0",
+    "author": "token00",
+    "preview": "/styles/blog/preview.png",
+    "builtin": true,
+    "defaultTheme": "light",
+    "tags": ["blog", "default", "tech"]
+  },
+
+  "design": {
+    "mode": "light",
+    "tokens": {
+      "--bg-primary": "#ffffff",
+      "--bg-secondary": "#f5f5f7",
+      "--bg-tertiary": "#e8e8ed",
+      "--text-primary": "#1d1d1f",
+      "--text-secondary": "#3a3a3f",
+      "--text-muted": "#8a8a8f",
+      "--accent-blue": "#0ea5e9",
+      "--accent-purple": "#6366f1",
+      "--accent-blue-dim": "#0284c7",
+      "--border-color": "rgba(0,0,0,0.12)",
+      "--hover-bg": "rgba(14,165,233,0.06)",
+      "--gradient-from": "#0ea5e9",
+      "--gradient-via": "#38bdf8",
+      "--gradient-to": "#6366f1",
+      "--grid-pattern": "transparent",
+      "--selection-bg": "rgba(14,165,233,0.2)",
+      "--scrollbar-thumb": "rgba(14,165,233,0.25)",
+      "--scrollbar-thumb-hover": "rgba(14,165,233,0.45)",
+      "--focus-ring": "rgba(14,165,233,0.5)",
+      "--card-border-hover": "rgba(14,165,233,0.3)",
+      "--section-divider": "rgba(14,165,233,0.15)",
+      "--btn-glow-from": "transparent",
+      "--btn-glow-to": "transparent",
+      "--content-max-width": "1200px",
+      "--reading-max-width": "720px",
+      "--header-height": "64px",
+      "--brand-font": "Inter, PingFang SC, system-ui, sans-serif",
+      "--radius-card": "14px",
+      "--shadow-card": "0 1px 3px rgba(0,0,0,0.06)"
+    },
+    "theme": ":root{\n  --bg-primary:#ffffff;\n  --bg-secondary:#f5f5f7;\n  --bg-tertiary:#e8e8ed;\n  --text-primary:#1d1d1f;\n  --text-secondary:#3a3a3f;\n  --text-muted:#8a8a8f;\n  --accent-blue:#0ea5e9;\n  --accent-purple:#6366f1;\n  --accent-blue-dim:#0284c7;\n  --border-color:rgba(0,0,0,0.12);\n  --hover-bg:rgba(14,165,233,0.06);\n  --gradient-from:#0ea5e9;\n  --gradient-via:#38bdf8;\n  --gradient-to:#6366f1;\n  --content-max-width:1200px;\n  --reading-max-width:720px;\n  --header-height:64px;\n  --brand-font:\"Inter\",\"PingFang SC\",system-ui,sans-serif;\n  --radius-card:14px;\n  --shadow-card:0 1px 3px rgba(0,0,0,0.06);\n}"
+  },
+
+  "site": {
+    "name": null,
+    "description": null,
+    "titleFormat": "%s | TokenPress",
+    "copyright": null,
+    "icp": null,
+    "icpUrl": null,
+    "poweredBy": null,
+    "footerLogo": null
+  },
+
+  "header": {
+    "variant": "sticky-solid",
+    "height": 64,
+    "logo": {
+      "type": "image",
+      "src": "/logo-dark.svg",
+      "srcLight": "/logo-light.svg",
+      "text": "TokenPress",
+      "position": "left",
+      "height": 36,
+      "link": "/"
+    },
+    "nav": {
+      "source": "sections",
+      "align": "left",
+      "style": "underline",
+      "icons": {
+        "token_plan": "command",
+        "githubhots": "github",
+        "ai_coding": "code",
+        "ai_works": "image",
+        "ai_info": "newspaper",
+        "blog": "book",
+        "design-works": "penTool"
+      },
+      "colors": {
+        "text": "#3a3a3f",
+        "hoverBg": "rgba(14,165,233,0.08)",
+        "hoverText": "#1d1d1f",
+        "activeBg": "#0ea5e9",
+        "activeText": "#ffffff",
+        "barBg": "transparent",
+        "barText": "#1d1d1f"
+      }
+    },
+    "actions": [
+      { "type": "theme", "icon": "palette", "style": "icon" },
+      { "type": "language", "icon": "globe", "style": "ghost", "label": { "zh": "中文", "en": "EN" } },
+      { "type": "admin", "icon": "dashboard", "style": "outline", "showWhen": "loggedIn" },
+      { "type": "logout", "icon": "logout", "style": "ghost", "showWhen": "loggedIn" },
+      { "type": "login", "icon": "user", "style": "outline", "showWhen": "loggedOut" }
+    ],
+    "background": "#ffffff",
+    "borderBottom": "1px solid rgba(0,0,0,0.08)"
+  },
+
+  "hero": {
+    "enabled": true,
+    "position": "before-content",
+    "variant": "carousel",
+    "size": "standard",
+    "height": "60vh",
+    "autoplay": true,
+    "interval": 5,
+    "transition": "slide",
+    "overlay": { "enabled": true, "color": "rgba(0,0,0,0.25)" },
+    "showCTA": true,
+    "ctaButtons": []
+  },
+
+  "layouts": {
+    "homepage": {
+      "container": "boxed",
+      "sections": [
+        { "component": "Hero", "variant": "carousel", "props": { "autoplay": true } },
+        { "component": "Banner", "variant": "cta", "id": "home_main" },
+        { "component": "ArticleList", "variant": "grid-3", "props": { "source": "latest", "limit": 9 } },
+        { "component": "Banner", "variant": "cta", "id": "home_bottom" }
+      ]
+    },
+    "section": {
+      "layout": "page-sidebar-right",
+      "hero": { "enabled": false },
+      "sidebar": { "enabled": true, "sticky": true },
+      "list": { "layout": "grid", "columns": 3, "showThumbnail": true, "showExcerpt": true },
+      "subcategory": {
+        "enabled": true,
+        "position": "sidebar",
+        "style": "list",
+        "columns": 3,
+        "showCount": true
+      }
+    },
+    "article": {
+      "layout": "two-column",
+      "showTOC": true,
+      "showAuthor": true,
+      "sidebar": "related",
+      "maxWidth": 720
+    },
+    "list": { "layout": "grid", "columns": 3 },
+    "category": {
+      "layout": "page-sidebar-right",
+      "hero": { "enabled": true, "titleFrom": "category", "showCover": false, "description": true },
+      "sidebar": { "enabled": true, "sticky": true },
+      "list": { "layout": "grid", "columns": 3, "showThumbnail": true, "showExcerpt": true },
+      "subcategory": {
+        "enabled": true,
+        "position": "sidebar",
+        "style": "list",
+        "showCount": true
+      }
+    },
+    "templates": {
+      "article-list": { "columns": 1, "gap": "1rem", "showThumbnail": true, "showExcerpt": true, "cardStyle": "clean" },
+      "article-grid": { "columns": 3, "gap": "1.5rem", "aspectRatio": "16/10", "showThumbnail": true, "showExcerpt": true, "cardStyle": "bordered" },
+      "article-masonry": { "columns": 2, "gap": "1rem", "aspectRatio": "auto", "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
+      "magazine": { "columns": 3, "gap": "1.5rem", "showThumbnail": true, "showExcerpt": true, "cardStyle": "bordered" },
+      "single-page": { "maxWidth": 760, "centered": true },
+      "link-wall": { "columns": 4, "gap": "0.75rem", "pill": true },
+      "design-gallery": { "columns": 3, "gap": "1rem", "aspectRatio": "4/3", "cardStyle": "clean" }
+    }
+  },
+
+  "footer": {
+    "variant": "multi-column",
+    "columns": [
+      { "title": "导航", "links": [
+        { "label": "首页", "href": "/" },
+        { "label": "博客", "href": "/blog" },
+        { "label": "AI 编程", "href": "/ai-coding" },
+        { "label": "设计师作品", "href": "/design-works" }
+      ] },
+      { "title": "资源", "links": [
+        { "label": "GitHub 热门", "href": "/githubhots" },
+        { "label": "资源导航", "href": "/resources" },
+        { "label": "灵感瀑布", "href": "/inspiration" },
+        { "label": "科技杂志", "href": "/tech-magazine" }
+      ] },
+      { "title": "关于", "links": [
+        { "label": "关于我们", "href": "/about" },
+        { "label": "友情链接", "href": "/links" },
+        { "label": "Token 计划", "href": "/token-plan" }
+      ] }
+    ],
+    "friendLinks": {
+      "show": true,
+      "source": "table",
+      "items": [],
+      "maxItems": 20
+    },
+    "bottom": { "copyright": "© 2026 Token00 · 让 Token 的力量无限放大", "social": ["github", "wechat"], "showBackToTop": true },
+    "background": "var(--bg-secondary)",
+    "textColor": "var(--text-muted)"
+  },
+
+  "features": {
+    "submenuEnabled": true,
+    "readingProgressBar": true,
+    "backToTop": true,
+    "welcomeOverlay": true,
+    "languageSwitcher": "icon"
+  }
+}

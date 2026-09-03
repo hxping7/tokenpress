@@ -4,13 +4,16 @@ import { useId } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSiteSettings } from '@/lib/useSiteSettings'
+import { useStyleSite } from '@/components/StyleProvider'
 
 export function FooterLogo() {
+  // 风格包 site.footerLogo 覆盖优先；否则读 site_settings.footer_logo
+  const site = useStyleSite() || {}
   // Fetch custom footer logo from settings（与全站设置共用去重后的单一请求）
   const { data: settingsData } = useSiteSettings()
   const uid = useId().replace(/:/g, '')
 
-  const customLogo = settingsData?.data?.footer_logo
+  const customLogo = site.footerLogo?.src ?? settingsData?.data?.footer_logo
 
   // If custom logo URL is set, use it（用户专属 logo 优先级最高，固定显示）
   if (customLogo) {

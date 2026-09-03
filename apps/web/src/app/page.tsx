@@ -31,6 +31,21 @@ interface HeroResult {
   ctaButtons: HeroCtaButton[]
 }
 
+// 读取当前激活风格包的 hero 配置（CTA 卡片/形态/高度），供首页 Hero 覆盖
+async function getStyleHero(): Promise<any | null> {
+  try {
+    const baseUrl = typeof window === 'undefined'
+      ? `${process.env.BACKEND_URL || 'http://localhost:4001'}`
+      : ''
+    const res = await fetch(`${baseUrl}/api/v1/styles/active`, { cache: 'no-store' })
+    if (!res.ok) return null
+    const json = await res.json()
+    return json?.data?.hero || null
+  } catch {
+    return null
+  }
+}
+
 // ISR: 每 60 秒重新生成
 export const dynamic = 'force-dynamic'
 export const revalidate = 60
@@ -190,24 +205,34 @@ function HeroFallback() {
 
 export default async function HomePage() {
   const [
-    { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons },
+    { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons: settingsCta },
     homeBanners,
     recentArticles,
     welcomePage,
+    styleHero,
   ] = await Promise.all([
     getHeroSlides(),
     getHomeBanners(),
     getRecentArticles(),
     getWelcomePage(),
+    getStyleHero(),
   ])
+
+  // 风格包 hero 配置覆盖：CTA 卡片/尺寸/轮播间隔优先于 site_settings
+  const heroCfg = styleHero || {}
+  const ctaButtons: HeroCtaButton[] = Array.isArray(heroCfg.ctaButtons) && heroCfg.ctaButtons.length > 0
+    ? heroCfg.ctaButtons
+    : settingsCta
+  const finalHeroSize = typeof heroCfg.size === 'string' && heroCfg.size ? heroCfg.size : heroSize
+  const finalInterval = Number(heroCfg.interval) || heroInterval
 
   return (
     <>
       <WelcomeOverlay enabled={welcomePage.enabled} htmlPath={welcomePage.htmlPath} />
       <HomeSections
         heroSlides={heroSlides}
-        heroSize={heroSize}
-        heroInterval={heroInterval}
+        heroSize={finalHeroSize}
+        heroInterval={finalInterval}
         ctaButtons={ctaButtons}
         recentArticles={recentArticles}
         homeBanners={homeBanners}

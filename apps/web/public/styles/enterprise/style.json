@@ -1,0 +1,212 @@
+{
+  "$": {
+    "id": "enterprise",
+    "name": "科技企业官网",
+    "description": "商务科技企业风格：纯黑主色、方形卡片、顶部单图 Hero + 双 CTA、左侧边栏 + 标签切换二级分类、单栏文章页 + 顶部大图、四列页脚。",
+    "version": "1.1.0",
+    "author": "token00",
+    "preview": "/styles/enterprise/preview.png",
+    "builtin": true,
+    "defaultTheme": "light",
+    "tags": ["enterprise", "corporate", "business"]
+  },
+
+  "design": {
+    "mode": "light",
+    "tokens": {
+      "--bg-primary": "#ffffff",
+      "--bg-secondary": "#f7f7f8",
+      "--bg-tertiary": "#ececee",
+      "--text-primary": "#0a0a0a",
+      "--text-secondary": "#3a3a3f",
+      "--text-muted": "#8a8a8f",
+      "--accent-blue": "#111111",
+      "--accent-purple": "#444444",
+      "--accent-blue-dim": "#000000",
+      "--border-color": "rgba(0,0,0,0.12)",
+      "--hover-bg": "rgba(17,17,17,0.06)",
+      "--gradient-from": "#111111",
+      "--gradient-via": "#444444",
+      "--gradient-to": "#111111",
+      "--grid-pattern": "transparent",
+      "--selection-bg": "rgba(17,17,17,0.15)",
+      "--scrollbar-thumb": "rgba(17,17,17,0.25)",
+      "--scrollbar-thumb-hover": "rgba(17,17,17,0.45)",
+      "--focus-ring": "rgba(17,17,17,0.5)",
+      "--card-border-hover": "rgba(17,17,17,0.3)",
+      "--section-divider": "rgba(17,17,17,0.15)",
+      "--btn-glow-from": "transparent",
+      "--btn-glow-to": "transparent",
+      "--content-max-width": "1280px",
+      "--reading-max-width": "820px",
+      "--header-height": "72px",
+      "--brand-font": "Inter, PingFang SC, system-ui, sans-serif",
+      "--radius-card": "4px",
+      "--shadow-card": "0 4px 14px rgba(0,0,0,0.08)"
+    },
+    "theme": ":root{\n  --bg-primary:#ffffff;\n  --bg-secondary:#f7f7f8;\n  --bg-tertiary:#ececee;\n  --text-primary:#0a0a0a;\n  --text-secondary:#3a3a3f;\n  --text-muted:#8a8a8f;\n  --accent-blue:#111111;\n  --accent-purple:#444444;\n  --accent-blue-dim:#000000;\n  --border-color:rgba(0,0,0,0.12);\n  --hover-bg:rgba(17,17,17,0.06);\n  --gradient-from:#111111;\n  --gradient-via:#444444;\n  --gradient-to:#111111;\n  --content-max-width:1280px;\n  --reading-max-width:820px;\n  --header-height:72px;\n  --brand-font:\"Inter\",\"PingFang SC\",system-ui,sans-serif;\n  --radius-card:4px;\n  --shadow-card:0 4px 14px rgba(0,0,0,0.08);\n}"
+  },
+
+  "site": {
+    "name": null,
+    "description": null,
+    "titleFormat": "%s | Token00",
+    "copyright": null,
+    "icp": null,
+    "icpUrl": null,
+    "poweredBy": null,
+    "footerLogo": null
+  },
+
+  "header": {
+    "variant": "sticky-solid",
+    "height": 72,
+    "logo": {
+      "type": "text",
+      "text": "Token00",
+      "position": "left",
+      "height": 32,
+      "link": "/"
+    },
+    "nav": {
+      "source": "sections",
+      "align": "right",
+      "style": "plain",
+      "icons": {},
+      "colors": {
+        "text": "#3a3a3f",
+        "hoverBg": "rgba(17,17,17,0.06)",
+        "hoverText": "#0a0a0a",
+        "activeBg": "#111111",
+        "activeText": "#ffffff",
+        "barBg": "#ffffff",
+        "barText": "#0a0a0a"
+      }
+    },
+    "actions": [
+      { "type": "language", "icon": "globe", "style": "ghost", "label": { "zh": "中文", "en": "EN" } },
+      { "type": "theme", "icon": "palette", "style": "icon" },
+      { "type": "admin", "icon": "dashboard", "style": "outline", "showWhen": "loggedIn" },
+      { "type": "logout", "icon": "logout", "style": "ghost", "showWhen": "loggedIn" },
+      { "type": "login", "icon": "user", "style": "primary", "showWhen": "loggedOut" }
+    ],
+    "background": "#ffffff",
+    "borderBottom": "1px solid rgba(0,0,0,0.08)"
+  },
+
+  "hero": {
+    "enabled": true,
+    "position": "before-content",
+    "variant": "standard",
+    "size": "standard",
+    "height": "70vh",
+    "autoplay": true,
+    "interval": 5,
+    "transition": "fade",
+    "overlay": { "enabled": true, "color": "rgba(0,0,0,0.35)" },
+    "showCTA": true,
+    "ctaButtons": [
+      { "label": { "zh": "预约演示", "en": "Book a Demo" }, "href": "/about", "style": "primary" },
+      { "label": { "zh": "查看产品", "en": "View Products" }, "href": "/blog", "style": "outline" }
+    ]
+  },
+
+  "layouts": {
+    "homepage": {
+      "container": "full",
+      "sections": [
+        { "component": "Hero", "variant": "standard" },
+        { "component": "Features", "variant": "3-col-cards" },
+        { "component": "Banner", "id": "home_main", "variant": "cta" },
+        { "component": "CTA", "variant": "banner" },
+        { "component": "ArticleList", "variant": "grid-2", "props": { "source": "latest", "limit": 6 } }
+      ]
+    },
+    "section": {
+      "layout": "page-sidebar-left",
+      "hero": { "enabled": true, "titleFrom": "section", "showCover": true, "description": true },
+      "sidebar": { "enabled": true, "sticky": true },
+      "list": { "layout": "grid", "columns": 2, "showThumbnail": true, "showExcerpt": true, "cardStyle": "shadow" },
+      "subcategory": {
+        "enabled": true,
+        "position": "top",
+        "style": "pill",
+        "columns": 3,
+        "showCount": true
+      }
+    },
+    "article": {
+      "layout": "single",
+      "showTOC": true,
+      "showAuthor": false,
+      "sidebar": "related",
+      "maxWidth": 820,
+      "hero": "cover"
+    },
+    "list": { "layout": "grid", "columns": 2 },
+    "category": {
+      "layout": "page-sidebar-left",
+      "hero": { "enabled": true, "titleFrom": "category", "showCover": true, "description": true },
+      "sidebar": { "enabled": true, "sticky": true },
+      "list": { "layout": "grid", "columns": 2, "showThumbnail": true, "showExcerpt": true, "cardStyle": "shadow" },
+      "subcategory": {
+        "enabled": true,
+        "position": "top",
+        "style": "pill",
+        "showCount": true
+      }
+    },
+    "templates": {
+      "article-list": { "columns": 1, "gap": "1rem", "showThumbnail": true, "showExcerpt": true, "cardStyle": "shadow" },
+      "article-grid": { "columns": 2, "gap": "1.5rem", "aspectRatio": "16/9", "showThumbnail": true, "showExcerpt": true, "cardStyle": "shadow" },
+      "article-masonry": { "columns": 2, "gap": "1rem", "aspectRatio": "auto", "showThumbnail": true, "showExcerpt": true, "cardStyle": "shadow" },
+      "magazine": { "columns": 2, "gap": "1.5rem", "showThumbnail": true, "showExcerpt": true, "cardStyle": "shadow" },
+      "single-page": { "maxWidth": 820, "centered": true },
+      "link-wall": { "columns": 4, "gap": "0.75rem", "pill": false },
+      "design-gallery": { "columns": 3, "gap": "1rem", "aspectRatio": "4/3", "cardStyle": "shadow" }
+    }
+  },
+
+  "footer": {
+    "variant": "multi-column",
+    "columns": [
+      { "title": "产品", "links": [
+        { "label": "Token 计划", "href": "/token-plan" },
+        { "label": "AI 编程", "href": "/ai-coding" },
+        { "label": "AI 作品", "href": "/ai-works" }
+      ] },
+      { "title": "解决方案", "links": [
+        { "label": "企业服务", "href": "/enterprise" },
+        { "label": "技术博客", "href": "/blog" },
+        { "label": "资源导航", "href": "/resources" }
+      ] },
+      { "title": "公司", "links": [
+        { "label": "关于我们", "href": "/about" },
+        { "label": "联系我们", "href": "/contact" },
+        { "label": "加入我们", "href": "/careers" }
+      ] },
+      { "title": "支持", "links": [
+        { "label": "帮助中心", "href": "/help" },
+        { "label": "合作伙伴", "href": "/partners" },
+        { "label": "友情链接", "href": "/links" }
+      ] }
+    ],
+    "friendLinks": {
+      "show": false,
+      "source": "table",
+      "items": [],
+      "maxItems": 20
+    },
+    "bottom": { "copyright": "© 2026 Token00 · 专注 AI 与 Token 科技", "social": ["github", "wechat"], "showBackToTop": true },
+    "background": "#0a0a0a",
+    "textColor": "#e5e5e5"
+  },
+
+  "features": {
+    "submenuEnabled": true,
+    "readingProgressBar": true,
+    "backToTop": true,
+    "welcomeOverlay": true,
+    "languageSwitcher": "icon"
+  }
+}

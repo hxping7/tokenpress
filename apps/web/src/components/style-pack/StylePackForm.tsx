@@ -38,15 +38,20 @@ export type StyleDraft = {
   layouts: any
   header: any
   footer: any
+  site?: any
+  hero?: any
+  features?: any
 }
 
 const TABS = [
   { key: 'basic', label: '基本信息' },
+  { key: 'site', label: '站点信息' },
   { key: 'theme', label: '配色主题' },
   { key: 'variants', label: '配色方案' },
   { key: 'nav', label: '全局导航' },
   { key: 'icons', label: '导航图标' },
   { key: 'home', label: '首页' },
+  { key: 'features', label: '功能开关' },
   { key: 'section', label: '板块' },
   { key: 'category', label: '分类' },
   { key: 'article', label: '内容' },
@@ -74,6 +79,61 @@ export function StylePackForm({
 
   const updateManifest = (k: string, v: any) =>
     onChange({ ...draft, manifest: { ...draft.manifest, [k]: v } })
+
+  // ===== 站点信息覆盖（空值 → null = 跟随后台全局设置）=====
+  const siteRaw: any = draft.site && typeof draft.site === 'object' ? draft.site : {}
+  const siteFl: any = siteRaw.footerLogo && typeof siteRaw.footerLogo === 'object' ? siteRaw.footerLogo : null
+  const setSiteVal = (k: string, v: string) => set(`site.${k}`, v.trim() === '' ? null : v)
+  const patchSiteFl = (patch: any) => {
+    const base = siteFl || { type: 'image' }
+    const next = { ...base, ...patch }
+    if (!next.src) {
+      set('site.footerLogo', null)
+      return
+    }
+    set('site.footerLogo', next)
+  }
+
+  // ===== 行为特性开关 =====
+  const feats: any = draft.features && typeof draft.features === 'object' ? draft.features : {}
+  const langMode: string =
+    typeof feats.languageSwitcher === 'string' && feats.languageSwitcher ? feats.languageSwitcher : 'icon'
+  const setFeat = (k: string, v: any) => set(`features.${k}`, v)
+
+  // ===== Home Hero 配置 =====
+  const heroCfg: any = draft.hero && typeof draft.hero === 'object' ? draft.hero : {}
+  const heroCtas: any[] = Array.isArray(heroCfg.ctaButtons) ? heroCfg.ctaButtons : []
+  const writeCtas = (next: any[]) => set('hero.ctaButtons', next)
+  const ctaLabelVal = (c: any, lang: 'zh' | 'en') => {
+    const l = c?.label
+    if (typeof l === 'string') return lang === 'zh' ? l : ''
+    if (l && typeof l === 'object') return l[lang] || ''
+    return ''
+  }
+  const updateCtaLabel = (i: number, lang: 'zh' | 'en', v: string) => {
+    const c = heroCtas[i] || {}
+    const cur = c.label && typeof c.label === 'object' ? { ...c.label } : {}
+    cur[lang] = v
+    const zh = (cur.zh || '').trim()
+    const en = (cur.en || '').trim()
+    const label = zh || en ? { zh, en } : ''
+    writeCtas(heroCtas.map((x, idx) => (idx === i ? { ...x, label } : x)))
+  }
+  const updateHeroCta = (i: number, patch: any) =>
+    writeCtas(heroCtas.map((c, idx) => (idx === i ? { ...c, ...patch } : c)))
+  const removeHeroCta = (i: number) => writeCtas(heroCtas.filter((_, idx) => idx !== i))
+
+  // ===== 页脚友链（footer.friendLinks）=====
+  const footerRaw: any = draft.footer && typeof draft.footer === 'object' ? draft.footer : {}
+  const flCfg: any = footerRaw.friendLinks && typeof footerRaw.friendLinks === 'object' ? footerRaw.friendLinks : {}
+  const flItems: any[] = Array.isArray(flCfg.items) ? flCfg.items : []
+  const setFlCfg = (patch: any) => set('footer.friendLinks', { ...flCfg, ...patch })
+  const setFlItem = (i: number, k: 'name' | 'url', v: string) => {
+    const arr = flItems.map((it, idx) => (idx === i ? { ...it, [k]: v } : it))
+    setFlCfg({ items: arr })
+  }
+  const addFlItem = () => setFlCfg({ items: [...flItems, { name: '', url: '' }] })
+  const removeFlItem = (i: number) => setFlCfg({ items: flItems.filter((_, idx) => idx !== i) })
 
   // ===== 首页 section 数组编辑 =====
   const homeSections: any[] = get('layouts.homepage.sections', []) || []
@@ -205,6 +265,63 @@ export function StylePackForm({
                 ] as any}
               />
             </Field>
+          </>
+        )}
+
+        {tab === 'site' && (
+          <>
+            <Field
+              label="标题格式 titleFormat"
+              desc="全站 <title> 模板，%s 为文章标题占位。留空为默认「%s | TokenPress」。如：%s | Token00"
+            >
+              <TextInput value={siteRaw.titleFormat || ''} onChange={(v) => set('site.titleFormat', v)} placeholder="%s | TokenPress" />
+            </Field>
+            <div className="border-t border-t-border pt-4">
+              <p className="text-sm font-medium text-t-text-primary mb-1">站点信息覆盖</p>
+              <p className="text-xs text-t-text-muted mb-3">以下字段留空 = 跟随后台「系统设置」中的全局值，不写死进本模板包。</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="站点名称" desc="覆盖全局站名（导航/页脚 Logo 文字等）">
+                  <TextInput value={siteRaw.name || ''} onChange={(v) => setSiteVal('name', v)} placeholder="跟随后台设置" />
+                </Field>
+                <Field label="站点描述" desc="SEO description 覆盖">
+                  <TextInput value={siteRaw.description || ''} onChange={(v) => setSiteVal('description', v)} placeholder="跟随后台设置" />
+                </Field>
+                <Field label="版权信息 copyright">
+                  <TextInput value={siteRaw.copyright || ''} onChange={(v) => setSiteVal('copyright', v)} placeholder="跟随后台设置" />
+                </Field>
+                <Field label="ICP 备案号">
+                  <TextInput value={siteRaw.icp || ''} onChange={(v) => setSiteVal('icp', v)} placeholder="跟随后台设置" />
+                </Field>
+                <Field label="ICP 链接">
+                  <TextInput value={siteRaw.icpUrl || ''} onChange={(v) => setSiteVal('icpUrl', v)} placeholder="https://beian.miit.gov.cn/" />
+                </Field>
+                <Field label="技术支持署名 poweredBy">
+                  <TextInput value={siteRaw.poweredBy || ''} onChange={(v) => setSiteVal('poweredBy', v)} placeholder="跟随后台设置" />
+                </Field>
+              </div>
+            </div>
+            <div className="border-t border-t-border pt-4">
+              <p className="text-sm font-medium text-t-text-primary mb-1">自定义页脚 Logo</p>
+              <p className="text-xs text-t-text-muted mb-3">覆盖站点设置里的全局页脚 Logo；src 须为本站相对路径（以 / 开头）。</p>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-t-text-secondary">启用自定义页脚 Logo</span>
+                <Toggle
+                  value={!!siteFl?.src}
+                  onChange={(on) => (on ? set('site.footerLogo', { type: 'image', src: '/uploads/logo-footer.svg', height: 36 }) : set('site.footerLogo', null))}
+                  labelOn="开" labelOff="关"
+                />
+              </div>
+              {siteFl?.src && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Field label="图片路径" desc="例：/uploads/logo-footer.svg">
+                    <TextInput value={siteFl.src || ''} onChange={(v) => patchSiteFl({ src: v.trim() })} placeholder="/uploads/…" />
+                  </Field>
+                  <Field label="高度" desc="展示高度（px）">
+                    <NumberInput value={Number(siteFl.height || 36)} onChange={(v) => patchSiteFl({ height: v })} min={12} max={120} suffix="px" />
+                  </Field>
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -401,6 +518,136 @@ export function StylePackForm({
 
         {tab === 'home' && (
           <>
+            <div className="border border-t-border rounded-xl p-4 space-y-4 bg-t-bg-secondary/30">
+              <p className="text-sm font-medium text-t-text-primary">Hero 轮播配置（hero）</p>
+              <p className="text-xs text-t-text-muted -mt-3">
+                size / interval / CTA 按钮即时生效并优先于后台轮播设置；variant / position / height / overlay 为预置展示配置，供后续视觉形态使用。
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Hero 总开关">
+                  <Toggle value={heroCfg.enabled !== false} onChange={(v) => set('hero.enabled', v)} labelOn="开" labelOff="关" />
+                </Field>
+                <Field label="尺寸 size" desc="占位宽/全宽等；「跟随后台」回落到站点设置的轮播尺寸">
+                  <SelectInput
+                    value={typeof heroCfg.size === 'string' ? heroCfg.size : ''}
+                    onChange={(v) => set('hero.size', v)}
+                    options={[
+                      { value: '', label: '跟随后台设置（默认）' },
+                      { value: 'standard', label: '标准（1280px 容器）' },
+                      { value: 'wide', label: '宽屏（1536px）' },
+                      { value: 'ultrawide', label: '超宽（1920px）' },
+                      { value: 'full', label: '全宽（100%）' },
+                      { value: 'fullscreen', label: '全宽（兼容旧值）' },
+                    ] as any}
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Field label="展示形态 variant" desc="预置：轮播/标准/左右分栏/纯图等">
+                  <SelectInput
+                    value={typeof heroCfg.variant === 'string' ? heroCfg.variant : 'carousel'}
+                    onChange={(v) => set('hero.variant', v)}
+                    options={[
+                      { value: 'carousel', label: '轮播' },
+                      { value: 'standard', label: '标准' },
+                      { value: 'split-left', label: '左分栏' },
+                      { value: 'split-right', label: '右分栏' },
+                      { value: 'image-only', label: '纯图片' },
+                      { value: 'none', label: '无' },
+                    ] as any}
+                  />
+                </Field>
+                <Field label="版面位置 position">
+                  <SelectInput
+                    value={typeof heroCfg.position === 'string' ? heroCfg.position : 'before-content'}
+                    onChange={(v) => set('hero.position', v)}
+                    options={[
+                      { value: 'before-content', label: '内容之前' },
+                      { value: 'after-content', label: '内容之后' },
+                      { value: 'floating', label: '悬浮' },
+                    ] as any}
+                  />
+                </Field>
+                <Field label="切换动画 transition">
+                  <SelectInput
+                    value={typeof heroCfg.transition === 'string' ? heroCfg.transition : 'slide'}
+                    onChange={(v) => set('hero.transition', v)}
+                    options={[
+                      { value: 'slide', label: '滑动' },
+                      { value: 'fade', label: '淡入淡出' },
+                    ] as any}
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="轮播间隔" desc="秒。仅轮播时生效">
+                  <NumberInput value={Number(heroCfg.interval) || 5} onChange={(v) => set('hero.interval', v)} min={1} max={60} suffix="秒" />
+                </Field>
+                <Field label="高度" desc="CSS 高度，如 60vh / 520px（预置）">
+                  <TextInput value={typeof heroCfg.height === 'string' ? heroCfg.height : ''} onChange={(v) => set('hero.height', v)} placeholder="60vh" />
+                </Field>
+                <Field label="自动播放 autoplay">
+                  <Toggle value={heroCfg.autoplay !== false} onChange={(v) => set('hero.autoplay', v)} labelOn="开" labelOff="关" />
+                </Field>
+                <Field label="显示 CTA 按钮 showCTA">
+                  <Toggle value={heroCfg.showCTA !== false} onChange={(v) => set('hero.showCTA', v)} labelOn="开" labelOff="关" />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="遮罩 overlay">
+                  <div className="flex items-center gap-3">
+                    <Toggle value={heroCfg.overlay?.enabled !== false} onChange={(v) => set('hero.overlay.enabled', v)} labelOn="开" labelOff="关" />
+                  </div>
+                </Field>
+                <Field label="遮罩颜色" desc="rgba / hex，如 rgba(0,0,0,0.25)">
+                  <TextInput
+                    value={typeof heroCfg.overlay?.color === 'string' ? heroCfg.overlay.color : ''}
+                    onChange={(v) => set('hero.overlay.color', v)}
+                    placeholder="rgba(0,0,0,0.25)"
+                  />
+                </Field>
+              </div>
+              {heroCfg.showCTA !== false && (
+                <div className="border-t border-t-border pt-3">
+                  <p className="text-xs text-t-text-muted mb-2">
+                    CTA 按钮：不配置则回落到站点设置；label 支持中英双语，style 为按钮形态（primary 实色 / outline 描边 / ghost 幽灵）。
+                  </p>
+                  <div className="space-y-2">
+                    {heroCtas.length === 0 && (
+                      <p className="text-xs text-t-text-muted">尚未配置 CTA，将使用站点设置中的按钮。</p>
+                    )}
+                    {heroCtas.map((c: any, i: number) => (
+                      <div key={i} className="border border-t-border rounded-lg p-3 space-y-2 bg-t-bg-secondary/40">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <TextInput value={ctaLabelVal(c, 'zh')} onChange={(v) => updateCtaLabel(i, 'zh', v)} placeholder="按钮文字（中文）" />
+                          <TextInput value={ctaLabelVal(c, 'en')} onChange={(v) => updateCtaLabel(i, 'en', v)} placeholder="Button label (EN)" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <TextInput value={c.href || ''} onChange={(v) => updateHeroCta(i, { href: v })} placeholder="/token-plan 或 https://…" />
+                          <SelectInput
+                            value={c.style || 'primary'}
+                            onChange={(v) => updateHeroCta(i, { style: v })}
+                            options={[
+                              { value: 'primary', label: '实色主按钮' },
+                              { value: 'outline', label: '描边' },
+                              { value: 'ghost', label: '幽灵文字' },
+                            ] as any}
+                          />
+                          <button onClick={() => removeHeroCta(i)} className="shrink-0 px-2.5 py-1.5 text-xs rounded-lg bg-t-hover text-red-400 hover:text-red-300">✕</button>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => writeCtas([...heroCtas, { label: { zh: '', en: '' }, href: '/', style: 'primary' }])}
+                      className="px-3 py-1.5 text-sm rounded-lg border border-t-accent-blue/60 text-t-accent-blue hover:bg-t-accent-blue/10"
+                    >
+                      + 添加 CTA 按钮
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Field
               label="首页区块顺序"
               desc="首页由这些区块按顺序组成。调整顺序或移除，右侧实时预览会随之变化。"
@@ -440,6 +687,46 @@ export function StylePackForm({
                 </Field>
               ) : null,
             )}
+          </>
+        )}
+
+        {tab === 'features' && (
+          <>
+            <p className="text-xs text-t-text-muted -mt-2">
+              全站行为开关。默认值 = 关闭留空 / 跟随各组件默认；改动即时生效（需保存并应用后刷新前台）。
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="阅读进度条" desc="文章详情页顶部 3px 进度条（需 true 才显示）">
+                <Toggle value={feats.readingProgressBar === true} onChange={(v) => setFeat('readingProgressBar', v)} labelOn="开" labelOff="关" />
+              </Field>
+              <Field label="回到顶部按钮" desc="右下角回顶浮动按钮（false 时隐藏）">
+                <Toggle value={feats.backToTop !== false} onChange={(v) => setFeat('backToTop', v)} labelOn="开" labelOff="关" />
+              </Field>
+              <Field label="欢迎页" desc="全屏欢迎动画遮罩（还需在后台开启欢迎页并配置路径）">
+                <Toggle value={feats.welcomeOverlay !== false} onChange={(v) => setFeat('welcomeOverlay', v)} labelOn="开" labelOff="关" />
+              </Field>
+              <Field label="二级菜单" desc="预置：Header 悬停下拉（当前 Header 尚无该 UI，仅保留标识）">
+                <Toggle value={feats.submenuEnabled !== false} onChange={(v) => setFeat('submenuEnabled', v)} labelOn="开" labelOff="关" />
+              </Field>
+            </div>
+            <div className="border-t border-t-border pt-4">
+              <p className="text-sm font-medium text-t-text-primary mb-1">语言切换按钮</p>
+              <p className="text-xs text-t-text-muted mb-3">false = 全站隐藏语言切换入口；开启后可选择显示形态（当前版本仅区分开关，形态供后续细化）。</p>
+              <div className="flex items-center gap-4 flex-wrap">
+                <Toggle value={feats.languageSwitcher !== false} onChange={(on) => setFeat('languageSwitcher', on ? langMode : false)} labelOn="显示" labelOff="隐藏" />
+                {feats.languageSwitcher !== false && (
+                  <SelectInput
+                    value={langMode}
+                    onChange={(v) => setFeat('languageSwitcher', v)}
+                    options={[
+                      { value: 'icon', label: '仅图标' },
+                      { value: 'label', label: '图标 + 语言名' },
+                      { value: 'full', label: '完整' },
+                    ] as any}
+                  />
+                )}
+              </div>
+            </div>
           </>
         )}
 
@@ -500,6 +787,57 @@ export function StylePackForm({
                 <NumberInput value={Number(get(`layouts.${scope}.list.columns`, 3))} onChange={(v) => set(`layouts.${scope}.list.columns`, v)} min={1} max={4} />
               </Field>
             </div>
+            {scope === 'section' && (
+              <div className="border-t border-t-border pt-4 mt-2">
+                <p className="text-sm font-medium text-t-text-primary mb-1">二级分类导航（subcategory）</p>
+                <p className="text-xs text-t-text-muted mb-3">在板块页内展示该板块下属分类。位置 tab/top 渲染为顶部胶囊/标签导航；sidebar 渲染在侧栏；none 关闭。</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Field label="启用二级分类导航">
+                    <Toggle
+                      value={get('layouts.section.subcategory.enabled', true) !== false}
+                      onChange={(v) => (v ? set('layouts.section.subcategory.enabled', true) : set('layouts.section.subcategory.enabled', false))}
+                      labelOn="开" labelOff="关"
+                    />
+                  </Field>
+                  {get('layouts.section.subcategory.enabled', true) !== false && (
+                    <>
+                      <Field label="展示位置">
+                        <SelectInput
+                          value={get('layouts.section.subcategory.position', 'top')}
+                          onChange={(v) => set('layouts.section.subcategory.position', v)}
+                          options={[
+                            { value: 'top', label: '顶部横条' },
+                            { value: 'tab', label: '内容区上方标签' },
+                            { value: 'sidebar', label: '侧栏' },
+                            { value: 'none', label: '不展示' },
+                          ] as any}
+                        />
+                      </Field>
+                      <Field label="样式">
+                        <SelectInput
+                          value={get('layouts.section.subcategory.style', 'pill')}
+                          onChange={(v) => set('layouts.section.subcategory.style', v)}
+                          options={[
+                            { value: 'pill', label: '胶囊' },
+                            { value: 'card', label: '卡片' },
+                            { value: 'list', label: '列表' },
+                            { value: 'grid', label: '网格' },
+                          ] as any}
+                        />
+                      </Field>
+                      <Field label="显示文章数">
+                        <Toggle value={!!get('layouts.section.subcategory.showCount', false)} onChange={(v) => set('layouts.section.subcategory.showCount', v)} labelOn="开" labelOff="关" />
+                      </Field>
+                      {get('layouts.section.subcategory.style', 'pill') === 'grid' && (
+                        <Field label="网格列数">
+                          <NumberInput value={Number(get('layouts.section.subcategory.columns', 4))} onChange={(v) => set('layouts.section.subcategory.columns', v)} min={1} max={6} />
+                        </Field>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
@@ -603,11 +941,63 @@ export function StylePackForm({
         )}
 
         {tab === 'foot' && (
-          <Field label="页脚（footer.json）" desc="页脚结构配置（导航、版权、社交等），JSON 格式。">
-            <TextArea value={draft.footer ? JSON.stringify(draft.footer, null, 2) : ''} onChange={(v) => {
-              try { onChange({ ...draft, footer: v.trim() ? JSON.parse(v) : null }) } catch { /* ignore */ }
-            }} rows={10} />
-          </Field>
+          <>
+            <div className="border border-t-border rounded-xl p-4 space-y-4 bg-t-bg-secondary/30">
+              <p className="text-sm font-medium text-t-text-primary">友链展示（footer.friendLinks）</p>
+              <p className="text-xs text-t-text-muted -mt-3">仅控制页脚是否展示友链及数据来源，不在此存数据本身。</p>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-t-text-secondary">页脚展示友链</span>
+                <Toggle value={flCfg.show !== false} onChange={(v) => setFlCfg({ show: v })} labelOn="展示" labelOff="隐藏" />
+              </div>
+              {flCfg.show !== false && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Field label="数据来源">
+                      <SelectInput
+                        value={flCfg.source || 'table'}
+                        onChange={(v) => setFlCfg({ source: v })}
+                        options={[
+                          { value: 'table', label: '后台友链表' },
+                          { value: 'custom', label: '自定义列表' },
+                        ] as any}
+                      />
+                    </Field>
+                    <Field label="最多展示数">
+                      <NumberInput value={Number(flCfg.maxItems || 20)} onChange={(v) => setFlCfg({ maxItems: v })} min={1} max={100} />
+                    </Field>
+                    <Field label="列数">
+                      <NumberInput value={Number(flCfg.columns || 4)} onChange={(v) => setFlCfg({ columns: v })} min={1} max={6} />
+                    </Field>
+                  </div>
+                  {flCfg.source === 'custom' && (
+                    <div className="border-t border-t-border pt-3">
+                      <p className="text-xs text-t-text-muted mb-2">自定义友链条目（每项 name + url）：</p>
+                      <div className="space-y-2">
+                        {flItems.map((it: any, i: number) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <TextInput value={it.name || ''} onChange={(v) => setFlItem(i, 'name', v)} placeholder="名称，如 TokenPress" />
+                            <TextInput value={it.url || ''} onChange={(v) => setFlItem(i, 'url', v)} placeholder="https://…" />
+                            <button onClick={() => removeFlItem(i)} className="shrink-0 px-2.5 py-1.5 text-xs rounded-lg bg-t-hover text-red-400 hover:text-red-300">✕</button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={addFlItem}
+                          className="px-3 py-1.5 text-sm rounded-lg border border-t-accent-blue/60 text-t-accent-blue hover:bg-t-accent-blue/10"
+                        >
+                          + 添加友链
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <Field label="页脚完整 JSON（footer.json）" desc="导航分组、版权、社交、背景色等完整结构；此处为高级编辑，改动会覆盖上方友链配置。">
+              <TextArea value={draft.footer ? JSON.stringify(draft.footer, null, 2) : ''} onChange={(v) => {
+                try { onChange({ ...draft, footer: v.trim() ? JSON.parse(v) : null }) } catch { /* ignore */ }
+              }} rows={10} />
+            </Field>
+          </>
         )}
       </div>
     </div>

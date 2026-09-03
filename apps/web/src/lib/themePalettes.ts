@@ -75,6 +75,16 @@ export const BUILTIN_THEME_OPTIONS: { key: string; labelZh: string; labelEn: str
   { key: 'space', labelZh: '太空深蓝', labelEn: 'Space Blue', color: '#4488ff' },
 ]
 
+// 品牌/强调色变量：必须由风格包 theme.css 决定，内置配色叠加层（activeTheme）不得覆盖。
+// 否则一旦用户切换内置主题（night/cyber/lava/space），所有风格包会变成同一种强调色，无法区分。
+// 内置主题只负责背景 / 明暗模式（--bg-*、--text-* 等），强调色始终跟随当前风格包。
+const PACK_ACCENT_RE =
+  /(?:--accent-blue|--accent-purple|--accent-blue-dim|--gradient-from|--gradient-via|--gradient-to|--btn-glow-from|--btn-glow-to|--grid-pattern):[^;]*;/g
+
+function stripPackAccentVars(css: string): string {
+  return css.replace(PACK_ACCENT_RE, '')
+}
+
 // 解析某配色主题的 CSS：优先内置 5 套，其次风格包自定义 themeVariants
 export function resolveThemePalette(
   theme: string | null,
@@ -82,10 +92,10 @@ export function resolveThemePalette(
 ): string | null {
   if (!theme) return null
   const builtin = getThemePalette(theme)
-  if (builtin) return builtin
+  if (builtin) return stripPackAccentVars(builtin)
   if (themeVariants && typeof themeVariants === 'object') {
     const v = themeVariants[theme]
-    if (typeof v === 'string' && v.trim()) return v
+    if (typeof v === 'string' && v.trim()) return stripPackAccentVars(v)
   }
   return null
 }

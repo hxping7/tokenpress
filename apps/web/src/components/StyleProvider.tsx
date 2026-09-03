@@ -13,6 +13,12 @@ export interface StyleConfig {
   footer: any
   // 风格包自定义可切换配色（key -> :root{...} CSS）
   themeVariants?: Record<string, string> | null
+  // 站点信息覆盖（含与 site_settings 全局默认合并后的结果）
+  site?: Record<string, any> | null
+  // Hero 配置（variant/position/ctaButtons/height）
+  hero?: any
+  // 行为特性（readingProgressBar/submenuEnabled 等）
+  features?: Record<string, any> | null
 }
 
 const DEFAULT_CONFIG: StyleConfig = {
@@ -23,6 +29,9 @@ const DEFAULT_CONFIG: StyleConfig = {
   header: null,
   footer: null,
   themeVariants: null,
+  site: null,
+  hero: null,
+  features: null,
 }
 
 const StyleContext = createContext<StyleConfig>(DEFAULT_CONFIG)
@@ -117,4 +126,19 @@ export function useStyleThemeOptions(): { key: string; labelZh: string; labelEn:
 // 风格包自定义配色 CSS（key -> CSS）
 export function useStyleThemeVariants(): Record<string, string> | null {
   return useContext(StyleContext).themeVariants || null
+}
+
+// 站点信息（风格包 site 覆盖 + site_settings 全局默认合并后的结果）
+export function useStyleSite(): Record<string, any> | null {
+  return useContext(StyleContext).site || null
+}
+
+// Hero 配置（variant/position/ctaButtons/height 等）
+export function useStyleHero(): any {
+  return useContext(StyleContext).hero
+}
+
+// 行为特性（readingProgressBar/submenuEnabled/welcomeOverlay 等）
+export function useStyleFeatures(): Record<string, any> | null {
+  return useContext(StyleContext).features || null
 }

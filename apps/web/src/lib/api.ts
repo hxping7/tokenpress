@@ -390,6 +390,9 @@ class ApiClient {
     layouts?: any
     header?: any
     footer?: any
+    site?: any
+    hero?: any
+    features?: any
   }) {
     return this.request<{ success: boolean; data: any }>(`/styles/${id}`, {
       method: 'PUT',

@@ -31,12 +31,16 @@ export function StylePreviewPage({ styleId, builtin }: { styleId: string; builti
         try {
           const res = await api.getStyle(styleId)
           const d = res.data
+          const rawStyle = d.style && typeof d.style === 'object' ? d.style : null
           loaded = {
             manifest: { name: d.manifest?.name || '', description: d.manifest?.description || '', version: d.manifest?.version || '' },
             theme: typeof d.theme === 'string' ? d.theme : '',
             layouts: d.layouts || {},
             header: d.header || {},
             footer: d.footer || null,
+            site: rawStyle?.site && typeof rawStyle.site === 'object' ? rawStyle.site : {},
+            hero: rawStyle?.hero && typeof rawStyle.hero === 'object' ? rawStyle.hero : {},
+            features: rawStyle?.features && typeof rawStyle.features === 'object' ? rawStyle.features : {},
           }
         } catch (e: any) {
           if (!cancelled) setSaveError(e?.message || '加载失败')
@@ -61,6 +65,9 @@ export function StylePreviewPage({ styleId, builtin }: { styleId: string; builti
         layouts: draft.layouts,
         header: draft.header,
         footer: draft.footer,
+        site: draft.site || {},
+        hero: draft.hero || {},
+        features: draft.features || {},
       })
       try { sessionStorage.removeItem(DRAFT_KEY(styleId)) } catch { /* ignore */ }
       if (apply) await api.setActiveStyle(styleId)

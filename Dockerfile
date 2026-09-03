@@ -30,6 +30,9 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ libc-dev
 
+# playwright-core 预览截图需要 Chromium（系统依赖 + CJK 字体）
+RUN apk add --no-cache chromium nss harfbuzz fontconfig ttf-freefont font-noto-cjk
+
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install -g pnpm@9.15.0
 
@@ -37,6 +40,10 @@ COPY --from=backend-builder /app/apps/server/dist ./apps/server/dist
 COPY --from=backend-builder /app/apps/server/src/db/defaults ./apps/server/dist/db/defaults
 # 内置模板包（buildin styles）：构建期拷入镜像，运行时由 initBuiltinStyles 拷贝进持久卷
 COPY apps/web/public/styles ./apps/server/styles-builtin
+# 风格包 JSON Schema（GET /api/v1/styles/:id/schema 供 AI Agent 读取）。
+# 必须放在 styles-builtin 同级（/app/apps/server/）而非 data/ 下：data/ 是持久卷，
+# 镜像内文件会被挂载遮蔽，放进去运行时读不到。
+COPY apps/web/public/style-json.schema.json ./apps/server/style-json.schema.json
 # 内置欢迎页预置（welcome*.html）：构建期拷入镜像，运行时由 initBuiltinStaticHtml 拷贝进 statichtml 持久卷
 COPY apps/server/statichtml-presets ./apps/server/statichtml-presets
 COPY --from=backend-builder /app/apps/server/package.json ./apps/server/

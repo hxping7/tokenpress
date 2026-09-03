@@ -7,148 +7,102 @@ import { siteSettings } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { STYLES_DIR } from '../utils/paths.js'
+import { auditLog } from '../utils/auditLogger.js'
 import { BUILTIN_SOURCE } from '../utils/initStyles.js'
+import {
+  applyBatchPatch,
+  applyHomepageSections,
+  applyPatch,
+  applyScheme,
+  getIn,
+  readPackConfig,
+  STYLE_JSON,
+  validateId,
+  validatePack,
+  writePack,
+  type PatchOp,
+  type StylePack,
+  buildThemeCssFromTokens,
+} from '../lib/stylePack.js'
+import { renderStylePreview } from '../lib/styleAi.js'
+import { withLock } from '../lib/previewLock.js'
 
 const router = Router()
-
-// 已注册的首页 section 组件名（防止渲染未知组件）
-// CustomBlock：声明式自定义区块（纯 JSON 驱动，无需改代码即可拼装新首页段落）
-const REGISTERED_HOMEPAGE_COMPONENTS = ['Hero', 'Features', 'ArticleList', 'CTA', 'Banner', 'CustomBlock'] as const
-type HomepageComponent = (typeof REGISTERED_HOMEPAGE_COMPONENTS)[number]
-
-// manifest.themeVariants：包可声明的多套可切换配色（key -> :root{...} CSS）
-function validateThemeVariants(manifest: any): { ok: boolean; error?: string } {
-  const tv = manifest?.themeVariants
-  if (tv === undefined || tv === null) return { ok: true }
-  if (typeof tv !== 'object' || Array.isArray(tv)) {
-    return { ok: false, error: 'manifest.themeVariants 必须是对象（key -> CSS 字符串）' }
-  }
-  for (const [k, v] of Object.entries(tv)) {
-    if (typeof v !== 'string') return { ok: false, error: `themeVariants.${k} 必须是 CSS 字符串` }
-    const r = validateTheme(v)
-    if (!r.ok) return { ok: false, error: `themeVariants.${k}: ${r.error}` }
-  }
-  return { ok: true }
-}
-
-// ===== 校验工具 =====
-function validateId(id: string): { ok: boolean; error?: string } {
-  if (!id || typeof id !== 'string') return { ok: false, error: 'id is required' }
-  if (!/^[a-z0-9-]+$/.test(id)) return { ok: false, error: 'id 只能包含小写字母、数字与连字符' }
-  if (id.includes('..')) return { ok: false, error: 'id 非法' }
-  return { ok: true }
-}
-
-// theme.css 仅允许 :root{ --var: value; } 声明，禁止脚本/外链/导入
-function validateTheme(css: unknown): { ok: boolean; error?: string } {
-  if (typeof css !== 'string') return { ok: false, error: 'theme 必须是字符串' }
-  const s = css.trim()
-  if (!s.startsWith(':root')) return { ok: false, error: 'theme 必须以 :root 开头' }
-  if (!s.includes('{') || !s.includes('}')) return { ok: false, error: 'theme 必须是合法 CSS 块' }
-  if (/<|>|url\(|@import|javascript:|expression\(/i.test(s)) {
-    return { ok: false, error: 'theme 包含不允许的内容（脚本/外链/@import）' }
-  }
-  return { ok: true }
-}
-
-function validateHeader(obj: any): { ok: boolean; error?: string } {
-  if (!obj || typeof obj !== 'object') return { ok: false, error: 'header 必须是对象' }
-  const src = obj?.logo?.src
-  if (src !== undefined) {
-    if (typeof src !== 'string' || !src.startsWith('/') || src.includes('..') || src.includes('://') || src.includes('<')) {
-      return { ok: false, error: 'header.logo.src 仅允许同源相对路径' }
-    }
-  }
-  const nav = obj?.nav
-  if (nav !== undefined) {
-    if (nav.position !== undefined && !['top', 'left'].includes(nav.position)) {
-      return { ok: false, error: 'header.nav.position 仅允许 top | left' }
-    }
-    if (nav.height !== undefined && (typeof nav.height !== 'number' || nav.height < 32 || nav.height > 160)) {
-      return { ok: false, error: 'header.nav.height 须为 32~160 的数字(px)' }
-    }
-    if (nav.width !== undefined && (typeof nav.width !== 'number' || nav.width < 140 || nav.width > 400)) {
-      return { ok: false, error: 'header.nav.width 须为 140~400 的数字(px)' }
-    }
-    const colors = nav.colors
-    if (colors !== undefined) {
-      if (typeof colors !== 'object' || Array.isArray(colors)) return { ok: false, error: 'header.nav.colors 必须是对象' }
-      for (const [k, v] of Object.entries(colors)) {
-        if (typeof v !== 'string') return { ok: false, error: `header.nav.colors.${k} 必须是字符串` }
-        if (/<|javascript:|url\(|@import/i.test(v)) {
-          return { ok: false, error: `header.nav.colors.${k} 包含不允许的内容` }
-        }
-      }
-    }
-  }
-  return { ok: true }
-}
-
-function validateLayouts(obj: any): { ok: boolean; error?: string } {
-  if (!obj || typeof obj !== 'object') return { ok: false, error: 'layouts 必须是对象' }
-  const sections = obj?.homepage?.sections
-  if (Array.isArray(sections)) {
-    for (const s of sections) {
-      if (!REGISTERED_HOMEPAGE_COMPONENTS.includes(s?.component)) {
-        return { ok: false, error: `未知组件：${s?.component}（允许：${REGISTERED_HOMEPAGE_COMPONENTS.join(', ')}）` }
-      }
-    }
-  }
-  return { ok: true }
-}
-
-function validateJson(value: unknown, name: string): { ok: boolean; error?: string } {
-  if (typeof value === 'string') {
-    try { JSON.parse(value) } catch { return { ok: false, error: `${name} 不是合法 JSON` } }
-  } else if (value !== undefined && typeof value !== 'object') {
-    return { ok: false, error: `${name} 必须是对象或 JSON 字符串` }
-  }
-  return { ok: true }
-}
 
 // ===== 读取辅助 =====
 function parseJsonFile(content: string): any {
   return JSON.parse(content)
 }
 
-async function readPackConfig(id: string): Promise<{
-  id: string
-  manifest: any
-  theme: string
-  layouts: any
-  header: any
-  footer: any
-} | null> {
-  const dir = path.join(STYLES_DIR, id)
-  if (!fs.existsSync(dir)) return null
-  const manifestPath = path.join(dir, 'manifest.json')
-  if (!fs.existsSync(manifestPath)) return null
+// 深合并 site_settings 全局默认 + 风格包 site 覆盖
+// 未覆盖字段回落全局值，覆盖字段以风格包为准
+async function resolveSiteInfo(pack: StylePack): Promise<Record<string, any>> {
+  const rows = await db.select().from(siteSettings).all()
+  const settings: Record<string, string> = {}
+  for (const r of rows) settings[r.key] = r.value ?? ''
+  const ov = pack.site || {}
 
-  const manifest = parseJsonFile(await fsp.readFile(manifestPath, 'utf8'))
-  const read = async (file: string): Promise<string | null> => {
-    const p = path.join(dir, file)
-    return fs.existsSync(p) ? await fsp.readFile(p, 'utf8') : null
+  const resolve = (packKey: string, settingKey: string, fallback: any = '') => {
+    const v = ov[packKey]
+    return v === undefined || v === null ? settings[settingKey] ?? fallback : v
   }
-  const theme = (await read('theme.css')) || ''
-  const layoutsRaw = await read('layouts.json')
-  const headerRaw = await read('header.json')
-  const footerRaw = await read('footer.json')
 
   return {
-    id,
-    manifest,
-    theme,
-    layouts: layoutsRaw ? parseJsonFile(layoutsRaw) : null,
-    header: headerRaw ? parseJsonFile(headerRaw) : null,
-    footer: footerRaw ? parseJsonFile(footerRaw) : null,
+    name: resolve('name', 'site_name', 'TokenPress'),
+    description: resolve('description', 'site_description', ''),
+    titleFormat: ov.titleFormat ?? '%s | TokenPress',
+    copyright: resolve('copyright', 'copyright_text', ''),
+    icp: resolve('icp', 'icp_number', ''),
+    icpUrl: resolve('icpUrl', 'icp_url', ''),
+    poweredBy: resolve('poweredBy', 'powered_by', ''),
+    footerLogo: ov.footerLogo ?? null,
   }
 }
 
-function toJson(value: any): any {
-  if (typeof value === 'string') {
-    try { return JSON.parse(value) } catch { return null }
+// ===== 组合单个包的完整配置（供 /active 与 /:id 返回）=====
+async function buildPackResponse(pack: StylePack, activeId: string) {
+  // 首页布局覆盖：siteSettings.homepage_layouts 深合并（向后兼容旧字段）
+  let layouts = pack.layouts || null
+  try {
+    const homepageOverride = await db.select().from(siteSettings).where(eq(siteSettings.key, 'homepage_layouts')).get()
+    if (homepageOverride?.value) {
+      const override = JSON.parse(homepageOverride.value)
+      if (override && typeof override === 'object' && !Array.isArray(override)) {
+        const packHomepage = layouts?.homepage || {}
+        layouts = { ...(layouts || {}), homepage: { ...packHomepage, ...override } }
+      }
+    }
+  } catch { /* ignore */ }
+
+  const site = await resolveSiteInfo(pack)
+
+  return {
+    activeStyle: activeId,
+    defaultTheme: pack.$?.defaultTheme || 'light',
+    manifest: pack.$,
+    // SSR 注入的主题 CSS：以 design.tokens 为单一事实来源，旧 design.theme 字符串作兜底合并
+    theme: buildThemeCssFromTokens(pack.design?.tokens, pack.design?.theme || ''),
+    themeVariants: pack.design?.themeVariants || null,
+    layouts,
+    header: pack.header,
+    footer: pack.footer,
+    // ===== 新增：全站可定制字段 =====
+    site,
+    hero: pack.hero || null,
+    features: pack.features || null,
+    homepage: layouts?.homepage || null,
+    // ===== 完整合并对象（Agent 首选读取 = 整个 style 单文件）=====
+    style: {
+      $: pack.$,
+      design: pack.design || {},
+      header: pack.header,
+      footer: pack.footer,
+      layouts,
+      site: pack.site || null,
+      hero: pack.hero || null,
+      features: pack.features || null,
+    },
   }
-  return value
 }
 
 async function getActiveStyleId(): Promise<string> {
@@ -161,6 +115,12 @@ async function getActiveStyleId(): Promise<string> {
   }
 }
 
+async function setActiveStyleId(id: string): Promise<void> {
+  await db.insert(siteSettings)
+    .values({ key: 'active_style', value: id })
+    .onConflictDoUpdate({ target: siteSettings.key, set: { value: id } })
+}
+
 // ===== 路由 =====
 
 // GET /api/v1/styles/active — 公开（供 SSR 渲染读取当前激活包配置）
@@ -168,41 +128,8 @@ router.get('/active', async (_req, res) => {
   try {
     const activeId = await getActiveStyleId()
     const pack = await readPackConfig(activeId)
-    if (!pack) {
-      return res.status(404).json({ success: false, error: `激活的模板包不存在：${activeId}` })
-    }
-
-    // 首页布局覆盖：检查 siteSettings 中的 homepage_layouts，存在则深合并
-    let layouts = pack.layouts || null
-    try {
-      const homepageOverride = await db.select()
-        .from(siteSettings)
-        .where(eq(siteSettings.key, 'homepage_layouts'))
-        .get()
-      if (homepageOverride?.value) {
-        const override = JSON.parse(homepageOverride.value)
-        if (override && typeof override === 'object' && !Array.isArray(override)) {
-          const packHomepage = layouts?.homepage || {}
-          layouts = {
-            ...(layouts || {}),
-            homepage: { ...packHomepage, ...override },
-          }
-        }
-      }
-    } catch { /* ignore homepage_layouts parse failure */ }
-
-    res.json({
-      success: true,
-      data: {
-        activeStyle: activeId,
-        defaultTheme: pack.manifest?.defaultTheme || 'light',
-        manifest: pack.manifest,
-        theme: pack.theme,
-        layouts,
-        header: pack.header,
-        footer: pack.footer,
-      },
-    })
+    if (!pack) return res.status(404).json({ success: false, error: `激活的模板包不存在：${activeId}` })
+    res.json({ success: true, data: await buildPackResponse(pack, activeId) })
   } catch (err) {
     console.error('Get active style error:', err)
     res.status(500).json({ success: false, error: 'Failed to get active style' })
@@ -213,12 +140,8 @@ router.get('/active', async (_req, res) => {
 router.get('/', apiTokenOrAdmin('styles:read'), async (_req, res) => {
   try {
     const activeId = await getActiveStyleId()
-    if (!fs.existsSync(STYLES_DIR)) {
-      return res.json({ success: true, data: [] })
-    }
-    const entries = fs.readdirSync(STYLES_DIR, { withFileTypes: true })
-      .filter(e => e.isDirectory())
-      .map(e => e.name)
+    if (!fs.existsSync(STYLES_DIR)) return res.json({ success: true, data: [] })
+    const entries = fs.readdirSync(STYLES_DIR, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
 
     const result = []
     for (const id of entries) {
@@ -226,11 +149,11 @@ router.get('/', apiTokenOrAdmin('styles:read'), async (_req, res) => {
       if (!pack) continue
       result.push({
         id: pack.id,
-        name: pack.manifest?.name || id,
-        description: pack.manifest?.description || '',
-        version: pack.manifest?.version || '',
-        builtin: !!pack.manifest?.builtin,
-        preview: pack.manifest?.preview || null,
+        name: pack.$?.name || id,
+        description: pack.$?.description || '',
+        version: pack.$?.version || '',
+        builtin: !!pack.$?.builtin,
+        preview: pack.$?.preview || null,
         active: id === activeId,
       })
     }
@@ -249,64 +172,280 @@ router.get('/:id', apiTokenOrAdmin('styles:read'), async (req, res) => {
     if (!v.ok) return res.status(400).json({ success: false, error: v.error })
     const pack = await readPackConfig(id)
     if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
-    res.json({
-      success: true,
-      data: {
-        id: pack.id,
-        manifest: pack.manifest,
-        theme: pack.theme,
-        layouts: pack.layouts,
-        header: pack.header,
-        footer: pack.footer,
-      },
-    })
+    res.json({ success: true, data: await buildPackResponse(pack, id) })
   } catch (err) {
     console.error('Get style error:', err)
     res.status(500).json({ success: false, error: 'Failed to get style' })
   }
 })
 
+// GET /api/v1/styles/:id/schema — JSON Schema（Agent 读取以理解可配置字段与校验规则）
+router.get('/:id/schema', apiTokenOrAdmin('styles:read'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+    const pack = await readPackConfig(id)
+    if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
+    // 读共享 schema 文件（多候选路径：
+    // ① 风格包目录同级（本地开发 = apps/web/public/style-json.schema.json）
+    // ② 内置包来源目录同级（Docker = /app/apps/server/style-json.schema.json）
+    //    data/ 整目录是持久卷，镜像内文件会被挂载遮蔽，故不能只查 ①）
+    const schemaPath = [
+      path.join(STYLES_DIR, '..', 'style-json.schema.json'),
+      path.join(BUILTIN_SOURCE, '..', 'style-json.schema.json'),
+    ].find((p) => fs.existsSync(p))
+    if (schemaPath) {
+      const schema = parseJsonFile(fs.readFileSync(schemaPath, 'utf8'))
+      return res.json({ success: true, data: schema })
+    }
+    res.status(404).json({ success: false, error: 'Schema not found' })
+  } catch (err) {
+    console.error('Get style schema error:', err)
+    res.status(500).json({ success: false, error: 'Failed to get style schema' })
+  }
+})
+
+// GET /api/v1/styles/:id/playbook — ai-playbook.md（Agent 设计约束说明书）
+router.get('/:id/playbook', apiTokenOrAdmin('styles:read'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+    const dir = path.join(STYLES_DIR, id)
+    const pb = path.join(dir, 'ai-playbook.md')
+    if (!fs.existsSync(pb)) return res.status(404).json({ success: false, error: 'ai-playbook.md not found' })
+    const markdown = await fsp.readFile(pb, 'utf8')
+    res.json({ success: true, data: { id, markdown } })
+  } catch (err) {
+    console.error('Get style playbook error:', err)
+    res.status(500).json({ success: false, error: 'Failed to get style playbook' })
+  }
+})
+
+// PATCH /api/v1/styles/:id — 单字段/批量原子修改（需 styles:write）
+// Body: { "path":"section.layout", "value":"sidebar-left" } 或 { "patch":[ {path,value}, ... ] }
+router.patch('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+
+    const pack = await readPackConfig(id)
+    if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
+
+    const body = req.body || {}
+    let patches: PatchOp[]
+    if (Array.isArray(body.patch)) {
+      patches = body.patch
+    } else if (typeof body.path === 'string') {
+      patches = [{ path: body.path, value: body.value, op: body.op }]
+    } else {
+      return res.status(400).json({ success: false, error: '请求体需包含 path+value 或 patch 数组' })
+    }
+
+    const r = applyBatchPatch(pack, patches)
+    if (!r.ok) return res.status(400).json({ success: false, error: r.error })
+
+    await writePack(id, r.pack!)
+    await auditLog(req as any, 'update', 'style_pack', undefined,
+      `[${id}] PATCH ${patches.length} op(s): ${patches.map((p) => p.path).join(', ')}`)
+    res.json({ success: true, data: { id, applied: patches.length, style: r.pack } })
+  } catch (err) {
+    console.error('Patch style error:', err)
+    res.status(500).json({ success: false, error: 'Failed to patch style' })
+  }
+})
+
+// PATCH /api/v1/styles/:id/homepage-sections — 首页组件数组操作
+// Body: { "op":"insert|remove|replace|move", "index":2, "element":{...}, "toIndex":3 }
+router.patch('/:id/homepage-sections', apiTokenOrAdmin('styles:write'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+    const pack = await readPackConfig(id)
+    if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
+
+    const { op, index, element, toIndex } = req.body || {}
+    const r = applyHomepageSections(pack, op, index, element, toIndex)
+    if (!r.ok) return res.status(400).json({ success: false, error: r.error })
+
+    await writePack(id, r.pack!)
+    await auditLog(req as any, 'update', 'style_pack', undefined,
+      `[${id}] homepage-sections ${op || '?'}@${index ?? ''}`)
+    res.json({ success: true, data: { id, sections: r.pack?.layouts?.homepage?.sections } })
+  } catch (err) {
+    console.error('Patch homepage sections error:', err)
+    res.status(500).json({ success: false, error: 'Failed to patch homepage sections' })
+  }
+})
+
+// POST /api/v1/styles/:id/scheme — 配色方案批量重算
+router.post('/:id/scheme', apiTokenOrAdmin('styles:write'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+    const pack = await readPackConfig(id)
+    if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
+
+    const { mode, accent, accentAlt } = req.body || {}
+    const r = applyScheme(pack, { mode, accent, accentAlt })
+    if (!r.ok) return res.status(400).json({ success: false, error: r.error })
+
+    await writePack(id, r.pack!)
+    await auditLog(req as any, 'update', 'style_pack', undefined,
+      `[${id}] scheme mode=${mode || 'auto'} accent=${accent ?? ''}${accentAlt ? ` accentAlt=${accentAlt}` : ''}`)
+    res.json({ success: true, data: { id, design: r.pack?.design } })
+  } catch (err) {
+    console.error('Apply scheme error:', err)
+    res.status(500).json({ success: false, error: 'Failed to apply scheme' })
+  }
+})
+
+// POST /api/v1/styles/:id/activate — 激活为当前使用风格包
+router.post('/:id/activate', apiTokenOrAdmin('styles:write'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+    const pack = await readPackConfig(id)
+    if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
+    await setActiveStyleId(id)
+    await auditLog(req as any, 'activate', 'style_pack', undefined, `[${id}] activated`)
+    res.json({ success: true, data: { id, message: `已激活风格包：${id}` } })
+  } catch (err) {
+    console.error('Activate style error:', err)
+    res.status(500).json({ success: false, error: 'Failed to activate style' })
+  }
+})
+
+// GET /api/v1/styles/:id/diff — 对比两个风格包差异
+router.get('/:id/diff', apiTokenOrAdmin('styles:read'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const target = String(req.query.target || '')
+    const v1 = validateId(id)
+    const v2 = validateId(target)
+    if (!v1.ok || !v2.ok) return res.status(400).json({ success: false, error: 'id 或 target 非法' })
+    const a = await readPackConfig(id)
+    const b = await readPackConfig(target)
+    if (!a || !b) return res.status(404).json({ success: false, error: 'Style pack not found' })
+
+    const changes: { path: string; from: any; to: any }[] = []
+    const roots = ['header', 'footer', 'layouts', 'site', 'hero', 'features', 'design']
+    const walk = (pa: any, pb: any, prefix: string) => {
+      const keys = new Set([...(pa && typeof pa === 'object' ? Object.keys(pa) : []), ...(pb && typeof pb === 'object' ? Object.keys(pb) : [])])
+      for (const k of keys) {
+        const pathKey = prefix ? `${prefix}.${k}` : k
+        const va = getIn(a, pathKey)
+        const vb = getIn(b, pathKey)
+        const isObj = (x: any) => x && typeof x === 'object' && !Array.isArray(x)
+        if (isObj(va) || isObj(vb)) {
+          if (isObj(va) && isObj(vb)) { walk(va, vb, pathKey); continue }
+        }
+        if (JSON.stringify(va) !== JSON.stringify(vb)) changes.push({ path: pathKey, from: va, to: vb })
+      }
+    }
+    for (const root of roots) walk((a as any)[root], (b as any)[root], root)
+
+    res.json({ success: true, data: { from: id, to: target, changes } })
+  } catch (err) {
+    console.error('Diff style error:', err)
+    res.status(500).json({ success: false, error: 'Failed to diff style' })
+  }
+})
+
+// POST /api/v1/styles/:id/preview — 渲染预览图（需 styles:write）
+// Body: { "view":"home|section", "patches":[{path,value},...], "baseUrl":"https://..." }
+// - 依赖 playwright-core（可选）+ 系统 Chrome；未安装时返回 501。
+// - 带 patches 时临时写入渲染、完成后恢复（非破坏性）。
+// - SSR 依据 active_style 决定渲染哪一包，故预览需临时把 active_style 切到目标 id，
+//   使前端能读取到打了 patch 的 token；渲染完成后在 finally 恢复。
+// - 锁取全局：active_style 是共享单例，预览并发或预览 vs activate 都会竞争它。
+//   restore 时仅当 active_style 仍为 id 才回滚，避免并发 activate 的切换被覆盖。
+router.post('/:id/preview', apiTokenOrAdmin('styles:write'), async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    const v = validateId(id)
+    if (!v.ok) return res.status(400).json({ success: false, error: v.error })
+
+    const pack = await readPackConfig(id)
+    if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
+
+    const { view, patches, baseUrl } = req.body || {}
+
+    const r = await withLock('style-preview-global', async () => {
+      const prevActive = await getActiveStyleId()
+      let switched = false
+      try {
+        if (prevActive !== id) { await setActiveStyleId(id); switched = true }
+        return await renderStylePreview({
+          id,
+          view: view === 'section' ? 'section' : 'home',
+          patches,
+          baseUrl,
+        })
+      } finally {
+        // 仍指向 id 才回滚：如果期间 activate 切到了别的包，不要把它覆盖掉
+        if (switched && (await getActiveStyleId()) === id) {
+          await setActiveStyleId(prevActive)
+        }
+      }
+    })
+
+    if (!r.ok) {
+      const status = /未配置|playwright-core/.test(r.error) ? 501 : 400
+      return res.status(status).json({ success: false, error: r.error })
+    }
+    await auditLog(req as any, 'render', 'style_pack', undefined, `[${id}] preview view=${view || 'home'}`)
+    res.json({ success: true, data: { id, imageUrl: r.imageUrl } })
+  } catch (err) {
+    console.error('Preview style error:', err)
+    res.status(500).json({ success: false, error: 'Failed to render style preview' })
+  }
+})
+
 // POST /api/v1/styles — 新建/上传模板包（需 styles:write）
+// 直接提交：兼容旧多文件格式 + 新 style 单文件格式。
+// AI Agent 在本地用 LLM 生成完整 style.json 后，通过本接口提交落盘。
 router.post('/', apiTokenOrAdmin('styles:write'), async (req, res) => {
   try {
-    const { id, manifest, theme, layouts, header, footer } = req.body || {}
+    const body = req.body || {}
+
+    // ===== 直接提交 =====
+    const id = body.id || body.$?.id
     const v = validateId(id)
     if (!v.ok) return res.status(400).json({ success: false, error: v.error })
 
     const dir = path.join(STYLES_DIR, id)
-    if (fs.existsSync(path.join(dir, 'manifest.json'))) {
-      const existing = parseJsonFile(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'))
-      if (existing?.builtin) {
-        return res.status(409).json({ success: false, error: '内置模板包不可覆盖，请改用 PUT 局部更新或使用其它 id' })
-      }
+    const metaPath = path.join(dir, STYLE_JSON)
+    if (fs.existsSync(metaPath)) {
+      const existing = parseJsonFile(fs.readFileSync(metaPath, 'utf8'))
+      if (existing?.$?.builtin) return res.status(409).json({ success: false, error: '内置模板包不可覆盖，请改用 PUT 局部更新或使用其它 id' })
       return res.status(409).json({ success: false, error: '该 id 已存在，请使用 PUT 更新或换用其它 id' })
     }
 
-    if (!manifest || typeof manifest !== 'object') {
-      return res.status(400).json({ success: false, error: 'manifest 必填' })
+    // 构造 pack
+    let pack: StylePack
+    if (body.style && typeof body.style === 'object') {
+      pack = { id, ...body.style }
+    } else {
+      pack = {
+        id,
+        $: { ...(body.manifest || {}), id, builtin: false },
+        design: { theme: body.theme, themeVariants: body.manifest?.themeVariants, themeOptions: body.manifest?.themeOptions },
+        header: body.header,
+        footer: body.footer,
+        layouts: body.layouts,
+      }
     }
-    if (theme !== undefined) {
-      const tv = validateTheme(theme)
-      if (!tv.ok) return res.status(400).json({ success: false, error: tv.error })
-    }
-    if (layouts !== undefined) {
-      const lv = validateLayouts(toJson(layouts))
-      if (!lv.ok) return res.status(400).json({ success: false, error: lv.error })
-    }
-    if (header !== undefined) {
-      const hv = validateHeader(toJson(header))
-      if (!hv.ok) return res.status(400).json({ success: false, error: hv.error })
-    }
-    const tv = validateThemeVariants(manifest)
-    if (!tv.ok) return res.status(400).json({ success: false, error: tv.error })
+    const pv = validatePack(pack)
+    if (!pv.ok) return res.status(400).json({ success: false, error: pv.error })
 
-    fs.mkdirSync(dir, { recursive: true })
-    await fsp.writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ ...manifest, id, builtin: false }, null, 2))
-    if (theme !== undefined) await fsp.writeFile(path.join(dir, 'theme.css'), theme)
-    if (layouts !== undefined) await fsp.writeFile(path.join(dir, 'layouts.json'), JSON.stringify(toJson(layouts), null, 2))
-    if (header !== undefined) await fsp.writeFile(path.join(dir, 'header.json'), JSON.stringify(toJson(header), null, 2))
-    if (footer !== undefined) await fsp.writeFile(path.join(dir, 'footer.json'), JSON.stringify(toJson(footer), null, 2))
-
+    await writePack(id, pack)
+    await auditLog(req as any, 'create', 'style_pack', undefined, `[${id}] created`)
     res.status(201).json({ success: true, data: { id, message: 'Style pack created' } })
   } catch (err) {
     console.error('Create style error:', err)
@@ -314,45 +453,44 @@ router.post('/', apiTokenOrAdmin('styles:write'), async (req, res) => {
   }
 })
 
-// PUT /api/v1/styles/:id — 局部更新（需 styles:write）
+// PUT /api/v1/styles/:id — 局部更新（需 styles:write）兼容旧接口
 router.put('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
   try {
     const id = String(req.params.id)
     const v = validateId(id)
     if (!v.ok) return res.status(400).json({ success: false, error: v.error })
 
-    const dir = path.join(STYLES_DIR, id)
-    if (!fs.existsSync(path.join(dir, 'manifest.json'))) {
-      return res.status(404).json({ success: false, error: 'Style pack not found' })
+    const pack = await readPackConfig(id)
+    if (!pack) return res.status(404).json({ success: false, error: 'Style pack not found' })
+
+    const body = req.body || {}
+    const next: StylePack = { ...pack }
+
+    if (body.style && typeof body.style === 'object') {
+      // 整份 style 替换（保留 id 与元数据）
+      const merged = { ...body.style, $: { ...pack.$, ...(body.style.$ || {}) } }
+      const pv = validatePack({ id, ...merged })
+      if (!pv.ok) return res.status(400).json({ success: false, error: pv.error })
+      await writePack(id, { id, ...merged })
+      await auditLog(req as any, 'update', 'style_pack', undefined, `[${id}] full style.json replace`)
+      return res.json({ success: true, data: { id, message: 'Style pack updated' } })
     }
 
-    const { manifest, theme, layouts, header, footer } = req.body || {}
-    if (theme !== undefined) {
-      const tv = validateTheme(theme)
-      if (!tv.ok) return res.status(400).json({ success: false, error: tv.error })
-    }
-    if (layouts !== undefined) {
-      const lv = validateLayouts(toJson(layouts))
-      if (!lv.ok) return res.status(400).json({ success: false, error: lv.error })
-    }
-    if (header !== undefined) {
-      const hv = validateHeader(toJson(header))
-      if (!hv.ok) return res.status(400).json({ success: false, error: hv.error })
-    }
-    if (manifest !== undefined && typeof manifest === 'object') {
-      const tv = validateThemeVariants(manifest)
-      if (!tv.ok) return res.status(400).json({ success: false, error: tv.error })
-    }
+    // 旧字段局部更新
+    if (body.theme !== undefined) next.design = { ...(next.design || {}), theme: body.theme }
+    if (body.manifest !== undefined && typeof body.manifest === 'object') next.$ = { ...(next.$ || {}), ...body.manifest, id }
+    if (body.layouts !== undefined) next.layouts = body.layouts
+    if (body.header !== undefined) next.header = body.header
+    if (body.footer !== undefined) next.footer = body.footer
+    if (body.site !== undefined) next.site = body.site
+    if (body.hero !== undefined) next.hero = body.hero
+    if (body.features !== undefined) next.features = body.features
 
-    if (manifest !== undefined && typeof manifest === 'object') {
-      const cur = parseJsonFile(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'))
-      await fsp.writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ ...cur, ...manifest, id }, null, 2))
-    }
-    if (theme !== undefined) await fsp.writeFile(path.join(dir, 'theme.css'), theme)
-    if (layouts !== undefined) await fsp.writeFile(path.join(dir, 'layouts.json'), JSON.stringify(toJson(layouts), null, 2))
-    if (header !== undefined) await fsp.writeFile(path.join(dir, 'header.json'), JSON.stringify(toJson(header), null, 2))
-    if (footer !== undefined) await fsp.writeFile(path.join(dir, 'footer.json'), JSON.stringify(toJson(footer), null, 2))
+    const pv = validatePack(next)
+    if (!pv.ok) return res.status(400).json({ success: false, error: pv.error })
 
+    await writePack(id, next)
+    await auditLog(req as any, 'update', 'style_pack', undefined, `[${id}] legacy fields update`)
     res.json({ success: true, data: { id, message: 'Style pack updated' } })
   } catch (err) {
     console.error('Update style error:', err)
@@ -361,8 +499,6 @@ router.put('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
 })
 
 // POST /api/v1/styles/:id/restore — 恢复内置模板包到出厂默认（需 styles:write）
-// 仅对 builtin 包有效：从镜像内置源 styles-builtin/<id> 重新拷贝覆盖当前磁盘文件，
-// 丢弃用户对布局/配色/导航等的全部个人修改。当前激活状态不变。
 router.post('/:id/restore', apiTokenOrAdmin('styles:write'), async (req, res) => {
   try {
     const id = String(req.params.id)
@@ -370,26 +506,16 @@ router.post('/:id/restore', apiTokenOrAdmin('styles:write'), async (req, res) =>
     if (!v.ok) return res.status(400).json({ success: false, error: v.error })
 
     const targetDir = path.join(STYLES_DIR, id)
-    if (!fs.existsSync(path.join(targetDir, 'manifest.json'))) {
-      return res.status(404).json({ success: false, error: 'Style pack not found' })
-    }
-    const curManifest = parseJsonFile(fs.readFileSync(path.join(targetDir, 'manifest.json'), 'utf8'))
-    if (!curManifest?.builtin) {
-      return res.status(400).json({
-        success: false,
-        error: '只有内置模板包支持恢复默认；自定义包请直接删除后重建',
-      })
-    }
+    if (!fs.existsSync(targetDir)) return res.status(404).json({ success: false, error: 'Style pack not found' })
+    const curPack = await readPackConfig(id)
+    if (!curPack?.$?.builtin) return res.status(400).json({ success: false, error: '只有内置模板包支持恢复默认；自定义包请直接删除后重建' })
 
     const sourceDir = path.join(BUILTIN_SOURCE, id)
-    if (!fs.existsSync(path.join(sourceDir, 'manifest.json'))) {
-      return res.status(404).json({ success: false, error: `未找到内置源模板包：${id}` })
-    }
+    if (!fs.existsSync(sourceDir)) return res.status(404).json({ success: false, error: `未找到内置源模板包：${id}` })
 
-    // 重新拷贝：先清后拷，确保与出厂源完全一致（含被用户删除的文件复原）
     fs.rmSync(targetDir, { recursive: true, force: true })
     fs.cpSync(sourceDir, targetDir, { recursive: true })
-
+    await auditLog(req as any, 'restore', 'style_pack', undefined, `[${id}] restored to builtin default`)
     res.json({ success: true, data: { id, message: 'Style pack restored to default' } })
   } catch (err) {
     console.error('Restore style error:', err)
@@ -406,11 +532,10 @@ router.delete('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
 
     const dir = path.join(STYLES_DIR, id)
     if (!fs.existsSync(dir)) return res.status(404).json({ success: false, error: 'Style pack not found' })
-    const manifest = parseJsonFile(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'))
-    if (manifest?.builtin) {
-      return res.status(403).json({ success: false, error: '内置模板包受保护，不可删除' })
-    }
+    const pack = await readPackConfig(id)
+    if (pack?.$?.builtin) return res.status(403).json({ success: false, error: '内置模板包受保护，不可删除' })
     fs.rmSync(dir, { recursive: true, force: true })
+    await auditLog(req as any, 'delete', 'style_pack', undefined, `[${id}] deleted`)
     res.json({ success: true, message: 'Style pack deleted' })
   } catch (err) {
     console.error('Delete style error:', err)

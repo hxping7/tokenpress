@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useLocaleStore } from '@/stores'
 
 interface HeroSlide {
   id: string
@@ -65,7 +66,31 @@ function isHardLink(url: string): boolean {
 }
 
 export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons }: HeroCarouselProps) {
-  const ctaList = ctaButtons && ctaButtons.length > 0 ? ctaButtons : DEFAULT_HERO_CTA
+  const { locale } = useLocaleStore()
+  // 归一化 CTA：兼容编辑器/风格包写入的 {label:{zh,en}, style:'outline'} 形状（样式包 schema），
+  // 也兼容原有 {label:string, variant:'secondary'}；label 对象按当前语言解析，style 映射到渲染形态。
+  const rawCtaList: any[] = ctaButtons && ctaButtons.length > 0 ? ctaButtons : DEFAULT_HERO_CTA
+  const ctaList: HeroCtaButton[] = rawCtaList.map((b) => {
+    const lbl = b?.label
+    const label =
+      typeof lbl === 'string'
+        ? lbl
+        : lbl && typeof lbl === 'object'
+          ? locale === 'en'
+            ? lbl.en || lbl.zh || ''
+            : lbl.zh || lbl.en || ''
+          : ''
+    const s: string = b?.style
+    const variant: HeroCtaVariant =
+      b?.variant === 'primary' || b?.variant === 'secondary' || b?.variant === 'ghost'
+        ? b.variant
+        : s === 'outline'
+          ? 'secondary'
+          : s === 'ghost'
+            ? 'ghost'
+            : 'primary'
+    return { label, href: b?.href || '#', target: b?.target, variant }
+  })
   const resolved = HERO_SIZE_STYLES[size] || HERO_SIZE_STYLES.standard
   const isFull = size === 'full' || size === 'fullscreen'
   const [currentSlide, setCurrentSlide] = useState(0)
