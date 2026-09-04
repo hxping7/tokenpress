@@ -38,14 +38,12 @@ export type StyleDraft = {
   layouts: any
   header: any
   footer: any
-  site?: any
   hero?: any
   features?: any
 }
 
 const TABS = [
   { key: 'basic', label: '基本信息' },
-  { key: 'site', label: '站点信息' },
   { key: 'theme', label: '配色主题' },
   { key: 'variants', label: '配色方案' },
   { key: 'nav', label: '全局导航' },
@@ -79,20 +77,6 @@ export function StylePackForm({
 
   const updateManifest = (k: string, v: any) =>
     onChange({ ...draft, manifest: { ...draft.manifest, [k]: v } })
-
-  // ===== 站点信息覆盖（空值 → null = 跟随后台全局设置）=====
-  const siteRaw: any = draft.site && typeof draft.site === 'object' ? draft.site : {}
-  const siteFl: any = siteRaw.footerLogo && typeof siteRaw.footerLogo === 'object' ? siteRaw.footerLogo : null
-  const setSiteVal = (k: string, v: string) => set(`site.${k}`, v.trim() === '' ? null : v)
-  const patchSiteFl = (patch: any) => {
-    const base = siteFl || { type: 'image' }
-    const next = { ...base, ...patch }
-    if (!next.src) {
-      set('site.footerLogo', null)
-      return
-    }
-    set('site.footerLogo', next)
-  }
 
   // ===== 行为特性开关 =====
   const feats: any = draft.features && typeof draft.features === 'object' ? draft.features : {}
@@ -265,63 +249,6 @@ export function StylePackForm({
                 ] as any}
               />
             </Field>
-          </>
-        )}
-
-        {tab === 'site' && (
-          <>
-            <Field
-              label="标题格式 titleFormat"
-              desc="全站 <title> 模板，%s 为文章标题占位。留空为默认「%s | TokenPress」。如：%s | Token00"
-            >
-              <TextInput value={siteRaw.titleFormat || ''} onChange={(v) => set('site.titleFormat', v)} placeholder="%s | TokenPress" />
-            </Field>
-            <div className="border-t border-t-border pt-4">
-              <p className="text-sm font-medium text-t-text-primary mb-1">站点信息覆盖</p>
-              <p className="text-xs text-t-text-muted mb-3">以下字段留空 = 跟随后台「系统设置」中的全局值，不写死进本模板包。</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="站点名称" desc="覆盖全局站名（导航/页脚 Logo 文字等）">
-                  <TextInput value={siteRaw.name || ''} onChange={(v) => setSiteVal('name', v)} placeholder="跟随后台设置" />
-                </Field>
-                <Field label="站点描述" desc="SEO description 覆盖">
-                  <TextInput value={siteRaw.description || ''} onChange={(v) => setSiteVal('description', v)} placeholder="跟随后台设置" />
-                </Field>
-                <Field label="版权信息 copyright">
-                  <TextInput value={siteRaw.copyright || ''} onChange={(v) => setSiteVal('copyright', v)} placeholder="跟随后台设置" />
-                </Field>
-                <Field label="ICP 备案号">
-                  <TextInput value={siteRaw.icp || ''} onChange={(v) => setSiteVal('icp', v)} placeholder="跟随后台设置" />
-                </Field>
-                <Field label="ICP 链接">
-                  <TextInput value={siteRaw.icpUrl || ''} onChange={(v) => setSiteVal('icpUrl', v)} placeholder="https://beian.miit.gov.cn/" />
-                </Field>
-                <Field label="技术支持署名 poweredBy">
-                  <TextInput value={siteRaw.poweredBy || ''} onChange={(v) => setSiteVal('poweredBy', v)} placeholder="跟随后台设置" />
-                </Field>
-              </div>
-            </div>
-            <div className="border-t border-t-border pt-4">
-              <p className="text-sm font-medium text-t-text-primary mb-1">自定义页脚 Logo</p>
-              <p className="text-xs text-t-text-muted mb-3">覆盖站点设置里的全局页脚 Logo；src 须为本站相对路径（以 / 开头）。</p>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-t-text-secondary">启用自定义页脚 Logo</span>
-                <Toggle
-                  value={!!siteFl?.src}
-                  onChange={(on) => (on ? set('site.footerLogo', { type: 'image', src: '/uploads/logo-footer.svg', height: 36 }) : set('site.footerLogo', null))}
-                  labelOn="开" labelOff="关"
-                />
-              </div>
-              {siteFl?.src && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="图片路径" desc="例：/uploads/logo-footer.svg">
-                    <TextInput value={siteFl.src || ''} onChange={(v) => patchSiteFl({ src: v.trim() })} placeholder="/uploads/…" />
-                  </Field>
-                  <Field label="高度" desc="展示高度（px）">
-                    <NumberInput value={Number(siteFl.height || 36)} onChange={(v) => patchSiteFl({ height: v })} min={12} max={120} suffix="px" />
-                  </Field>
-                </div>
-              )}
-            </div>
           </>
         )}
 

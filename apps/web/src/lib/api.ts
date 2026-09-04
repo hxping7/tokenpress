@@ -390,7 +390,6 @@ class ApiClient {
     layouts?: any
     header?: any
     footer?: any
-    site?: any
     hero?: any
     features?: any
   }) {

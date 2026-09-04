@@ -1549,11 +1549,11 @@ requests.post(
 1. `GET /api/v1/styles`（`styles:read`）— 查看有哪些包、当前激活哪个
 2. `GET /api/v1/styles/:id/schema` — 读 JSON Schema，理解可配置字段与校验规则（勿凭记忆猜字段）
 3. `GET /api/v1/styles/:id/playbook` — 读该包 AI 设计约束（品牌调性/禁止项）
-4. `GET /api/v1/styles/:id` — 读当前完整配置。**原始覆盖在 `data.style.*`；顶层 `site` 是已与全局合并的解析值，禁止回写**
-5. 修改：`PATCH /:id`（`{patch:[{path,value},...]}` 批量原子）或 `PUT /:id`（`{style:{...}}` 整包替换）
+4. `GET /api/v1/styles/:id` — 读当前完整配置。**原始值在 `data.style.*`；顶层 `site` 是由全局 `site_settings` 解析的站点信息（只读），不属于包、禁止回写**
+5. 修改：`PATCH /:id`（`{patch:[{path,value},...]}` 批量原子）或 `PUT /:id`（`{style:{...}}` 整包替换，后端自动剔除 `site` 键）
 6. 验证：`GET /:id` 确认落盘 → `POST /:id/preview`（home/section 预览图）→ 确需全站生效再 `POST /:id/activate`
 
-**可 PATCH 根白名单**：`site | design | header | footer | layouts | hero | features`（`$` 元数据不可改）。`site.*` 默认 `null` = 跟随后台全局设置，仅在需要覆盖某字段时写入（titleFormat/footerLogo/copyright/icp/poweredBy…）。功能开关在 `features` 根（readingProgressBar/backToTop/welcomeOverlay/languageSwitcher/submenuEnabled）。Hero CTA 的 label 为双语对象：`{"label": {"zh": "...", "en": "..."}, "href": "/path", "style": "primary|outline|ghost"}`。
+**可 PATCH 根白名单**：`design | header | footer | layouts | hero | features`（`$` 元数据不可改）。风格包只负责「装修」（布局/配色/结构）；站点信息（名称/版权/备案/页脚 Logo）属内容，唯一来源是 `site_settings`（`settings:write`），不进入 `style.json`。功能开关在 `features` 根（readingProgressBar/backToTop/welcomeOverlay/languageSwitcher/submenuEnabled）。Hero CTA 的 label 为双语对象：`{"label": {"zh": "...", "en": "..."}, "href": "/path", "style": "primary|outline|ghost"}`。
 
 **Python 示例：**
 
@@ -1587,7 +1587,7 @@ print(requests.post(f"{API_BASE}/styles/blog/activate", headers=H).json())
 # → {'success': True, 'data': {'id': 'blog', 'message': '已激活风格包：blog'}}
 ```
 
-> 改包动作全部记录 `audit_logs`；`site.*` 属风格包级展示覆盖（默认 null 由全局兜底），不构成越权。恢复出厂：`POST /styles/:id/restore`（仅内置包）。
+> 改包动作全部记录 `audit_logs`；站点信息走 `site_settings`（`settings:write`），风格包内不存在内容字段，无越权路径。恢复出厂：`POST /styles/:id/restore`（仅内置包）。
 
 ---
 
@@ -1635,4 +1635,4 @@ print(requests.post(f"{API_BASE}/styles/blog/activate", headers=H).json())
 6. **Windows 环境**：使用 Node.js `fetch` 发送请求，避免 curl 中文乱码
 7. **错误恢复**：上传失败检查 `error` + `detail` 字段；400 类错误修正参数即可重试，500 类错误稍后重试
 8. **批量上传**：多张图片使用 `Promise.all` 并行上传，再统一发布文章
-9. **改包先读 schema**：改风格包前先 `GET /styles/:id/schema` + `/playbook`；多字段用 PATCH `patch[]` 原子提交；回写只动 `data.style.*`（顶层 `site` 是合并值，勿写）；`site.*` 仅在覆盖全局时才写，其余保持 null 兜底
+9. **改包先读 schema**：改风格包前先 `GET /styles/:id/schema` + `/playbook`；多字段用 PATCH `patch[]` 原子提交；回写只动 `data.style.*`（顶层 `site` 是全局解析值，勿写）

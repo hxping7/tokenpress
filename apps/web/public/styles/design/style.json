@@ -8,9 +8,12 @@
     "preview": "/styles/design/preview.png",
     "builtin": true,
     "defaultTheme": "light",
-    "tags": ["design", "portfolio", "creative"]
+    "tags": [
+      "design",
+      "portfolio",
+      "creative"
+    ]
   },
-
   "design": {
     "mode": "light",
     "tokens": {
@@ -46,18 +49,6 @@
     },
     "theme": ":root{\n  --bg-primary:#ffffff;\n  --bg-secondary:#fafafa;\n  --bg-tertiary:#f0f0f0;\n  --text-primary:#1a1a1a;\n  --text-secondary:#555555;\n  --text-muted:#999999;\n  --accent-blue:#d71920;\n  --accent-purple:#0a0a0a;\n  --accent-blue-dim:#b01015;\n  --border-color:rgba(0,0,0,0.08);\n  --hover-bg:rgba(215,25,32,0.06);\n  --gradient-from:#d71920;\n  --gradient-via:#0a0a0a;\n  --gradient-to:#d71920;\n  --content-max-width:1320px;\n  --reading-max-width:760px;\n  --header-height:72px;\n  --brand-font:\"Inter\",\"Helvetica Neue\",sans-serif;\n  --radius-card:20px;\n  --shadow-card:0 8px 30px rgba(0,0,0,0.06);\n}"
   },
-
-  "site": {
-    "name": null,
-    "description": null,
-    "titleFormat": "%s | Studio",
-    "copyright": null,
-    "icp": null,
-    "icpUrl": null,
-    "poweredBy": null,
-    "footerLogo": null
-  },
-
   "header": {
     "variant": "sticky-glass",
     "height": 72,
@@ -84,15 +75,35 @@
       }
     },
     "actions": [
-      { "type": "search", "icon": "search", "style": "icon" },
-      { "type": "theme", "icon": "palette", "style": "icon" },
-      { "type": "language", "icon": "globe", "style": "ghost", "label": { "zh": "中文", "en": "EN" } },
-      { "type": "admin", "icon": "dashboard", "style": "ghost", "showWhen": "loggedIn" }
+      {
+        "type": "search",
+        "icon": "search",
+        "style": "icon"
+      },
+      {
+        "type": "theme",
+        "icon": "palette",
+        "style": "icon"
+      },
+      {
+        "type": "language",
+        "icon": "globe",
+        "style": "ghost",
+        "label": {
+          "zh": "中文",
+          "en": "EN"
+        }
+      },
+      {
+        "type": "admin",
+        "icon": "dashboard",
+        "style": "ghost",
+        "showWhen": "loggedIn"
+      }
     ],
     "background": "rgba(255,255,255,0.7)",
     "borderBottom": "1px solid rgba(0,0,0,0.06)"
   },
-
   "hero": {
     "enabled": true,
     "position": "before-content",
@@ -102,24 +113,48 @@
     "autoplay": true,
     "interval": 5,
     "transition": "fade",
-    "overlay": { "enabled": false, "color": "rgba(0,0,0,0.2)" },
+    "overlay": {
+      "enabled": false,
+      "color": "rgba(0,0,0,0.2)"
+    },
     "showCTA": false,
     "ctaButtons": []
   },
-
   "layouts": {
     "homepage": {
       "container": "full",
       "sections": [
-        { "component": "Hero", "variant": "fullscreen" },
-        { "component": "ArticleList", "variant": "masonry", "props": { "source": "latest", "limit": 12, "showViewToggle": false } }
+        {
+          "component": "Hero",
+          "variant": "fullscreen"
+        },
+        {
+          "component": "ArticleList",
+          "variant": "masonry",
+          "props": {
+            "source": "latest",
+            "limit": 12,
+            "showViewToggle": false
+          }
+        }
       ]
     },
     "section": {
       "layout": "none",
-      "hero": { "enabled": false },
-      "sidebar": { "enabled": false, "sticky": false },
-      "list": { "layout": "masonry", "columns": 2, "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
+      "hero": {
+        "enabled": false
+      },
+      "sidebar": {
+        "enabled": false,
+        "sticky": false
+      },
+      "list": {
+        "layout": "masonry",
+        "columns": 2,
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
       "subcategory": {
         "enabled": true,
         "position": "top",
@@ -136,12 +171,25 @@
       "maxWidth": 760,
       "hero": "cover"
     },
-    "list": { "layout": "masonry", "columns": 2 },
+    "list": {
+      "layout": "masonry",
+      "columns": 2
+    },
     "category": {
       "layout": "none",
-      "hero": { "enabled": false },
-      "sidebar": { "enabled": false },
-      "list": { "layout": "masonry", "columns": 3, "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
+      "hero": {
+        "enabled": false
+      },
+      "sidebar": {
+        "enabled": false
+      },
+      "list": {
+        "layout": "masonry",
+        "columns": 3,
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
       "subcategory": {
         "enabled": true,
         "position": "top",
@@ -150,16 +198,54 @@
       }
     },
     "templates": {
-      "article-list": { "columns": 1, "gap": "1.5rem", "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
-      "article-grid": { "columns": 3, "gap": "1.5rem", "aspectRatio": "1/1", "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
-      "article-masonry": { "columns": 2, "gap": "1.5rem", "aspectRatio": "auto", "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
-      "magazine": { "columns": 2, "gap": "1.5rem", "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
-      "single-page": { "maxWidth": 760, "centered": true },
-      "link-wall": { "columns": 4, "gap": "1rem", "pill": true },
-      "design-gallery": { "columns": 3, "gap": "1.5rem", "aspectRatio": "4/5", "cardStyle": "clean", "hover": "zoom" }
+      "article-list": {
+        "columns": 1,
+        "gap": "1.5rem",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "article-grid": {
+        "columns": 3,
+        "gap": "1.5rem",
+        "aspectRatio": "1/1",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "article-masonry": {
+        "columns": 2,
+        "gap": "1.5rem",
+        "aspectRatio": "auto",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "magazine": {
+        "columns": 2,
+        "gap": "1.5rem",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "single-page": {
+        "maxWidth": 760,
+        "centered": true
+      },
+      "link-wall": {
+        "columns": 4,
+        "gap": "1rem",
+        "pill": true
+      },
+      "design-gallery": {
+        "columns": 3,
+        "gap": "1.5rem",
+        "aspectRatio": "4/5",
+        "cardStyle": "clean",
+        "hover": "zoom"
+      }
     }
   },
-
   "footer": {
     "variant": "minimal",
     "columns": [],
@@ -169,11 +255,14 @@
       "items": [],
       "maxItems": 20
     },
-    "bottom": { "copyright": "© 2026 STUDIO · Crafted with care", "social": [], "showBackToTop": true },
+    "bottom": {
+      "copyright": "© 2026 STUDIO · Crafted with care",
+      "social": [],
+      "showBackToTop": true
+    },
     "background": "#ffffff",
     "textColor": "#999999"
   },
-
   "features": {
     "submenuEnabled": false,
     "readingProgressBar": false,

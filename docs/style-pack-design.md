@@ -37,11 +37,10 @@ styles/<id>/
 
 ## 3. `style.json` 顶层结构
 
-七个根键，可通过 `PATCH /api/v1/styles/:id` 单独更新（`PATCHABLE_ROOTS = site / design / header / footer / layouts / hero / features`）。
+六个根键，可通过 `PATCH /api/v1/styles/:id` 单独更新（`PATCHABLE_ROOTS = design / header / footer / layouts / hero / features`）。
 
 | 根键 | 职责 |
 |---|---|
-| `site` | 站点信息覆盖（名称/描述/版权/备案/页脚 Logo） |
 | `design` | 配色模式、设计令牌、主题变体与可选项 |
 | `header` | 顶栏形态、Logo、导航、动作按钮 |
 | `footer` | 页脚版式、栏目、友情链接、底栏 |
@@ -49,15 +48,9 @@ styles/<id>/
 | `hero` | 首页英雄区（轮播/标准/分栏）与 CTA |
 | `features` | 全站功能开关（阅读进度条、回顶、欢迎页、语言切换器、二级菜单） |
 
-### 3.1 `site`（站点信息覆盖）
+> **风格包只负责「装修」**：布局、配色、结构。站点信息（名称/描述/版权/备案/页脚 Logo）是**内容**，统一由后台「系统设置」（`site_settings`）管理，不进入风格包——同一份内容不存两套来源。
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `name` / `description` / `copyright` / `icp` / `icpUrl` / `poweredBy` | string \| null | **`null` = 跟随后台站点设置**；非空才覆盖 |
-| `titleFormat` | string | 标题模板，支持 `%s` 占位 |
-| `footerLogo` | object \| null | `{ type, src, height }`，页脚专用 Logo |
-
-### 3.2 `design`
+### 3.1 `design`
 
 | 字段 | 说明 |
 |---|---|
@@ -67,7 +60,7 @@ styles/<id>/
 | `themeVariants` | 多套可切配色（键值对象） |
 | `themeOptions` | 后台下拉可选项数组 |
 
-### 3.3 `header`
+### 3.2 `header`
 
 | 字段 | 取值 / 说明 |
 |---|---|
@@ -78,7 +71,7 @@ styles/<id>/
 | `actions` | 右侧动作按钮数组 |
 | `background` / `borderBottom` | CSS 值 |
 
-### 3.4 `footer`
+### 3.3 `footer`
 
 | 字段 | 说明 |
 |---|---|
@@ -88,7 +81,7 @@ styles/<id>/
 | `bottom` | `{ copyright, social[], showBackToTop }` |
 | `background` / `textColor` | CSS 值 |
 
-### 3.5 `layouts`
+### 3.4 `layouts`
 
 - `homepage`：`container`（`boxed` / `full` / `wide`）+ `sections[]`，按数组顺序渲染；每项 `{ component, variant, id, props }`，`component` 取值受白名单约束：`Hero` / `Features` / `ArticleList` / `CTA` / `Banner` / `CustomBlock`（`Banner` 用 `id` 引用 `home_banners` 中的命名横幅）。
 - `section`（板块页默认骨架）：
@@ -100,7 +93,7 @@ styles/<id>/
 - `category` / `article` / `list`：分类页、文章页、列表页的结构覆盖。
 - 板块与分类另有 `template`（7 套：`article-list` / `article-grid` / `article-masonry` / `magazine` / `single-page` / `link-wall` / `design-gallery`）+ `template_config`，优先级高于风格包默认值，用于「同一站点内不同板块不同版式」。
 
-### 3.6 `hero`
+### 3.5 `hero`
 
 | 字段 | 取值 / 说明 |
 |---|---|
@@ -114,7 +107,7 @@ styles/<id>/
 
 > **运行时契约**：`HeroCarousel` 会把 `{ label:{zh,en}, style }` 归一化为当前语言的文本 + `primary` / `secondary` / `ghost`（`outline` → `secondary`），未归一化前直接渲染会显示 `[object Object]`。
 
-### 3.7 `features`
+### 3.6 `features`
 
 | 字段 | 取值 | 说明 |
 |---|---|---|
@@ -132,7 +125,7 @@ styles/<id>/
 2. **组件消费**：页面组件不再硬编码结构，改为读取配置：
    - `useStyleSite()` / `useStyleHero()` / `useStyleHeader()` / `useStyleFooter()` / `useStyleLayouts()` / `useStyleFeatures()`
    - `Home` 循环渲染 `layouts.homepage.sections[]`；`SectionPageClient` 读 `layouts.section`；文章页读 `layouts.article`。
-3. **覆盖顺序**：后台站点设置 → 风格包 `site.*` 覆盖（非 null 的字段）→ 板块/分类 `template` 覆盖版式 → 配色主题覆盖颜色变量。
+3. **覆盖顺序**：后台站点设置（站点信息的唯一来源）→ 板块/分类 `template` 覆盖版式 → 配色主题覆盖颜色变量。
 4. **切换生效**：写 `active_style` 立即生效，无需重启。
 
 ---
@@ -140,8 +133,8 @@ styles/<id>/
 ## 5. 后台编辑器与读写契约
 
 - 编辑器入口：管理后台「风格」设置块（卡片选择 + 编辑弹窗 `/admin/style-preview` 实时预览）。
-- **关键契约**：`GET /api/v1/styles/:id` 的**顶层 `site` 是与 `site_settings` 合并后的解析值**（供前台渲染用），编辑器必须读写 **`data.style.site`**（原始覆盖，`null` 表示跟随后台）。把顶层 `site` 回写进包会把全局设置冻结进每一个包。
-- 编辑器保存走 `PUT /api/v1/styles/:id` 的 legacy 字段分支（`site` / `hero` / `features` / `header` / `footer` / `layouts` / `theme` / `manifest`）。
+- **关键契约**：`GET /api/v1/styles/:id` 的**顶层 `site` 是由 `site_settings` 解析的全局站点信息**（只读，供前台 Header/Footer 渲染），**不属于风格包、不可回写**；编辑器草稿只读写 `data.style` 下的 `design` / `header` / `footer` / `layouts` / `hero` / `features`。
+- 编辑器保存走 `PUT /api/v1/styles/:id` 的 legacy 字段分支（`hero` / `features` / `header` / `footer` / `layouts` / `theme` / `manifest`）；POST/PUT 整包替换时后端会自动剔除传入的 `site` 键。
 
 ---
 

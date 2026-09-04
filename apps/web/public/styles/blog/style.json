@@ -8,9 +8,12 @@
     "preview": "/styles/blog/preview.png",
     "builtin": true,
     "defaultTheme": "light",
-    "tags": ["blog", "default", "tech"]
+    "tags": [
+      "blog",
+      "default",
+      "tech"
+    ]
   },
-
   "design": {
     "mode": "light",
     "tokens": {
@@ -46,18 +49,6 @@
     },
     "theme": ":root{\n  --bg-primary:#ffffff;\n  --bg-secondary:#f5f5f7;\n  --bg-tertiary:#e8e8ed;\n  --text-primary:#1d1d1f;\n  --text-secondary:#3a3a3f;\n  --text-muted:#8a8a8f;\n  --accent-blue:#0ea5e9;\n  --accent-purple:#6366f1;\n  --accent-blue-dim:#0284c7;\n  --border-color:rgba(0,0,0,0.12);\n  --hover-bg:rgba(14,165,233,0.06);\n  --gradient-from:#0ea5e9;\n  --gradient-via:#38bdf8;\n  --gradient-to:#6366f1;\n  --content-max-width:1200px;\n  --reading-max-width:720px;\n  --header-height:64px;\n  --brand-font:\"Inter\",\"PingFang SC\",system-ui,sans-serif;\n  --radius-card:14px;\n  --shadow-card:0 1px 3px rgba(0,0,0,0.06);\n}"
   },
-
-  "site": {
-    "name": null,
-    "description": null,
-    "titleFormat": "%s | TokenPress",
-    "copyright": null,
-    "icp": null,
-    "icpUrl": null,
-    "poweredBy": null,
-    "footerLogo": null
-  },
-
   "header": {
     "variant": "sticky-solid",
     "height": 64,
@@ -94,16 +85,42 @@
       }
     },
     "actions": [
-      { "type": "theme", "icon": "palette", "style": "icon" },
-      { "type": "language", "icon": "globe", "style": "ghost", "label": { "zh": "中文", "en": "EN" } },
-      { "type": "admin", "icon": "dashboard", "style": "outline", "showWhen": "loggedIn" },
-      { "type": "logout", "icon": "logout", "style": "ghost", "showWhen": "loggedIn" },
-      { "type": "login", "icon": "user", "style": "outline", "showWhen": "loggedOut" }
+      {
+        "type": "theme",
+        "icon": "palette",
+        "style": "icon"
+      },
+      {
+        "type": "language",
+        "icon": "globe",
+        "style": "ghost",
+        "label": {
+          "zh": "中文",
+          "en": "EN"
+        }
+      },
+      {
+        "type": "admin",
+        "icon": "dashboard",
+        "style": "outline",
+        "showWhen": "loggedIn"
+      },
+      {
+        "type": "logout",
+        "icon": "logout",
+        "style": "ghost",
+        "showWhen": "loggedIn"
+      },
+      {
+        "type": "login",
+        "icon": "user",
+        "style": "outline",
+        "showWhen": "loggedOut"
+      }
     ],
     "background": "#ffffff",
     "borderBottom": "1px solid rgba(0,0,0,0.08)"
   },
-
   "hero": {
     "enabled": true,
     "position": "before-content",
@@ -113,26 +130,59 @@
     "autoplay": true,
     "interval": 5,
     "transition": "slide",
-    "overlay": { "enabled": true, "color": "rgba(0,0,0,0.25)" },
+    "overlay": {
+      "enabled": true,
+      "color": "rgba(0,0,0,0.25)"
+    },
     "showCTA": true,
     "ctaButtons": []
   },
-
   "layouts": {
     "homepage": {
       "container": "boxed",
       "sections": [
-        { "component": "Hero", "variant": "carousel", "props": { "autoplay": true } },
-        { "component": "Banner", "variant": "cta", "id": "home_main" },
-        { "component": "ArticleList", "variant": "grid-3", "props": { "source": "latest", "limit": 9 } },
-        { "component": "Banner", "variant": "cta", "id": "home_bottom" }
+        {
+          "component": "Hero",
+          "variant": "carousel",
+          "props": {
+            "autoplay": true
+          }
+        },
+        {
+          "component": "Banner",
+          "variant": "cta",
+          "id": "home_main"
+        },
+        {
+          "component": "ArticleList",
+          "variant": "grid-3",
+          "props": {
+            "source": "latest",
+            "limit": 9
+          }
+        },
+        {
+          "component": "Banner",
+          "variant": "cta",
+          "id": "home_bottom"
+        }
       ]
     },
     "section": {
       "layout": "page-sidebar-right",
-      "hero": { "enabled": false },
-      "sidebar": { "enabled": true, "sticky": true },
-      "list": { "layout": "grid", "columns": 3, "showThumbnail": true, "showExcerpt": true },
+      "hero": {
+        "enabled": false
+      },
+      "sidebar": {
+        "enabled": true,
+        "sticky": true
+      },
+      "list": {
+        "layout": "grid",
+        "columns": 3,
+        "showThumbnail": true,
+        "showExcerpt": true
+      },
       "subcategory": {
         "enabled": true,
         "position": "sidebar",
@@ -148,12 +198,28 @@
       "sidebar": "related",
       "maxWidth": 720
     },
-    "list": { "layout": "grid", "columns": 3 },
+    "list": {
+      "layout": "grid",
+      "columns": 3
+    },
     "category": {
       "layout": "page-sidebar-right",
-      "hero": { "enabled": true, "titleFrom": "category", "showCover": false, "description": true },
-      "sidebar": { "enabled": true, "sticky": true },
-      "list": { "layout": "grid", "columns": 3, "showThumbnail": true, "showExcerpt": true },
+      "hero": {
+        "enabled": true,
+        "titleFrom": "category",
+        "showCover": false,
+        "description": true
+      },
+      "sidebar": {
+        "enabled": true,
+        "sticky": true
+      },
+      "list": {
+        "layout": "grid",
+        "columns": 3,
+        "showThumbnail": true,
+        "showExcerpt": true
+      },
       "subcategory": {
         "enabled": true,
         "position": "sidebar",
@@ -162,36 +228,115 @@
       }
     },
     "templates": {
-      "article-list": { "columns": 1, "gap": "1rem", "showThumbnail": true, "showExcerpt": true, "cardStyle": "clean" },
-      "article-grid": { "columns": 3, "gap": "1.5rem", "aspectRatio": "16/10", "showThumbnail": true, "showExcerpt": true, "cardStyle": "bordered" },
-      "article-masonry": { "columns": 2, "gap": "1rem", "aspectRatio": "auto", "showThumbnail": true, "showExcerpt": false, "cardStyle": "clean" },
-      "magazine": { "columns": 3, "gap": "1.5rem", "showThumbnail": true, "showExcerpt": true, "cardStyle": "bordered" },
-      "single-page": { "maxWidth": 760, "centered": true },
-      "link-wall": { "columns": 4, "gap": "0.75rem", "pill": true },
-      "design-gallery": { "columns": 3, "gap": "1rem", "aspectRatio": "4/3", "cardStyle": "clean" }
+      "article-list": {
+        "columns": 1,
+        "gap": "1rem",
+        "showThumbnail": true,
+        "showExcerpt": true,
+        "cardStyle": "clean"
+      },
+      "article-grid": {
+        "columns": 3,
+        "gap": "1.5rem",
+        "aspectRatio": "16/10",
+        "showThumbnail": true,
+        "showExcerpt": true,
+        "cardStyle": "bordered"
+      },
+      "article-masonry": {
+        "columns": 2,
+        "gap": "1rem",
+        "aspectRatio": "auto",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "magazine": {
+        "columns": 3,
+        "gap": "1.5rem",
+        "showThumbnail": true,
+        "showExcerpt": true,
+        "cardStyle": "bordered"
+      },
+      "single-page": {
+        "maxWidth": 760,
+        "centered": true
+      },
+      "link-wall": {
+        "columns": 4,
+        "gap": "0.75rem",
+        "pill": true
+      },
+      "design-gallery": {
+        "columns": 3,
+        "gap": "1rem",
+        "aspectRatio": "4/3",
+        "cardStyle": "clean"
+      }
     }
   },
-
   "footer": {
     "variant": "multi-column",
     "columns": [
-      { "title": "导航", "links": [
-        { "label": "首页", "href": "/" },
-        { "label": "博客", "href": "/blog" },
-        { "label": "AI 编程", "href": "/ai-coding" },
-        { "label": "设计师作品", "href": "/design-works" }
-      ] },
-      { "title": "资源", "links": [
-        { "label": "GitHub 热门", "href": "/githubhots" },
-        { "label": "资源导航", "href": "/resources" },
-        { "label": "灵感瀑布", "href": "/inspiration" },
-        { "label": "科技杂志", "href": "/tech-magazine" }
-      ] },
-      { "title": "关于", "links": [
-        { "label": "关于我们", "href": "/about" },
-        { "label": "友情链接", "href": "/links" },
-        { "label": "Token 计划", "href": "/token-plan" }
-      ] }
+      {
+        "title": "导航",
+        "links": [
+          {
+            "label": "首页",
+            "href": "/"
+          },
+          {
+            "label": "博客",
+            "href": "/blog"
+          },
+          {
+            "label": "AI 编程",
+            "href": "/ai-coding"
+          },
+          {
+            "label": "设计师作品",
+            "href": "/design-works"
+          }
+        ]
+      },
+      {
+        "title": "资源",
+        "links": [
+          {
+            "label": "GitHub 热门",
+            "href": "/githubhots"
+          },
+          {
+            "label": "资源导航",
+            "href": "/resources"
+          },
+          {
+            "label": "灵感瀑布",
+            "href": "/inspiration"
+          },
+          {
+            "label": "科技杂志",
+            "href": "/tech-magazine"
+          }
+        ]
+      },
+      {
+        "title": "关于",
+        "links": [
+          {
+            "label": "关于我们",
+            "href": "/about"
+          },
+          {
+            "label": "友情链接",
+            "href": "/links"
+          },
+          {
+            "label": "Token 计划",
+            "href": "/token-plan"
+          }
+        ]
+      }
     ],
     "friendLinks": {
       "show": true,
@@ -199,11 +344,17 @@
       "items": [],
       "maxItems": 20
     },
-    "bottom": { "copyright": "© 2026 Token00 · 让 Token 的力量无限放大", "social": ["github", "wechat"], "showBackToTop": true },
+    "bottom": {
+      "copyright": "© 2026 Token00 · 让 Token 的力量无限放大",
+      "social": [
+        "github",
+        "wechat"
+      ],
+      "showBackToTop": true
+    },
     "background": "var(--bg-secondary)",
     "textColor": "var(--text-muted)"
   },
-
   "features": {
     "submenuEnabled": true,
     "readingProgressBar": true,

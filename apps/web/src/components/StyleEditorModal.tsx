@@ -32,7 +32,7 @@ export function StyleEditorModal({ styleId, builtin, onClose, onSaved, onDeleted
         const res = await api.getStyle(styleId)
         const d = res.data
         if (cancelled) return
-        // 站点覆盖等「原始值」取 d.style（顶层 d.site 是已与 site_settings 合并的解析值，不可回写）
+        // 原始覆盖值取 d.style（顶层 d.site 是由 site_settings 解析的全局值，不进入草稿）
         const rawStyle = d.style && typeof d.style === 'object' ? d.style : null
         setDraft({
           manifest: {
@@ -46,7 +46,6 @@ export function StyleEditorModal({ styleId, builtin, onClose, onSaved, onDeleted
           layouts: d.layouts || {},
           header: d.header || {},
           footer: d.footer || null,
-          site: rawStyle?.site && typeof rawStyle.site === 'object' ? rawStyle.site : {},
           hero: rawStyle?.hero && typeof rawStyle.hero === 'object' ? rawStyle.hero : {},
           features: rawStyle?.features && typeof rawStyle.features === 'object' ? rawStyle.features : {},
         })
@@ -71,7 +70,6 @@ export function StyleEditorModal({ styleId, builtin, onClose, onSaved, onDeleted
         layouts: draft.layouts,
         header: draft.header,
         footer: draft.footer,
-        site: draft.site || {},
         hero: draft.hero || {},
         features: draft.features || {},
       })

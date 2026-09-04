@@ -34,28 +34,23 @@ function parseJsonFile(content: string): any {
   return JSON.parse(content)
 }
 
-// 深合并 site_settings 全局默认 + 风格包 site 覆盖
-// 未覆盖字段回落全局值，覆盖字段以风格包为准
-async function resolveSiteInfo(pack: StylePack): Promise<Record<string, any>> {
+// 站点信息统一解析自 site_settings 全局设置。
+// 风格包是「装修」（布局/配色/结构），不再覆盖站点内容（名称/版权/备案等），
+// 避免同一份内容存在两套来源。返回结构保持不变，前端 Header/Footer 无需改动。
+async function resolveSiteInfo(_pack: StylePack): Promise<Record<string, any>> {
   const rows = await db.select().from(siteSettings).all()
   const settings: Record<string, string> = {}
   for (const r of rows) settings[r.key] = r.value ?? ''
-  const ov = pack.site || {}
-
-  const resolve = (packKey: string, settingKey: string, fallback: any = '') => {
-    const v = ov[packKey]
-    return v === undefined || v === null ? settings[settingKey] ?? fallback : v
-  }
 
   return {
-    name: resolve('name', 'site_name', 'TokenPress'),
-    description: resolve('description', 'site_description', ''),
-    titleFormat: ov.titleFormat ?? '%s | TokenPress',
-    copyright: resolve('copyright', 'copyright_text', ''),
-    icp: resolve('icp', 'icp_number', ''),
-    icpUrl: resolve('icpUrl', 'icp_url', ''),
-    poweredBy: resolve('poweredBy', 'powered_by', ''),
-    footerLogo: ov.footerLogo ?? null,
+    name: settings.site_name ?? 'TokenPress',
+    description: settings.site_description ?? '',
+    titleFormat: settings.title_format ?? '%s | TokenPress',
+    copyright: settings.copyright_text ?? '',
+    icp: settings.icp_number ?? '',
+    icpUrl: settings.icp_url ?? '',
+    poweredBy: settings.powered_by ?? '',
+    footerLogo: null, // 全局页脚 Logo 由前端直接读 site_settings.footer_logo
   }
 }
 
@@ -98,7 +93,6 @@ async function buildPackResponse(pack: StylePack, activeId: string) {
       header: pack.header,
       footer: pack.footer,
       layouts,
-      site: pack.site || null,
       hero: pack.hero || null,
       features: pack.features || null,
     },
@@ -430,7 +424,9 @@ router.post('/', apiTokenOrAdmin('styles:write'), async (req, res) => {
     // 构造 pack
     let pack: StylePack
     if (body.style && typeof body.style === 'object') {
-      pack = { id, ...body.style }
+      // 站点信息由 site_settings 管理，传入的 site 键一律剔除
+      const { site: _drop, ...styleRest } = body.style
+      pack = { id, ...styleRest }
     } else {
       pack = {
         id,
@@ -467,8 +463,9 @@ router.put('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
     const next: StylePack = { ...pack }
 
     if (body.style && typeof body.style === 'object') {
-      // 整份 style 替换（保留 id 与元数据）
-      const merged = { ...body.style, $: { ...pack.$, ...(body.style.$ || {}) } }
+      // 整份 style 替换（保留 id 与元数据；剔除 site —— 站点信息由 site_settings 管理）
+      const { site: _drop, ...styleRest } = body.style
+      const merged = { ...styleRest, $: { ...pack.$, ...(styleRest.$ || {}) } }
       const pv = validatePack({ id, ...merged })
       if (!pv.ok) return res.status(400).json({ success: false, error: pv.error })
       await writePack(id, { id, ...merged })
@@ -482,7 +479,6 @@ router.put('/:id', apiTokenOrAdmin('styles:write'), async (req, res) => {
     if (body.layouts !== undefined) next.layouts = body.layouts
     if (body.header !== undefined) next.header = body.header
     if (body.footer !== undefined) next.footer = body.footer
-    if (body.site !== undefined) next.site = body.site
     if (body.hero !== undefined) next.hero = body.hero
     if (body.features !== undefined) next.features = body.features
 

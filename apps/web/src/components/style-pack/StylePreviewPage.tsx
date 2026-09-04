@@ -38,7 +38,6 @@ export function StylePreviewPage({ styleId, builtin }: { styleId: string; builti
             layouts: d.layouts || {},
             header: d.header || {},
             footer: d.footer || null,
-            site: rawStyle?.site && typeof rawStyle.site === 'object' ? rawStyle.site : {},
             hero: rawStyle?.hero && typeof rawStyle.hero === 'object' ? rawStyle.hero : {},
             features: rawStyle?.features && typeof rawStyle.features === 'object' ? rawStyle.features : {},
           }
@@ -65,7 +64,6 @@ export function StylePreviewPage({ styleId, builtin }: { styleId: string; builti
         layouts: draft.layouts,
         header: draft.header,
         footer: draft.footer,
-        site: draft.site || {},
         hero: draft.hero || {},
         features: draft.features || {},
       })

@@ -499,24 +499,23 @@ POST /api/v1/statichtml/file
 | GET | `/api/v1/styles/:id` | `styles:read` | 单包完整配置 |
 | GET | `/api/v1/styles/:id/schema` | `styles:read` | JSON Schema（可配置字段 + 校验规则） |
 | GET | `/api/v1/styles/:id/playbook` | `styles:read` | `ai-playbook.md` 原文（Agent 设计约束） |
-| GET | `/api/v1/styles/:id/diff?target=<id2>` | `styles:read` | 两包差异（对比根：site/design/header/footer/layouts/hero/features） |
+| GET | `/api/v1/styles/:id/diff?target=<id2>` | `styles:read` | 两包差异（对比根：design/header/footer/layouts/hero/features） |
 | PATCH | `/api/v1/styles/:id` | `styles:write` | 单字段 / 批量原子修改 |
 | PATCH | `/api/v1/styles/:id/homepage-sections` | `styles:write` | 首页组件数组增删改移 |
 | POST | `/api/v1/styles` | `styles:write` | 新建包（201；id 已存在或撞内置包 → 409） |
 | POST | `/api/v1/styles/:id/scheme` | `styles:write` | 配色批量重算（`mode`/`accent`/`accentAlt`） |
 | POST | `/api/v1/styles/:id/activate` | `styles:write` | 激活为当前风格包（写 `site_settings.active_style`） |
 | POST | `/api/v1/styles/:id/preview` | `styles:write` | 渲染预览图（依赖 playwright-core + 系统 Chrome，未安装 501；非破坏，临时切换后回滚） |
-| PUT | `/api/v1/styles/:id` | `styles:write` | 整包 `{style:{...}}` 替换 或 旧字段局部更新（theme/manifest/layouts/header/footer/site/hero/features） |
+| PUT | `/api/v1/styles/:id` | `styles:write` | 整包 `{style:{...}}` 替换 或 旧字段局部更新（theme/manifest/layouts/header/footer/hero/features） |
 | POST | `/api/v1/styles/:id/restore` | `styles:write` | 内置包恢复出厂默认（从镜像内 builtin 源整目录重拷） |
 | DELETE | `/api/v1/styles/:id` | `styles:write` | 删除自定义包（内置包受保护 → 403） |
 
-**读取契约（重要）**：GET 返回体中**顶层 `site` 是已与全局 `site_settings` 深合并的解析值**（未覆盖字段回落全局）；原始覆盖在 `data.style.site`（`null` = 跟随后台）。回写/编辑一律改 `data.style.site`，**禁止写顶层 `site`**（会把全局配置冻结进该包）。Agent 首选整体读写 `data.style`（style.json 完整对象）。
+**读取契约（重要）**：GET 返回体中**顶层 `site` 是由全局 `site_settings` 解析的站点信息**（只读，供前台渲染），不属于风格包、不接受回写。站点信息（名称/版权/备案等）只能通过「1. 站点设置」接口修改。编辑/写入一律改 `data.style` 下的 `design|header|footer|layouts|hero|features`。Agent 首选整体读写 `data.style`（style.json 完整对象）。
 
-**style.json 顶层键**：`$`(元数据) `design` `site` `header` `hero` `layouts` `footer` `features`。可 PATCH 根白名单：`site | design | header | footer | layouts | hero | features`（`$` 禁改）。常用覆盖字段：
+**style.json 顶层键**：`$`(元数据) `design` `header` `hero` `layouts` `footer` `features`。可 PATCH 根白名单：`design | header | footer | layouts | hero | features`（`$` 禁改）。常用覆盖字段：
 
 | 根 | 子字段 |
 |---|---|
-| `site` | `name` `description` `titleFormat` `copyright` `icp` `icpUrl` `poweredBy` `footerLogo` |
 | `hero` | `enabled` `size` `interval` `autoplay` `variant` `position` `height` `transition` `showCTA` `ctaButtons[]`（`{label:{zh,en},href,style}`）`overlay` |
 | `features` | `readingProgressBar` `backToTop` `welcomeOverlay` `languageSwitcher` `submenuEnabled` |
 | `footer.friendLinks` | `show` `source(table\|custom)` `maxItems` `columns` `items[]` |
@@ -526,7 +525,7 @@ POST /api/v1/statichtml/file
 
 ```json
 // PATCH 单字段
-{ "path": "site.titleFormat", "value": "%s | MyBrand" }
+{ "path": "hero.interval", "value": 5 }
 
 // PATCH 批量（原子，任一失败整体拒绝）
 { "patch": [
@@ -535,7 +534,7 @@ POST /api/v1/statichtml/file
 ] }
 
 // 批量中删除字段
-{ "patch": [ { "path": "site.poweredBy", "op": "delete" } ] }
+{ "patch": [ { "path": "features.welcomeOverlay", "op": "delete" } ] }
 
 // 首页组件数组：在 index 2 插入命名 Banner
 PATCH /api/v1/styles/blog/homepage-sections
@@ -546,7 +545,7 @@ PUT /api/v1/styles/:id
 { "style": { "$": { "name": "..." }, "design": { "tokens": { ... } }, "header": { ... }, "layouts": { ... } } }
 ```
 
-**安全**：包 id 正则 `^[a-z0-9-]+$`（防路径穿越）；PATCH 分根字段校验（header/layouts/footer/site/design）；所有写端点（create/update/patch/homepage-sections/scheme/activate/preview/restore/delete）均写 `audit_logs`（action `style_pack`，detail 含 `[id]` 与变更路径）。`site.*` 属「风格包级展示覆盖」（默认 null 由全局兜底），由 `styles:write` 管理，不越权 `settings:write`。
+**安全**：包 id 正则 `^[a-z0-9-]+$`（防路径穿越）；PATCH 分根字段校验（header/layouts/footer/design）；所有写端点（create/update/patch/homepage-sections/scheme/activate/preview/restore/delete）均写 `audit_logs`（action `style_pack`，detail 含 `[id]` 与变更路径）。风格包只负责「装修」（布局/配色/结构），站点信息属内容、唯一来源 `site_settings`（`settings:write`），不存在经 `styles:write` 越权改站点内容的路径。
 
 ---
 
@@ -597,7 +596,7 @@ call("POST", "/statichtml/file", {
 # 风格包：列包 / 读单包 schema / 批量补丁 / 激活（需 styles:read|write）
 print(call("GET", "/styles"))
 print(call("GET", "/styles/blog/schema"))
-call("PATCH", "/styles/blog", {"patch": [{"path": "site.titleFormat", "value": "%s | MyBrand"}]})
+call("PATCH", "/styles/blog", {"patch": [{"path": "hero.interval", "value": 5}]})
 call("POST", "/styles/blog/activate", {})
 ```
 

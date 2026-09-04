@@ -31,21 +31,8 @@ export interface StylePack {
   header: any
   footer: any
   layouts: any                        // 含 homepage.sections / section / category / article / list / templates
-  site?: SiteOverrides                // 站点信息覆盖（未覆盖回落到 site_settings 全局默认）
   hero?: any                          // Hero 配置（variant/position/ctaButtons/height）
   features?: Record<string, any>
-}
-
-export interface SiteOverrides {
-  name?: string | null
-  description?: string | null
-  titleFormat?: string
-  copyright?: string | null
-  icp?: string | null
-  icpUrl?: string | null
-  poweredBy?: string | null
-  footerLogo?: { type?: string; src?: string; height?: number }
-  [key: string]: any
 }
 
 // ===== 校验工具 =====
@@ -101,27 +88,6 @@ function validateTheme(css: unknown): { ok: boolean; error?: string } {
   if (!s.includes('{') || !s.includes('}')) return { ok: false, error: 'theme 必须是合法 CSS 块' }
   if (/<|>|url\(|@import|javascript:|expression\(/i.test(s)) {
     return { ok: false, error: 'theme 包含不允许的内容（脚本/外链/@import）' }
-  }
-  return { ok: true }
-}
-
-function validateSite(site: any): { ok: boolean; error?: string } {
-  if (site === undefined || site === null) return { ok: true }
-  if (typeof site !== 'object' || Array.isArray(site)) return { ok: false, error: 'site 必须是对象' }
-  for (const key of ['name', 'description', 'copyright', 'icp', 'icpUrl', 'poweredBy']) {
-    if (site[key] !== undefined && site[key] !== null && typeof site[key] !== 'string') {
-      return { ok: false, error: `site.${key} 必须是字符串或 null` }
-    }
-    if (typeof site[key] === 'string' && /<|javascript:/i.test(site[key])) {
-      return { ok: false, error: `site.${key} 包含不允许的内容` }
-    }
-  }
-  const fl = site.footerLogo
-  if (fl !== undefined && fl !== null) {
-    if (typeof fl !== 'object') return { ok: false, error: 'site.footerLogo 必须是对象' }
-    if (fl.src !== undefined && (typeof fl.src !== 'string' || !fl.src.startsWith('/') || fl.src.includes('..') || fl.src.includes('://'))) {
-      return { ok: false, error: 'site.footerLogo.src 仅允许同源相对路径' }
-    }
   }
   return { ok: true }
 }
@@ -214,7 +180,6 @@ function validateDesign(design: any): { ok: boolean; error?: string } {
 export function validatePack(pack: StylePack): { ok: boolean; error?: string } {
   if (!pack || typeof pack !== 'object') return { ok: false, error: 'pack 必须是对象' }
   const checks = [
-    validateSite(pack.site),
     validateHeader(pack.header),
     validateLayouts(pack.layouts),
     validateFooter(pack.footer),
@@ -259,7 +224,9 @@ export function deleteIn(obj: any, path: string): any {
 }
 
 // 允许 patch 的顶层根（防止 agent 写未受控字段）
-export const PATCHABLE_ROOTS = ['site', 'design', 'header', 'footer', 'layouts', 'hero', 'features'] as const
+// 注：风格包只负责「装修」（布局/配色/结构），站点信息（名称/版权/备案等）
+// 统一由 site_settings 全局设置管理，故 site 不在可写根之列。
+export const PATCHABLE_ROOTS = ['design', 'header', 'footer', 'layouts', 'hero', 'features'] as const
 
 // 校验单字段 patch 的 path 是否合法（必须在可 patch 根下）
 export function validatePatchPath(pack: StylePack, path: string): { ok: boolean; error?: string } {
@@ -393,13 +360,12 @@ export function applyPatch(pack: StylePack, patch: PatchOp): { ok: boolean; pack
     next = { ...pack, ...setIn(pack, patch.path, patch.value) }
   }
 
-  // 校验修改后的包（若 path 落入 header/layouts/design/site/footer 则逐字段校验）
+  // 校验修改后的包（若 path 落入 header/layouts/design/footer 则逐字段校验）
   const root = patch.path.split('.')[0]
   let check: { ok: boolean; error?: string } = { ok: true }
   if (root === 'header') check = validateHeader(getIn(next, 'header'))
   else if (root === 'layouts') check = validateLayouts(getIn(next, 'layouts'))
   else if (root === 'footer') check = validateFooter(getIn(next, 'footer'))
-  else if (root === 'site') check = validateSite(getIn(next, 'site'))
   else if (root === 'design') check = validateDesign(getIn(next, 'design'))
   if (!check.ok) return { ok: false, error: check.error }
 

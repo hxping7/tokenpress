@@ -30,9 +30,10 @@
 | `header` | 顶部导航 | `variant` / `logo`（src/width/height）/ `nav` / `actions` / `background` / `borderBottom` |
 | `footer` | 页脚 | `variant` / `columns` / `friendLinks` / `bottom` / `background` / `textColor` |
 | `layouts` | 布局骨架 | `homepage.sections[]` / `section`（含 `subcategory`）/ `article` / `list` / `category` / `templates` |
-| `site` | **全站展示覆盖**（`null` = 跟随后台全局 site_settings） | `name` / `description` / `titleFormat` / `copyright` / `icp` / `icpUrl` / `poweredBy` / `footerLogo` |
 | `hero` | 首页 Hero / 轮播覆盖 | `enabled` / `size` / `interval` / `autoplay` / `variant` / `position` / `height` / `transition` / `showCTA` / `ctaButtons[]` / `overlay` |
 | `features` | 功能开关覆盖（布尔，`null` 值字段不限制前端） | `readingProgressBar` / `backToTop` / `welcomeOverlay` / `languageSwitcher` / `submenuEnabled` |
+
+> 风格包只负责「装修」（布局/配色/结构）。站点信息（名称/描述/版权/备案/页脚 Logo）统一由 `site_settings` 全局设置管理，不进入 `style.json`。
 
 字段级定义与校验规则以 `GET /api/v1/styles/:id/schema` 返回的 `style-json.schema.json` 为准（Agent 改包前应读取）。
 
@@ -49,8 +50,6 @@
 
 | 字段 | 消费位置 |
 |---|---|
-| `site.titleFormat` | `generateMetadata` 页面标题后缀（三包差异化：blog `\| TokenPress`、design `\| Studio`、enterprise `\| Token00`） |
-| `site.name/description` | metadata / 布局文案；`site.footerLogo`（type:image）与 `copyright/icp/icpUrl/poweredBy` → `Footer`/`FooterLogo` |
 | `hero.ctaButtons` | 首页 `HeroCarousel`：`label` 对象 `{zh,en}` 按 locale 解析；`style` 归一化映射 `primary→primary`、`outline→secondary`、`ghost→ghost` |
 | `hero.enabled/size/interval/...` | 首页 Hero 外观与自动轮播参数（与 `site_settings.hero_*` 组成合并链，包覆盖优先） |
 | `features.readingProgressBar` | 文章详情页顶部阅读进度条（`ReadingProgress`），false 不渲染 |
@@ -67,11 +66,11 @@
 
 全部端点见 `docs/admin-api.md` / `docs/ai-publish-api.md`（新增「风格包 styles」章节）。要点：
 
-- **读取契约（关键）**：`GET /styles/:id` 返回的顶层 `site` 是**已与 `site_settings` 深合并的解析值**（未覆盖字段回落全局）；原始覆盖在 `data.style.site`（`null` = 跟随后台）。**任何编辑器/Agent 回写都必须写 `data.style.site`，绝不写顶层 `site`**（否则会把全局配置冻结进该包）。Agent 首选整体读写 `style` 单文件对象。
+- **读取契约（关键）**：`GET /styles/:id` 返回的顶层 `site` 是**由 `site_settings` 解析的全局站点信息**（只读，供前台 Header/Footer 渲染），不属于风格包、不接受回写；编辑器/Agent 只读写 `data.style` 下的 `design|header|footer|layouts|hero|features`。Agent 首选整体读写 `style` 单文件对象。
 - **写入三条路径**：
-  1. `PATCH /styles/:id` — 单字段/批量原子 patch（`{path,value}` 或 `{patch:[{path,value,op}]}`），根必须在 `site|design|header|footer|layouts|hero|features`；
-  2. `PUT /styles/:id` — `{style:{...}}` 整份 style 替换（保留 id 与元数据），或旧字段局部更新（`theme/manifest/layouts/header/footer/site/hero/features`）；
-  3. `POST /styles` — 新建包（直接提交 `{style:{...}}` 或旧字段形式）。
+  1. `PATCH /styles/:id` — 单字段/批量原子 patch（`{path,value}` 或 `{patch:[{path,value,op}]}`），根必须在 `design|header|footer|layouts|hero|features`；
+  2. `PUT /styles/:id` — `{style:{...}}` 整份 style 替换（保留 id 与元数据，自动剔除 `site` 键），或旧字段局部更新（`theme/manifest/layouts/header/footer/hero/features`）；
+  3. `POST /styles` — 新建包（直接提交 `{style:{...}}` 或旧字段形式，同样剔除 `site` 键）。
 - 首页组件增删改走 `PATCH /styles/:id/homepage-sections`（insert/remove/replace/move）；配色批量重算走 `POST /styles/:id/scheme`（mode/accent/accentAlt）。
 - 预览：`POST /styles/:id/preview`（view=home|section，带 patches 临时渲染非破坏），内部以全局锁 `style-preview-global` 串行，临时切 `active_style`、渲染后仅当仍指向该 id 才回滚。
 - 恢复默认 `POST /styles/:id/restore`（仅内置包，从镜像内 `styles-builtin` 源整目录重拷）；删除 `DELETE /styles/:id`（内置包 403）。
@@ -80,9 +79,9 @@
 
 - 权限标识 `styles:read` / `styles:write`，位于 `packages/shared` 权限目录（roles: admin / superadmin），与现有 token 白名单同一套机制；后台 tokens 页可勾选。
 - `GET /styles/active` 公开（SSR 需要）；其余读端点需 `styles:read`，全部写端点需 `styles:write`。无权限访问写接口 403（实测）。
-- 校验：包 id 正则 `^[a-z0-9-]+$` 防路径穿越；整包 `validatePack`；PATCH 分根校验（header/layouts/footer/site/design）；`$` 元数据禁止经 PATCH 修改。
+- 校验：包 id 正则 `^[a-z0-9-]+$` 防路径穿越；整包 `validatePack`；PATCH 分根校验（header/layouts/footer/design）；`$` 元数据禁止经 PATCH 修改。
 - 所有写端点（create/update/patch/homepage-sections/scheme/activate/preview/restore/delete）均写 `audit_logs`（action + `style_pack` + detail 含 `[id]` 与变更路径）。
-- **`site.*` 归属定案**：属「风格包级展示覆盖」由 `styles:write` 管理——三包默认 `site` 字段为 null、由全局 `site_settings` 兜底，不构成对 `settings:write` 的越权。
+- **站点信息归属定案**：名称/描述/版权/备案/页脚 Logo 属**内容**，唯一来源是 `site_settings`（`settings:write`）；风格包不含 `site` 根键，不存在经 `styles:write` 越权改站点内容的路径。
 - 内置包与用户包并存：`POST` 撞内置包 id 409；内置包仅可 `restore` 不可 `delete`/`POST` 覆盖。
 
 ## 7. 验收清单
@@ -99,7 +98,7 @@
 | AC-8 | 安全校验：id 穿越 / CSS 注入 / 未知组件被拒 | ✔ 已验证 |
 | AC-9 | 持久化：容器重建后内置三包与自定义包均不丢（`initBuiltinStyles` 只拷贝缺失目录） | ✔ 已验证 |
 | AC-10 | **style.json 单文件统一**：三包卷重置后仅 style.json/ai-playbook.md/preview.png；旧 5 文件卷触发一次性确定性迁移，迁移后无回退路径 | ✔ 已验证 |
-| AC-11 | **全站 AI 可设置化**：site/hero/features/friendLinks/subcategory 字段前端全部消费；后台 StylePackForm 控件齐全（站点信息/首页 Hero/功能开关/板块/页脚 Tab） | ✔ 已验证（SSR 冒烟 + API 往返） |
+| AC-11 | **全站 AI 可设置化**：hero/features/friendLinks/subcategory 字段前端全部消费；后台 StylePackForm 控件齐全（首页 Hero/功能开关/板块/页脚 Tab） | ✔ 已验证（SSR 冒烟 + API 往返） |
 | AC-12 | **写操作审计**：10 个变更端点全部落 audit_logs（operator=api-token/admin 合成身份） | ✔ 已验证 |
 | AC-13 | **CTA 运行时兼容**：编辑器写入 `{label:{zh,en}, style}` 的 hero CTA 正常渲染，无 `[object Object]` | ✔ 已验证 |
 
