@@ -10,6 +10,48 @@ import { useStyleFooter, useStyleSite } from '@/components/StyleProvider'
 import { t } from '@/lib/i18n'
 import { useSiteSettings } from '@/lib/useSiteSettings'
 
+// ===== Footer 前景色辅助：确保文字与 footer 背景对比度达标 =====
+// 仅能判断具体色值（#hex / rgba）；var() 背景（跟随主题）返回 null → 交由主题变量处理。
+function parseColorLuminance(c?: string): number | null {
+  if (!c) return null
+  const s = c.trim()
+  if (s.startsWith('#')) {
+    let hex = s
+    if (hex.length === 4) hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3]
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  }
+  const m = s.match(/rgba?\(([^)]+)\)/)
+  if (m) {
+    const p = m[1].split(',').map((x) => parseFloat(x))
+    return (0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]) / 255
+  }
+  return null
+}
+
+function withAlpha(hex: string, alpha: number): string {
+  const s = (hex || '').trim()
+  if (!s.startsWith('#')) return s
+  let h = s
+  if (h.length === 4) h = '#' + h[1] + h[1] + h[2] + h[2] + h[3] + h[3]
+  const r = parseInt(h.slice(1, 3), 16)
+  const g = parseInt(h.slice(3, 5), 16)
+  const b = parseInt(h.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+// 深色 footer 上，临时把 FooterLogo 的渐变/描边变量翻成亮色，使其在黑底可见
+const FOOTER_LOGO_DARK_VARS = {
+  '--accent-blue': '#e5e5e5',
+  '--accent-purple': '#cfcfcf',
+  '--gradient-from': '#e5e5e5',
+  '--gradient-to': '#cfcfcf',
+  '--text-secondary': '#e5e5e5',
+  '--bg-tertiary': '#1c1c1e',
+} as React.CSSProperties
+
 interface FriendLink {
   id: number
   name: string
@@ -47,6 +89,28 @@ export function Footer() {
   const fc = useStyleFooter()
   // 站点信息覆盖（风格包 site + site_settings 全局默认合并结果）
   const site = useStyleSite() || {}
+
+  // Footer 前景色：跟随 footer 背景明暗 + 包配置 textColor，避免黑底配深灰字看不见
+  const footerBgLum = parseColorLuminance(fc?.background)
+  const footerDark = footerBgLum !== null && footerBgLum < 0.4
+  const footerTextConcrete = !!fc?.textColor && !String(fc.textColor).startsWith('var(')
+  const footerFg = footerDark
+    ? (fc?.textColor || '#e5e5e5')
+    : footerTextConcrete
+      ? String(fc?.textColor)
+      : 'var(--text-secondary)'
+  const footerFgMuted = footerDark
+    ? footerTextConcrete
+      ? withAlpha(String(fc?.textColor), 0.62)
+      : 'rgba(255,255,255,0.62)'
+    : 'var(--text-muted)'
+  const footerFgHover = footerDark ? '#ffffff' : 'var(--text-primary)'
+  const footerVarStyle: React.CSSProperties = {
+    '--footer-fg': footerFg,
+    '--footer-fg-muted': footerFgMuted,
+    '--footer-fg-hover': footerFgHover,
+  } as React.CSSProperties
+  const footerLogoWrap = footerDark ? FOOTER_LOGO_DARK_VARS : undefined
 
   // Hide footer on admin and auth pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
@@ -127,16 +191,16 @@ export function Footer() {
   // 极简 Footer（设计师作品集包）
   if (fc?.variant === 'minimal') {
     return (
-      <footer className="border-t border-t-border" style={{ background: fc.background || 'transparent' }}>
+      <footer className="border-t border-t-border" style={{ background: fc.background || 'transparent', ...footerVarStyle }}>
         <div className="max-w-[var(--content-max-width)] mx-auto py-10 px-4 flex flex-col items-center gap-4">
-          <FooterLogo />
-          <span className="text-sm text-t-text-muted">{fc.bottom?.copyright || copyrightText}</span>
+          <div style={footerLogoWrap}><FooterLogo /></div>
+          <span className="text-sm text-[var(--footer-fg)]">{fc.bottom?.copyright || copyrightText}</span>
         </div>
       </footer>
     )
   }
 
-  const footerStyle: React.CSSProperties = {}
+  const footerStyle: React.CSSProperties = { ...footerVarStyle }
   if (fc?.background) footerStyle.background = fc.background
   if (fc?.textColor) footerStyle.color = fc.textColor
 
@@ -156,13 +220,13 @@ export function Footer() {
             {footerNav.map((group, gIdx) => (
               <div key={gIdx} className="space-y-3">
                 {group.title && (
-                  <h3 className="text-sm font-semibold text-t-text-primary">
+                  <h3 className="text-sm font-semibold text-[var(--footer-fg)]">
                     {group.title}
                   </h3>
                 )}
                 {group.html !== undefined ? (
                   <div
-                    className="text-sm text-t-text-secondary [&_a]:text-t-text-secondary [&_a]:hover:text-t-text-primary [&_a]:transition-colors [&_img]:inline-block"
+                    className="text-sm text-[var(--footer-fg)] [&_a]:text-[var(--footer-fg)] [&_a]:hover:text-[var(--footer-fg-hover)] [&_a]:transition-colors [&_img]:inline-block"
                     dangerouslySetInnerHTML={{ __html: group.html || '' }}
                   />
                 ) : (
@@ -172,7 +236,7 @@ export function Footer() {
                         {item.url?.startsWith('/') || item.url?.startsWith('#') ? (
                           <Link
                             href={item.url}
-                            className="text-sm text-t-text-secondary hover:text-t-text-primary transition-colors"
+                            className="text-sm text-[var(--footer-fg)] hover:text-[var(--footer-fg-hover)] transition-colors"
                           >
                             {item.name}
                           </Link>
@@ -181,7 +245,7 @@ export function Footer() {
                             href={item.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-t-text-secondary hover:text-t-text-primary transition-colors"
+                            className="text-sm text-[var(--footer-fg)] hover:text-[var(--footer-fg-hover)] transition-colors"
                           >
                             {item.name}
                           </a>
@@ -204,7 +268,7 @@ export function Footer() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-t-text-secondary hover:text-t-text-primary transition-colors whitespace-nowrap"
+                    className="text-sm text-[var(--footer-fg)] hover:text-[var(--footer-fg-hover)] transition-colors whitespace-nowrap"
                   >
                     {link.name}
                   </a>
@@ -219,8 +283,8 @@ export function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             {/* 左列：Logo + 版权文本 */}
             <div className="flex flex-col items-center md:items-start gap-2">
-              <FooterLogo />
-              <span className="text-xs text-t-text-muted">{copyrightText}</span>
+              <div style={footerLogoWrap}><FooterLogo /></div>
+              <span className="text-xs text-[var(--footer-fg-muted)]">{copyrightText}</span>
             </div>
 
             {/* 中列：ICP 备案 */}
@@ -230,7 +294,7 @@ export function Footer() {
                   href={icpUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-t-text-muted hover:text-t-text-secondary transition-colors"
+                  className="text-xs text-[var(--footer-fg-muted)] hover:text-[var(--footer-fg-hover)] transition-colors"
                 >
                   {icpNumber}
                 </a>
@@ -240,7 +304,7 @@ export function Footer() {
             {/* 右列：Powered by / 技术栈 */}
             <div className="flex justify-center md:justify-end">
               {poweredBy && (
-                <span className="text-xs text-t-text-muted">{poweredBy}</span>
+                <span className="text-xs text-[var(--footer-fg-muted)]">{poweredBy}</span>
               )}
             </div>
           </div>

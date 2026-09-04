@@ -344,7 +344,7 @@
       "showBackToTop": true
     },
     "background": "var(--bg-secondary)",
-    "textColor": "var(--text-muted)"
+    "textColor": "var(--text-secondary)"
   },
   "features": {
     "readingProgressBar": true,
