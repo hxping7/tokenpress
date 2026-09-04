@@ -24,10 +24,12 @@
 
 ### Hero（首页核心视觉）
 - 数据由 site_settings 的 hero_slides / hero_carousel_use_articles 提供
-- `hero.variant`: carousel（轮播）/ standard / split-left / split-right / image-only / none
-- `hero.position`: before-content / after-content / floating
+- `hero.enabled`: false 时首页不渲染 Hero 区
+- `hero.size`: standard / wide / ultrawide / full（空 = 跟随后台 hero_size）
+- `hero.interval`: 自动轮播间隔秒数（空/0 = 跟随后台）
+- `hero.autoplay`: false 时仅手动切换
+- `hero.showCTA`: false 时隐藏 CTA 按钮区
 - `hero.ctaButtons[]`: CTA 按钮卡片（label 支持 {zh,en}、href、style）
-- `hero.height`: 高度 vh / px
 
 ### 首页内容块
 - `layouts.homepage.container`: boxed / full / wide
@@ -48,14 +50,12 @@
 ### 页脚
 - `footer.columns[]`: 页脚菜单分组（title + links[{label,href}] 或 html）
 - `footer.friendLinks.show`: 是否显示友链；`source`: table（读表）/ custom（自定义 items）
-- `footer.bottom.copyright`: 版权文本（也可用 `site.copyright` 覆盖全局）
+- `footer.bottom.copyright`: 版权文本
 
-### 站点信息
-- `site.name` / `site.copyright` / `site.icp` / `site.icpUrl` / `site.poweredBy`
-- 值为 null 表示回落 site_settings 全局默认
+> 站点信息（名称/版权/备案/页脚 Logo）不在本包内——属内容，唯一来源是后台「系统设置」（`site_settings`），本包只管布局/配色/结构。
 
 ## Agent 操作示例
-- 「把首页 Hero 改成左文右图分栏」→ patch `hero.variant` = "split-left", `hero.overlay.enabled` = false
+- 「关闭首页 Hero 轮播」→ patch `hero.enabled` = false
 - 「菜单放左边、Logo 居中」→ patch `header.logo.position` = "center", `header.nav.align` = "left"
 - 「二级分类改成顶部标签云」→ patch `layouts.section.subcategory.position` = "top", `layouts.section.subcategory.style` = "pill"
 - 「文章页用沉浸式无边栏」→ patch `layouts.article.layout` = "immersive", `layouts.article.showTOC` = false
@@ -68,7 +68,7 @@
 **鉴权**：`Authorization: Bearer t00_sk_...`，读需 `styles:read`、写需 `styles:write`（均在后台 Token 管理可授）。
 
 - 读取当前全量：`GET /api/v1/styles/active` → `data.style`（合并后单文件）
-- 单字段改：`PATCH /api/v1/styles/blog` body `{ "path":"hero.variant", "value":"split-left" }`
+- 单字段改：`PATCH /api/v1/styles/blog` body `{ "path":"hero.interval", "value":8 }`
 - 批量改：`PATCH /api/v1/styles/blog` body `{ "patch":[ {path,value}, ... ] }`
 - 首页组件序列增删改移：`PATCH /api/v1/styles/blog/homepage-sections` body `{ op, index, element?, toIndex? }`
 - 配色方案重算：`POST /api/v1/styles/blog/scheme` body `{ mode?, accent?, accentAlt? }`
@@ -79,4 +79,4 @@
 
 > **架构提醒**：Agent 跑在 PC 本地，用本地 LLM 基于 `GET /:id/schema` + 本 playbook 生成/改写 style.json，再调用远程 TokenPress API 提交（POST /、PATCH /、activate 等）。
 
-**可 patch 根**：`site` / `design` / `header` / `footer` / `layouts` / `hero` / `features`（禁止改 `$` 元数据）。design 令牌用下标键，如 `design.tokens['--radius-card']`。
+**可 patch 根**：`design` / `header` / `footer` / `layouts` / `hero` / `features`（禁止改 `$` 元数据；站点信息属内容，走 site_settings，不在本包）。design 令牌用下标键，如 `design.tokens['--radius-card']`。

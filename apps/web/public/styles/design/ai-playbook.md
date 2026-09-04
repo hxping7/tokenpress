@@ -24,10 +24,10 @@
 - `header.actions[]`: 极简（仅 search + theme + language + admin）
 
 ### Hero
-- `hero.variant`: image-only（满屏大图）
-- `hero.size`: fullscreen
+- `hero.enabled`: true
+- `hero.size`: full（满屏大图）
 - `hero.showCTA`: false（无 CTA）
-- `hero.height`: 80vh
+- `hero.autoplay`: 自动轮播开关；`hero.interval`: 轮播间隔秒数
 
 ### 首页内容块
 - 极简序列：Hero（满屏大图）→ ArticleList（瀑布流）
@@ -61,7 +61,7 @@
 **鉴权**：`Authorization: Bearer t00_sk_...`，读需 `styles:read`、写需 `styles:write`（均在后台 Token 管理可授）。
 
 - 读取当前全量：`GET /api/v1/styles/active` → `data.style`（合并后单文件）
-- 单字段改：`PATCH /api/v1/styles/design` body `{ "path":"hero.variant", "value":"image-only" }`
+- 单字段改：`PATCH /api/v1/styles/design` body `{ "path":"hero.interval", "value":8 }`
 - 批量改：`PATCH /api/v1/styles/design` body `{ "patch":[ {path,value}, ... ] }`
 - 首页组件序列增删改移：`PATCH /api/v1/styles/design/homepage-sections` body `{ op, index, element?, toIndex? }`
 - 配色方案重算：`POST /api/v1/styles/design/scheme` body `{ mode?, accent?, accentAlt? }`
@@ -72,4 +72,4 @@
 
 > **架构提醒**：Agent 跑在 PC 本地，用本地 LLM 基于 `GET /:id/schema` + 本 playbook 生成/改写 style.json，再调用远程 TokenPress API 提交（POST /、PATCH /、activate 等）。
 
-**可 patch 根**：`site` / `design` / `header` / `footer` / `layouts` / `hero` / `features`（禁止改 `$` 元数据）。design 令牌用下标键，如 `design.tokens['--radius-card']`。
+**可 patch 根**：`design` / `header` / `footer` / `layouts` / `hero` / `features`（禁止改 `$` 元数据；站点信息属内容，走 site_settings，不在本包）。design 令牌用下标键，如 `design.tokens['--radius-card']`。
