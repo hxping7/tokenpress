@@ -37,6 +37,7 @@ function useMenuItems() {
     { key: '/admin', label: t('admin.dashboard', backendLocale), icon: LayoutDashboard, roles: ['superadmin', 'admin'] },
     { key: '/admin/articles', label: t('admin.articles', backendLocale), icon: FileText, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/media', label: t('admin.media', backendLocale), icon: FolderOpen, roles: ['superadmin', 'admin', 'user'] },
+    { key: '/admin/statichtml', label: t('admin.staticHtml', backendLocale), icon: Globe, roles: ['superadmin', 'admin'] },
     { key: '/admin/categories', label: t('admin.categories', backendLocale), icon: Layers, roles: ['superadmin', 'admin'] },
     { key: '/admin/users', label: t('admin.users', backendLocale), icon: Users, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/tokens', label: t('admin.tokens', backendLocale), icon: Key, roles: ['superadmin', 'admin', 'user'] },
@@ -47,7 +48,6 @@ function useMenuItems() {
     { key: '/admin/ads', label: t('admin.ads', backendLocale), icon: Megaphone, roles: ['superadmin', 'admin'] },
     { key: '/admin/logs', label: t('admin.logs', backendLocale), icon: ScrollText, roles: ['superadmin', 'admin', 'user'] },
     { key: '/admin/settings', label: t('admin.settings', backendLocale), icon: Settings, roles: ['superadmin'] },
-    { key: '/admin/statichtml', label: t('admin.staticHtml', backendLocale), icon: Globe, roles: ['superadmin', 'admin'] },
   ]
 
   return allItems.filter(item => item.roles.includes(role)).map(({ key, label, icon }) => ({ key, label, icon }))
