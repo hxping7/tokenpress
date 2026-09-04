@@ -54,11 +54,13 @@ router.get('/', async (req, res) => {
       coverImage: articles.coverImage,
       sectionId: articles.sectionId,
       status: articles.status,
+      meta: articles.meta,
       publishedAt: articles.publishedAt,
       createdAt: articles.createdAt,
       updatedAt: articles.updatedAt,
       pinnedAt: articles.pinnedAt,
       pinnedScope: articles.pinnedScope,
+      viewCount: articles.viewCount,
       author: { id: users.id, username: users.username, displayName: users.displayName },
       category: { id: categories.id, name: categories.name, slug: categories.slug },
       section: { id: sections.id, name: sections.name, slug: sections.slug, path: sections.path },
@@ -101,51 +103,6 @@ router.get('/', async (req, res) => {
   }
 })
 
-// GET /api/v1/articles/carousel-articles — public, for hero carousel
-router.get('/carousel-articles', async (req, res) => {
-  console.log('[API] /carousel-articles endpoint called', req.query)
-  try {
-    const source = (req.query.source as string) || 'latest'
-    const limit = Math.min(10, Math.max(1, parseInt(req.query.limit as string) || 5))
-
-    // Only published articles with cover image
-    const conditions = [
-      eq(articles.status, 'published'),
-      sql`${articles.coverImage} IS NOT NULL`,
-    ]
-
-    // Order by source
-    const orderBy = source === 'hot'
-      ? desc(articles.viewCount)
-      : desc(articles.publishedAt)
-
-    const rows = await db.select({
-      id: articles.id,
-      title: articles.title,
-      slug: articles.slug,
-      excerpt: articles.excerpt,
-      coverImage: articles.coverImage,
-      publishedAt: articles.publishedAt,
-      viewCount: articles.viewCount,
-      section: { id: sections.id, name: sections.name, slug: sections.slug, path: sections.path },
-    })
-      .from(articles)
-      .leftJoin(sections, eq(articles.sectionId, sections.id))
-      .where(and(...conditions))
-      .orderBy(orderBy)
-      .limit(limit)
-      .all()
-
-    res.json({
-      success: true,
-      data: rows,
-    })
-  } catch (err) {
-    console.error('Get carousel articles error:', err)
-    res.status(500).json({ success: false, error: 'Failed to get carousel articles' })
-  }
-})
-
 // GET /api/v1/articles/:id — public
 router.get('/:id', async (req, res) => {
   try {
@@ -165,6 +122,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Article not found' })
     }
 
+    // 可选：公开详情浏览量 +1（作品集详情页用于统计，普通文章历史走 articleViews 表，不传 view 即不重复计数）
+    if (req.query.view === '1') {
+      await db.update(articles)
+        .set({ viewCount: (article.viewCount || 0) + 1, updatedAt: new Date().toISOString() })
+        .where(eq(articles.id, article.id))
+        .run()
+    }
+
     const author = await db.select({
       id: users.id, username: users.username, displayName: users.displayName, avatarUrl: users.avatarUrl,
     }).from(users).where(eq(users.id, article.authorId)).get()
@@ -179,9 +144,22 @@ router.get('/:id', async (req, res) => {
       .where(eq(articleTags.articleId, article.id))
       .all()
 
+    // 解析文章模板配置（template_config 为 JSON 字符串）
+    let templateConfig: Record<string, unknown> | null = null
+    if (article.templateConfig) {
+      try { templateConfig = JSON.parse(article.templateConfig) } catch { templateConfig = null }
+    }
+
     res.json({
       success: true,
-      data: { ...article, author, category, tags: articleTags_.map((t) => t.name) },
+      data: {
+        ...article,
+        articleTemplate: article.articleTemplate || 'standard',
+        templateConfig,
+        author,
+        category,
+        tags: articleTags_.map((t) => t.name),
+      },
     })
   } catch (err) {
     console.error('Get article error:', err)

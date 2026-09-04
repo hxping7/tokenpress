@@ -3,13 +3,14 @@ import rateLimit from 'express-rate-limit'
 import { db } from '../db/index.js'
 import { ads, adLogs, contentReviews } from '../db/schema.js'
 import { eq, and, sql } from 'drizzle-orm'
+import { getRateLimitMax } from '../lib/rateLimitConfig.js'
 
 const router = Router()
 
-// Rate limit for ad serving
+// Rate limit for ad serving（阈值可由后台「限流保护」配置）
 const adServeLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: () => getRateLimitMax('rate_limit_ads'),
   message: { success: false, error: 'Too many requests' },
 })
 

@@ -156,7 +156,7 @@ async function testTokens() {
   // Create another token for AI tests
   res = await request('POST', '/tokens', {
     name: 'AI测试Token',
-    permissions: ['article:write', 'media:upload', 'work:write', 'content:delete'],
+    permissions: ['article:write', 'media:upload', 'content:delete'],
   }, auth)
   if (res.data.success) {
     apiToken = res.data.data.token

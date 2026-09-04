@@ -11,6 +11,10 @@ export const sections = sqliteTable('sections', {
   externalUrl: text('external_url'), // 外部链接URL，设置后点击菜单直接跳转
   sortOrder: integer('sort_order').notNull().default(0),
   isActive: integer('is_active').notNull().default(1),
+  layouts: text('layouts'), // JSON — per-section layout override (section/article/list), nullable
+  kind: text('kind', { enum: ['articles', 'design_works'] }).notNull().default('articles'), // 板块内容类型：文章流 / 设计师作品集
+  template: text('template').notNull().default('article-list'), // 板块渲染模板（文章列表/卡片网格/瀑布流/杂志/单页/链接墙/作品集画廊）
+  templateConfig: text('template_config'), // JSON — 模板配置（如列数），nullable
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),
 })
@@ -49,6 +53,9 @@ export const categories = sqliteTable('categories', {
   sectionId: integer('section_id').notNull().references(() => sections.id, { onDelete: 'cascade' }),
   description: text('description'),
   sortOrder: integer('sort_order').notNull().default(0),
+  template: text('template').notNull().default('article-list'), // 分类渲染模板（可覆盖所属板块）
+  templateConfig: text('template_config'), // JSON — 模板配置（如列数），nullable
+  layouts: text('layouts'), // JSON — per-category layout override（category/article/list），nullable；分类级覆盖风格包 category 默认
 })
 
 // ===== Articles =====
@@ -67,6 +74,10 @@ export const articles = sqliteTable('articles', {
   pinnedAt: text('pinned_at'),
   pinnedScope: text('pinned_scope', { enum: ['global', 'section'] }),
   authorId: integer('author_id').notNull().references(() => users.id),
+  meta: text('meta'), // JSON — 内容扩展字段（如 kind='design_work' 时存作品专属字段）
+  articleTemplate: text('article_template').notNull().default('standard'), // 文章级渲染模板（详情页形态，与列表页模板正交）
+  templateConfig: text('template_config'), // JSON — 文章模板专属配置（如 videoUrl / gallery / events）
+  sortOrder: integer('sort_order').notNull().default(0),
   publishedAt: text('published_at'),
   createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
   updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`),

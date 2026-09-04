@@ -1,0 +1,514 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "style-json.schema.json",
+  "title": "TokenPress Style Pack",
+  "description": "风格包单文件 style.json 的结构与校验规则。AI Agent 通过 GET /api/v1/styles/:id/schema 读取本 schema，理解可配置字段与合法取值。",
+  "type": "object",
+  "properties": {
+    "$": {
+      "type": "object",
+      "description": "元数据（只读，AI 不可通过 patch 修改根 $）",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "preview": {
+          "type": "string"
+        },
+        "builtin": {
+          "type": "boolean"
+        },
+        "defaultTheme": {
+          "type": "string",
+          "enum": [
+            "light",
+            "dark",
+            "night",
+            "cyber",
+            "lava",
+            "space"
+          ]
+        },
+        "compatibleThemes": {
+          "type": "array",
+          "description": "兼容墙纸白名单：声明前台配色切换器中允许出现的墙纸 key。省略或空数组=全部内置主题均可切换。深品牌色与深墙纸会撞色时，应只列浅色墙纸（如 light）。",
+          "items": {
+            "type": "string",
+            "enum": [
+              "night",
+              "cyber",
+              "lava",
+              "light",
+              "space"
+            ]
+          }
+        }
+      }
+    },
+    "design": {
+      "type": "object",
+      "description": "设计令牌 + 出厂配色。明暗/墙纸由全局主题（activeTheme）决定，包不声明；tokens 为出厂 :root CSS 变量（品牌色不会被主题覆盖）；theme 为完整 theme.css（兼容注入）。",
+      "properties": {
+        "tokens": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "theme": {
+          "type": "string"
+        }
+      }
+    },
+    "header": {
+      "type": "object",
+      "description": "顶部导航栏配置",
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "sticky-solid",
+            "sticky-glass",
+            "sticky-transparent",
+            "static",
+            "hidden"
+          ]
+        },
+        "height": {
+          "type": "number"
+        },
+        "logo": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "image",
+                "text",
+                "component"
+              ]
+            },
+            "src": {
+              "type": "string"
+            },
+            "srcLight": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "position": {
+              "type": "string",
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            "height": {
+              "type": "number"
+            },
+            "link": {
+              "type": "string"
+            }
+          }
+        },
+        "nav": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "sections",
+                "custom",
+                "mixed"
+              ]
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "customItems": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "align": {
+              "type": "string",
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            "style": {
+              "type": "string",
+              "enum": [
+                "plain",
+                "underline",
+                "pill",
+                "split",
+                "minimal"
+              ]
+            },
+            "position": {
+              "type": "string",
+              "enum": [
+                "top",
+                "left"
+              ]
+            },
+            "icons": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "showIcon": {
+              "type": "boolean"
+            },
+            "dropdown": {
+              "type": "string",
+              "enum": [
+                "hover",
+                "click"
+              ]
+            },
+            "colors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "background": {
+          "type": "string"
+        },
+        "borderBottom": {
+          "type": "string"
+        }
+      }
+    },
+    "hero": {
+      "type": "object",
+      "description": "首页 Hero 配置",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "string"
+        },
+        "autoplay": {
+          "type": "boolean"
+        },
+        "interval": {
+          "type": "number"
+        },
+        "showCTA": {
+          "type": "boolean"
+        },
+        "ctaButtons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": [
+                  "string",
+                  "object"
+                ]
+              },
+              "href": {
+                "type": "string"
+              },
+              "style": {
+                "type": "string",
+                "enum": [
+                  "primary",
+                  "outline",
+                  "ghost"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "layouts": {
+      "type": "object",
+      "description": "布局配置（含首页组件序列、板块/分类/文章布局、模板级默认）",
+      "properties": {
+        "homepage": {
+          "type": "object",
+          "properties": {
+            "container": {
+              "type": "string",
+              "enum": [
+                "boxed",
+                "full",
+                "wide"
+              ]
+            },
+            "sections": {
+              "type": "array",
+              "description": "首页组件序列（动态注册表：Hero/Features/ArticleList/CTA/Banner/CustomBlock）",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "component": {
+                    "type": "string",
+                    "enum": [
+                      "Hero",
+                      "Features",
+                      "ArticleList",
+                      "CTA",
+                      "Banner",
+                      "CustomBlock"
+                    ]
+                  },
+                  "variant": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "props": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "component"
+                ]
+              }
+            }
+          }
+        },
+        "section": {
+          "type": "object",
+          "properties": {
+            "layout": {
+              "type": "string",
+              "enum": [
+                "page-sidebar-right",
+                "page-sidebar-left",
+                "landing",
+                "none"
+              ]
+            },
+            "hero": {
+              "type": "object"
+            },
+            "sidebar": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "sticky": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "list": {
+              "type": "object"
+            },
+            "subcategory": {
+              "type": "object",
+              "description": "二级分类配置",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "position": {
+                  "type": "string",
+                  "enum": [
+                    "sidebar",
+                    "top",
+                    "tab",
+                    "none"
+                  ]
+                },
+                "style": {
+                  "type": "string",
+                  "enum": [
+                    "pill",
+                    "card",
+                    "list",
+                    "grid"
+                  ]
+                },
+                "columns": {
+                  "type": "number"
+                },
+                "showCount": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "category": {
+          "type": "object"
+        },
+        "article": {
+          "type": "object"
+        },
+        "list": {
+          "type": "object"
+        },
+        "templates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "footer": {
+      "type": "object",
+      "description": "页脚配置（含站点信息链接与友链展示控制）",
+      "properties": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "multi-column",
+            "simple",
+            "minimal",
+            "mega"
+          ]
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "html": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "friendLinks": {
+          "type": "object",
+          "description": "友链展示控制（不存数据，只控制如何展示）",
+          "properties": {
+            "show": {
+              "type": "boolean"
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "table",
+                "custom"
+              ]
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "columns": {
+              "type": "number"
+            },
+            "maxItems": {
+              "type": "number"
+            }
+          }
+        },
+        "bottom": {
+          "type": "object",
+          "properties": {
+            "copyright": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "social": {
+              "type": "array"
+            },
+            "showBackToTop": {
+              "type": "boolean"
+            }
+          }
+        },
+        "background": {
+          "type": "string"
+        },
+        "textColor": {
+          "type": "string"
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "description": "行为特性开关",
+      "properties": {
+        "readingProgressBar": {
+          "type": "boolean"
+        },
+        "backToTop": {
+          "type": "boolean"
+        },
+        "welcomeOverlay": {
+          "type": "boolean"
+        },
+        "languageSwitcher": {
+          "type": "string",
+          "enum": [
+            "icon",
+            "label",
+            "full"
+          ]
+        }
+      }
+    }
+  }
+}

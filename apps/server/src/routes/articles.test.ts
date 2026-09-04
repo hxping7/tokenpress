@@ -27,20 +27,26 @@ beforeAll(async () => {
   const mod = await import('../index.js')
   app = mod.app
 
-  // Run the full migration chain to mirror the production schema (0000 → 0016).
-  // 0000 creates the base tables; 0015 adds pinned_at/pinned_scope that the
-  // article list query selects; 0016 is a no-op on a fresh DB (no legacy
-  // `section` column) so it is safe to always run.
-  const { migrate: migrate0000 } = await import('../db/migrations/0000_initial.js')
-  await migrate0000()
-  const { migrate: migrate0013 } = await import('../db/migrations/0013_media_article_id.js')
-  await migrate0013()
-  const { migrate: migrate0014 } = await import('../db/migrations/0014_add_hero_carousel_settings.js')
-  await migrate0014()
-  const { migrate: migrate0015 } = await import('../db/migrations/0015_add_article_pin.js')
-  await migrate0015()
-  const { migrate: migrate0016 } = await import('../db/migrations/0016_rebuild_articles.js')
-  await migrate0016()
+  // Run the FULL migration chain (0000 → 0022) to mirror the production schema.
+  // Columns added after 0016 (sections.layouts, categories.layouts, article_template)
+  // are referenced by the live schema, so the test DB must include them too.
+  const migrations = [
+    '../db/migrations/0000_initial.js',
+    '../db/migrations/0013_media_article_id.js',
+    '../db/migrations/0014_add_hero_carousel_settings.js',
+    '../db/migrations/0015_add_article_pin.js',
+    '../db/migrations/0016_rebuild_articles.js',
+    '../db/migrations/0017_add_sections_layouts.js',
+    '../db/migrations/0018_add_design_works.js',
+    '../db/migrations/0019_add_template.js',
+    '../db/migrations/0020_merge_design_works_into_articles.js',
+    '../db/migrations/0021_add_article_template.js',
+    '../db/migrations/0022_add_category_layouts.js',
+  ]
+  for (const m of migrations) {
+    const { migrate } = await import(m)
+    await migrate()
+  }
 }, 30000)
 
 afterAll(async () => {

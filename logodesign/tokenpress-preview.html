@@ -3,294 +3,330 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TokenPress Logo Preview</title>
+  <title>TokenPress Logo · 参考板</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #020810;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      color: #e0e8ff;
+      background: #03070f;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #cfe2ff;
+      min-height: 100vh;
+      padding: 40px 20px 64px;
     }
 
-    header {
-      text-align: center;
-      padding: 56px 20px 32px;
+    header { text-align: center; margin-bottom: 28px; }
+    header h1 {
+      font-size: 15px; letter-spacing: 4px; text-transform: uppercase;
+      color: #5ab8ff; font-weight: 600;
     }
-    header .site { font-size: 11px; letter-spacing: 6px; color: #1a4060; text-transform: uppercase; margin-bottom: 12px; }
-    header h1 { font-size: 13px; letter-spacing: 4px; color: #3a7aaa; text-transform: uppercase; }
-
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.2), rgba(124,58,237,0.2), transparent);
-      margin: 0 60px;
+    header p {
+      margin-top: 10px; font-size: 12px; letter-spacing: 1px; color: #4a6a8a;
     }
 
-    .variant { padding: 64px 60px; border-bottom: 1px solid rgba(0,180,255,0.05); }
-    .variant:last-of-type { border-bottom: none; }
-
-    .variant-header {
-      display: flex;
-      align-items: baseline;
-      gap: 16px;
-      margin-bottom: 40px;
+    .section-title {
+      max-width: 1180px; margin: 40px auto 16px; padding: 0 4px;
+      font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+      color: #6fae6f; display: flex; align-items: center; gap: 12px;
     }
-    .variant-num  { font-size: 11px; letter-spacing: 4px; color: #00d4ff; text-transform: uppercase; opacity: 0.6; }
-    .variant-name { font-size: 11px; letter-spacing: 3px; color: #2a4a6a; text-transform: uppercase; }
-    .variant-desc { font-size: 11px; color: #1a3a5a; letter-spacing: 1px; margin-left: auto; }
+    .section-title .range { color: #2a4a6a; font-family: ui-monospace, monospace; letter-spacing: 1px; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,180,255,0.08); }
 
-    .logo-display {
-      background: #050a14;
-      border: 1px solid rgba(0,180,255,0.1);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 52px 40px;
-      position: relative;
+    .grid {
+      max-width: 1180px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
       overflow: hidden;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      display: flex; flex-direction: column;
+      background: #0a121f;
     }
-    .logo-display::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.35), rgba(124,58,237,0.35), transparent);
+    .swatch {
+      height: 168px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      position: relative;
     }
-    .logo-display::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
+    .swatch::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
     }
-    .logo-display:hover {
-      border-color: rgba(0,212,255,0.25);
-      box-shadow: 0 0 50px rgba(0,160,255,0.07);
+    .idx {
+      position: absolute; top: 9px; left: 10px;
+      font-family: ui-monospace, 'SF Mono', monospace;
+      font-size: 11px; letter-spacing: 1px; color: #cfe2ff;
+      background: rgba(10,18,31,0.55); border: 1px solid rgba(255,255,255,0.08);
+      padding: 2px 8px; border-radius: 7px;
     }
-    .logo-display svg {
-      position: relative; z-index: 1;
-      max-width: 100%; height: auto;
-    }
+    .logo { width: 100%; max-width: 220px; height: auto; display: block; }
 
-    .compare-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px;
-      margin-top: 2px;
+    .meta {
+      padding: 11px 14px 13px;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
-    .logo-display.light {
-      background: #eef5ff;
-      border-color: rgba(0,100,200,0.1);
-    }
-    .logo-display.light::after {
-      background-image:
-        linear-gradient(rgba(0,80,180,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,80,180,0.04) 1px, transparent 1px);
-    }
-    .logo-display.compact {
-      background: #0a1628;
-      padding: 28px 32px;
-    }
-
-    .corner-tag {
-      position: absolute; top: 14px; right: 18px; z-index: 2;
-      font-size: 10px; letter-spacing: 2.5px; color: #0d2840; text-transform: uppercase;
-    }
-    .corner-tag.light { color: #9ab8d8; }
-
-    .usage-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-    .usage-tag {
-      font-size: 10px; letter-spacing: 2px; color: #1a4060;
-      border: 1px solid rgba(0,180,255,0.1);
-      padding: 5px 12px; border-radius: 4px; text-transform: uppercase;
-    }
-
-    .dl-row {
-      display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; align-items: center;
-    }
-    .dl-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 10px; letter-spacing: 2px; color: #2a6090;
-      border: 1px solid rgba(0,150,255,0.15);
-      padding: 6px 14px; border-radius: 5px; text-transform: uppercase;
-      text-decoration: none; transition: color 0.2s, border-color 0.2s;
-    }
-    .dl-btn:hover { color: #60b8ff; border-color: rgba(0,180,255,0.35); }
-    .dl-btn svg { width: 12px; height: 12px; fill: currentColor; }
+    .meta .name { font-size: 12px; color: #bcd6f5; letter-spacing: 0.4px; }
+    .meta .spec { font-size: 10px; color: #3a5a7a; letter-spacing: 1px; margin-top: 5px; font-family: ui-monospace, monospace; }
+    .meta .ver { font-size: 10px; margin-top: 5px; letter-spacing: 0.5px; }
+    .meta .ver.dark { color: #22d3ee; }
+    .meta .ver.light { color: #5ab8ff; }
 
     footer {
-      text-align: center; padding: 48px;
-      font-size: 10px; letter-spacing: 4px; color: #0d1e30; text-transform: uppercase;
+      max-width: 1180px; margin: 48px auto 0; text-align: center;
+      font-size: 11px; letter-spacing: 2px; color: #1a3050; line-height: 1.9;
     }
-
-    /* 浅色背景预览下的反色处理 */
-    .logo-display.light svg :is(rect:first-child) { display: none; }
   </style>
 </head>
 <body>
 
+<!-- ===== 可复用 logo 符号（最终状态） ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+
+    <!-- V1 深色：纯字标 -->
+    <symbol id="v1-dark" viewBox="0 0 390 72">
+      <defs>
+        <linearGradient id="v1dTxt" x1="6" y1="0" x2="384" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#5ab8ff"/><stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+        <linearGradient id="v1dInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#22d3ee"/><stop offset="50%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+      </defs>
+      <text x="6" y="52" font-family="'Segoe UI',system-ui,sans-serif" font-size="48" font-weight="700" letter-spacing="-1" fill="url(#v1dTxt)">TokenPress</text>
+      <line x1="6" y1="62" x2="384" y2="62" stroke="url(#v1dInf)" stroke-width="0.5" opacity="0.3"/>
+    </symbol>
+
+    <!-- V1 浅色：纯字标 -->
+    <symbol id="v1-light" viewBox="0 0 390 72">
+      <defs>
+        <linearGradient id="v1lTxt" x1="6" y1="0" x2="384" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0070b8"/><stop offset="55%" stop-color="#0a2a4a"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+        <linearGradient id="v1lInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#0090cc"/><stop offset="50%" stop-color="#1e5fb0"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+      </defs>
+      <text x="6" y="52" font-family="'Segoe UI',system-ui,sans-serif" font-size="48" font-weight="700" letter-spacing="-1" fill="url(#v1lTxt)">TokenPress</text>
+      <line x1="6" y1="62" x2="384" y2="62" stroke="url(#v1lInf)" stroke-width="0.5" opacity="0.3"/>
+    </symbol>
+
+    <!-- V2 深色：六边形图标 + 文字 -->
+    <symbol id="v2-dark" viewBox="0 0 380 120">
+      <defs>
+        <linearGradient id="v2dBg" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0f2448"/><stop offset="100%" stop-color="#162040"/>
+        </linearGradient>
+        <linearGradient id="v2dBd" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+        <linearGradient id="v2dInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+        <linearGradient id="v2dTxt" x1="86" y1="0" x2="366" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#5ab8ff"/><stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(0,24)">
+        <polygon points="36,4 64,20 64,52 36,68 8,52 8,20" fill="url(#v2dBg)" stroke="url(#v2dBd)" stroke-width="1.5"/>
+        <polygon points="36,8 60,22 60,50 36,64 12,50 12,22" fill="none" stroke="rgba(34,211,238,0.12)" stroke-width="1"/>
+        <g transform="translate(36,36)">
+          <path d="M 18 0 C 18 -9, 7 -9, 0 0 C -7 9, -18 9, -18 0 C -18 -9, -7 -9, 0 0 C 7 9, 18 9, 18 0 Z" fill="none" stroke="url(#v2dInf)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="0" cy="0" r="3" fill="#ffffff"/>
+        </g>
+      </g>
+      <text x="86" y="70" font-family="'Segoe UI',system-ui,sans-serif" font-size="32" font-weight="700" fill="url(#v2dTxt)">TokenPress</text>
+      <text x="88" y="88" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" letter-spacing="4" fill="#2a6090">AI CONTENT PLATFORM</text>
+    </symbol>
+
+    <!-- V2 浅色：六边形图标 + 文字 -->
+    <symbol id="v2-light" viewBox="0 0 380 120">
+      <defs>
+        <linearGradient id="v2lBd" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0090cc"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+        <linearGradient id="v2lInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#0090cc"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+        <linearGradient id="v2lTxt" x1="86" y1="0" x2="366" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0070b8"/><stop offset="55%" stop-color="#0a2a4a"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+      </defs>
+      <g transform="translate(0,24)">
+        <polygon points="36,4 64,20 64,52 36,68 8,52 8,20" fill="#eef6ff" stroke="url(#v2lBd)" stroke-width="1.5"/>
+        <polygon points="36,8 60,22 60,50 36,64 12,50 12,22" fill="none" stroke="rgba(10,138,168,0.15)" stroke-width="1"/>
+        <g transform="translate(36,36)">
+          <path d="M 18 0 C 18 -9, 7 -9, 0 0 C -7 9, -18 9, -18 0 C -18 -9, -7 -9, 0 0 C 7 9, 18 9, 18 0 Z" fill="none" stroke="url(#v2lInf)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="0" cy="0" r="3" fill="#0a2a4a"/>
+        </g>
+      </g>
+      <text x="86" y="70" font-family="'Segoe UI',system-ui,sans-serif" font-size="32" font-weight="700" fill="url(#v2lTxt)">TokenPress</text>
+      <text x="88" y="88" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" letter-spacing="4" fill="#4a70a0">AI CONTENT PLATFORM</text>
+    </symbol>
+
+    <!-- V3 深色：轨道环形 -->
+    <symbol id="v3-dark" viewBox="0 0 360 175">
+      <defs>
+        <linearGradient id="v3dRing" x1="0" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#22d3ee" stop-opacity="0"/>
+          <stop offset="30%" stop-color="#22d3ee"/>
+          <stop offset="70%" stop-color="#3b82f6"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="v3dTxt" x1="40" y1="0" x2="320" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#5ab8ff"/><stop offset="50%" stop-color="#ffffff"/><stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+        <linearGradient id="v3dInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="180" cy="86" rx="160" ry="62" fill="none" stroke="url(#v3dRing)" stroke-width="1" opacity="0.5"/>
+      <ellipse cx="180" cy="86" rx="142" ry="50" fill="none" stroke="rgba(34,211,238,0.08)" stroke-width="1.5"/>
+      <ellipse cx="180" cy="86" rx="120" ry="40" fill="none" stroke="rgba(59,130,246,0.06)" stroke-width="1"/>
+      <line x1="14" y1="86" x2="54" y2="86" stroke="#22d3ee" stroke-width="1" opacity="0.5"/>
+      <line x1="306" y1="86" x2="346" y2="86" stroke="#3b82f6" stroke-width="1" opacity="0.5"/>
+      <circle cx="14" cy="86" r="3" fill="#22d3ee" opacity="0.7"/>
+      <circle cx="346" cy="86" r="3" fill="#3b82f6" opacity="0.7"/>
+      <text x="180" y="82" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="42" font-weight="800" letter-spacing="-0.5" fill="url(#v3dTxt)">TokenPress</text>
+      <g transform="translate(180,108)">
+        <path d="M 38 0 C 38 -16, 15 -16, 0 0 C -15 16, -38 16, -38 0 C -38 -16, -15 -16, 0 0 C 15 16, 38 16, 38 0 Z" fill="none" stroke="url(#v3dInf)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="-38" cy="0" r="3" fill="#22d3ee"/>
+        <circle cx="38" cy="0" r="3" fill="#3b82f6"/>
+        <circle cx="0" cy="0" r="2" fill="#ffffff"/>
+      </g>
+      <text x="180" y="162" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" letter-spacing="6" fill="#1a4060" opacity="0.9">AI CONTENT PLATFORM</text>
+    </symbol>
+
+    <!-- V3 浅色：轨道环形 -->
+    <symbol id="v3-light" viewBox="0 0 360 175">
+      <defs>
+        <linearGradient id="v3lRing" x1="0" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0090cc" stop-opacity="0"/>
+          <stop offset="30%" stop-color="#0090cc"/>
+          <stop offset="70%" stop-color="#1e5fb0"/>
+          <stop offset="100%" stop-color="#1e5fb0" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="v3lTxt" x1="40" y1="0" x2="320" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0070b8"/><stop offset="50%" stop-color="#0a2a4a"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+        <linearGradient id="v3lInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#0090cc"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="180" cy="86" rx="160" ry="62" fill="none" stroke="url(#v3lRing)" stroke-width="1" opacity="0.5"/>
+      <ellipse cx="180" cy="86" rx="142" ry="50" fill="none" stroke="rgba(10,144,204,0.08)" stroke-width="1.5"/>
+      <ellipse cx="180" cy="86" rx="120" ry="40" fill="none" stroke="rgba(30,95,176,0.06)" stroke-width="1"/>
+      <line x1="14" y1="86" x2="54" y2="86" stroke="#0090cc" stroke-width="1" opacity="0.5"/>
+      <line x1="306" y1="86" x2="346" y2="86" stroke="#1e5fb0" stroke-width="1" opacity="0.5"/>
+      <circle cx="14" cy="86" r="3" fill="#0090cc" opacity="0.7"/>
+      <circle cx="346" cy="86" r="3" fill="#1e5fb0" opacity="0.7"/>
+      <text x="180" y="82" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="42" font-weight="800" letter-spacing="-0.5" fill="url(#v3lTxt)">TokenPress</text>
+      <g transform="translate(180,108)">
+        <path d="M 38 0 C 38 -16, 15 -16, 0 0 C -15 16, -38 16, -38 0 C -38 -16, -15 -16, 0 0 C 15 16, 38 16, 38 0 Z" fill="none" stroke="url(#v3lInf)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="-38" cy="0" r="3" fill="#0090cc"/>
+        <circle cx="38" cy="0" r="3" fill="#1e5fb0"/>
+        <circle cx="0" cy="0" r="2" fill="#0a2a4a"/>
+      </g>
+      <text x="180" y="162" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="9" font-weight="400" letter-spacing="6" fill="#2a4a6a" opacity="0.9">AI CONTENT PLATFORM</text>
+    </symbol>
+
+    <!-- V4 深色：胶囊 Badge（对称包络） -->
+    <symbol id="v4-dark" viewBox="0 0 284 72">
+      <defs>
+        <linearGradient id="v4dTxt" x1="90" y1="0" x2="246" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#5ab8ff"/><stop offset="55%" stop-color="#ffffff"/><stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+        <linearGradient id="v4dBd" x1="16" y1="8" x2="268" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+        <linearGradient id="v4dInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <rect x="16" y="8" width="252" height="56" rx="28" fill="rgba(34,211,238,0.05)" stroke="url(#v4dBd)" stroke-width="1.5"/>
+      <g transform="translate(52,36)">
+        <path d="M 16 0 C 16 -8, 6 -8, 0 0 C -6 8, -16 8, -16 0 C -16 -8, -6 -8, 0 0 C 6 8, 16 8, 16 0 Z" fill="none" stroke="url(#v4dInf)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="168" y="47" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="30" font-weight="700" fill="url(#v4dTxt)">TokenPress</text>
+    </symbol>
+
+    <!-- V4 浅色：胶囊 Badge（对称包络） -->
+    <symbol id="v4-light" viewBox="0 0 284 72">
+      <defs>
+        <linearGradient id="v4lTxt" x1="90" y1="0" x2="246" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0070b8"/><stop offset="55%" stop-color="#0a2a4a"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+        <linearGradient id="v4lBd" x1="16" y1="8" x2="268" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#0090cc"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+        <linearGradient id="v4lInf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#0090cc"/><stop offset="100%" stop-color="#0a8aa8"/>
+        </linearGradient>
+      </defs>
+      <rect x="16" y="8" width="252" height="56" rx="28" fill="rgba(10,138,168,0.06)" stroke="url(#v4lBd)" stroke-width="1.5"/>
+      <g transform="translate(52,36)">
+        <path d="M 16 0 C 16 -8, 6 -8, 0 0 C -6 8, -16 8, -16 0 C -16 -8, -6 -8, 0 0 C 6 8, 16 8, 16 0 Z" fill="none" stroke="url(#v4lInf)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="168" y="47" text-anchor="middle" font-family="'Segoe UI',system-ui,sans-serif" font-size="30" font-weight="700" fill="url(#v4lTxt)">TokenPress</text>
+    </symbol>
+
+  </defs>
+</svg>
+
 <header>
-  <div class="site">github.com / tokenpress</div>
-  <h1>TokenPress · Logo System · 3 Versions</h1>
+  <h1>TokenPress · Logo 参考板</h1>
+  <p>V1 – V4 布局变体 · 深 / 浅背景对照 · 每张编号便于引用</p>
 </header>
-<div class="divider"></div>
 
-<!-- ===== V1 Minimal Glow ===== -->
-<div class="variant">
-  <div class="variant-header">
-    <span class="variant-num">01 /</span>
-    <span class="variant-name">Minimal Glow</span>
-    <span class="variant-desc">极简发光横版 · Token ∞ Press 联排</span>
-  </div>
-
-  <div class="logo-display">
-    <span class="corner-tag">Dark</span>
-    <object data="logo-tp-v1-minimal.svg" type="image/svg+xml" style="max-height:160px; width:100%;"></object>
-  </div>
-
-  <div class="compare-row">
-    <div class="logo-display light" style="min-height:110px;">
-      <span class="corner-tag light">Light BG</span>
-      <object data="logo-tp-v1-minimal.svg" type="image/svg+xml"
-        style="max-height:100px; width:100%; filter: invert(1) hue-rotate(185deg) brightness(0.65) contrast(1.3);"></object>
-    </div>
-    <div class="logo-display compact" style="min-height:110px;">
-      <span class="corner-tag">Compact</span>
-      <object data="logo-tp-v1-minimal.svg" type="image/svg+xml" style="max-height:55px; width:100%;"></object>
-    </div>
-  </div>
-
-  <div class="dl-row">
-    <a class="dl-btn" href="logo-tp-v1-minimal.svg" download>
-      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
-      SVG 下载
-    </a>
-  </div>
-  <div class="usage-row">
-    <span class="usage-tag">GitHub README 顶部</span>
-    <span class="usage-tag">官网 Header</span>
-    <span class="usage-tag">文档封面</span>
-    <span class="usage-tag">社交媒体 Banner</span>
-  </div>
+<!-- ===================== V1 ===================== -->
+<div class="section-title">V1 · 纯字标 <span class="range">01 – 06</span></div>
+<div class="grid">
+  <div class="card"><div class="swatch" style="background:#000000;"><span class="idx">01</span><svg class="logo" viewBox="0 0 390 72"><use href="#v1-dark"/></svg></div><div class="meta"><div class="name">01 · V1 纯字标 · 纯黑</div><div class="spec">#000000</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#050a14;"><span class="idx">02</span><svg class="logo" viewBox="0 0 390 72"><use href="#v1-dark"/></svg></div><div class="meta"><div class="name">02 · V1 纯字标 · 深空蓝</div><div class="spec">#050a14</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#0a1f3c,#10406b);"><span class="idx">03</span><svg class="logo" viewBox="0 0 390 72"><use href="#v1-dark"/></svg></div><div class="meta"><div class="name">03 · V1 纯字标 · 科技蓝渐变</div><div class="spec">#0a1f3c → #10406b</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#ffffff;"><span class="idx">04</span><svg class="logo" viewBox="0 0 390 72"><use href="#v1-light"/></svg></div><div class="meta"><div class="name">04 · V1 纯字标 · 纯白</div><div class="spec">#ffffff</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#f0f3f7;"><span class="idx">05</span><svg class="logo" viewBox="0 0 390 72"><use href="#v1-light"/></svg></div><div class="meta"><div class="name">05 · V1 纯字标 · 浅灰</div><div class="spec">#f0f3f7</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#f5fbff,#e6f2ff);"><span class="idx">06</span><svg class="logo" viewBox="0 0 390 72"><use href="#v1-light"/></svg></div><div class="meta"><div class="name">06 · V1 纯字标 · 品牌浅渐变</div><div class="spec">#f5fbff → #e6f2ff</div><div class="ver light">浅色版</div></div></div>
 </div>
 
-<div class="divider"></div>
-
-<!-- ===== V2 Hexicon ===== -->
-<div class="variant">
-  <div class="variant-header">
-    <span class="variant-num">02 /</span>
-    <span class="variant-name">Hex Icon + Text</span>
-    <span class="variant-desc">六边形图标 + 横排文字</span>
-  </div>
-
-  <div class="logo-display">
-    <span class="corner-tag">Dark</span>
-    <object data="logo-tp-v2-hexicon.svg" type="image/svg+xml" style="max-height:160px; width:100%;"></object>
-  </div>
-
-  <div class="compare-row">
-    <div class="logo-display light" style="min-height:110px;">
-      <span class="corner-tag light">Light BG</span>
-      <object data="logo-tp-v2-hexicon.svg" type="image/svg+xml"
-        style="max-height:100px; width:100%; filter: invert(1) hue-rotate(185deg) brightness(0.65) contrast(1.3);"></object>
-    </div>
-    <div class="logo-display compact" style="min-height:110px;">
-      <span class="corner-tag">Icon Only</span>
-      <div style="position:relative; z-index:1;">
-        <svg width="80" height="80" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="hexBg_s" x1="0" y1="0" x2="140" y2="140" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#0f2448"/>
-              <stop offset="100%" stop-color="#1a0840"/>
-            </linearGradient>
-            <linearGradient id="hexBorder_s" x1="0" y1="0" x2="140" y2="140" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#00d4ff"/>
-              <stop offset="50%" stop-color="#7c3aed"/>
-              <stop offset="100%" stop-color="#00d4ff"/>
-            </linearGradient>
-            <linearGradient id="infGrad_s" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#00ffea"/>
-              <stop offset="50%" stop-color="#a855f7"/>
-              <stop offset="100%" stop-color="#00d4ff"/>
-            </linearGradient>
-          </defs>
-          <polygon points="70,8 121,38 121,102 70,132 19,102 19,38" fill="url(#hexBg_s)" stroke="url(#hexBorder_s)" stroke-width="2.5"/>
-          <polygon points="70,16 113,42 113,98 70,124 27,98 27,42" fill="none" stroke="rgba(0,212,255,0.1)" stroke-width="1.5"/>
-          <g transform="translate(70,70)">
-            <path d="M 34 0 C 34 -18, 13 -18, 0 0 C -13 18, -34 18, -34 0 C -34 -18, -13 -18, 0 0 C 13 18, 34 18, 34 0 Z"
-              fill="none" stroke="url(#infGrad_s)" stroke-width="5.5" stroke-linecap="round"/>
-            <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.6)"/>
-          </g>
-          <circle cx="70" cy="8" r="3" fill="#00d4ff" opacity="0.7"/>
-          <circle cx="121" cy="38" r="2.5" fill="#7c3aed" opacity="0.6"/>
-          <circle cx="121" cy="102" r="2.5" fill="#00d4ff" opacity="0.5"/>
-        </svg>
-      </div>
-    </div>
-  </div>
-
-  <div class="dl-row">
-    <a class="dl-btn" href="logo-tp-v2-hexicon.svg" download>
-      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
-      SVG 下载
-    </a>
-  </div>
-  <div class="usage-row">
-    <span class="usage-tag">GitHub 仓库头像</span>
-    <span class="usage-tag">导航栏 Logo</span>
-    <span class="usage-tag">Favicon 候选</span>
-    <span class="usage-tag">App 图标</span>
-  </div>
+<!-- ===================== V2 ===================== -->
+<div class="section-title">V2 · 六边形图标 + 文字 <span class="range">07 – 12</span></div>
+<div class="grid">
+  <div class="card"><div class="swatch" style="background:#000000;"><span class="idx">07</span><svg class="logo" viewBox="0 0 380 120"><use href="#v2-dark"/></svg></div><div class="meta"><div class="name">07 · V2 六边形+文字 · 纯黑</div><div class="spec">#000000</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#050a14;"><span class="idx">08</span><svg class="logo" viewBox="0 0 380 120"><use href="#v2-dark"/></svg></div><div class="meta"><div class="name">08 · V2 六边形+文字 · 深空蓝</div><div class="spec">#050a14</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#0a1f3c,#10406b);"><span class="idx">09</span><svg class="logo" viewBox="0 0 380 120"><use href="#v2-dark"/></svg></div><div class="meta"><div class="name">09 · V2 六边形+文字 · 科技蓝渐变</div><div class="spec">#0a1f3c → #10406b</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#ffffff;"><span class="idx">10</span><svg class="logo" viewBox="0 0 380 120"><use href="#v2-light"/></svg></div><div class="meta"><div class="name">10 · V2 六边形+文字 · 纯白</div><div class="spec">#ffffff</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#f0f3f7;"><span class="idx">11</span><svg class="logo" viewBox="0 0 380 120"><use href="#v2-light"/></svg></div><div class="meta"><div class="name">11 · V2 六边形+文字 · 浅灰</div><div class="spec">#f0f3f7</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#f5fbff,#e6f2ff);"><span class="idx">12</span><svg class="logo" viewBox="0 0 380 120"><use href="#v2-light"/></svg></div><div class="meta"><div class="name">12 · V2 六边形+文字 · 品牌浅渐变</div><div class="spec">#f5fbff → #e6f2ff</div><div class="ver light">浅色版</div></div></div>
 </div>
 
-<div class="divider"></div>
+<!-- ===================== V3 ===================== -->
+<div class="section-title">V3 · 轨道环形 <span class="range">13 – 18</span></div>
+<div class="grid">
+  <div class="card"><div class="swatch" style="background:#000000;"><span class="idx">13</span><svg class="logo" viewBox="0 0 360 175"><use href="#v3-dark"/></svg></div><div class="meta"><div class="name">13 · V3 轨道环形 · 纯黑</div><div class="spec">#000000</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#050a14;"><span class="idx">14</span><svg class="logo" viewBox="0 0 360 175"><use href="#v3-dark"/></svg></div><div class="meta"><div class="name">14 · V3 轨道环形 · 深空蓝</div><div class="spec">#050a14</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#0a1f3c,#10406b);"><span class="idx">15</span><svg class="logo" viewBox="0 0 360 175"><use href="#v3-dark"/></svg></div><div class="meta"><div class="name">15 · V3 轨道环形 · 科技蓝渐变</div><div class="spec">#0a1f3c → #10406b</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#ffffff;"><span class="idx">16</span><svg class="logo" viewBox="0 0 360 175"><use href="#v3-light"/></svg></div><div class="meta"><div class="name">16 · V3 轨道环形 · 纯白</div><div class="spec">#ffffff</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#f0f3f7;"><span class="idx">17</span><svg class="logo" viewBox="0 0 360 175"><use href="#v3-light"/></svg></div><div class="meta"><div class="name">17 · V3 轨道环形 · 浅灰</div><div class="spec">#f0f3f7</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#f5fbff,#e6f2ff);"><span class="idx">18</span><svg class="logo" viewBox="0 0 360 175"><use href="#v3-light"/></svg></div><div class="meta"><div class="name">18 · V3 轨道环形 · 品牌浅渐变</div><div class="spec">#f5fbff → #e6f2ff</div><div class="ver light">浅色版</div></div></div>
+</div>
 
-<!-- ===== V3 Orbital ===== -->
-<div class="variant">
-  <div class="variant-header">
-    <span class="variant-num">03 /</span>
-    <span class="variant-name">Orbital Ring</span>
-    <span class="variant-desc">轨道环形竖版 · Token∞Press 三行布局</span>
-  </div>
-
-  <div class="logo-display" style="min-height:400px;">
-    <span class="corner-tag">Dark</span>
-    <object data="logo-tp-v3-orbital.svg" type="image/svg+xml" style="max-height:420px; width:100%;"></object>
-  </div>
-
-  <div class="compare-row">
-    <div class="logo-display light" style="min-height:200px;">
-      <span class="corner-tag light">Light BG</span>
-      <object data="logo-tp-v3-orbital.svg" type="image/svg+xml"
-        style="max-height:180px; width:100%; filter: invert(1) hue-rotate(185deg) brightness(0.65) contrast(1.3);"></object>
-    </div>
-    <div class="logo-display compact" style="min-height:200px;">
-      <span class="corner-tag">Compact</span>
-      <object data="logo-tp-v3-orbital.svg" type="image/svg+xml" style="max-height:160px; width:100%;"></object>
-    </div>
-  </div>
-
-  <div class="dl-row">
-    <a class="dl-btn" href="logo-tp-v3-orbital.svg" download>
-      <svg viewBox="0 0 16 16"><path d="M8 12l-4-4h3V2h2v6h3L8 12zM2 14h12v-2H2v2z"/></svg>
-      SVG 下载
-    </a>
-  </div>
-  <div class="usage-row">
-    <span class="usage-tag">GitHub 社交预览图</span>
-    <span class="usage-tag">项目首页 Hero</span>
-    <span class="usage-tag">OGP 分享卡片</span>
-    <span class="usage-tag">PPT 封面</span>
-  </div>
+<!-- ===================== V4 ===================== -->
+<div class="section-title">V4 · 胶囊 Badge <span class="range">19 – 24</span></div>
+<div class="grid">
+  <div class="card"><div class="swatch" style="background:#000000;"><span class="idx">19</span><svg class="logo" viewBox="0 0 284 72"><use href="#v4-dark"/></svg></div><div class="meta"><div class="name">19 · V4 胶囊 Badge · 纯黑</div><div class="spec">#000000</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#050a14;"><span class="idx">20</span><svg class="logo" viewBox="0 0 284 72"><use href="#v4-dark"/></svg></div><div class="meta"><div class="name">20 · V4 胶囊 Badge · 深空蓝</div><div class="spec">#050a14</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#0a1f3c,#10406b);"><span class="idx">21</span><svg class="logo" viewBox="0 0 284 72"><use href="#v4-dark"/></svg></div><div class="meta"><div class="name">21 · V4 胶囊 Badge · 科技蓝渐变</div><div class="spec">#0a1f3c → #10406b</div><div class="ver dark">深色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#ffffff;"><span class="idx">22</span><svg class="logo" viewBox="0 0 284 72"><use href="#v4-light"/></svg></div><div class="meta"><div class="name">22 · V4 胶囊 Badge · 纯白</div><div class="spec">#ffffff</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:#f0f3f7;"><span class="idx">23</span><svg class="logo" viewBox="0 0 284 72"><use href="#v4-light"/></svg></div><div class="meta"><div class="name">23 · V4 胶囊 Badge · 浅灰</div><div class="spec">#f0f3f7</div><div class="ver light">浅色版</div></div></div>
+  <div class="card"><div class="swatch" style="background:linear-gradient(135deg,#f5fbff,#e6f2ff);"><span class="idx">24</span><svg class="logo" viewBox="0 0 284 72"><use href="#v4-light"/></svg></div><div class="meta"><div class="name">24 · V4 胶囊 Badge · 品牌浅渐变</div><div class="spec">#f5fbff → #e6f2ff</div><div class="ver light">浅色版</div></div></div>
 </div>
 
 <footer>
-  tokenpress · AI-Powered Content Platform · 2026
+  TokenPress · AI Content Platform · Logo 参考板<br>
+  01–24 连续编号 · 深底用深色版 / 浅底用浅色版
 </footer>
 
 </body>

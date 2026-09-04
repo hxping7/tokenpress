@@ -6,7 +6,9 @@ import { useQuery } from '@tanstack/react-query'
 import { FooterLogo } from '@/components/FooterLogo'
 import { api } from '@/lib/api'
 import { useLocaleStore } from '@/stores'
+import { useStyleFooter, useStyleSite } from '@/components/StyleProvider'
 import { t } from '@/lib/i18n'
+import { useSiteSettings } from '@/lib/useSiteSettings'
 
 interface FriendLink {
   id: number
@@ -31,12 +33,8 @@ export function Footer() {
   const pathname = usePathname()
   const { locale } = useLocaleStore()
 
-  // Fetch footer settings
-  const { data: settingsData } = useQuery({
-    queryKey: ['site-settings', 'footer_nav,footer_nav_columns,powered_by,copyright_text,icp_number,icp_url'],
-    queryFn: () => api.get('/site-settings/keys/footer_nav,footer_nav_columns,powered_by,copyright_text,icp_number,icp_url'),
-    staleTime: 5 * 60 * 1000,
-  })
+  // Fetch footer settings（与全站设置共用去重后的单一请求）
+  const { data: settingsData } = useSiteSettings()
 
   // Fetch friend links
   const { data: linksData } = useQuery({
@@ -44,6 +42,11 @@ export function Footer() {
     queryFn: () => api.get('/friend-links'),
     staleTime: 5 * 60 * 1000,
   })
+
+  // Style Pack 覆盖（必须在早期 return 前调用，遵守 Hooks 规则）
+  const fc = useStyleFooter()
+  // 站点信息覆盖（风格包 site + site_settings 全局默认合并结果）
+  const site = useStyleSite() || {}
 
   // Hide footer on admin and auth pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
@@ -54,10 +57,10 @@ export function Footer() {
   const settings = settingsData?.data || {}
   const footerNavStr = settings.footer_nav
   const footerNavColumns = parseInt(settings.footer_nav_columns || '4', 10)
-  const poweredBy = settings.powered_by || ''
-  const copyrightText = settings.copyright_text || `© ${new Date().getFullYear()} TokenPress. All rights reserved.`
-  const icpNumber = settings.icp_number
-  const icpUrl = settings.icp_url || 'https://beian.miit.gov.cn/'
+  const poweredBy = site.poweredBy ?? settings.powered_by ?? ''
+  const copyrightText = site.copyright ?? settings.copyright_text ?? `© ${new Date().getFullYear()} TokenPress. All rights reserved.`
+  const icpNumber = site.icp ?? settings.icp_number
+  const icpUrl = site.icpUrl ?? settings.icp_url ?? 'https://beian.miit.gov.cn/'
 
   // Parse footer nav from settings (grouped format)
   let footerNav: FooterNavGroup[] = []
@@ -71,6 +74,15 @@ export function Footer() {
   if (footerNav.length > 0 && !Array.isArray((footerNav as any)[0]?.links) && (footerNav as any)[0]?.html === undefined) {
     const flatItems = footerNav as unknown as NavItem[]
     footerNav = [{ title: locale === 'en' ? 'Navigation' : '导航', links: flatItems }]
+  }
+
+  // Style Pack 覆盖：若模板包 footer 配置了 columns，优先用它
+  if (fc?.columns && Array.isArray(fc.columns) && fc.columns.length > 0) {
+    footerNav = fc.columns.map((g: any) => ({
+      title: g.title || '',
+      links: (g.links || []).map((l: any) => ({ name: l.label, url: l.href })),
+      html: g.html,
+    }))
   }
 
   // Default nav groups if empty
@@ -95,13 +107,41 @@ export function Footer() {
     ]
   }
 
-  const activeFriendLinks = friendLinks.filter((l) => l.isActive && l.name && l.url).map((l) => ({
-    ...l,
-    url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}`,
-  }))
+  const activeFriendLinks = (() => {
+    // 风格包 footer.friendLinks 控制是否展示/数据源/自定义
+    const fl = fc?.friendLinks || {}
+    if (fl.show === false) return []
+    if (fl.source === 'custom' && Array.isArray(fl.items)) {
+      return fl.items
+        .filter((l: any) => l && l.name && l.url)
+        .slice(0, fl.maxItems || 20)
+        .map((l: any) => ({ id: `custom-${l.url}`, name: l.name, url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}` }))
+    }
+    // 默认：读 friend_links 表
+    return friendLinks
+      .filter((l) => l.isActive && l.name && l.url)
+      .slice(0, fl.maxItems || 20)
+      .map((l) => ({ ...l, url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}` }))
+  })()
+
+  // 极简 Footer（设计师作品集包）
+  if (fc?.variant === 'minimal') {
+    return (
+      <footer className="border-t border-t-border" style={{ background: fc.background || 'transparent' }}>
+        <div className="max-w-[var(--content-max-width)] mx-auto py-10 px-4 flex flex-col items-center gap-4">
+          <FooterLogo />
+          <span className="text-sm text-t-text-muted">{fc.bottom?.copyright || copyrightText}</span>
+        </div>
+      </footer>
+    )
+  }
+
+  const footerStyle: React.CSSProperties = {}
+  if (fc?.background) footerStyle.background = fc.background
+  if (fc?.textColor) footerStyle.color = fc.textColor
 
   return (
-    <footer className="border-t border-t-border">
+    <footer className="border-t border-t-border" style={footerStyle}>
       <div className="max-w-[var(--content-max-width)] mx-auto">
         {/* 竖向多段式导航 */}
         <div className="py-8 px-4">
@@ -158,7 +198,7 @@ export function Footer() {
           {activeFriendLinks.length > 0 && (
             <div className="mt-8 pt-6 border-t border-t-border">
               <div className="flex flex-wrap gap-x-6 gap-y-2">
-                {activeFriendLinks.map((link) => (
+                {activeFriendLinks.map((link: { id: string; name: string; url: string }) => (
                   <a
                     key={link.id}
                     href={link.url}

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useLocaleStore } from '@/stores'
 
 interface HeroSlide {
   id: string
@@ -28,15 +29,31 @@ export const DEFAULT_HERO_CTA: HeroCtaButton[] = [
 
 interface HeroCarouselProps {
   slides: HeroSlide[]
-  size?: 'default' | 'fullscreen' | 'wide'
+  size?: 'standard' | 'wide' | 'ultrawide' | 'full' | 'default' | 'fullscreen'
   interval?: number // 切换间隔，单位：秒，默认5秒
   ctaButtons?: HeroCtaButton[] // 可后台配置的 CTA 按钮，未配置时回退到默认值
+  autoplay?: boolean // 自动轮播开关（默认 true）；false 时仅手动切换
+  showCTA?: boolean // CTA 按钮区开关（默认 true）
 }
 
+// 轮播尺寸 → 容器最大宽度 / 圆角 / 比例 / 图片 sizes。
+// 与后台「全局宽屏设置」(WIDTH_PRESETS) 四档一一对应：标准1280 / 宽屏1536 / 超宽1920 / 全宽(100%)。
+// 同时兼容历史存储值 default（=标准）、fullscreen（=全宽）。
+const HERO_SIZE_STYLES: Record<string, { container: string; inner: string; aspect: string; imgSizes: string }> = {
+  standard: { container: 'max-w-[1280px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1280px' },
+  wide: { container: 'max-w-[1536px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1536px' },
+  ultrawide: { container: 'max-w-[1920px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1920px' },
+  full: { container: 'w-full', inner: '', aspect: 'aspect-[2/1]', imgSizes: '100vw' },
+  // 历史值兼容
+  default: { container: 'max-w-[1280px] mx-auto', inner: 'rounded-2xl', aspect: 'aspect-[16/9] md:aspect-[21/9]', imgSizes: '(max-width: 768px) 100vw, 1280px' },
+  fullscreen: { container: 'w-full', inner: '', aspect: 'aspect-[2/1]', imgSizes: '100vw' },
+}
+
+// CTA 按钮：实色令牌化（去 AI 风渐变/发光），圆角随 --btn-radius
 const CTA_VARIANT_CLASS: Record<HeroCtaVariant, string> = {
-  primary: 'btn-glow px-6 py-3 bg-gradient-accent text-white font-medium rounded-xl text-sm transition-transform hover:scale-105',
-  secondary: 'px-6 py-3 border border-t-border text-t-text-primary font-medium rounded-xl text-sm hover:border-t-accent-blue/30 transition-all',
-  ghost: 'px-6 py-3 text-t-text-secondary font-medium rounded-xl text-sm hover:text-t-text-primary hover:bg-t-hover transition-all',
+  primary: 'btn-pack-primary px-6 py-3 text-sm',
+  secondary: 'px-6 py-3 border border-t-border text-t-text-primary font-medium text-sm hover:border-t-accent-blue/50 transition-all [border-radius:var(--btn-radius)]',
+  ghost: 'px-6 py-3 text-t-text-secondary font-medium text-sm hover:text-t-text-primary hover:bg-t-hover transition-all [border-radius:var(--btn-radius)]',
 }
 
 // 需要硬跳转（非 Next.js 客户端路由）的链接：静态页面、上传资源、外链
@@ -50,8 +67,34 @@ function isHardLink(url: string): boolean {
   )
 }
 
-export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons }: HeroCarouselProps) {
-  const ctaList = ctaButtons && ctaButtons.length > 0 ? ctaButtons : DEFAULT_HERO_CTA
+export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons, autoplay = true, showCTA = true }: HeroCarouselProps) {
+  const { locale } = useLocaleStore()
+  // 归一化 CTA：兼容编辑器/风格包写入的 {label:{zh,en}, style:'outline'} 形状（样式包 schema），
+  // 也兼容原有 {label:string, variant:'secondary'}；label 对象按当前语言解析，style 映射到渲染形态。
+  const rawCtaList: any[] = ctaButtons && ctaButtons.length > 0 ? ctaButtons : DEFAULT_HERO_CTA
+  const ctaList: HeroCtaButton[] = rawCtaList.map((b) => {
+    const lbl = b?.label
+    const label =
+      typeof lbl === 'string'
+        ? lbl
+        : lbl && typeof lbl === 'object'
+          ? locale === 'en'
+            ? lbl.en || lbl.zh || ''
+            : lbl.zh || lbl.en || ''
+          : ''
+    const s: string = b?.style
+    const variant: HeroCtaVariant =
+      b?.variant === 'primary' || b?.variant === 'secondary' || b?.variant === 'ghost'
+        ? b.variant
+        : s === 'outline'
+          ? 'secondary'
+          : s === 'ghost'
+            ? 'ghost'
+            : 'primary'
+    return { label, href: b?.href || '#', target: b?.target, variant }
+  })
+  const resolved = HERO_SIZE_STYLES[size] || HERO_SIZE_STYLES.standard
+  const isFull = size === 'full' || size === 'fullscreen'
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
@@ -63,13 +106,13 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
     setCurrentSlide((prev) => (prev - 1 + slides.length) % Math.max(slides.length, 1))
   }, [slides.length])
 
-  // 自动播放
+  // 自动播放（autoplay=false 时不启动定时器，仅手动切换）
   useEffect(() => {
-    if (slides.length <= 1 || isPaused) return
+    if (!autoplay || slides.length <= 1 || isPaused) return
 
     const timer = setInterval(nextSlide, interval * 1000)
     return () => clearInterval(timer)
-  }, [slides.length, isPaused, nextSlide, interval])
+  }, [autoplay, slides.length, isPaused, nextSlide, interval])
 
   // 使用默认 SVG
   const useDefaultSvg = slides.length === 0 || !slides[0]?.imageUrl
@@ -77,33 +120,20 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
   return (
     <section
       className={`relative flex items-center justify-center overflow-hidden ${
-        size === 'fullscreen' ? 'pt-16' : 'pt-20 pb-4'
+        isFull ? 'pt-16' : 'pt-20 pb-4'
       }`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Background grid pattern */}
-      <div className="absolute inset-0 grid-pattern" />
-
-      <div className={`relative z-10 text-center px-4 w-full ${
-        size === 'fullscreen' ? '' : size === 'wide' ? 'max-w-6xl mx-auto' : 'max-w-3xl mx-auto'
-      }`}>
+      <div className={`relative z-10 text-center w-full ${isFull ? 'px-0' : 'px-4'} ${resolved.container}`}>
         {useDefaultSvg ? (
           // 默认 SVG Logo
           <DefaultHeroSvg />
         ) : (
           // 轮播图
-          <div className={`relative overflow-hidden border border-t-border bg-t-bg-secondary ${
-            size === 'fullscreen' ? '' : 'rounded-2xl'
-          }`}>
+          <div className={`relative overflow-hidden bg-t-bg-secondary ${isFull ? '' : 'border border-t-border'} ${resolved.inner}`}>
             {/* Slides */}
-            <div className={`relative ${
-              size === 'fullscreen'
-                ? 'aspect-[2/1]'
-                : size === 'wide'
-                  ? 'aspect-[16/9] md:aspect-[21/9]'
-                  : 'aspect-[16/9] md:aspect-[21/9]'
-            }`}>
+            <div className={`relative ${resolved.aspect}`}>
               {slides.map((slide, index) => {
                 const isActive = index === currentSlide
                 const isSvg = slide.imageUrl?.toLowerCase().endsWith('.svg')
@@ -118,7 +148,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
                     fill
                     className="object-cover"
                     priority={index === 0}
-                    sizes={size === 'fullscreen' ? '100vw' : '(max-width: 768px) 100vw, 800px'}
+                    sizes={resolved.imgSizes}
                     unoptimized
                   />
                 )
@@ -204,6 +234,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
         )}
 
         {/* CTA 按钮 */}
+        {showCTA && (
         <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
           {ctaList.map((cta, idx) => {
             const variant = cta.variant || 'secondary'
@@ -240,12 +271,13 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
             )
           })}
         </div>
+        )}
       </div>
     </section>
   )
 }
 
-// 默认 Hero SVG 组件
+// 默认 Hero SVG 组件（令牌化配色，去霓虹渐变/发光，随风格包主题变化）
 function DefaultHeroSvg() {
   return (
     <svg
@@ -254,74 +286,28 @@ function DefaultHeroSvg() {
       xmlns="http://www.w3.org/2000/svg"
       className="w-full h-auto"
     >
-      <defs>
-        <linearGradient id="heroRingGrad" x1="0" y1="0" x2="560" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00d4ff" stopOpacity="0" />
-          <stop offset="25%" stopColor="#00d4ff" />
-          <stop offset="75%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="heroTextGrad" x1="80" y1="0" x2="480" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#60c0ff" />
-          <stop offset="45%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#b088ff" />
-        </linearGradient>
-        <linearGradient id="heroInfGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#00d4ff" />
-          <stop offset="50%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#00d4ff" />
-        </linearGradient>
-        <filter id="heroTextGlow">
-          <feGaussianBlur stdDeviation="4" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-        <filter id="heroInfGlow">
-          <feGaussianBlur stdDeviation="7" result="blur1" />
-          <feGaussianBlur stdDeviation="3" result="blur2" />
-          <feMerge>
-            <feMergeNode in="blur1" />
-            <feMergeNode in="blur2" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* 轨道椭圆 */}
-      <ellipse cx="280" cy="155" rx="248" ry="110" fill="none" stroke="url(#heroRingGrad)" strokeWidth="0.8" opacity="0.4" />
-      <ellipse cx="280" cy="155" rx="228" ry="95" fill="none" stroke="rgba(0,212,255,0.06)" strokeWidth="1.2" />
-      <ellipse cx="280" cy="155" rx="208" ry="80" fill="none" stroke="rgba(124,58,237,0.05)" strokeWidth="0.8" />
-
-      {/* 扫描线 */}
-      <line x1="10" y1="155" x2="80" y2="155" stroke="#00d4ff" strokeWidth="0.8" opacity="0.5" />
-      <line x1="480" y1="155" x2="550" y2="155" stroke="#7c3aed" strokeWidth="0.8" opacity="0.5" />
-      <circle cx="10" cy="155" r="3.5" fill="#00d4ff" opacity="0.7" />
-      <circle cx="550" cy="155" r="3.5" fill="#7c3aed" opacity="0.7" />
-
       {/* Token 文字 */}
       <text
-        x="280" y="148"
+        x="280" y="158"
         textAnchor="middle"
         fontFamily="var(--font-inter), 'Segoe UI', Arial, sans-serif"
         fontSize="88"
         fontWeight="800"
         letterSpacing="-2"
-        fill="url(#heroTextGrad)"
-        filter="url(#heroTextGlow)"
+        fill="var(--text-primary)"
       >
         Token
       </text>
 
-      {/* ∞ 符号 */}
-      <g transform="translate(280, 202)" filter="url(#heroInfGlow)">
+      {/* ∞ 符号（accent 单色） */}
+      <g transform="translate(280, 208)">
         <path
           d="M 68 0 C 68 -34, 26 -34, 0 0 C -26 34, -68 34, -68 0 C -68 -34, -26 -34, 0 0 C 26 34, 68 34, 68 0 Z"
           fill="none"
-          stroke="url(#heroInfGrad)"
+          stroke="var(--accent-blue)"
           strokeWidth="8"
           strokeLinecap="round"
         />
-        <circle cx="-68" cy="0" r="5" fill="#00d4ff" opacity="0.9" />
-        <circle cx="68" cy="0" r="5" fill="#7c3aed" opacity="0.9" />
       </g>
 
       {/* 域名 */}
@@ -332,8 +318,7 @@ function DefaultHeroSvg() {
         fontSize="13"
         fontWeight="400"
         letterSpacing="8"
-        fill="#1a4060"
-        opacity="0.9"
+        fill="var(--text-muted)"
       >
         TOKEN00.COM
       </text>

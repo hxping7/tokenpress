@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>欢迎进入 AI 科技文明 · Token00</title>
+<style>
+  :root{
+    --cyan:#3df0ff;
+    --blue:#4d7cff;
+    --violet:#9b6bff;
+    --ink:#03060f;
+    --text:#d6ecff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--ink);
+    overflow:hidden;
+    color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei",-apple-system,system-ui,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    cursor:default;
+  }
+  #stage{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* 顶部字标 */
+  .wordmark{
+    position:fixed;top:30px;left:0;right:0;
+    text-align:center;letter-spacing:.62em;
+    font-size:13px;font-weight:600;
+    color:rgba(214,236,255,.55);
+    text-indent:.62em;
+    pointer-events:none;
+    opacity:0;transition:opacity 1.4s ease;
+    text-shadow:0 0 18px rgba(61,240,255,.35);
+  }
+  .wordmark.show{opacity:1}
+
+  /* 阶段文字 */
+  .phase{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;pointer-events:none;text-align:center;
+    opacity:0;transform:translateY(14px) scale(.98);
+    transition:opacity 1s ease,transform 1s ease;
+    padding:0 24px;
+  }
+  .phase.show{opacity:1;transform:none}
+  .phase .kicker{
+    font-size:13px;letter-spacing:.5em;text-indent:.5em;
+    color:rgba(61,240,255,.8);
+    text-shadow:0 0 16px rgba(61,240,255,.5);
+  }
+  .phase .title{
+    font-size:clamp(34px,7vw,82px);
+    font-weight:800;line-height:1.05;letter-spacing:.04em;
+    background:linear-gradient(180deg,#eafcff 0%,#9fe9ff 40%,#5fb0ff 75%,#9b8bff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 26px rgba(61,240,255,.45)) drop-shadow(0 0 60px rgba(77,124,255,.25));
+  }
+  .phase .sub{
+    font-size:clamp(13px,1.8vw,17px);
+    color:rgba(214,236,255,.7);letter-spacing:.18em;
+  }
+
+  /* 操作按钮 */
+  .actions{
+    position:fixed;left:50%;bottom:11%;transform:translateX(-50%) translateY(20px);
+    display:flex;gap:20px;opacity:0;pointer-events:none;
+    transition:opacity 1.1s ease,transform 1.1s ease;
+    z-index:5;
+  }
+  .actions.show{opacity:1;transform:translateX(-50%);pointer-events:auto}
+  .btn{
+    appearance:none;border:0;cursor:pointer;
+    font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.22em;text-indent:.22em;
+    padding:15px 42px;border-radius:999px;
+    transition:transform .25s ease,box-shadow .25s ease,background .25s ease;
+  }
+  .btn:active{transform:translateY(1px) scale(.985)}
+  .btn-primary{
+    color:#021018;
+    background:linear-gradient(135deg,#7df3ff,#54a8ff 55%,#9b8bff);
+    box-shadow:0 0 28px rgba(61,240,255,.45),0 10px 34px rgba(77,124,255,.35),inset 0 0 0 1px rgba(255,255,255,.35);
+  }
+  .btn-primary:hover{box-shadow:0 0 44px rgba(61,240,255,.7),0 12px 40px rgba(77,124,255,.5),inset 0 0 0 1px rgba(255,255,255,.5);transform:translateY(-2px)}
+  .btn-ghost{
+    color:#bfe6ff;
+    background:rgba(120,180,255,.06);
+    box-shadow:inset 0 0 0 1px rgba(140,200,255,.4);
+    backdrop-filter:blur(6px);
+  }
+  .btn-ghost:hover{background:rgba(120,180,255,.14);box-shadow:inset 0 0 0 1px rgba(160,220,255,.7);transform:translateY(-2px)}
+
+  /* 颗粒 / 暗角叠层，增加质感 */
+  .grain,.vignette{position:fixed;inset:0;pointer-events:none;z-index:3}
+  .grain{
+    opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .vignette{
+    background:radial-gradient(120% 120% at 50% 45%,transparent 55%,rgba(0,0,0,.55) 100%);
+  }
+</style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+
+  <div class="wordmark" id="wordmark">TOKEN00</div>
+
+  <div class="phase" id="phaseConverge">
+    <div class="kicker">AI · 文明纪元</div>
+    <div class="title">智能，正在降临</div>
+    <div class="sub">无形的元素穿越虚空，向旧世界的壁垒汇聚</div>
+  </div>
+
+  <div class="phase" id="phaseBloom">
+    <div class="kicker">BREAKTHROUGH</div>
+    <div class="title">进入 AI 科技文明</div>
+    <div class="sub">壁垒崩解，新的秩序在光中生长</div>
+  </div>
+
+  <div class="actions" id="actions">
+    <button class="btn btn-primary" id="enter">进 入</button>
+    <button class="btn btn-ghost" id="replay">重 播</button>
+  </div>
+
+  <div class="vignette"></div>
+  <div class="grain"></div>
+
+<script>
+(() => {
+  "use strict";
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let W = 0, H = 0, cx = 0, cy = 0, R = 0;
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    cx = W / 2; cy = H / 2;
+    R = Math.min(W, H) * 0.30;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---- 工具 ----
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = (arr) => arr[(Math.random() * arr.length) | 0];
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+  function col(c, a){ return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+  const CYAN = [61,240,255], BLUE = [77,124,255], VIOLET = [155,107,255], WHITE = [225,244,255];
+  const PALETTE = [CYAN, BLUE, VIOLET];
+
+  // ---- 时间轴 ----
+  const T = { converge: 3600, impact: 4500, bloom: 6400, ripple: 8000 };
+  const DONE = 8000;
+
+  // ---- 背景星点 ----
+  let stars = [];
+  function buildStars(){
+    stars = [];
+    const n = Math.floor((W * H) / 9000);
+    for (let i = 0; i < n; i++){
+      stars.push({ x: Math.random()*W, y: Math.random()*H, r: rand(0.3,1.4), tw: rand(0,Math.PI*2), sp: rand(0.4,1.6) });
+    }
+  }
+  buildStars();
+
+  // ---- AI 飞行元素 ----
+  let flyers = [];
+  const GLYPHS = ['AI','◈','⟁','⚡','✦','⬡','λ','∑','⌬'];
+  function makeFlyer(){
+    const ang = rand(0, Math.PI * 2);
+    const dist = Math.max(W, H) * rand(0.55, 1.05);
+    const type = pick(['node','glyph','ring','hex','stream']);
+    const c = pick(PALETTE);
+    return {
+      x: cx + Math.cos(ang) * dist,
+      y: cy + Math.sin(ang) * dist,
+      depth: 1,
+      depthSpeed: rand(0.0042, 0.0072),
+      speed: rand(0.9, 1.8),
+      size: rand(7, 20),
+      type, c,
+      rot: rand(0, Math.PI * 2),
+      rotSp: rand(-0.04, 0.04),
+      glyph: pick(GLYPHS),
+      wob: rand(0, Math.PI * 2),
+      dead: false,
+    };
+  }
+  function seedFlyers(){
+    flyers = [];
+    const n = Math.floor(clamp((W * H) / 16000, 90, 170));
+    for (let i = 0; i < n; i++) flyers.push(makeFlyer());
+  }
+  seedFlyers();
+
+  // ---- 冲击火花 ----
+  let sparks = [];
+  function burst(){
+    sparks = [];
+    const n = 260;
+    for (let i = 0; i < n; i++){
+      const a = rand(0, Math.PI * 2);
+      const sp = rand(2, 13) * (0.5 + Math.random());
+      sparks.push({ x: cx, y: cy, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 1, c: pick([WHITE, CYAN, BLUE, VIOLET]), size: rand(1,3.4) });
+    }
+  }
+
+  // ---- 文明网络 ----
+  let net = [];
+  function buildNet(){
+    net = [];
+    const n = Math.floor(clamp((W*H)/26000, 26, 60));
+    for (let i = 0; i < n; i++){
+      net.push({ x: rand(W*0.12, W*0.88), y: rand(H*0.18, H*0.86), bx:0, by:0, ph: rand(0,Math.PI*2), amp: rand(8,26), c: pick([CYAN,BLUE,VIOLET]), r: rand(1.6,3.4) });
+    }
+    net.forEach((p,i)=>{ p.bx=p.x; p.by=p.y; });
+  }
+  buildNet();
+
+  // ---- 水波纹 ----
+  let ripples = [];
+  function spawnRipple(delay){
+    ripples.push({ t: -delay, max: Math.hypot(W,H)*0.75 });
+  }
+
+  // ---- 壁垒 ----
+  let barrier = { crack: 0, cracks: [] };
+  function buildCracks(){
+    barrier.cracks = [];
+    const arms = 13;
+    for (let i = 0; i < arms; i++){
+      const a = (i / arms) * Math.PI * 2 + rand(-0.2,0.2);
+      const pts = [{x:0,y:0}];
+      let x = 0, y = 0, ang = a;
+      const segs = 5 + (Math.random()*4|0);
+      for (let s = 0; s < segs; s++){
+        ang += rand(-0.4,0.4);
+        const len = R / segs * rand(0.7,1.3);
+        x += Math.cos(ang)*len; y += Math.sin(ang)*len;
+        pts.push({x, y});
+      }
+      barrier.cracks.push(pts);
+    }
+  }
+  buildCracks();
+
+  // ---- 状态 ----
+  let startTime = 0, running = false, impacted = false, rippled = false, done = false;
+  const dom = {
+    wordmark: document.getElementById('wordmark'),
+    converge: document.getElementById('phaseConverge'),
+    bloom: document.getElementById('phaseBloom'),
+    actions: document.getElementById('actions'),
+  };
+  function resetClass(el, on){ el.classList.toggle('show', on); }
+  function setButtons(on){ dom.actions.classList.toggle('show', on); }
+
+  function start(){
+    running = true; done = false; impacted = false; rippled = false;
+    sparks = []; ripples = [];
+    barrier.crack = 0;
+    buildCracks(); seedFlyers(); buildStars(); buildNet();
+    startTime = performance.now() - (reduce ? DONE + 200 : 0);
+    resetClass(dom.converge, false);
+    resetClass(dom.bloom, false);
+    setButtons(false);
+    resetClass(dom.wordmark, true);
+  }
+
+  function phaseOf(e){
+    if (e < T.converge) return 'converge';
+    if (e < T.impact) return 'impact';
+    if (e < T.bloom) return 'bloom';
+    if (e < T.ripple) return 'ripple';
+    return 'done';
+  }
+
+  // ---- 绘制：背景 + 星 ----
+  function drawBackground(e, dt){
+    // 拖尾：半透明覆盖形成光迹
+    ctx.fillStyle = 'rgba(3,6,15,0.22)';
+    ctx.fillRect(0, 0, W, H);
+
+    // 中心微光
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W,H)*0.7);
+    const bloom = clamp((e - T.impact) / (T.bloom - T.impact), 0, 1);
+    g.addColorStop(0, col(BLUE, 0.05 + bloom * 0.10));
+    g.addColorStop(0.5, col(VIOLET, 0.02 + bloom * 0.04));
+    g.addColorStop(1, 'rgba(3,6,15,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // 星
+    for (const s of stars){
+      s.tw += s.sp * dt * 0.06;
+      const a = 0.25 + Math.sin(s.tw) * 0.22;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = col(WHITE, clamp(a,0,0.6));
+      ctx.fill();
+    }
+  }
+
+  // ---- 绘制：飞行元素 ----
+  function drawFlyers(e, dt){
+    const ph = phaseOf(e);
+    const accel = ph === 'converge' ? 1 : 0.25;
+    for (const p of flyers){
+      if (p.dead) continue;
+      const dx = cx - p.x, dy = cy - p.y;
+      const d = Math.hypot(dx, dy) || 1;
+      p.x += (dx / d) * p.speed * accel * (e < T.converge ? 1 : 0.6);
+      p.y += (dy / d) * p.speed * accel * (e < T.converge ? 1 : 0.6);
+      p.depth -= p.depthSpeed * (ph === 'converge' ? 1 : 0.4);
+      p.rot += p.rotSp;
+      p.wob += 0.05;
+
+      const scale = lerp(0.25, 2.6, clamp(1 - p.depth, 0, 1));
+      if (p.depth <= 0){ p.dead = true; continue; }
+      const alpha = clamp(0.25 + (1 - p.depth) * 0.8, 0, 1);
+      const sz = p.size * scale;
+      const px = p.x + Math.cos(p.wob) * 4 * scale;
+      const py = p.y + Math.sin(p.wob) * 4 * scale;
+
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(p.rot);
+      ctx.shadowColor = col(p.c, 0.9);
+      ctx.shadowBlur = 14 * scale;
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = col(p.c, 1);
+      ctx.fillStyle = col(p.c, 1);
+      ctx.lineWidth = Math.max(1, 1.6 * scale);
+
+      if (p.type === 'node'){
+        ctx.beginPath(); ctx.arc(0, 0, sz*0.5, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = alpha*0.5; ctx.beginPath(); ctx.arc(0,0,sz*0.9,0,Math.PI*2); ctx.stroke();
+      } else if (p.type === 'glyph'){
+        ctx.font = `${Math.round(sz*1.4)}px "PingFang SC",system-ui,sans-serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(p.glyph, 0, 0);
+      } else if (p.type === 'ring'){
+        ctx.beginPath(); ctx.ellipse(0,0,sz,sz*0.42,0,0,Math.PI*2); ctx.stroke();
+      } else if (p.type === 'hex'){
+        ctx.beginPath();
+        for (let i=0;i<6;i++){ const a=i/6*Math.PI*2; const fn=i?'lineTo':'moveTo'; ctx[fn](Math.cos(a)*sz,Math.sin(a)*sz); }
+        ctx.closePath(); ctx.stroke();
+      } else { // stream
+        ctx.beginPath(); ctx.moveTo(-sz, 0); ctx.lineTo(sz, 0); ctx.stroke();
+        ctx.globalAlpha = alpha*0.4; ctx.beginPath(); ctx.moveTo(-sz*1.8,0); ctx.lineTo(-sz,0); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // 重新补充飞行物，保持汇聚密度
+    if (ph === 'converge' && flyers.filter(f=>!f.dead).length < 40){
+      for (let i=0;i<6;i++) flyers.push(makeFlyer());
+    }
+  }
+
+  // ---- 绘制：壁垒 ----
+  function drawBarrier(e, dt){
+    const crack = barrier.crack;
+    if (crack <= 0.001 && e > T.impact) return;
+    if (e > T.bloom + 600 && crack >= 1) return; // 碎裂后消失
+    const fade = clamp(1 - (e - T.bloom) / 800, 0, 1);
+    if (fade <= 0) return;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    // 力场填充
+    const fg = ctx.createRadialGradient(0,0,0,0,0,R);
+    fg.addColorStop(0, col(BLUE, 0.10 * fade));
+    fg.addColorStop(1, col(BLUE, 0));
+    ctx.fillStyle = fg;
+    ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.fill();
+
+    // 六边形边框
+    ctx.shadowColor = col(CYAN, 0.8); ctx.shadowBlur = 18;
+    ctx.strokeStyle = col(CYAN, 0.5 * fade);
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let i=0;i<6;i++){ const a=i/6*Math.PI*2 - Math.PI/2; const fn=i?'lineTo':'moveTo'; ctx[fn](Math.cos(a)*R,Math.sin(a)*R); }
+    ctx.closePath(); ctx.stroke();
+
+    // 内部网格环
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = col(CYAN, 0.16 * fade);
+    ctx.lineWidth = 1;
+    for (let k=1;k<=3;k++){ ctx.beginPath(); ctx.arc(0,0,R*k/3.2,0,Math.PI*2); ctx.stroke(); }
+
+    // 扫描线
+    const sweep = (e*0.0012) % (Math.PI*2);
+    ctx.strokeStyle = col(WHITE, 0.5 * fade);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(0,0);
+    ctx.lineTo(Math.cos(sweep)*R, Math.sin(sweep)*R); ctx.stroke();
+
+    // 裂痕
+    if (crack > 0.001){
+      const cc = lerp(CYAN, WHITE, clamp(crack,0,1));
+      ctx.shadowColor = col(cc, 1); ctx.shadowBlur = 20;
+      ctx.strokeStyle = col(cc, clamp(0.4 + crack*0.6,0,1));
+      ctx.lineWidth = 1 + crack*2.2;
+      for (const pts of barrier.cracks){
+        ctx.beginPath();
+        for (let i=0;i<pts.length;i++){
+          const x = pts[i].x * crack, y = pts[i].y * crack;
+          const fn = i?'lineTo':'moveTo'; ctx[fn](x,y);
+        }
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // ---- 绘制：冲击火花 + 冲击波 ----
+  function drawSparks(dt){
+    if (!sparks.length) return;
+    for (const s of sparks){
+      s.x += s.vx; s.y += s.vy;
+      s.vx *= 0.965; s.vy *= 0.965;
+      s.life -= dt * 0.0011;
+      if (s.life <= 0) continue;
+      ctx.save();
+      ctx.globalAlpha = clamp(s.life,0,1);
+      ctx.shadowColor = col(s.c, 1); ctx.shadowBlur = 12;
+      ctx.fillStyle = col(s.c, 1);
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.size * (0.4 + s.life), 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    sparks = sparks.filter(s => s.life > 0);
+  }
+  let shock = null;
+  function drawShock(e){
+    if (!shock) return;
+    const p = clamp((e - shock.start) / 900, 0, 1);
+    if (p >= 1){ shock = null; return; }
+    const rad = lerp(R*0.2, Math.hypot(W,H)*0.7, p);
+    ctx.save();
+    ctx.globalAlpha = (1 - p) * 0.8;
+    ctx.strokeStyle = col(WHITE, 1);
+    ctx.lineWidth = lerp(8, 0.5, p);
+    ctx.shadowColor = col(CYAN, 1); ctx.shadowBlur = 30;
+    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---- 绘制：文明网络 ----
+  function drawNet(e, dt){
+    if (e < T.bloom) return;
+    const bloom = clamp((e - T.bloom) / 1200, 0, 1);
+    const pulse = 0.5 + 0.5 * Math.sin(e*0.002);
+    ctx.save();
+    ctx.globalAlpha = bloom * 0.9;
+    // 连线
+    ctx.lineWidth = 1;
+    for (let i=0;i<net.length;i++){
+      const a = net[i];
+      for (let j=i+1;j<net.length;j++){
+        const b = net[j];
+        const d = Math.hypot(a.x-b.x, a.y-b.y);
+        if (d < Math.min(W,H)*0.22){
+          ctx.strokeStyle = col(a.c, (1 - d/(Math.min(W,H)*0.22)) * 0.25 * bloom);
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    // 节点
+    for (const p of net){
+      p.ph += dt*0.001;
+      p.x = p.bx + Math.cos(p.ph)*p.amp;
+      p.y = p.by + Math.sin(p.ph*1.3)*p.amp;
+      ctx.shadowColor = col(p.c, 1); ctx.shadowBlur = 14;
+      ctx.fillStyle = col(p.c, 0.5 + pulse*0.5);
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r*(0.8+pulse*0.4), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---- 绘制：水波纹 ----
+  function drawRipples(e){
+    if (!ripples.length) return;
+    for (const rp of ripples){
+      rp.t += 16;
+      const p = rp.t / 1600;
+      if (p <= 0 || p >= 1) continue;
+      const rad = p * rp.max;
+      const a = Math.sin(p * Math.PI) * 0.28;
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = col(CYAN, 1);
+      ctx.lineWidth = 2.2;
+      ctx.shadowColor = col(CYAN, 1); ctx.shadowBlur = 16;
+      ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+    ripples = ripples.filter(rp => rp.t < 1600);
+  }
+
+  // ---- 阶段文字调度 ----
+  function syncPhases(e){
+    resetClass(dom.converge, e >= 600 && e < T.impact - 200);
+    const bloomOn = e >= T.bloom - 200 && e < T.ripple - 300;
+    resetClass(dom.bloom, bloomOn);
+  }
+
+  // ---- 主循环 ----
+  let last = 0;
+  function frame(now){
+    if (!running) return;
+    const e = now - startTime;
+    const dt = Math.min(now - last, 50) || 16; last = now;
+    const ph = phaseOf(e);
+
+    drawBackground(e, dt);
+    drawFlyers(e, dt);
+    drawBarrier(e, dt);
+    drawNet(e, dt);
+
+    // 冲击触发
+    if (ph === 'impact' && !impacted){
+      impacted = true;
+      burst();
+      shock = { start: now };
+      barrier.crack = 0.0001;
+    }
+    if (impacted && barrier.crack < 1){
+      barrier.crack = clamp(barrier.crack + dt * 0.004, 0, 1);
+    }
+    drawShock(e);
+    drawSparks(dt);
+
+    // 水波纹触发
+    if (ph === 'ripple' && !rippled){
+      rippled = true;
+      spawnRipple(0); spawnRipple(220); spawnRipple(460);
+    }
+    drawRipples(e);
+
+    syncPhases(e);
+
+    if (e >= DONE && !done){
+      done = true;
+      setButtons(true);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---- 交互 ----
+  document.getElementById('enter').addEventListener('click', () => {
+    try { localStorage.setItem('t00_welcome_seen', '1'); } catch(_) {}
+    if (window.self !== window.top){
+      window.parent.postMessage({ type: 'welcome:close' }, '*');
+    } else if (location.protocol.indexOf('http') === 0){
+      window.location.href = '/';
+    } else {
+      // 独立预览（file://）下的优雅反馈，避免跳到文件系统根
+      document.body.style.transition = 'opacity .6s ease';
+      document.body.style.opacity = '0';
+      setTimeout(() => window.location.reload(), 620);
+    }
+  });
+  document.getElementById('replay').addEventListener('click', () => { start(); });
+
+  // 父页面可远程控制（重播 / 关闭）
+  window.addEventListener('message', (ev) => {
+    const d = ev.data || {};
+    if (d.type === 'welcome:replay') start();
+    if (d.type === 'welcome:hide') setButtons(false);
+  });
+
+  start();
+  requestAnimationFrame((t) => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

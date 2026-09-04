@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
+import { ALL_API_PERMISSIONS, ROLE_API_PERMISSIONS } from '@tokenpress/shared'
 
 const router = Router()
 router.use(authMiddleware)
@@ -54,37 +55,15 @@ router.post('/', async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, error: 'Name and permissions are required' })
     }
 
-    const validPermissions = [
-      'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
-      'friendlinks:write', 'sections:write', 'categories:write',
-      'users:write', 'stats:read', 'logs:read', 'backup:write',
-      'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
-      'statichtml:write', 'statichtml:read',
-    ]
+    const validPermissions = ALL_API_PERMISSIONS
     const invalidPerms = permissions.filter((p: string) => !validPermissions.includes(p))
     if (invalidPerms.length) {
       return res.status(400).json({ success: false, error: `Invalid permissions: ${invalidPerms.join(', ')}` })
     }
 
-    // Enforce role-based permission limits
+    // Enforce role-based permission limits (derived from shared catalog)
     const role = req.user!.role
-    const allowedByRole: Record<string, string[]> = {
-      superadmin: [
-        'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
-        'friendlinks:write', 'sections:write', 'categories:write',
-        'users:write', 'stats:read', 'logs:read', 'backup:write',
-        'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
-        'statichtml:write', 'statichtml:read',
-      ],
-      admin: [
-        'article:write', 'media:upload', 'work:write', 'content:delete', 'settings:write',
-        'friendlinks:write', 'sections:write', 'categories:write',
-        'stats:read', 'logs:read', 'backup:write',
-        'reviews:write', 'keywords:write', 'ads:write', 'ads:read', 'ads:delete',
-        'statichtml:write', 'statichtml:read',
-      ],
-      user: ['article:write', 'media:upload'],
-    }
+    const allowedByRole = ROLE_API_PERMISSIONS
     const allowed = allowedByRole[role] || allowedByRole.user
     const disallowed = permissions.filter((p: string) => !allowed.includes(p))
     if (disallowed.length) {

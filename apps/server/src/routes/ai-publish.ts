@@ -5,6 +5,8 @@ import { db } from '../db/index.js'
 import { articles, articleTags, tags, categories, sections, media, articleLikes, articleViews, adLogs, users, siteSettings } from '../db/schema.js'
 import { eq, and, inArray, isNull, sql } from 'drizzle-orm'
 import { apiTokenAuth, requirePermission, type ApiAuthRequest } from '../middleware/apiToken.js'
+import { isTemplateValid } from '../lib/sectionTemplates.js'
+import { auditLog } from '../utils/auditLogger.js'
 import { generateSlug, extractExcerpt, isValidPinScope } from '@tokenpress/shared'
 import type { ContentStatus, PinScope } from '@tokenpress/shared'
 import { getParam } from '../utils/params.js'
@@ -93,6 +95,65 @@ async function linkMediaToArticle(articleId: number, content: string, coverImage
  *     "status": "published"
  *   }
  */
+
+/**
+ * 解析发布接口中的分类参数（创建与更新共用）。
+ *
+ * 规则：
+ *  - category 与 categoryId 都未提供 → skip（创建时默认 null，更新时不改动）
+ *  - category 为 null / 空串，或 categoryId 为 null → 显式清空（set null）
+ *  - 非空 category（所属板块 slug 优先，否则按名称匹配）或数字 categoryId → 解析后 set
+ *  - 提供了值但解析不到 → error（不再静默丢弃，返回 400 让调用方感知）
+ */
+async function resolveCategoryForPublish(
+  rawCategory: unknown,
+  rawCategoryId: unknown,
+  sectionId: number,
+): Promise<
+  | { action: 'skip' }
+  | { action: 'set'; categoryId: number | null }
+  | { action: 'error'; message: string }
+> {
+  const categoryProvided = rawCategory !== undefined
+  const categoryIdProvided = rawCategoryId !== undefined
+
+  if (!categoryProvided && !categoryIdProvided) {
+    return { action: 'skip' }
+  }
+
+  // 显式清空
+  if (rawCategory === null || rawCategoryId === null) {
+    return { action: 'set', categoryId: null }
+  }
+  if (typeof rawCategory === 'string' && rawCategory.trim() === '') {
+    return { action: 'set', categoryId: null }
+  }
+
+  // category 文本：slug（限当前板块）优先，其次按名称
+  if (categoryProvided && typeof rawCategory === 'string' && rawCategory.trim() !== '') {
+    const term = rawCategory.trim()
+    const bySlug = await db.select().from(categories)
+      .where(and(eq(categories.slug, term), eq(categories.sectionId, sectionId)))
+      .get()
+    if (bySlug) return { action: 'set', categoryId: bySlug.id }
+    const byName = await db.select().from(categories).where(eq(categories.name, term)).get()
+    if (byName) return { action: 'set', categoryId: byName.id }
+    return { action: 'error', message: `Category "${term}" not found` }
+  }
+
+  // categoryId 数字
+  if (categoryIdProvided) {
+    const id = typeof rawCategoryId === 'number' ? rawCategoryId : Number(rawCategoryId)
+    if (!Number.isInteger(id) || id <= 0) {
+      return { action: 'error', message: `Invalid categoryId "${String(rawCategoryId)}"` }
+    }
+    const cat = await db.select().from(categories).where(eq(categories.id, id)).get()
+    if (!cat) return { action: 'error', message: `Category id ${id} not found` }
+    return { action: 'set', categoryId: cat.id }
+  }
+
+  return { action: 'skip' }
+}
 
 // POST /api/v1/ai/publish — create or update article
 router.post('/publish', requirePermission('article:write'), async (req: ApiAuthRequest, res) => {
@@ -205,6 +266,16 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
         }
       }
 
+      // 分类：创建/更新共用解析逻辑。更新时若提供 category/categoryId 则落地，
+      // 解析失败直接 400（不再静默丢弃），与新建行为一致。
+      const catResolve = await resolveCategoryForPublish(category, req.body.categoryId, sectionId)
+      if (catResolve.action === 'error') {
+        return res.status(400).json({ success: false, error: catResolve.message })
+      }
+      if (catResolve.action === 'set') {
+        updates.categoryId = catResolve.categoryId
+      }
+
       await db.update(articles).set(updates).where(eq(articles.id, existing.id)).run()
 
       // Trigger ISR revalidation
@@ -257,23 +328,14 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
       slug = `${slug}-${Date.now().toString(36)}`
     }
 
-    // Resolve category
+    // Resolve category (create path) — reuse the same helper as update.
     let categoryId: number | null = null
-    if (category) {
-      const cat = await db.select().from(categories)
-        .where(and(
-          eq(categories.slug, category),
-          eq(categories.sectionId, sectionId)
-        )).get()
-
-      if (!cat) {
-        // Try by name
-        const catByName = await db.select().from(categories)
-          .where(eq(categories.name, category)).get()
-        if (catByName) categoryId = catByName.id
-      } else {
-        categoryId = cat.id
-      }
+    const createCatResolve = await resolveCategoryForPublish(category, req.body.categoryId, sectionId)
+    if (createCatResolve.action === 'error') {
+      return res.status(400).json({ success: false, error: createCatResolve.message })
+    }
+    if (createCatResolve.action === 'set') {
+      categoryId = createCatResolve.categoryId
     }
 
     // Create new article
@@ -340,6 +402,199 @@ router.post('/publish', requirePermission('article:write'), async (req: ApiAuthR
   } catch (err) {
     console.error('AI publish error:', err)
     res.status(500).json({ success: false, error: 'Failed to publish article' })
+  }
+})
+
+// ============================================================
+// 分类管理（AI 远程，article:write 已隐含 categories:write）
+// ============================================================
+
+/** 规范化 layouts：接受对象或 JSON 字符串，返回存储用的字符串；非法/空 → null */
+function normalizeLayouts(v: unknown): string | null {
+  if (v === null || v === undefined) return null
+  if (typeof v === 'string') {
+    const s = v.trim()
+    if (!s) return null
+    try { JSON.parse(s); return s } catch { return null }
+  }
+  if (typeof v === 'object') return JSON.stringify(v)
+  return null
+}
+
+/** 将 DB 中的 categories 行转换为 API 输出（解析 template_config / layouts JSON） */
+function serializeCategory(row: any) {
+  if (!row) return row
+  let templateConfig: unknown = null
+  if (row.templateConfig && typeof row.templateConfig === 'string') {
+    try { templateConfig = JSON.parse(row.templateConfig) } catch { templateConfig = null }
+  }
+  let layouts: unknown = null
+  if (row.layouts && typeof row.layouts === 'string') {
+    try { layouts = JSON.parse(row.layouts) } catch { layouts = null }
+  }
+  return {
+    ...row,
+    template: row.template === '' ? '' : (row.template || 'article-list'),
+    templateConfig,
+    layouts,
+  }
+}
+
+/**
+ * 分类字段白名单：article:write 隐含 categories:write，因此只允许合理字段。
+ * 后台完整的 categories 管理（含排序、模板完整性校验等）仍走 /api/v1/categories。
+ */
+function buildCategoryValues(
+  input: Record<string, unknown>,
+  sectionId: number,
+): { values: Record<string, unknown>; error?: string } {
+  const values: Record<string, unknown> = { sectionId }
+  if (input.name !== undefined) values.name = String(input.name)
+  if (input.slug !== undefined && input.slug !== '') {
+    values.slug = String(input.slug)
+  }
+  if (input.description !== undefined) values.description = input.description ? String(input.description) : null
+  if (input.sortOrder !== undefined) values.sortOrder = Number(input.sortOrder) || 0
+  if (input.template !== undefined) {
+    const t = input.template === '' ? '' : String(input.template)
+    values.template = isTemplateValid(t) ? t : 'article-list'
+  }
+  if (input.templateConfig !== undefined) {
+    values.templateConfig = input.templateConfig === null
+      ? null
+      : (typeof input.templateConfig === 'object' ? JSON.stringify(input.templateConfig) : String(input.templateConfig))
+  }
+  if (input.layouts !== undefined) {
+    values.layouts = normalizeLayouts(input.layouts)
+  }
+  if (!values.name) return { values, error: 'name is required' }
+  return { values }
+}
+
+// POST /api/v1/ai/categories — create category under a section
+router.post('/categories', requirePermission('article:write'), async (req: ApiAuthRequest, res) => {
+  try {
+    const {
+      name,
+      slug,
+      section: sectionSlug,
+      sectionId: sectionIdRaw,
+      description,
+      sortOrder = 0,
+      template,
+      templateConfig,
+      layouts,
+    } = req.body
+
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'name is required' })
+    }
+
+    let sectionId: number
+    if (sectionIdRaw) {
+      const id = Number(sectionIdRaw)
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ success: false, error: `Invalid sectionId "${String(sectionIdRaw)}"` })
+      }
+      const sec = await db.select().from(sections).where(eq(sections.id, id)).get()
+      if (!sec) return res.status(400).json({ success: false, error: `Section id ${id} not found` })
+      sectionId = sec.id
+    } else if (sectionSlug) {
+      const sec = await db.select().from(sections).where(eq(sections.slug, String(sectionSlug))).get()
+      if (!sec) return res.status(400).json({ success: false, error: `Section "${String(sectionSlug)}" not found` })
+      sectionId = sec.id
+    } else {
+      return res.status(400).json({ success: false, error: 'section or sectionId is required', hint: 'e.g. section: "blog"' })
+    }
+
+    const categorySlug = slug || generateSlug(String(name))
+    const existing = await db.select().from(categories).where(eq(categories.slug, categorySlug)).get()
+    if (existing) {
+      return res.status(409).json({ success: false, error: `Category slug "${categorySlug}" already exists` })
+    }
+
+    const { values, error } = buildCategoryValues(
+      { name, slug: categorySlug, description, sortOrder, template, templateConfig, layouts },
+      sectionId,
+    )
+    if (error) return res.status(400).json({ success: false, error })
+
+    const result = await db.insert(categories).values(values as any).run()
+    const id = Number(result.lastInsertRowid)
+    const category = await db.select().from(categories).where(eq(categories.id, id)).get()
+
+    // 合成 req.user 供 auditLog 记录操作人（AI 认证走 req.apiToken，非 req.user）
+    ;(req as any).user = { userId: req.apiToken!.userId, username: 'api-token', role: 'admin' }
+    await auditLog(req as any, 'create', 'category', id, `Created category via AI API: ${name}`)
+    res.status(201).json({ success: true, data: serializeCategory(category) })
+  } catch (err) {
+    console.error('AI create category error:', err)
+    res.status(500).json({ success: false, error: 'Failed to create category' })
+  }
+})
+
+// PUT /api/v1/ai/categories/:id — modify an existing category
+router.put('/categories/:id', requirePermission('article:write'), async (req: ApiAuthRequest, res) => {
+  try {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ success: false, error: `Invalid category id "${req.params.id}"` })
+    }
+
+    const {
+      name,
+      slug,
+      section: sectionSlug,
+      sectionId: sectionIdRaw,
+      description,
+      sortOrder,
+      template,
+      templateConfig,
+      layouts,
+    } = req.body
+
+    const existing = await db.select().from(categories).where(eq(categories.id, id)).get()
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Category not found' })
+    }
+
+    // 若改 slug，校验唯一性
+    if (slug && slug !== existing.slug) {
+      const dup = await db.select().from(categories).where(eq(categories.slug, String(slug))).get()
+      if (dup) return res.status(409).json({ success: false, error: `Category slug "${slug}" already exists` })
+    }
+
+    // 若改所属板块，校验存在
+    let sectionId = existing.sectionId
+    if (sectionIdRaw) {
+      const sid = Number(sectionIdRaw)
+      if (!Number.isInteger(sid) || sid <= 0) {
+        return res.status(400).json({ success: false, error: `Invalid sectionId "${String(sectionIdRaw)}"` })
+      }
+      const sec = await db.select().from(sections).where(eq(sections.id, sid)).get()
+      if (!sec) return res.status(400).json({ success: false, error: `Section id ${sid} not found` })
+      sectionId = sec.id
+    } else if (sectionSlug) {
+      const sec = await db.select().from(sections).where(eq(sections.slug, String(sectionSlug))).get()
+      if (!sec) return res.status(400).json({ success: false, error: `Section "${String(sectionSlug)}" not found` })
+      sectionId = sec.id
+    }
+
+    const { values, error } = buildCategoryValues(
+      { name, slug, description, sortOrder, template, templateConfig, layouts },
+      sectionId,
+    )
+    if (error) return res.status(400).json({ success: false, error })
+
+    await db.update(categories).set(values as any).where(eq(categories.id, id)).run()
+
+    ;(req as any).user = { userId: req.apiToken!.userId, username: 'api-token', role: 'admin' }
+    await auditLog(req as any, 'update', 'category', id, `Updated category via AI API: ${existing.name}`)
+    const updated = await db.select().from(categories).where(eq(categories.id, id)).get()
+    res.json({ success: true, data: serializeCategory(updated) })
+  } catch (err) {
+    console.error('AI update category error:', err)
+    res.status(500).json({ success: false, error: 'Failed to update category' })
   }
 })
 

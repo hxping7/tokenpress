@@ -112,13 +112,14 @@ class ApiClient {
   }
 
   // ===== Articles =====
-  async getArticles(params: { page?: number; limit?: number; section?: string; category?: string; search?: string } = {}) {
+  async getArticles(params: { page?: number; limit?: number; section?: string; category?: string; search?: string; status?: string } = {}) {
     const query = new URLSearchParams()
     if (params.page) query.set('page', String(params.page))
     if (params.limit) query.set('limit', String(params.limit))
     if (params.section) query.set('section', params.section)
     if (params.category) query.set('category', params.category)
     if (params.search) query.set('search', params.search)
+    if (params.status) query.set('status', params.status)
     return this.request<{ success: boolean; data: any[]; pagination: any }>(
       `/articles?${query.toString()}`
     )
@@ -129,8 +130,14 @@ class ApiClient {
   }
 
   // ===== Categories =====
-  async getCategories() {
-    return this.request<{ success: boolean; data: any[] }>('/categories')
+  async getCategories(section?: string) {
+    const q = section ? `?section=${encodeURIComponent(section)}` : ''
+    return this.request<{ success: boolean; data: any[] }>(`/categories${q}`)
+  }
+
+  // ===== Friend Links =====
+  async getFriendLinks() {
+    return this.request<{ success: boolean; data: any[] }>('/friend-links').then((r) => r.data || [])
   }
 
   // ===== Admin Articles =====
@@ -343,6 +350,75 @@ class ApiClient {
 
   async getViewStatsOverview() {
     return this.request<{ success: boolean; data: any }>('/interactions/stats/overview')
+  }
+
+  // ===== Style Packs =====
+  // 公开：当前激活包配置（供 SSR 渲染）
+  async getActiveStyle() {
+    return this.request<{ success: boolean; data: any }>('/styles/active')
+  }
+
+  // 列出全部包（需 styles:read，或管理员 JWT）
+  async getStyles() {
+    return this.request<{ success: boolean; data: any[] }>('/styles')
+  }
+
+  // 取某包完整配置（需 styles:read，或管理员 JWT）
+  async getStyle(id: string) {
+    return this.request<{ success: boolean; data: any }>(`/styles/${id}`)
+  }
+
+  // 新建/上传模板包（需 styles:write）
+  async createStyle(data: {
+    id: string
+    manifest: any
+    theme?: string
+    layouts?: any
+    header?: any
+    footer?: any
+  }) {
+    return this.request<{ success: boolean; data: any }>('/styles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // 局部更新模板包（需 styles:write）
+  async updateStyle(id: string, data: {
+    manifest?: any
+    theme?: string
+    layouts?: any
+    header?: any
+    footer?: any
+    hero?: any
+    features?: any
+  }) {
+    return this.request<{ success: boolean; data: any }>(`/styles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // 删除自定义包（需 styles:write）
+  async deleteStyle(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/styles/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // 恢复内置模板包到出厂默认（需 styles:write）：从镜像内置源重新拷贝覆盖个人修改
+  async restoreStyle(id: string) {
+    return this.request<{ success: boolean; data: any }>(`/styles/${id}/restore`, {
+      method: 'POST',
+    })
+  }
+
+  // 激活某模板包（复用 site-settings 的 settings:write）
+  async setActiveStyle(id: string) {
+    return this.request<{ success: boolean; data: any }>('/site-settings', {
+      method: 'PUT',
+      body: JSON.stringify({ settings: { active_style: id } }),
+    })
   }
 }
 

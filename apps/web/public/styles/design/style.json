@@ -1,0 +1,263 @@
+{
+  "$": {
+    "id": "design",
+    "name": "设计师作品集",
+    "description": "设计师作品集风格：衬线标题、超大圆角、居中 Split 导航、满屏大图 Hero、零边栏 + 瀑布流板块、沉浸式文章、极简单行页脚。",
+    "version": "1.1.0",
+    "author": "token00",
+    "preview": "/styles/design/preview.png",
+    "builtin": true,
+    "defaultTheme": "light",
+    "tags": [
+      "design",
+      "portfolio",
+      "creative"
+    ]
+  },
+  "design": {
+    "tokens": {
+      "--bg-primary": "#ffffff",
+      "--bg-secondary": "#fafafa",
+      "--bg-tertiary": "#f0f0f0",
+      "--text-primary": "#1a1a1a",
+      "--text-secondary": "#555555",
+      "--text-muted": "#999999",
+      "--accent-blue": "#d71920",
+      "--accent-purple": "#0a0a0a",
+      "--accent-blue-dim": "#b01015",
+      "--border-color": "rgba(0,0,0,0.08)",
+      "--hover-bg": "rgba(215,25,32,0.06)",
+      "--gradient-from": "#d71920",
+      "--gradient-via": "#0a0a0a",
+      "--gradient-to": "#d71920",
+      "--grid-pattern": "transparent",
+      "--selection-bg": "rgba(215,25,32,0.18)",
+      "--scrollbar-thumb": "rgba(215,25,32,0.25)",
+      "--scrollbar-thumb-hover": "rgba(215,25,32,0.45)",
+      "--focus-ring": "rgba(215,25,32,0.5)",
+      "--card-border-hover": "rgba(215,25,32,0.3)",
+      "--section-divider": "rgba(215,25,32,0.15)",
+      "--btn-glow-from": "transparent",
+      "--btn-glow-to": "transparent",
+      "--content-max-width": "1320px",
+      "--reading-max-width": "760px",
+      "--header-height": "72px",
+      "--brand-font": "Inter, Helvetica Neue, sans-serif",
+      "--radius-card": "20px",
+      "--shadow-card": "0 8px 30px rgba(0,0,0,0.06)"
+    },
+    "theme": ":root{\n  --bg-primary:#ffffff;\n  --bg-secondary:#fafafa;\n  --bg-tertiary:#f0f0f0;\n  --text-primary:#1a1a1a;\n  --text-secondary:#555555;\n  --text-muted:#999999;\n  --accent-blue:#d71920;\n  --accent-purple:#0a0a0a;\n  --accent-blue-dim:#b01015;\n  --border-color:rgba(0,0,0,0.08);\n  --hover-bg:rgba(215,25,32,0.06);\n  --gradient-from:#d71920;\n  --gradient-via:#0a0a0a;\n  --gradient-to:#d71920;\n  --content-max-width:1320px;\n  --reading-max-width:760px;\n  --header-height:72px;\n  --brand-font:\"Inter\",\"Helvetica Neue\",sans-serif;\n  --radius-card:20px;\n  --shadow-card:0 8px 30px rgba(0,0,0,0.06);\n}"
+  },
+  "header": {
+    "variant": "sticky-glass",
+    "height": 72,
+    "logo": {
+      "type": "text",
+      "text": "STUDIO",
+      "position": "center",
+      "height": 28,
+      "link": "/"
+    },
+    "nav": {
+      "source": "sections",
+      "align": "center",
+      "style": "split",
+      "icons": {},
+      "colors": {
+        "text": "#1a1a1a",
+        "hoverBg": "rgba(215,25,32,0.06)",
+        "hoverText": "#0a0a0a",
+        "activeBg": "#d71920",
+        "activeText": "#ffffff",
+        "barBg": "rgba(255,255,255,0.7)",
+        "barText": "#1a1a1a"
+      }
+    },
+    "actions": [
+      {
+        "type": "search",
+        "icon": "search",
+        "style": "icon"
+      },
+      {
+        "type": "theme",
+        "icon": "palette",
+        "style": "icon"
+      },
+      {
+        "type": "language",
+        "icon": "globe",
+        "style": "ghost",
+        "label": {
+          "zh": "中文",
+          "en": "EN"
+        }
+      },
+      {
+        "type": "admin",
+        "icon": "dashboard",
+        "style": "ghost",
+        "showWhen": "loggedIn"
+      }
+    ],
+    "background": "rgba(255,255,255,0.7)",
+    "borderBottom": "1px solid rgba(0,0,0,0.06)"
+  },
+  "hero": {
+    "enabled": true,
+    "size": "fullscreen",
+    "autoplay": true,
+    "interval": 5,
+    "showCTA": false,
+    "ctaButtons": []
+  },
+  "layouts": {
+    "homepage": {
+      "container": "full",
+      "sections": [
+        {
+          "component": "Hero",
+          "variant": "fullscreen"
+        },
+        {
+          "component": "ArticleList",
+          "variant": "masonry",
+          "props": {
+            "source": "latest",
+            "limit": 12,
+            "showViewToggle": false
+          }
+        }
+      ]
+    },
+    "section": {
+      "layout": "none",
+      "hero": {
+        "enabled": false
+      },
+      "sidebar": {
+        "enabled": false,
+        "sticky": false
+      },
+      "list": {
+        "layout": "masonry",
+        "columns": 2,
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "subcategory": {
+        "enabled": true,
+        "position": "top",
+        "style": "pill",
+        "columns": 3,
+        "showCount": true
+      }
+    },
+    "article": {
+      "layout": "immersive",
+      "showTOC": false,
+      "showAuthor": true,
+      "sidebar": "none",
+      "maxWidth": 760,
+      "hero": "cover"
+    },
+    "list": {
+      "layout": "masonry",
+      "columns": 2
+    },
+    "category": {
+      "layout": "none",
+      "hero": {
+        "enabled": false
+      },
+      "sidebar": {
+        "enabled": false
+      },
+      "list": {
+        "layout": "masonry",
+        "columns": 3,
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "subcategory": {
+        "enabled": true,
+        "position": "top",
+        "style": "pill",
+        "showCount": true
+      }
+    },
+    "templates": {
+      "article-list": {
+        "columns": 1,
+        "gap": "1.5rem",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "article-grid": {
+        "columns": 3,
+        "gap": "1.5rem",
+        "aspectRatio": "1/1",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "article-masonry": {
+        "columns": 2,
+        "gap": "1.5rem",
+        "aspectRatio": "auto",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "magazine": {
+        "columns": 2,
+        "gap": "1.5rem",
+        "showThumbnail": true,
+        "showExcerpt": false,
+        "cardStyle": "clean"
+      },
+      "single-page": {
+        "maxWidth": 760,
+        "centered": true
+      },
+      "link-wall": {
+        "columns": 4,
+        "gap": "1rem",
+        "pill": true
+      },
+      "design-gallery": {
+        "columns": 3,
+        "gap": "1.5rem",
+        "aspectRatio": "4/5",
+        "cardStyle": "clean",
+        "hover": "zoom"
+      }
+    }
+  },
+  "footer": {
+    "variant": "minimal",
+    "columns": [],
+    "friendLinks": {
+      "show": false,
+      "source": "table",
+      "items": [],
+      "maxItems": 20
+    },
+    "bottom": {
+      "copyright": "© 2026 STUDIO · Crafted with care",
+      "social": [],
+      "showBackToTop": true
+    },
+    "background": "#ffffff",
+    "textColor": "#999999"
+  },
+  "features": {
+    "readingProgressBar": false,
+    "backToTop": true,
+    "welcomeOverlay": false,
+    "languageSwitcher": "icon"
+  }
+}

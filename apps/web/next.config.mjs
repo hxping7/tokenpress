@@ -3,6 +3,8 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     formats: ['image/webp', 'image/avif'],
+    // 本地 Docker 测试环境：图片用相对路径，next/image 直接透传避免容器内外 DNS 不一致导致图裂
+    unoptimized: process.env.IMAGES_UNOPTIMIZED === 'true',
     remotePatterns: [
       {
         protocol: 'http',
@@ -19,6 +21,18 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'backend',
+        port: '4001',
+        pathname: '/api/v1/media/files/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8081',
+        pathname: '/api/v1/media/files/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
         port: '4001',
         pathname: '/api/v1/media/files/**',
       },

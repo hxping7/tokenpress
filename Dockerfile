@@ -30,11 +30,22 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++ libc-dev
 
+# playwright-core 预览截图需要 Chromium（系统依赖 + CJK 字体）
+RUN apk add --no-cache chromium nss harfbuzz fontconfig ttf-freefont font-noto-cjk
+
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install -g pnpm@9.15.0
 
 COPY --from=backend-builder /app/apps/server/dist ./apps/server/dist
 COPY --from=backend-builder /app/apps/server/src/db/defaults ./apps/server/dist/db/defaults
+# 内置模板包（buildin styles）：构建期拷入镜像，运行时由 initBuiltinStyles 拷贝进持久卷
+COPY apps/web/public/styles ./apps/server/styles-builtin
+# 风格包 JSON Schema（GET /api/v1/styles/:id/schema 供 AI Agent 读取）。
+# 必须放在 styles-builtin 同级（/app/apps/server/）而非 data/ 下：data/ 是持久卷，
+# 镜像内文件会被挂载遮蔽，放进去运行时读不到。
+COPY apps/web/public/style-json.schema.json ./apps/server/style-json.schema.json
+# 内置欢迎页预置（welcome*.html）：构建期拷入镜像，运行时由 initBuiltinStaticHtml 拷贝进 statichtml 持久卷
+COPY apps/server/statichtml-presets ./apps/server/statichtml-presets
 COPY --from=backend-builder /app/apps/server/package.json ./apps/server/
 COPY --from=backend-builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=backend-builder /app/packages/shared/package.json ./packages/shared/
@@ -46,7 +57,7 @@ COPY --from=backend-builder /app/pnpm-workspace.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 
 WORKDIR /app/apps/server
-RUN mkdir -p data/uploads data/statichtml
+RUN mkdir -p data/uploads data/statichtml data/styles
 
 ENV NODE_ENV=production
 ENV PORT=4001
@@ -58,12 +69,21 @@ CMD ["node", "dist/index.js"]
 # ===== Frontend =====
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
+
+# better-sqlite3 在 hoisted monorepo 下会随 pnpm install 一并编译原生模块，
+# 预编译二进制下载失败时需源码编译（python3 + 构建工具），故 builder 阶段必须可用
+RUN apk add --no-cache python3 make g++ libc-dev
+
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install -g pnpm@9.15.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
 COPY packages/shared ./packages/shared
+# 必须在 install 之前 COPY apps/web：否则 pnpm install 阶段 apps/web 不存在，
+# 不会建立 workspace 软链 apps/web/node_modules/@tokenpress/shared，
+# 导致后续 next build 报 "Can't resolve '@tokenpress/shared'"
+COPY apps/web ./apps/web
 
 RUN rm -f .npmrc && \
     echo "registry=https://registry.npmmirror.com" > .npmrc && \
@@ -72,7 +92,8 @@ RUN rm -f .npmrc && \
 
 RUN pnpm install --frozen-lockfile
 
-COPY apps/web ./apps/web
+# frontend 也依赖 @tokenpress/shared（tokens 等后台页直接 import），必须在镜像内构建其 dist
+RUN pnpm --filter @tokenpress/shared build
 
 # 设置API相对路径为空，客户端使用相对路径走 nginx 代理
 ENV NEXT_PUBLIC_API_URL=

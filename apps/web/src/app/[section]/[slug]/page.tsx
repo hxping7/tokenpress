@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { ArticleDetailClient } from './ArticleDetailClient'
+import { DesignWorkDetail } from './DesignWorkDetail'
 import { getSiteUrl } from '@/lib/site-url'
 import { JsonLd } from '@/components/JsonLd'
+import { isDesignWork } from '@/lib/articleMeta'
 
 const SITE_URL = getSiteUrl()
 
@@ -14,6 +16,21 @@ async function fetchArticle(slug: string): Promise<any | null> {
   try {
     const res = await fetch(`${backendUrl}/api/v1/articles/${slug}`, {
       next: { tags: ['articles', `article-${slug}`], revalidate: 3600 },
+    })
+    if (!res.ok) return null
+    const { data } = await res.json()
+    return data
+  } catch {
+    return null
+  }
+}
+
+/** 根据 section ID 获取板块信息（含 layouts 覆盖） */
+async function fetchSection(id: number): Promise<Record<string, unknown> | null> {
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:4001'
+  try {
+    const res = await fetch(`${backendUrl}/api/v1/sections/${id}`, {
+      next: { tags: ['sections'], revalidate: 60 },
     })
     if (!res.ok) return null
     const { data } = await res.json()
@@ -73,8 +90,25 @@ function extractExcerpt(content: string, maxLen = 160): string {
 }
 
 export default async function ArticleDetailPage({ params }: Props) {
-  const { slug } = await params
+  const { section, slug } = await params
+
   const article = await fetchArticle(slug)
+
+  // 作品集类内容（meta.kind === 'design_work'）→ 渲染作品详情模板
+  if (article && isDesignWork(article.meta)) {
+    return <DesignWorkDetail article={article} />
+  }
+
+  if (!article) return <div className="min-h-screen flex items-center justify-center text-t-text-muted">文章未找到</div>
+
+  // 拉取板块级布局覆盖（供 ArticleDetailClient 解析文章页布局）
+  let sectionLayouts: Record<string, unknown> | null = null
+  if (article?.section?.id) {
+    const sectionData = await fetchSection(article.section.id)
+    if (sectionData?.layouts) {
+      sectionLayouts = sectionData.layouts as Record<string, unknown> | null
+    }
+  }
 
   let jsonLd: Record<string, unknown> | null = null
   if (article) {
@@ -101,7 +135,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   return (
     <>
       {jsonLd && <JsonLd data={jsonLd} />}
-      <ArticleDetailClient params={params} />
+      <ArticleDetailClient params={params} sectionLayouts={sectionLayouts} />
     </>
   )
 }

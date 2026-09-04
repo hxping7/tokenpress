@@ -10,7 +10,14 @@ import { migrate as migrateMediaArticleId } from './db/migrations/0013_media_art
 import { migrate as migrateHeroCarouselSettings } from './db/migrations/0014_add_hero_carousel_settings.js'
 import { migrate as migrateArticlePin } from './db/migrations/0015_add_article_pin.js'
 import { migrate as migrateArticleRebuild } from './db/migrations/0016_rebuild_articles.js'
+import { migrate as migrateSectionsLayouts } from './db/migrations/0017_add_sections_layouts.js'
+import { migrate as migrateDesignWorks } from './db/migrations/0018_add_design_works.js'
+import { migrate as migrateTemplate } from './db/migrations/0019_add_template.js'
+import { migrate as migrateMergeDesignWorks } from './db/migrations/0020_merge_design_works_into_articles.js'
+import { migrate as migrateArticleTemplate } from './db/migrations/0021_add_article_template.js'
+import { migrate as migrateCategoryLayouts } from './db/migrations/0022_add_category_layouts.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import { STYLES_DIR } from './utils/paths.js'
 import { systemEvent } from './utils/auditLogger.js'
 import { corsMiddleware } from './middleware/cors.js'
 import { antiScrapingMiddleware, imageHotlinkProtection } from './middleware/antiScraping.js'
@@ -41,12 +48,16 @@ import aiAdsRoutes from './routes/ai-ads.js'
 import adsPublicRoutes from './routes/ads-public.js'
 import carouselArticlesRoutes from './routes/carousel-articles.js'
 import adminAdsRoutes from './routes/admin-ads.js'
+import styleRoutes from './routes/styles.js'
 import staticHtmlRoutes from './routes/statichtml.js'
 import { initProviders, loadProviderConfigFromEnv, reloadProviderFromDB } from './lib/contentReview/providers/index.js'
+import { initBuiltinStyles } from './utils/initStyles.js'
+import { initBuiltinStaticHtml } from './utils/initStaticHtml.js'
 import { startReviewWorker, stopReviewWorker, retryFailedReviews } from './workers/reviewScheduler.js'
 import { aiPatrolTick } from './workers/aiPatrol.js'
 import { adScheduler } from './workers/adScheduler.js'
 import { cleanupExpiredLocks } from './lib/cronLock.js'
+import { refreshRateLimits, getRateLimitMax } from './lib/rateLimitConfig.js'
 import cron from 'node-cron'
 
 const app = express()
@@ -98,6 +109,15 @@ app.use('/statichtml', express.static(STATIC_HTML_DIR, {
   },
 }))
 
+// 静态文件：styles 目录（模板包静态资源，如 preview.png / assets）
+app.use('/styles', express.static(STYLES_DIR, {
+  extensions: false,
+  fallthrough: true,
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+  },
+}))
+
 app.use(express.json({ limit: '10mb' }))
 
 // 请求日志中间件
@@ -118,9 +138,12 @@ app.use((req, res, next) => {
 })
 
 // Rate limiting
+// 阈值集中在 lib/rateLimitConfig.ts，可由 Web 后台「安全 → 限流保护」实时配置，
+// 保存后经 refreshRateLimits() 刷新缓存，无需重启立即生效。未配置时回落默认值。
+// 全局限流：60s 窗口内最多 rate_limit_global 个请求 / IP（兜底，实际策略由各子接口限流定义）。
 const limiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: () => getRateLimitMax('rate_limit_global'),
   message: { success: false, error: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -130,7 +153,7 @@ app.use('/api/', limiter)
 // Auth rate limit
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: () => getRateLimitMax('rate_limit_auth'),
   message: { success: false, error: 'Too many login attempts' },
 })
 app.use('/api/v1/auth/login', authLimiter)
@@ -138,7 +161,7 @@ app.use('/api/v1/auth/login', authLimiter)
 // Articles API rate limit (防爬虫)
 const articlesLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: () => getRateLimitMax('rate_limit_articles'),
   message: { success: false, error: 'Too many requests' },
 })
 app.use('/api/v1/articles', articlesLimiter)
@@ -146,7 +169,7 @@ app.use('/api/v1/articles', articlesLimiter)
 // AI publish rate limit
 const aiPublishLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: () => getRateLimitMax('rate_limit_ai_publish'),
   message: { success: false, error: 'Too many publish requests' },
 })
 
@@ -165,7 +188,7 @@ app.use('/api/v1/tags', tagsRoutes)
 
 const interactionLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: () => getRateLimitMax('rate_limit_interactions'),
   message: { success: false, error: 'Too many requests' },
 })
 app.use('/api/v1/interactions', interactionLimiter, articleInteractionRoutes)
@@ -194,6 +217,9 @@ app.use('/api/v1/ads', adsPublicRoutes)
 // Carousel articles (public)
 app.use('/api/v1/carousel-articles', carouselArticlesRoutes)
 
+// Style Packs (public /active for SSR; list/get/write gated by styles:read / styles:write)
+app.use('/api/v1/styles', styleRoutes)
+
 // Health check
 app.get('/api/v1/health', (_req, res) => {
   res.json({
@@ -221,7 +247,22 @@ async function start() {
   await migrateHeroCarouselSettings()
   await migrateArticlePin()
   await migrateArticleRebuild()
+  await migrateSectionsLayouts()
+  await migrateDesignWorks()
+  await migrateTemplate()
+  await migrateMergeDesignWorks()
+  await migrateArticleTemplate()
+  await migrateCategoryLayouts()
   logger.info('✅ Database ready')
+
+  // 初始化限流阈值缓存（后台可在「安全 → 限流保护」中实时调整，无需重启）
+  await refreshRateLimits()
+
+  // 初始化内置模板包到持久卷（仅首次 / 缺失时拷贝，不覆盖用户包）
+  await initBuiltinStyles()
+
+  // 初始化内置欢迎页到 statichtml 持久卷（仅缺失时拷贝，不覆盖后台手动编辑）
+  await initBuiltinStaticHtml()
 
   // Initialize login cleanup task
   initLoginCleanup()

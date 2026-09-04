@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { db } from '../db/index.js'
-import { siteSettings, apiTokens } from '../db/schema.js'
+import { siteSettings } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
-import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
+import { type AuthRequest } from '../middleware/auth.js'
+import { apiTokenOrAdmin } from '../middleware/apiTokenOrAdmin.js'
 import { getParamAsInt } from '../utils/params.js'
 import { auditLog } from '../utils/auditLogger.js'
 import { reloadProviderFromDB } from '../lib/contentReview/providers/index.js'
 import { revalidatePath } from '../utils/revalidate.js'
+import { refreshRateLimits } from '../lib/rateLimitConfig.js'
 
 const router = Router()
 
@@ -25,8 +27,10 @@ router.get('/', async (_req, res) => {
   }
 })
 
-// PUT /api/v1/site-settings — update multiple settings (admin session or API token)
-router.put('/', async (req, res) => {
+// PUT /api/v1/site-settings — update multiple settings
+// 鉴权：apiTokenOrAdmin('settings:write') 优先用 API Token（需 settings:write 权限），
+// 否则回退管理员 JWT 会话。两种方式都会注入 req.user 并写 API 用量日志，保证审计一致。
+router.put('/', apiTokenOrAdmin('settings:write'), async (req: AuthRequest, res) => {
   try {
     const raw = (req.body as { settings?: unknown }).settings
     if (!raw || typeof raw !== 'object') {
@@ -42,53 +46,6 @@ router.put('/', async (req, res) => {
       }
     } else {
       Object.assign(settingsObj, raw)
-    }
-
-    // Check auth: either API token with settings:write, or admin session
-    const authHeader = req.headers.authorization
-
-    if (authHeader?.startsWith('Bearer t00_sk_')) {
-      // API Token authentication
-      const rawToken = authHeader.slice(7)
-      const tokenRecord = await db.select().from(apiTokens).where(eq(apiTokens.token, rawToken)).get()
-
-      if (!tokenRecord) {
-        return res.status(401).json({ success: false, error: 'API token not found' })
-      }
-      if (!tokenRecord.isActive) {
-        return res.status(401).json({ success: false, error: 'API token has been revoked' })
-      }
-      if (tokenRecord.expiresAt && new Date(tokenRecord.expiresAt) < new Date()) {
-        return res.status(401).json({ success: false, error: 'API token has expired' })
-      }
-
-      const permissions: string[] = JSON.parse(tokenRecord.permissions)
-      if (!permissions.includes('settings:write')) {
-        return res.status(403).json({ success: false, error: 'Missing required permission: settings:write' })
-      }
-
-      // Update last used time
-      await db.update(apiTokens)
-        .set({ lastUsedAt: new Date().toISOString() })
-        .where(eq(apiTokens.id, tokenRecord.id))
-        .run()
-    } else {
-      // JWT Session authentication
-      const authReq = req as AuthRequest
-      if (!authReq.user) {
-        // Try to authenticate via JWT middleware
-        await new Promise<void>((resolve, reject) => {
-          authMiddleware(req, res, (err) => {
-            if (err) reject(err)
-            else resolve()
-          })
-        })
-      }
-
-      const authReqAfter = req as AuthRequest
-      if (!authReqAfter.user || (authReqAfter.user.role !== 'superadmin' && authReqAfter.user.role !== 'admin')) {
-        return res.status(403).json({ success: false, error: 'Admin access required' })
-      }
     }
 
     for (const [key, value] of Object.entries(settingsObj)) {
@@ -110,6 +67,12 @@ router.put('/', async (req, res) => {
     const reviewKeys = Object.keys(settingsObj).filter(k => k.startsWith('review_'))
     if (reviewKeys.length > 0) {
       await reloadProviderFromDB()
+    }
+
+    // 限流阈值变更后立即刷新缓存，无需重启即生效
+    const rateLimitKeys = Object.keys(settingsObj).filter(k => k.startsWith('rate_limit_'))
+    if (rateLimitKeys.length > 0) {
+      await refreshRateLimits()
     }
 
     // Revalidate homepage ISR cache so hero_size etc. take effect immediately

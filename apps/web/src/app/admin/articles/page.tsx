@@ -9,6 +9,9 @@ import { useAuthStore } from '@/stores/auth'
 import { useLocaleStore } from '@/stores'
 import { MarkdownEditor } from '@/components/MarkdownEditor'
 import { t } from '@/lib/i18n'
+import { parseArticleMeta } from '@/lib/articleMeta'
+import { isDesignGallerySection } from '@/lib/sections'
+import { ARTICLE_TEMPLATES, getArticleTemplate } from '@/lib/articleTemplates'
 import { toast } from '@/components/ui/Toast'
 import {
   Plus, Search, Edit, Trash2, Eye,
@@ -30,6 +33,10 @@ interface Article {
   author_name?: string
   category_name?: string
   content?: string
+  excerpt?: string | null
+  meta?: any
+  articleTemplate?: string
+  templateConfig?: Record<string, unknown> | null
   createdAt: string
   updatedAt: string
   publishedAt: string | null
@@ -96,6 +103,16 @@ export default function ArticlesPage() {
   const [articleStatus, setArticleStatus] = useState<'draft' | 'published' | 'scheduled' | 'pending_review'>('draft')
   const [scheduledAt, setScheduledAt] = useState('')
   const [tags, setTags] = useState('')
+  // 作品集模式（isDesignGallerySection：template==='design-gallery' 或 kind==='design_works'）专属字段
+  const [workSummary, setWorkSummary] = useState('')
+  const [workAuthorName, setWorkAuthorName] = useState('')
+  const [workAuthorAvatar, setWorkAuthorAvatar] = useState('')
+  const [workCategory, setWorkCategory] = useState('')
+  const [workExternalUrl, setWorkExternalUrl] = useState('')
+  const [workGalleryImages, setWorkGalleryImages] = useState('')
+  // 文章级模板（详情页渲染形态）
+  const [articleTemplate, setArticleTemplate] = useState('standard')
+  const [templateConfigText, setTemplateConfigText] = useState('')
   const [uploadingCover, setUploadingCover] = useState(false)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
 
@@ -141,7 +158,7 @@ export default function ArticlesPage() {
   // 板块数据（动态获取）
   const { data: sectionsData } = useQuery({
     queryKey: ['admin-sections'],
-    queryFn: () => api.get('/sections'),
+    queryFn: () => api.get('/sections/all'),
   })
 
   const { data: articlesData, isLoading } = useQuery({
@@ -283,6 +300,14 @@ export default function ArticlesPage() {
     setArticleStatus('draft')
     setScheduledAt('')
     setTags('')
+    setWorkSummary('')
+    setWorkAuthorName('')
+    setWorkAuthorAvatar('')
+    setWorkCategory('')
+    setWorkExternalUrl('')
+    setWorkGalleryImages('')
+    setArticleTemplate('standard')
+    setTemplateConfigText('')
   }
 
   const handleSort = (field: typeof sortField) => {
@@ -340,6 +365,16 @@ export default function ArticlesPage() {
   const getRandomCover = () => {
     const randomUrl = `https://picsum.photos/1200/630?random=${Date.now()}`
     setCoverImage(randomUrl)
+  }
+
+  // 安全解析模板配置 JSON（失败时回退 null）
+  const safeJsonParse = (text: string): Record<string, unknown> | null => {
+    try {
+      const v = JSON.parse(text)
+      return v && typeof v === 'object' ? v : null
+    } catch {
+      return null
+    }
   }
 
   // 生成格式化标题 HTML
@@ -406,12 +441,34 @@ export default function ArticlesPage() {
       setEditorSection(article.section?.slug || '')
       setCategoryId(article.categoryId)
       setCoverImage(article.coverImage || '')
+      setArticleTemplate(article.articleTemplate || 'standard')
+      setTemplateConfigText(
+        article.templateConfig ? JSON.stringify(article.templateConfig, null, 2) : ''
+      )
       setArticleStatus(article.status as 'draft' | 'published' | 'scheduled' | 'pending_review')
       if (article.status === 'scheduled' && article.publishedAt) {
         const d = new Date(article.publishedAt)
         setScheduledAt(d.toISOString().slice(0, 16))
       } else {
         setScheduledAt('')
+      }
+      // 作品集字段（来自 meta）
+      const m = parseArticleMeta(article.meta)
+      if (m.kind === 'design_work') {
+        setWorkSummary(m.summary || article.excerpt || '')
+        setWorkAuthorName(m.authorName || '')
+        setWorkAuthorAvatar(m.authorAvatar || '')
+        setWorkCategory(m.category || '')
+        setWorkExternalUrl(m.externalUrl || '')
+        setWorkGalleryImages((m.galleryImages || []).join('\n'))
+        setTags((m.tags || []).join(', '))
+      } else {
+        setWorkSummary('')
+        setWorkAuthorName('')
+        setWorkAuthorAvatar('')
+        setWorkCategory('')
+        setWorkExternalUrl('')
+        setWorkGalleryImages('')
       }
       await loadArticleContent(article)
     } else {
@@ -429,17 +486,33 @@ export default function ArticlesPage() {
       title: formattedTitle,
       content,
       section: editorSection,
-      categoryId: categoryId || undefined,
+      categoryId: isWorkMode ? undefined : (categoryId || undefined),
       coverImage: coverImage || undefined,
       status: articleStatus,
+      articleTemplate: articleTemplate || 'standard',
+      templateConfig: templateConfigText.trim() ? safeJsonParse(templateConfigText) : null,
     }
 
     if (articleStatus === 'scheduled' && scheduledAt) {
       data.publishedAt = new Date(scheduledAt).toISOString()
     }
 
-    if (tags.trim()) {
-      data.tags = tags.split(',').map(t => t.trim()).filter(Boolean)
+    // 作品集模式：字段走 meta，不创建 article_tags
+    if (isWorkMode) {
+      if (articleStatus === 'scheduled') data.status = 'published'
+      data.meta = {
+        kind: 'design_work',
+        summary: workSummary || null,
+        authorName: workAuthorName || null,
+        authorAvatar: workAuthorAvatar || null,
+        category: workCategory || null,
+        tags: tags.trim() ? tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+        externalUrl: workExternalUrl || null,
+        galleryImages: workGalleryImages.split('\n').map((s: string) => s.trim()).filter(Boolean),
+      }
+      data.excerpt = workSummary || undefined
+    } else if (tags.trim()) {
+      data.tags = tags.split(',').map((t: string) => t.trim()).filter(Boolean)
     }
 
     if (editingArticle) {
@@ -452,6 +525,13 @@ export default function ArticlesPage() {
   const categories = categoriesData?.data?.filter((c: Category) => 
     editorSection ? c.section?.slug === editorSection : true
   ) || []
+
+  // 作品集模式判定：统一走 lib/sections.isDesignGallerySection
+  // （板块 template==='design-gallery' 或 历史 kind==='design_works' 均视为作品集）。
+  const editingSectionObj = sectionsData?.data?.find((s: Section) => s.slug === editorSection)
+  const isWorkMode = isDesignGallerySection(editingSectionObj)
+  const listSectionObj = sectionsData?.data?.find((s: Section) => s.slug === section)
+  const listIsWork = isDesignGallerySection(listSectionObj)
 
   return (
     <div className="space-y-6">
@@ -466,7 +546,7 @@ export default function ArticlesPage() {
           className="flex items-center gap-2 px-4 py-2 bg-t-accent-blue text-black font-medium rounded-lg hover:bg-t-accent-blue/90 transition-colors"
         >
           <Plus size={18} />
-          {t('articles.newArticle', backendLocale)}
+          {listIsWork ? '新建作品' : t('articles.newArticle', backendLocale)}
         </button>
       </div>
 
@@ -926,17 +1006,31 @@ export default function ArticlesPage() {
                       </select>
                     </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('articles.formCategory', backendLocale)}</label>
-                    <select
-                      value={categoryId || ''}
-                      onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
-                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
-                    >
-                      <option value="">{t('articles.selectCategory', backendLocale)}</option>
-                      {categories.map((cat: Category) => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
+                    {isWorkMode ? (
+                      <>
+                        <label className="block text-sm font-medium mb-2">作品分类（自由标签）</label>
+                        <input
+                          value={workCategory}
+                          onChange={(e) => setWorkCategory(e.target.value)}
+                          placeholder="如：UI/UX、品牌设计"
+                          className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium mb-2">{t('articles.formCategory', backendLocale)}</label>
+                        <select
+                          value={categoryId || ''}
+                          onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+                          className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                        >
+                          <option value="">{t('articles.selectCategory', backendLocale)}</option>
+                          {categories.map((cat: Category) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                          ))}
+                        </select>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1029,15 +1123,17 @@ export default function ArticlesPage() {
                       />
                       <span>{t('articles.publishNow', backendLocale)}</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        checked={articleStatus === 'scheduled'}
-                        onChange={() => setArticleStatus('scheduled')}
-                        className="w-4 h-4 text-t-accent-blue"
-                      />
-                      <span>{t('articles.scheduled', backendLocale)}</span>
-                    </label>
+                    {!isWorkMode && (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          checked={articleStatus === 'scheduled'}
+                          onChange={() => setArticleStatus('scheduled')}
+                          className="w-4 h-4 text-t-accent-blue"
+                        />
+                        <span>{t('articles.scheduled', backendLocale)}</span>
+                      </label>
+                    )}
                   </div>
                   {articleStatus === 'scheduled' && (
                     <input
@@ -1050,6 +1146,113 @@ export default function ArticlesPage() {
                   )}
                 </div>
               </div>
+
+              {/* 文章级模板（详情页渲染形态）— 非作品集模式显示 */}
+              {!isWorkMode && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">文章模板（详情页样式）</label>
+                    <select
+                      value={articleTemplate}
+                      onChange={(e) => setArticleTemplate(e.target.value)}
+                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    >
+                      {ARTICLE_TEMPLATES.map((tm) => (
+                        <option key={tm.key} value={tm.key}>{tm.label}</option>
+                      ))}
+                    </select>
+                    <div
+                      className="mt-3 rounded-lg border border-t-border overflow-hidden bg-t-bg-secondary"
+                      dangerouslySetInnerHTML={{ __html: getArticleTemplate(articleTemplate).previewSvg }}
+                    />
+                    <p className="mt-2 text-sm text-t-text-secondary">{getArticleTemplate(articleTemplate).description}</p>
+                  </div>
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-medium mb-2">模板配置（JSON，可选）</label>
+                    <textarea
+                      value={templateConfigText}
+                      onChange={(e) => setTemplateConfigText(e.target.value)}
+                      rows={5}
+                      placeholder={
+                        articleTemplate === 'video-post'
+                          ? '{\n  "videoUrl": "https://...",\n  "source": "bilibili"\n}'
+                          : articleTemplate === 'photo-essay'
+                          ? '{\n  "gallery": ["url1", "url2"],\n  "cols": 3\n}'
+                          : articleTemplate === 'timeline'
+                          ? '{\n  "events": [{"date":"2024","title":"...","text":"..."}]\n}'
+                          : articleTemplate === 'code-showcase'
+                          ? '{\n  "files": ["main.ts", "utils.ts"]\n}'
+                          : articleTemplate === 'split-media'
+                          ? '{\n  "media": ["url1", "url2"]\n}'
+                          : '{}'
+                      }
+                      className="w-full px-4 py-3 text-sm font-mono bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    />
+                    <p className="mt-1 text-xs text-t-text-muted">
+                      {articleTemplate === 'video-post' && 'videoUrl 必填；source: bilibili / youtube / file（本地 mp4）'}
+                      {articleTemplate === 'photo-essay' && 'gallery 图片数组（留空则自动从正文提取）；cols: 2-4'}
+                      {articleTemplate === 'timeline' && 'events 数组；留空则按正文 ## 标题自动切分时间线'}
+                      {articleTemplate === 'code-showcase' && 'files 文件树列表（仅展示）'}
+                      {articleTemplate === 'split-media' && 'media 右侧媒体数组（留空则自动从正文/封面提取）'}
+                      {articleTemplate === 'standard' && '标准模板无需配置'}
+                      {articleTemplate === 'story' && '沉浸长文无需配置'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 作品集模式专属字段 */}
+              {isWorkMode && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="lg:col-span-2">
+                    <label className="block text-sm font-medium mb-2">简介（列表摘要）</label>
+                    <textarea
+                      value={workSummary}
+                      onChange={(e) => setWorkSummary(e.target.value)}
+                      rows={2}
+                      placeholder="一句话介绍这件作品"
+                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">作者名</label>
+                    <input
+                      value={workAuthorName}
+                      onChange={(e) => setWorkAuthorName(e.target.value)}
+                      placeholder="设计师 / 工作室"
+                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">作者头像 URL</label>
+                    <input
+                      value={workAuthorAvatar}
+                      onChange={(e) => setWorkAuthorAvatar(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">外链 URL</label>
+                    <input
+                      value={workExternalUrl}
+                      onChange={(e) => setWorkExternalUrl(e.target.value)}
+                      placeholder="线上作品 / Behance 等"
+                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">图集（每行一个图片 URL）</label>
+                    <textarea
+                      value={workGalleryImages}
+                      onChange={(e) => setWorkGalleryImages(e.target.value)}
+                      rows={3}
+                      placeholder={'https://.../1.jpg\nhttps://.../2.jpg'}
+                      className="w-full px-4 py-3 bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Markdown Editor */}
               <div className="h-[calc(100%-220px)] min-h-[300px]">

@@ -5,6 +5,8 @@ node_modules/
 # Build
 dist/
 .next/
+.next.old/
+.next.old2/
 out/
 build/
 

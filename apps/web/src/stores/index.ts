@@ -13,15 +13,15 @@ const COOKIE_NAMES = {
 
 // ===== Theme Store =====
 interface ThemeState {
-  theme: ThemeName
-  setTheme: (theme: ThemeName) => void
+  theme: string
+  setTheme: (theme: string) => void
   initTheme: (defaultTheme: string) => void
 }
 
 export const useThemeStore = create<ThemeState>()(
   (set) => ({
     theme: 'night',
-    setTheme: (theme: ThemeName) => {
+    setTheme: (theme: string) => {
       set({ theme })
       setCookie(COOKIE_NAMES.theme, theme)
       if (typeof document !== 'undefined') {

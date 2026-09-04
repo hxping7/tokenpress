@@ -14,6 +14,17 @@ import { scheduleReview } from '../lib/contentReview/index.js'
 import { extractText as extractReviewText } from '../lib/contentReview/extractText.js'
 import { extractImages as extractReviewImages } from '../lib/contentReview/extractImages.js'
 
+// 文章级渲染模板白名单（与前端 lib/articleTemplates.ts 保持一致）
+const VALID_ARTICLE_TEMPLATES = [
+  'standard',
+  'photo-essay',
+  'video-post',
+  'code-showcase',
+  'timeline',
+  'split-media',
+  'story',
+]
+
 // 删除单篇文章（含关联记录与可选媒体清理），供单条删除与批量删除复用。
 async function performArticleDelete(articleId: number, deleteMedia: boolean): Promise<{ found: boolean }> {
   const existing = await db.select().from(articles).where(eq(articles.id, articleId)).get()
@@ -101,6 +112,7 @@ router.get('/', async (req: AuthRequest, res) => {
       title: articles.title,
       slug: articles.slug,
       excerpt: articles.excerpt,
+      meta: articles.meta,
       coverImage: articles.coverImage,
       sectionId: articles.sectionId,
       status: articles.status,
@@ -169,10 +181,18 @@ router.get('/:id', async (req: AuthRequest, res) => {
     // Get author
     const author = await db.select().from(users).where(eq(users.id, article.authorId)).get()
 
+    // 解析文章模板配置（template_config 为 JSON 字符串）
+    let templateConfig: Record<string, unknown> | null = null
+    if (article.templateConfig) {
+      try { templateConfig = JSON.parse(article.templateConfig) } catch { templateConfig = null }
+    }
+
     res.json({
       success: true,
       data: {
         ...article,
+        articleTemplate: article.articleTemplate || 'standard',
+        templateConfig,
         section,
         category,
         tags: tagNames,
@@ -185,13 +205,13 @@ router.get('/:id', async (req: AuthRequest, res) => {
   }
 })
 
-// POST /api/v1/admin/articles — 任意登录用户可创建文章
+// POST /api/v1/admin/articles — 任意登录用户可创建文章（content 可空：作品集类内容用 meta 承载）
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const { title, content, section: sectionSlug, categoryId, tags: tagNames, coverImage, status, publishedAt } = req.body
+    const { title, content, section: sectionSlug, categoryId, tags: tagNames, coverImage, status, publishedAt, meta, sortOrder, articleTemplate, templateConfig } = req.body
 
-    if (!title || !content || !sectionSlug) {
-      return res.status(400).json({ success: false, error: 'Title, content, and section are required' })
+    if (!title || !sectionSlug) {
+      return res.status(400).json({ success: false, error: 'Title and section are required' })
     }
 
     const section = await db.select().from(sections).where(eq(sections.slug, sectionSlug)).get()
@@ -246,13 +266,17 @@ router.post('/', async (req: AuthRequest, res) => {
     const result = await db.insert(articles).values({
       title,
       slug,
-      content,
+      content: content || '',
       excerpt,
       coverImage: coverImage || null,
       sectionId,
       categoryId: resolvedCategoryId,
       status: articleStatus,
       authorId: req.user!.userId,
+      meta: meta && typeof meta === 'object' ? JSON.stringify(meta) : null,
+      articleTemplate: typeof articleTemplate === 'string' && VALID_ARTICLE_TEMPLATES.includes(articleTemplate) ? articleTemplate : 'standard',
+      templateConfig: templateConfig && typeof templateConfig === 'object' ? JSON.stringify(templateConfig) : (typeof templateConfig === 'string' ? templateConfig : null),
+      sortOrder: Number(sortOrder) || 0,
       publishedAt: resolvedPublishedAt,
       ...pinFields,
     }).run()
@@ -497,6 +521,20 @@ router.put('/:id', async (req: AuthRequest, res) => {
     }
     if (req.body.excerpt !== undefined) updates.excerpt = req.body.excerpt
     if (req.body.coverImage !== undefined) updates.coverImage = req.body.coverImage
+    if (req.body.meta !== undefined) {
+      updates.meta = req.body.meta && typeof req.body.meta === 'object' ? JSON.stringify(req.body.meta) : null
+    }
+    if (req.body.articleTemplate !== undefined) {
+      updates.articleTemplate = typeof req.body.articleTemplate === 'string' && VALID_ARTICLE_TEMPLATES.includes(req.body.articleTemplate)
+        ? req.body.articleTemplate
+        : 'standard'
+    }
+    if (req.body.templateConfig !== undefined) {
+      updates.templateConfig = req.body.templateConfig && typeof req.body.templateConfig === 'object'
+        ? JSON.stringify(req.body.templateConfig)
+        : (typeof req.body.templateConfig === 'string' ? req.body.templateConfig : null)
+    }
+    if (req.body.sortOrder !== undefined) updates.sortOrder = Number(req.body.sortOrder) || 0
 
     if (req.body.section !== undefined) {
       const section = await db.select().from(sections).where(eq(sections.slug, req.body.section)).get()

@@ -12,11 +12,13 @@ services:
     volumes:
       - tokenpress-data:/app/apps/server/data
       - tokenpress-statichtml:/app/apps/server/data/statichtml
+      - tokenpress-styles:/app/apps/server/data/styles
     environment:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET}
       - SITE_URL=${SITE_URL}
       - FRONTEND_URL=http://localhost:3001
+      - STYLES_DIR=/app/apps/server/data/styles
       - REVALIDATE_SECRET=${REVALIDATE_SECRET}
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:4001/api/v1/health"]
@@ -39,6 +41,7 @@ services:
       - SITE_URL=${SITE_URL}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+      - IMAGES_UNOPTIMIZED=${IMAGES_UNOPTIMIZED:-true}
       - BACKEND_URL=http://backend:4001
       - REVALIDATE_SECRET=${REVALIDATE_SECRET}
     depends_on:
@@ -66,3 +69,5 @@ volumes:
     name: tokenpress-uploads
   tokenpress-statichtml:
     name: tokenpress-statichtml
+  tokenpress-styles:
+    name: tokenpress-styles

@@ -40,9 +40,10 @@ export interface HomeBannerNotice {
 }
 
 export interface HomeBannerConfig {
+  id?: string
   enabled: boolean
   type: HomeBannerType
-  position: HomeBannerPosition
+  position?: HomeBannerPosition
   cta?: HomeBannerCta
   cards?: HomeBannerCard[]
   image?: HomeBannerImage
@@ -104,7 +105,7 @@ function CtaBanner({ data }: { data?: HomeBannerCta }) {
             {data.buttonText && (
               <Link
                 href={data.buttonLink || '#'}
-                className="btn-glow mt-6 px-6 py-3 bg-gradient-accent text-white font-medium rounded-xl text-sm transition-transform hover:scale-105"
+                className="btn-pack-primary mt-6 px-6 py-3 text-sm"
                 {...targetProps(data.buttonTarget)}
                 onClick={(e) => { if (!data.buttonLink) e.preventDefault() }}
               >

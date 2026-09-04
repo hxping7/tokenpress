@@ -2,9 +2,14 @@
 
 import { ArrowUp } from 'lucide-react'
 import { useLocaleStore } from '@/stores'
+import { useStyleFeatures } from '@/components/StyleProvider'
 
 export function BackToTop() {
   const { locale } = useLocaleStore()
+  const features = useStyleFeatures() || {}
+
+  // features.backToTop === false → 整站隐藏回顶入口
+  if (features.backToTop === false) return null
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
