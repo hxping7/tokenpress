@@ -43,16 +43,8 @@
     },
     "design": {
       "type": "object",
-      "description": "设计令牌 + 配色。mode 控制明暗；tokens 为 :root CSS 变量；theme 为完整 theme.css（兼容注入）。",
+      "description": "设计令牌 + 出厂配色。明暗/墙纸由全局主题（activeTheme）决定，包不声明；tokens 为出厂 :root CSS 变量（品牌色不会被主题覆盖）；theme 为完整 theme.css（兼容注入）。",
       "properties": {
-        "mode": {
-          "type": "string",
-          "enum": [
-            "light",
-            "dark",
-            "auto"
-          ]
-        },
         "tokens": {
           "type": "object",
           "additionalProperties": {
@@ -61,15 +53,6 @@
         },
         "theme": {
           "type": "string"
-        },
-        "themeVariants": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "themeOptions": {
-          "type": "array"
         }
       }
     },

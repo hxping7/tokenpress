@@ -33,7 +33,7 @@ export function FooterLogo() {
   }
 
   // 默认页脚 logo（开源仓库名 TokenPress）：内联 SVG，配色取自主题 CSS 变量，
-  // 随明暗主题与风格包配色（含自定义 themeVariants）自动适应。
+  // 随明暗主题与风格包配色自动适应。
   const hexBorder = `fHexBorder-${uid}`
   const infGrad = `fInfGrad-${uid}`
   const textGrad = `fTextGrad-${uid}`

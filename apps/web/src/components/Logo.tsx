@@ -28,7 +28,7 @@ export function Logo({
   const logoHeight = heightProp ?? heightMap[size]
 
   // 默认 logo（开源仓库名 TokenPress）渲染为内联 SVG，文字/描边取主题 CSS 变量，
-  // 随明暗主题与各配色皮肤（含风格包自定义 themeVariants）自动适应，无需改源码。
+  // 随明暗主题与各配色皮肤自动适应，无需改源码。
   // 用户经后台 header_logo 上传的专属 logo 优先级最高，仍按原图固定显示。
   const gradientId = useId().replace(/:/g, '')
   const DefaultMark = (

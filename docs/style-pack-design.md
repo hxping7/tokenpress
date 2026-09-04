@@ -54,11 +54,8 @@ styles/<id>/
 
 | 字段 | 说明 |
 |---|---|
-| `mode` | `light` / `dark` / `auto` |
-| `tokens` | 设计令牌对象（颜色/字体/圆角/阴影/容器宽度） |
-| `theme` | 出厂配色名 |
-| `themeVariants` | 多套可切配色（键值对象） |
-| `themeOptions` | 后台下拉可选项数组 |
+| `tokens` | 设计令牌对象（颜色/字体/圆角/阴影/容器宽度），品牌色不会被全局主题覆盖 |
+| `theme` | 出厂 theme.css（兼容注入的 CSS 字符串兜底） |
 
 ### 3.2 `header`
 

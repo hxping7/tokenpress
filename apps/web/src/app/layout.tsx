@@ -36,9 +36,6 @@ async function getActiveStyleConfig(): Promise<{ config: StyleConfig; theme: str
         layouts: d.layouts || null,
         header: d.header || null,
         footer: d.footer || null,
-        themeVariants: d.manifest?.themeVariants || null,
-        site: d.site || null,
-        hero: d.hero || null,
         features: d.features || null,
       },
       theme: d.theme || '',
@@ -134,7 +131,7 @@ export default async function RootLayout({
   try {
     const themeCookie = (await cookies()).get('token00_theme')?.value
     if (themeCookie && themeCookie !== styleConfig.defaultTheme) {
-      themeOverride = resolveThemePalette(themeCookie, styleConfig.themeVariants) || ''
+      themeOverride = resolveThemePalette(themeCookie) || ''
     }
   } catch {}
 

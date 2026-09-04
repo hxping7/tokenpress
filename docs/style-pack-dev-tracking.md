@@ -25,8 +25,8 @@
 
 | 键 | 职责 | 主要子字段 |
 |---|---|---|
-| `$` | 包元数据（不可经 PATCH 修改） | `id` / `name` / `description` / `version` / `builtin` / `preview` / `defaultTheme` / `themeVariants` / `themeOptions` |
-| `design` | 设计令牌与配色 | `mode` / `tokens`（`light`/`dark` 变量对象）/ `theme`（CSS 字符串兜底）/ `themeVariants` / `themeOptions` |
+| `$` | 包元数据（不可经 PATCH 修改） | `id` / `name` / `description` / `version` / `builtin` / `preview` / `defaultTheme` |
+| `design` | 设计令牌与配色 | `tokens`（:root CSS 变量，品牌色不被主题覆盖）/ `theme`（CSS 字符串兜底） |
 | `header` | 顶部导航 | `variant` / `logo`（src/width/height）/ `nav` / `actions` / `background` / `borderBottom` |
 | `footer` | 页脚 | `variant` / `columns` / `friendLinks` / `bottom` / `background` / `textColor` |
 | `layouts` | 布局骨架 | `homepage.sections[]` / `section`（含 `subcategory`）/ `article` / `list` / `category` / `templates` |

@@ -77,7 +77,6 @@ async function buildPackResponse(pack: StylePack, activeId: string) {
     manifest: pack.$,
     // SSR 注入的主题 CSS：以 design.tokens 为单一事实来源，旧 design.theme 字符串作兜底合并
     theme: buildThemeCssFromTokens(pack.design?.tokens, pack.design?.theme || ''),
-    themeVariants: pack.design?.themeVariants || null,
     layouts,
     header: pack.header,
     footer: pack.footer,
@@ -431,7 +430,7 @@ router.post('/', apiTokenOrAdmin('styles:write'), async (req, res) => {
       pack = {
         id,
         $: { ...(body.manifest || {}), id, builtin: false },
-        design: { theme: body.theme, themeVariants: body.manifest?.themeVariants, themeOptions: body.manifest?.themeOptions },
+        design: { theme: body.theme },
         header: body.header,
         footer: body.footer,
         layouts: body.layouts,

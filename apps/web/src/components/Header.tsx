@@ -17,7 +17,6 @@ import {
   Info, PenTool, Layout, Folder, Flame, Rocket,
 } from 'lucide-react'
 import { useStyleHeader, useStyleSite, useStyleThemeOptions, useStyleFeatures } from '@/components/StyleProvider'
-import { BUILTIN_THEME_OPTIONS } from '@/lib/themePalettes'
 import { Logo } from '@/components/Logo'
 
 interface Section {
@@ -256,9 +255,8 @@ function HeaderActions({
   onItemClick?: () => void
   dark?: boolean
 }) {
-  // 可切换配色：优先用风格包 manifest.themeOptions 声明的列表，否则回退内置 5 套
-  const packThemeOptions = useStyleThemeOptions()
-  const effectiveThemeOptions = packThemeOptions.length ? packThemeOptions : BUILTIN_THEME_OPTIONS
+  // 可切换配色 = 全局墙纸（内置 5 套），与风格包无关：主题只换配色，不改布局
+  const effectiveThemeOptions = useStyleThemeOptions()
 
   const isDesktop = variant === 'desktop'
   const visible = actions.filter((a) => {

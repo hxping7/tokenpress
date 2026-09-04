@@ -13,7 +13,7 @@
 ## 可配置维度
 
 ### 整体定位
-- `design.mode`: light
+- 明暗（light/dark）：由全局主题（activeTheme）决定，本包默认浅色，仅经 `design.tokens` 调整配色
 - `design.tokens['--accent-blue']`: 主强调色（默认红 #d71920）
 - `design.tokens['--radius-card']`: 卡片圆角（默认 20px，超大圆角）
 

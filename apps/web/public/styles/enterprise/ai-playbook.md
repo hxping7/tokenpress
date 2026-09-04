@@ -12,7 +12,7 @@
 ## 可配置维度
 
 ### 整体定位
-- `design.mode`: light | dark
+- 明暗（light/dark）：由全局主题（activeTheme）决定，本包默认浅色，仅经 `design.tokens` 调整配色
 - `design.tokens['--accent-blue']`: 主强调色（默认纯黑 #111111）
 - `design.tokens['--radius-card']`: 卡片圆角（默认 4px，方形）
 
@@ -47,7 +47,7 @@
 - `footer.background`: #0a0a0a（深色页脚）
 
 ## Agent 操作示例
-- 「企业站整体偏深色」→ 设置 `design.mode` = "dark"，并重算 tokens
+- 「企业站整体偏深色」→ 切换全局主题为 dark（如 night），并相应重算 `design.tokens` 的 bg/text 变量
 - 「二级分类放到顶部做标签」→ patch `layouts.section.subcategory.position` = "top"
 - 「列表改成 3 列」→ patch `layouts.section.list.columns` = 3
 

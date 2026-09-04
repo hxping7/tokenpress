@@ -11,28 +11,11 @@ import {
 } from './schema'
 import { WIDTH_PRESETS } from '@/lib/layout-config'
 
-export type StyleThemeOption = {
-  key: string
-  labelZh?: string
-  labelEn?: string
-  color?: string
-}
-
-export type StyleThemeVariant = {
-  key: string
-  labelZh: string
-  labelEn: string
-  color: string
-  css: string
-}
-
 export type StyleDraft = {
   manifest: {
     name?: string
     description?: string
     version?: string
-    themeVariants?: Record<string, string>
-    themeOptions?: StyleThemeOption[]
   }
   theme: string
   layouts: any
@@ -45,7 +28,6 @@ export type StyleDraft = {
 const TABS = [
   { key: 'basic', label: '基本信息' },
   { key: 'theme', label: '配色主题' },
-  { key: 'variants', label: '配色方案' },
   { key: 'nav', label: '全局导航' },
   { key: 'icons', label: '导航图标' },
   { key: 'home', label: '首页' },
@@ -147,44 +129,6 @@ export function StylePackForm({
 
   const navColors = get('header.nav.colors', {}) || {}
 
-  // ===== 可切换配色方案（themeVariants + themeOptions）=====
-  const tvRaw: Record<string, string> = get('manifest.themeVariants', {}) || {}
-  const optRaw: StyleThemeOption[] = Array.isArray(get('manifest.themeOptions', [])) ? (get('manifest.themeOptions', []) as StyleThemeOption[]) : []
-  const optMap = Object.fromEntries(optRaw.map((o) => [o.key, o]))
-  const variantKeys = Array.from(new Set([...Object.keys(tvRaw), ...optRaw.map((o) => o.key)]))
-  const variants: StyleThemeVariant[] = variantKeys.map((k) => ({
-    key: k,
-    labelZh: optMap[k]?.labelZh || '',
-    labelEn: optMap[k]?.labelEn || '',
-    color: optMap[k]?.color || '#6366f1',
-    css: tvRaw[k] || '',
-  }))
-
-  const writeVariants = (next: StyleThemeVariant[]) => {
-    const tv: Record<string, string> = {}
-    const opts: StyleThemeOption[] = []
-    for (const v of next) {
-      const key = (v.key || '').trim()
-      if (!key) continue
-      tv[key] = v.css || ''
-      opts.push({
-        key,
-        labelZh: v.labelZh || key,
-        labelEn: v.labelEn || key,
-        color: v.color || '#6366f1',
-      })
-    }
-    onChange({
-      ...draft,
-      manifest: { ...draft.manifest, themeVariants: tv, themeOptions: opts },
-    })
-  }
-  const addVariant = () =>
-    writeVariants([...variants, { key: '', labelZh: '', labelEn: '', color: '#6366f1', css: ':root{\n  \n}' }])
-  const updateVariant = (i: number, field: keyof StyleThemeVariant, val: string) =>
-    writeVariants(variants.map((v, idx) => (idx === i ? { ...v, [field]: val } : v)))
-  const removeVariant = (i: number) => writeVariants(variants.filter((_, idx) => idx !== i))
-
   // ===== 导航图标（header.nav.icons: Record<slug|name, 内联SVG>）=====
   const navIconsRaw: Record<string, string> = get('header.nav.icons', {}) || {}
   const iconEntries: [string, string][] = Object.entries(navIconsRaw)
@@ -258,58 +202,6 @@ export function StylePackForm({
             desc="以 :root { --var: value; } 声明 CSS 变量，仅允许变量声明，禁止 @import / url() / 脚本。这是整站配色皮肤。"
           >
             <TextArea value={draft.theme || ''} onChange={(v) => onChange({ ...draft, theme: v })} rows={10} />
-          </Field>
-        )}
-
-        {tab === 'variants' && (
-          <Field
-            label="可切换配色方案"
-            desc="注册多套配色，访客可在前台一键切换。key 为切换标识，须与每套的 key 一致；CSS 须以 :root 开头，禁止 url()/@import/脚本。保存后经前台配色切换器生效。"
-          >
-            <div className="space-y-4">
-              {variants.length === 0 && (
-                <p className="text-xs text-t-text-muted">尚未注册配色方案。点击下方「+ 添加配色方案」新增一套可切换配色。</p>
-              )}
-              {variants.map((v, i) => (
-                <div key={i} className="border border-t-border rounded-xl p-4 space-y-3 bg-t-bg-secondary/40">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <Field label="标识 key" desc="切换标识，英文/数字/连字符">
-                      <TextInput value={v.key} onChange={(val) => updateVariant(i, 'key', val)} placeholder="如 ocean" />
-                    </Field>
-                    <Field label="中文名">
-                      <TextInput value={v.labelZh} onChange={(val) => updateVariant(i, 'labelZh', val)} placeholder="海洋" />
-                    </Field>
-                    <Field label="英文名">
-                      <TextInput value={v.labelEn} onChange={(val) => updateVariant(i, 'labelEn', val)} placeholder="Ocean" />
-                    </Field>
-                    <Field label="预览色" desc="切换器上的色块">
-                      <ColorInput value={v.color} allowEmpty onChange={(val) => updateVariant(i, 'color', val)} />
-                    </Field>
-                  </div>
-                  <Field label="配色 CSS（:root{...}）" desc="覆盖调色板 CSS 变量，仅声明变量">
-                    <TextArea
-                      value={v.css}
-                      onChange={(val) => updateVariant(i, 'css', val)}
-                      rows={5}
-                    />
-                  </Field>
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => removeVariant(i)}
-                      className="px-3 py-1.5 text-xs rounded-lg bg-t-hover text-red-400 hover:text-red-300"
-                    >
-                      移除该配色
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <button
-                onClick={addVariant}
-                className="px-3 py-1.5 text-sm rounded-lg border border-t-accent-blue/60 text-t-accent-blue hover:bg-t-accent-blue/10"
-              >
-                + 添加配色方案
-              </button>
-            </div>
           </Field>
         )}
 

@@ -21,17 +21,15 @@ export interface StylePack {
   // 元数据（= 旧 manifest）
   $: any
   // 设计令牌 + 原始 theme.css
+  // 明暗与配色不在这里声明：墙纸由全局主题（activeTheme）决定，包只给出厂默认值
   design: {
     tokens?: Record<string, string>   // 解析出的 CSS 变量
     theme?: string                    // 原始 theme.css（前端 StyleProvider 直接注入）
-    themeVariants?: Record<string, string>
-    themeOptions?: any[]
-    mode?: 'light' | 'dark' | 'auto'
   }
   header: any
   footer: any
   layouts: any                        // 含 homepage.sections / section / category / article / list / templates
-  hero?: any                          // Hero 配置（variant/position/ctaButtons/height）
+  hero?: any                          // Hero 配置（enabled/size/interval/autoplay/showCTA/ctaButtons）
   features?: Record<string, any>
 }
 
@@ -158,15 +156,6 @@ function validateDesign(design: any): { ok: boolean; error?: string } {
     const r = validateTheme(design.theme)
     if (!r.ok) return { ok: false, error: r.error }
   }
-  const tv = design.themeVariants
-  if (tv !== undefined && tv !== null) {
-    if (typeof tv !== 'object' || Array.isArray(tv)) return { ok: false, error: 'design.themeVariants 必须是对象' }
-    for (const [k, v] of Object.entries(tv)) {
-      if (typeof v !== 'string') return { ok: false, error: `themeVariants.${k} 必须是 CSS 字符串` }
-      const r = validateTheme(v)
-      if (!r.ok) return { ok: false, error: `themeVariants.${k}: ${r.error}` }
-    }
-  }
   if (design.tokens !== undefined) {
     if (typeof design.tokens !== 'object' || Array.isArray(design.tokens)) return { ok: false, error: 'design.tokens 必须是对象' }
     for (const [k, v] of Object.entries(design.tokens)) {
@@ -292,8 +281,6 @@ async function migrateLegacyPack(id: string): Promise<StylePack | null> {
     $: manifest,
     design: {
       theme,
-      ...(manifest.themeVariants ? { themeVariants: manifest.themeVariants } : {}),
-      ...(manifest.themeOptions ? { themeOptions: manifest.themeOptions } : {}),
     },
     header: header || {},
     footer: footer || {},
