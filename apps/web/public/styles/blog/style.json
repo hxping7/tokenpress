@@ -123,17 +123,9 @@
   },
   "hero": {
     "enabled": true,
-    "position": "before-content",
-    "variant": "carousel",
     "size": "standard",
-    "height": "60vh",
     "autoplay": true,
     "interval": 5,
-    "transition": "slide",
-    "overlay": {
-      "enabled": true,
-      "color": "rgba(0,0,0,0.25)"
-    },
     "showCTA": true,
     "ctaButtons": []
   },
@@ -356,7 +348,6 @@
     "textColor": "var(--text-muted)"
   },
   "features": {
-    "submenuEnabled": true,
     "readingProgressBar": true,
     "backToTop": true,
     "welcomeOverlay": true,

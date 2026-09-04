@@ -30,8 +30,8 @@
 | `header` | 顶部导航 | `variant` / `logo`（src/width/height）/ `nav` / `actions` / `background` / `borderBottom` |
 | `footer` | 页脚 | `variant` / `columns` / `friendLinks` / `bottom` / `background` / `textColor` |
 | `layouts` | 布局骨架 | `homepage.sections[]` / `section`（含 `subcategory`）/ `article` / `list` / `category` / `templates` |
-| `hero` | 首页 Hero / 轮播覆盖 | `enabled` / `size` / `interval` / `autoplay` / `variant` / `position` / `height` / `transition` / `showCTA` / `ctaButtons[]` / `overlay` |
-| `features` | 功能开关覆盖（布尔，`null` 值字段不限制前端） | `readingProgressBar` / `backToTop` / `welcomeOverlay` / `languageSwitcher` / `submenuEnabled` |
+| `hero` | 首页 Hero / 轮播覆盖 | `enabled`（false 隐藏 Hero 区）/ `size` / `interval` / `autoplay`（false 仅手动）/ `showCTA`（false 隐藏按钮区）/ `ctaButtons[]` |
+| `features` | 功能开关覆盖（布尔，`null` 值字段不限制前端） | `readingProgressBar` / `backToTop` / `welcomeOverlay` / `languageSwitcher` |
 
 > 风格包只负责「装修」（布局/配色/结构）。站点信息（名称/描述/版权/备案/页脚 Logo）统一由 `site_settings` 全局设置管理，不进入 `style.json`。
 
@@ -51,7 +51,7 @@
 | 字段 | 消费位置 |
 |---|---|
 | `hero.ctaButtons` | 首页 `HeroCarousel`：`label` 对象 `{zh,en}` 按 locale 解析；`style` 归一化映射 `primary→primary`、`outline→secondary`、`ghost→ghost` |
-| `hero.enabled/size/interval/...` | 首页 Hero 外观与自动轮播参数（与 `site_settings.hero_*` 组成合并链，包覆盖优先） |
+| `hero.enabled/size/interval/autoplay/showCTA` | 首页 Hero 显隐/尺寸/间隔/自动轮播/CTA 显隐（与 `site_settings.hero_*` 组成合并链，包覆盖优先；`enabled:false` 整区不渲染） |
 | `features.readingProgressBar` | 文章详情页顶部阅读进度条（`ReadingProgress`），false 不渲染 |
 | `features.backToTop` | `BackToTop`，false 时组件返回 null |
 | `features.welcomeOverlay` | 欢迎页叠加层 `WelcomeOverlay`，false 且站点开关关 → 不加载 |

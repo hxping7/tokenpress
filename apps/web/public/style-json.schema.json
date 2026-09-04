@@ -219,29 +219,7 @@
         "enabled": {
           "type": "boolean"
         },
-        "position": {
-          "type": "string",
-          "enum": [
-            "before-content",
-            "after-content",
-            "floating"
-          ]
-        },
-        "variant": {
-          "type": "string",
-          "enum": [
-            "carousel",
-            "standard",
-            "split-left",
-            "split-right",
-            "image-only",
-            "none"
-          ]
-        },
         "size": {
-          "type": "string"
-        },
-        "height": {
           "type": "string"
         },
         "autoplay": {
@@ -249,24 +227,6 @@
         },
         "interval": {
           "type": "number"
-        },
-        "transition": {
-          "type": "string",
-          "enum": [
-            "slide",
-            "fade"
-          ]
-        },
-        "overlay": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "color": {
-              "type": "string"
-            }
-          }
         },
         "showCTA": {
           "type": "boolean"
@@ -534,9 +494,6 @@
       "type": "object",
       "description": "行为特性开关",
       "properties": {
-        "submenuEnabled": {
-          "type": "boolean"
-        },
         "readingProgressBar": {
           "type": "boolean"
         },

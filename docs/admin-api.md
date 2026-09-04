@@ -516,8 +516,8 @@ POST /api/v1/statichtml/file
 
 | 根 | 子字段 |
 |---|---|
-| `hero` | `enabled` `size` `interval` `autoplay` `variant` `position` `height` `transition` `showCTA` `ctaButtons[]`（`{label:{zh,en},href,style}`）`overlay` |
-| `features` | `readingProgressBar` `backToTop` `welcomeOverlay` `languageSwitcher` `submenuEnabled` |
+| `hero` | `enabled` `size` `interval` `autoplay` `showCTA` `ctaButtons[]`（`{label:{zh,en},href,style}`） |
+| `features` | `readingProgressBar` `backToTop` `welcomeOverlay` `languageSwitcher` |
 | `footer.friendLinks` | `show` `source(table\|custom)` `maxItems` `columns` `items[]` |
 | `layouts.section.subcategory` | `enabled` `position(sidebar\|top\|tab\|none)` `style(pill\|card\|list\|grid)` `showCount` `columns` |
 

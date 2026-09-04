@@ -32,6 +32,8 @@ interface HeroCarouselProps {
   size?: 'standard' | 'wide' | 'ultrawide' | 'full' | 'default' | 'fullscreen'
   interval?: number // 切换间隔，单位：秒，默认5秒
   ctaButtons?: HeroCtaButton[] // 可后台配置的 CTA 按钮，未配置时回退到默认值
+  autoplay?: boolean // 自动轮播开关（默认 true）；false 时仅手动切换
+  showCTA?: boolean // CTA 按钮区开关（默认 true）
 }
 
 // 轮播尺寸 → 容器最大宽度 / 圆角 / 比例 / 图片 sizes。
@@ -65,7 +67,7 @@ function isHardLink(url: string): boolean {
   )
 }
 
-export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons }: HeroCarouselProps) {
+export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons, autoplay = true, showCTA = true }: HeroCarouselProps) {
   const { locale } = useLocaleStore()
   // 归一化 CTA：兼容编辑器/风格包写入的 {label:{zh,en}, style:'outline'} 形状（样式包 schema），
   // 也兼容原有 {label:string, variant:'secondary'}；label 对象按当前语言解析，style 映射到渲染形态。
@@ -104,13 +106,13 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
     setCurrentSlide((prev) => (prev - 1 + slides.length) % Math.max(slides.length, 1))
   }, [slides.length])
 
-  // 自动播放
+  // 自动播放（autoplay=false 时不启动定时器，仅手动切换）
   useEffect(() => {
-    if (slides.length <= 1 || isPaused) return
+    if (!autoplay || slides.length <= 1 || isPaused) return
 
     const timer = setInterval(nextSlide, interval * 1000)
     return () => clearInterval(timer)
-  }, [slides.length, isPaused, nextSlide, interval])
+  }, [autoplay, slides.length, isPaused, nextSlide, interval])
 
   // 使用默认 SVG
   const useDefaultSvg = slides.length === 0 || !slides[0]?.imageUrl
@@ -232,6 +234,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
         )}
 
         {/* CTA 按钮 */}
+        {showCTA && (
         <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
           {ctaList.map((cta, idx) => {
             const variant = cta.variant || 'secondary'
@@ -268,6 +271,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
             )
           })}
         </div>
+        )}
       </div>
     </section>
   )

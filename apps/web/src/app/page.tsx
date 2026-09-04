@@ -225,6 +225,10 @@ export default async function HomePage() {
     : settingsCta
   const finalHeroSize = typeof heroCfg.size === 'string' && heroCfg.size ? heroCfg.size : heroSize
   const finalInterval = Number(heroCfg.interval) || heroInterval
+  // 包级开关：enabled=false 隐藏整个 Hero 区；autoplay=false 停止自动轮播；showCTA=false 隐藏 CTA 按钮区
+  const heroEnabled = heroCfg.enabled !== false
+  const heroAutoplay = heroCfg.autoplay !== false
+  const heroShowCTA = heroCfg.showCTA !== false
 
   return (
     <>
@@ -234,6 +238,9 @@ export default async function HomePage() {
         heroSize={finalHeroSize}
         heroInterval={finalInterval}
         ctaButtons={ctaButtons}
+        heroEnabled={heroEnabled}
+        heroAutoplay={heroAutoplay}
+        heroShowCTA={heroShowCTA}
         recentArticles={recentArticles}
         homeBanners={homeBanners}
       />

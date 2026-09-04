@@ -97,13 +97,12 @@ styles/<id>/
 
 | 字段 | 取值 / 说明 |
 |---|---|
-| `enabled` | 布尔 |
-| `variant` | `carousel` / `standard` / `split-left` / `split-right` / `image-only` / `none` |
-| `position` | `before-content` / `after-content` / `floating` |
-| `size` / `height` | 尺寸字符串（留空 = 跟随后台） |
-| `autoplay` / `interval` / `transition` | 轮播行为，`transition`: `slide` / `fade` |
-| `overlay` | `{ enabled, color }` |
-| `showCTA` / `ctaButtons[]` | CTA 按钮；每项 `{ label, href, style: primary\|outline\|ghost }`，`label` 可为 `{ zh, en }` 双语对象 |
+| `enabled` | boolean；`false` 时首页不渲染 Hero 区 |
+| `size` | `standard` / `wide` / `ultrawide` / `full`（空 = 跟随后台 `hero_size`） |
+| `interval` | 自动轮播间隔秒数（空/0 = 跟随后台 `hero_carousel_interval`） |
+| `autoplay` | boolean；`false` 时仅手动切换 |
+| `showCTA` | boolean；`false` 时隐藏 CTA 按钮区 |
+| `ctaButtons[]` | `{ label, href, style: primary\|outline\|ghost }`，`label` 可为 `{ zh, en }` 双语对象；非空时覆盖后台 `hero_cta_buttons` |
 
 > **运行时契约**：`HeroCarousel` 会把 `{ label:{zh,en}, style }` 归一化为当前语言的文本 + `primary` / `secondary` / `ghost`（`outline` → `secondary`），未归一化前直接渲染会显示 `[object Object]`。
 
@@ -111,7 +110,6 @@ styles/<id>/
 
 | 字段 | 取值 | 说明 |
 |---|---|---|
-| `submenuEnabled` | boolean | 二级菜单开关 |
 | `readingProgressBar` | boolean | 阅读进度条 |
 | `backToTop` | boolean | 回到顶部按钮 |
 | `welcomeOverlay` | boolean | 欢迎页浮层 |
@@ -177,11 +175,6 @@ styles/<id>/
 
 ---
 
-## 8. 当前渲染边界
+## 8. 字段设计原则
 
-以下字段可由后台/API 编辑并持久化，但**尚未接入实际渲染**，改动不会在前台产生视觉变化：
-
-- `hero.variant` / `position` / `height` / `overlay`
-- `features.submenuEnabled`
-
-接入前请勿在文档中宣称这些字段已生效。
+`style.json` 中**每一个字段都必须已接入渲染**——不接受"预置/保留"类死配置（这类字段会让编辑者和 AI 误以为改动有效）。新增可配置项的顺序：先实现渲染消费，再加入 schema 与编辑器；字段一旦被证明无消费端，即从 schema、三包文件与编辑器中同步移除。

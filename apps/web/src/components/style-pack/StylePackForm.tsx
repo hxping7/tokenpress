@@ -448,10 +448,10 @@ export function StylePackForm({
             <div className="border border-t-border rounded-xl p-4 space-y-4 bg-t-bg-secondary/30">
               <p className="text-sm font-medium text-t-text-primary">Hero 轮播配置（hero）</p>
               <p className="text-xs text-t-text-muted -mt-3">
-                size / interval / CTA 按钮即时生效并优先于后台轮播设置；variant / position / height / overlay 为预置展示配置，供后续视觉形态使用。
+                全部字段即时生效：size / interval / CTA 按钮优先于后台轮播设置；enabled / autoplay / showCTA 控制显隐与轮播行为。
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Hero 总开关">
+                <Field label="Hero 总开关" desc="关闭后首页不渲染 Hero 区">
                   <Toggle value={heroCfg.enabled !== false} onChange={(v) => set('hero.enabled', v)} labelOn="开" labelOff="关" />
                 </Field>
                 <Field label="尺寸 size" desc="占位宽/全宽等；「跟随后台」回落到站点设置的轮播尺寸">
@@ -470,68 +470,14 @@ export function StylePackForm({
                 </Field>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label="展示形态 variant" desc="预置：轮播/标准/左右分栏/纯图等">
-                  <SelectInput
-                    value={typeof heroCfg.variant === 'string' ? heroCfg.variant : 'carousel'}
-                    onChange={(v) => set('hero.variant', v)}
-                    options={[
-                      { value: 'carousel', label: '轮播' },
-                      { value: 'standard', label: '标准' },
-                      { value: 'split-left', label: '左分栏' },
-                      { value: 'split-right', label: '右分栏' },
-                      { value: 'image-only', label: '纯图片' },
-                      { value: 'none', label: '无' },
-                    ] as any}
-                  />
-                </Field>
-                <Field label="版面位置 position">
-                  <SelectInput
-                    value={typeof heroCfg.position === 'string' ? heroCfg.position : 'before-content'}
-                    onChange={(v) => set('hero.position', v)}
-                    options={[
-                      { value: 'before-content', label: '内容之前' },
-                      { value: 'after-content', label: '内容之后' },
-                      { value: 'floating', label: '悬浮' },
-                    ] as any}
-                  />
-                </Field>
-                <Field label="切换动画 transition">
-                  <SelectInput
-                    value={typeof heroCfg.transition === 'string' ? heroCfg.transition : 'slide'}
-                    onChange={(v) => set('hero.transition', v)}
-                    options={[
-                      { value: 'slide', label: '滑动' },
-                      { value: 'fade', label: '淡入淡出' },
-                    ] as any}
-                  />
-                </Field>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="轮播间隔" desc="秒。仅轮播时生效">
+                <Field label="轮播间隔" desc="秒。自动轮播的切换间隔">
                   <NumberInput value={Number(heroCfg.interval) || 5} onChange={(v) => set('hero.interval', v)} min={1} max={60} suffix="秒" />
                 </Field>
-                <Field label="高度" desc="CSS 高度，如 60vh / 520px（预置）">
-                  <TextInput value={typeof heroCfg.height === 'string' ? heroCfg.height : ''} onChange={(v) => set('hero.height', v)} placeholder="60vh" />
-                </Field>
-                <Field label="自动播放 autoplay">
+                <Field label="自动播放 autoplay" desc="关闭后仅手动切换">
                   <Toggle value={heroCfg.autoplay !== false} onChange={(v) => set('hero.autoplay', v)} labelOn="开" labelOff="关" />
                 </Field>
-                <Field label="显示 CTA 按钮 showCTA">
+                <Field label="显示 CTA 按钮 showCTA" desc="关闭后隐藏按钮区">
                   <Toggle value={heroCfg.showCTA !== false} onChange={(v) => set('hero.showCTA', v)} labelOn="开" labelOff="关" />
-                </Field>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="遮罩 overlay">
-                  <div className="flex items-center gap-3">
-                    <Toggle value={heroCfg.overlay?.enabled !== false} onChange={(v) => set('hero.overlay.enabled', v)} labelOn="开" labelOff="关" />
-                  </div>
-                </Field>
-                <Field label="遮罩颜色" desc="rgba / hex，如 rgba(0,0,0,0.25)">
-                  <TextInput
-                    value={typeof heroCfg.overlay?.color === 'string' ? heroCfg.overlay.color : ''}
-                    onChange={(v) => set('hero.overlay.color', v)}
-                    placeholder="rgba(0,0,0,0.25)"
-                  />
                 </Field>
               </div>
               {heroCfg.showCTA !== false && (
@@ -631,9 +577,6 @@ export function StylePackForm({
               </Field>
               <Field label="欢迎页" desc="全屏欢迎动画遮罩（还需在后台开启欢迎页并配置路径）">
                 <Toggle value={feats.welcomeOverlay !== false} onChange={(v) => setFeat('welcomeOverlay', v)} labelOn="开" labelOff="关" />
-              </Field>
-              <Field label="二级菜单" desc="预置：Header 悬停下拉（当前 Header 尚无该 UI，仅保留标识）">
-                <Toggle value={feats.submenuEnabled !== false} onChange={(v) => setFeat('submenuEnabled', v)} labelOn="开" labelOff="关" />
               </Field>
             </div>
             <div className="border-t border-t-border pt-4">

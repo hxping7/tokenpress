@@ -1553,7 +1553,7 @@ requests.post(
 5. 修改：`PATCH /:id`（`{patch:[{path,value},...]}` 批量原子）或 `PUT /:id`（`{style:{...}}` 整包替换，后端自动剔除 `site` 键）
 6. 验证：`GET /:id` 确认落盘 → `POST /:id/preview`（home/section 预览图）→ 确需全站生效再 `POST /:id/activate`
 
-**可 PATCH 根白名单**：`design | header | footer | layouts | hero | features`（`$` 元数据不可改）。风格包只负责「装修」（布局/配色/结构）；站点信息（名称/版权/备案/页脚 Logo）属内容，唯一来源是 `site_settings`（`settings:write`），不进入 `style.json`。功能开关在 `features` 根（readingProgressBar/backToTop/welcomeOverlay/languageSwitcher/submenuEnabled）。Hero CTA 的 label 为双语对象：`{"label": {"zh": "...", "en": "..."}, "href": "/path", "style": "primary|outline|ghost"}`。
+**可 PATCH 根白名单**：`design | header | footer | layouts | hero | features`（`$` 元数据不可改）。风格包只负责「装修」（布局/配色/结构）；站点信息（名称/版权/备案/页脚 Logo）属内容，唯一来源是 `site_settings`（`settings:write`），不进入 `style.json`。功能开关在 `features` 根（readingProgressBar/backToTop/welcomeOverlay/languageSwitcher）。Hero CTA 的 label 为双语对象：`{"label": {"zh": "...", "en": "..."}, "href": "/path", "style": "primary|outline|ghost"}`。
 
 **Python 示例：**
 

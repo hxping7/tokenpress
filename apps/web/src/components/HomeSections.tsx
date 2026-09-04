@@ -18,13 +18,14 @@ interface HeroSlide { id: string; imageUrl: string; linkUrl: string; linkTarget:
 interface Article { id: number; title: string; slug: string; excerpt: string | null; coverImage: string | null; publishedAt: string; section: { name: string; path: string } }
 interface SectionItem { id: number; name: string; slug: string; path: string; externalUrl: string | null }
 
-function HeroSection({ slides, size, interval, ctaButtons, variant }: {
+function HeroSection({ slides, size, interval, ctaButtons, variant, autoplay, showCTA }: {
   slides: HeroSlide[]; size: string; interval: number; ctaButtons: HeroCtaButton[]; variant?: string
+  autoplay?: boolean; showCTA?: boolean
 }) {
   // size 取自 siteSettings（p.size > heroSize 回退），variant 仅控制展示风格（如 split-image-right）
   const heroSize = size || 'standard'
   return (
-    <HeroCarousel slides={slides} size={heroSize as any} interval={interval} ctaButtons={ctaButtons} />
+    <HeroCarousel slides={slides} size={heroSize as any} interval={interval} ctaButtons={ctaButtons} autoplay={autoplay} showCTA={showCTA} />
   )
 }
 
@@ -260,20 +261,28 @@ interface HomeCtx {
   heroSize: string
   heroInterval: number
   ctaButtons: HeroCtaButton[]
+  heroEnabled?: boolean
+  heroAutoplay?: boolean
+  heroShowCTA?: boolean
   recentArticles: Article[]
   homeBanners?: HomeBannerConfig[]
 }
 
 const HOMEPAGE_REGISTRY: Record<string, (sec: any, ctx: HomeCtx) => JSX.Element | null> = {
-  Hero: (sec, ctx) => (
-    <HeroSection
-      slides={ctx.heroSlides}
-      size={sec.props?.size || (sec.variant === 'fullscreen' ? 'fullscreen' : ctx.heroSize)}
-      interval={ctx.heroInterval}
-      ctaButtons={ctx.ctaButtons}
-      variant={sec.variant}
-    />
-  ),
+  Hero: (sec, ctx) => {
+    if (ctx.heroEnabled === false) return null
+    return (
+      <HeroSection
+        slides={ctx.heroSlides}
+        size={sec.props?.size || (sec.variant === 'fullscreen' ? 'fullscreen' : ctx.heroSize)}
+        interval={ctx.heroInterval}
+        ctaButtons={ctx.ctaButtons}
+        variant={sec.variant}
+        autoplay={ctx.heroAutoplay}
+        showCTA={ctx.heroShowCTA}
+      />
+    )
+  },
   Features: (sec) => <FeaturesSection variant={sec.variant} />,
   ArticleList: (sec, ctx) => (
     <ArticleListSection
@@ -301,6 +310,9 @@ export function HomeSections({
   heroSize,
   heroInterval,
   ctaButtons,
+  heroEnabled,
+  heroAutoplay,
+  heroShowCTA,
   recentArticles,
   homeBanners,
 }: {
@@ -308,6 +320,9 @@ export function HomeSections({
   heroSize: string
   heroInterval: number
   ctaButtons: HeroCtaButton[]
+  heroEnabled?: boolean
+  heroAutoplay?: boolean
+  heroShowCTA?: boolean
   recentArticles: Article[]
   homeBanners?: HomeBannerConfig[]
 }) {
@@ -317,13 +332,15 @@ export function HomeSections({
     | { component: string; variant?: string; props?: any; id?: string }[]
     | undefined
 
-  const ctx: HomeCtx = { heroSlides, heroSize, heroInterval, ctaButtons, recentArticles, homeBanners }
+  const ctx: HomeCtx = { heroSlides, heroSize, heroInterval, ctaButtons, heroEnabled, heroAutoplay, heroShowCTA, recentArticles, homeBanners }
 
   // 无配置时回退到经典布局（保持向后兼容）
   if (!sections || sections.length === 0) {
     return (
       <>
-        <HeroSection slides={heroSlides} size={heroSize} interval={heroInterval} ctaButtons={ctaButtons} />
+        {heroEnabled !== false && (
+          <HeroSection slides={heroSlides} size={heroSize} interval={heroInterval} ctaButtons={ctaButtons} autoplay={heroAutoplay} showCTA={heroShowCTA} />
+        )}
         <ArticleListSection articles={recentArticles} />
       </>
     )
