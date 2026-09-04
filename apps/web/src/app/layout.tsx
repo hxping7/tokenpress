@@ -36,6 +36,7 @@ async function getActiveStyleConfig(): Promise<{ config: StyleConfig; theme: str
         layouts: d.layouts || null,
         header: d.header || null,
         footer: d.footer || null,
+        compatibleThemes: d.manifest?.compatibleThemes || null,
         features: d.features || null,
       },
       theme: d.theme || '',

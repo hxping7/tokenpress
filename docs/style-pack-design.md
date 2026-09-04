@@ -17,6 +17,8 @@
 
 内置主题覆盖层**不覆盖风格包自带的 `--accent-blue`**（`apps/web/src/lib/themePalettes.ts` 的 `resolveThemePalette`），否则任意切一次主题会把各包的强调色刷成同一种颜色。
 
+> **兼容墙纸白名单 `$.compatibleThemes`**：品牌色由包独占，一旦与某墙纸的明度撞车（如 enterprise 纯黑强调色 `#111` 配深墙纸 night/cyber/lava/space → 黑字黑底不可读），包可在元数据声明 `compatibleThemes: ["light"]`，前台切换器只列出兼容墙纸，加载时若 cookie 主题不在白名单内则强制作废回落出厂默认。省略或空数组 = 5 套全部可切换。
+
 ---
 
 ## 2. 包结构与存储

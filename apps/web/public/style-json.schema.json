@@ -38,6 +38,20 @@
             "lava",
             "space"
           ]
+        },
+        "compatibleThemes": {
+          "type": "array",
+          "description": "兼容墙纸白名单：声明前台配色切换器中允许出现的墙纸 key。省略或空数组=全部内置主题均可切换。深品牌色与深墙纸会撞色时，应只列浅色墙纸（如 light）。",
+          "items": {
+            "type": "string",
+            "enum": [
+              "night",
+              "cyber",
+              "lava",
+              "light",
+              "space"
+            ]
+          }
         }
       }
     },

@@ -8,6 +8,7 @@
     "preview": "/styles/enterprise/preview.png",
     "builtin": true,
     "defaultTheme": "light",
+    "compatibleThemes": ["light"],
     "tags": [
       "enterprise",
       "corporate",

@@ -25,7 +25,7 @@
 
 | 键 | 职责 | 主要子字段 |
 |---|---|---|
-| `$` | 包元数据（不可经 PATCH 修改） | `id` / `name` / `description` / `version` / `builtin` / `preview` / `defaultTheme` |
+| `$` | 包元数据（不可经 PATCH 修改） | `id` / `name` / `description` / `version` / `builtin` / `preview` / `defaultTheme` / `compatibleThemes`（兼容墙纸白名单，可选） |
 | `design` | 设计令牌与配色 | `tokens`（:root CSS 变量，品牌色不被主题覆盖）/ `theme`（CSS 字符串兜底） |
 | `header` | 顶部导航 | `variant` / `logo`（src/width/height）/ `nav` / `actions` / `background` / `borderBottom` |
 | `footer` | 页脚 | `variant` / `columns` / `friendLinks` / `bottom` / `background` / `textColor` |

@@ -10,12 +10,14 @@ import {
   NAV_ALIGN_OPTIONS, HEADER_VARIANT_OPTIONS, LOGO_POSITION_OPTIONS, NAV_COLOR_FIELDS, ASPECT_OPTIONS,
 } from './schema'
 import { WIDTH_PRESETS } from '@/lib/layout-config'
+import { BUILTIN_THEME_OPTIONS } from '@/lib/themePalettes'
 
 export type StyleDraft = {
   manifest: {
     name?: string
     description?: string
     version?: string
+    compatibleThemes?: string[]
   }
   theme: string
   layouts: any
@@ -197,12 +199,57 @@ export function StylePackForm({
         )}
 
         {tab === 'theme' && (
-          <Field
-            label="配色主题（theme.css）"
-            desc="以 :root { --var: value; } 声明 CSS 变量，仅允许变量声明，禁止 @import / url() / 脚本。这是整站配色皮肤。"
-          >
-            <TextArea value={draft.theme || ''} onChange={(v) => onChange({ ...draft, theme: v })} rows={10} />
-          </Field>
+          <>
+            <Field
+              label="配色主题（theme.css）"
+              desc="以 :root { --var: value; } 声明 CSS 变量，仅允许变量声明，禁止 @import / url() / 脚本。这是整站配色皮肤。"
+            >
+              <TextArea value={draft.theme || ''} onChange={(v) => onChange({ ...draft, theme: v })} rows={10} />
+            </Field>
+            <Field
+              label="兼容墙纸（可切换配色白名单）"
+              desc="勾选前台配色切换器中允许出现的墙纸。不勾=全部 5 套均可切换。品牌色（如纯黑强调色）与深墙纸会撞色导致不可读时，应只勾浅色墙纸（如「极简亮白」）。"
+            >
+              {(() => {
+                const compThemes: string[] = Array.isArray(get('manifest.compatibleThemes', []))
+                  ? (get('manifest.compatibleThemes', []) as string[])
+                  : []
+                const toggleTheme = (key: string) => {
+                  const next = compThemes.includes(key)
+                    ? compThemes.filter((k) => k !== key)
+                    : [...compThemes, key]
+                  updateManifest('compatibleThemes', next)
+                }
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {BUILTIN_THEME_OPTIONS.map((o) => {
+                      const on = compThemes.includes(o.key)
+                      return (
+                        <button
+                          key={o.key}
+                          type="button"
+                          onClick={() => toggleTheme(o.key)}
+                          className={
+                            'flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition ' +
+                            (on
+                              ? 'border-t-accent-blue/60 bg-t-accent-blue/10 text-t-text-primary'
+                              : 'border-t-border bg-t-bg-secondary/40 text-t-text-muted hover:text-t-text-primary')
+                          }
+                        >
+                          <span
+                            className="inline-block w-3.5 h-3.5 rounded-full border border-black/10"
+                            style={{ background: o.color }}
+                          />
+                          <span>{o.labelZh}</span>
+                          {on && <span className="ml-auto text-t-accent-blue">✓</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </Field>
+          </>
         )}
 
         {tab === 'nav' && (

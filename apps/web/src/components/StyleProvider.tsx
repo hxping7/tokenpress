@@ -11,6 +11,8 @@ export interface StyleConfig {
   layouts: any
   header: any
   footer: any
+  // 兼容墙纸白名单（可选）：声明哪些内置主题与该包品牌色不冲突；为空/未声明=全部兼容
+  compatibleThemes?: string[] | null
   // 站点信息（只读全局值，唯一来源是 site_settings，包内不存）
   site?: Record<string, any> | null
   // Hero 配置（enabled/size/interval/autoplay/showCTA/ctaButtons）
@@ -26,6 +28,7 @@ const DEFAULT_CONFIG: StyleConfig = {
   layouts: null,
   header: null,
   footer: null,
+  compatibleThemes: null,
   site: null,
   hero: null,
   features: null,
@@ -42,10 +45,19 @@ function readThemeCookie(): string | null {
   return m ? decodeURIComponent(m[1]) : null
 }
 
-function applyThemeOverride(theme: string | null, defaultTheme: string) {
+function applyThemeOverride(
+  theme: string | null,
+  defaultTheme: string,
+  compatibleThemes?: string[] | null,
+) {
   if (typeof document === 'undefined') return
   let el = document.getElementById(OVERRIDE_ID) as HTMLStyleElement | null
-  const effective = theme || ''
+  // 兼容白名单：用户所选墙纸不在包声明的兼容列表内时，回落到出厂默认（不注入覆盖层）
+  const allowed = Array.isArray(compatibleThemes) && compatibleThemes.length > 0
+  let effective = theme || ''
+  if (allowed && effective && effective !== defaultTheme && !compatibleThemes!.includes(effective)) {
+    effective = ''
+  }
   // 当未选配色或选中的就是模板出厂配色时，移除覆盖层（由模板包 theme.css 决定）
   if (!effective || effective === defaultTheme) {
     if (el) el.remove()
@@ -78,18 +90,25 @@ export function StyleProvider({
     // 依赖 store 的 theme 以触发重跑；实际取值读 cookie（setTheme 已同步写入），
     // 避免 store 初始默认值 'night' 与真实 cookie 主题不一致造成的误判。
     const cookieTheme = readThemeCookie()
-    setActiveTheme(cookieTheme)
-    applyThemeOverride(cookieTheme, config.defaultTheme)
+    // 兼容白名单：cookie 主题若不在包声明的兼容列表内，强制作废，回落到出厂默认
+    const allowed = Array.isArray(config.compatibleThemes) && config.compatibleThemes.length > 0
+    const effectiveTheme =
+      cookieTheme && (!allowed || cookieTheme === config.defaultTheme || config.compatibleThemes!.includes(cookieTheme))
+        ? cookieTheme
+        : config.defaultTheme
+    setActiveTheme(effectiveTheme)
+    applyThemeOverride(cookieTheme, config.defaultTheme, config.compatibleThemes)
     // 同步 data-theme 供遗留组件读取
     if (typeof document !== 'undefined') {
-      document.documentElement.dataset.theme = cookieTheme || config.defaultTheme
+      document.documentElement.dataset.theme = effectiveTheme
     }
-  }, [theme, config.defaultTheme])
+  }, [theme, config.defaultTheme, config.compatibleThemes])
 
   const value: StyleConfig = {
     ...config,
     // 暴露当前生效的配色（cookie 优先，否则模板出厂配色）
     defaultTheme: activeTheme || config.defaultTheme,
+    compatibleThemes: config.compatibleThemes || null,
   }
 
   return <StyleContext.Provider value={value}>{children}</StyleContext.Provider>
@@ -112,8 +131,12 @@ export function useStyleFooter(): any {
   return useContext(StyleContext).footer
 }
 
-// 全局墙纸（配色皮肤）列表：唯一来源是内置 5 套，风格包不参与
+// 全局墙纸（配色皮肤）列表：唯一来源是内置 5 套；若包声明 compatibleThemes 白名单则只返回兼容项
 export function useStyleThemeOptions(): { key: string; labelZh: string; labelEn: string; color: string }[] {
+  const compatible = useContext(StyleContext).compatibleThemes
+  if (Array.isArray(compatible) && compatible.length > 0) {
+    return BUILTIN_THEME_OPTIONS.filter((o) => compatible.includes(o.key))
+  }
   return BUILTIN_THEME_OPTIONS
 }
 

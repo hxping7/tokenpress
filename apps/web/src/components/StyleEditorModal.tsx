@@ -39,6 +39,9 @@ export function StyleEditorModal({ styleId, builtin, onClose, onSaved, onDeleted
             name: d.manifest?.name || '',
             description: d.manifest?.description || '',
             version: d.manifest?.version || '',
+            compatibleThemes: Array.isArray(d.manifest?.compatibleThemes)
+              ? d.manifest.compatibleThemes
+              : undefined,
           },
           theme: typeof d.theme === 'string' ? d.theme : '',
           layouts: d.layouts || {},

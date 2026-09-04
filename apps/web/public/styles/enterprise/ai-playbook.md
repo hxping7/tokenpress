@@ -15,6 +15,7 @@
 - 明暗（light/dark）：由全局主题（activeTheme）决定，本包默认浅色，仅经 `design.tokens` 调整配色
 - `design.tokens['--accent-blue']`: 主强调色（默认纯黑 #111111）
 - `design.tokens['--radius-card']`: 卡片圆角（默认 4px，方形）
+- `$.compatibleThemes`: `["light"]` —— 纯黑强调色与深墙纸（night/cyber/lava/space）会撞成黑字黑底不可读，故前台只开放「极简亮白」墙纸；**改包时勿扩此白名单**，除非先把 `--accent-blue` 调成在深底上可见的亮色。
 
 ### Header
 - `header.logo.type`: text（用站点名文字做 logo）
