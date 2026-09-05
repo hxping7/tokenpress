@@ -37,7 +37,7 @@ function SearchResults() {
   })
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-[var(--header-actual-height)]">
       {/* Search Header */}
       <div className="border-b border-t-border py-8 px-4">
         <div className="max-w-3xl mx-auto text-center">
@@ -120,7 +120,7 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen pt-16 flex items-center justify-center"><div className="animate-pulse text-t-text-secondary">加载中...</div></div>}>
+    <Suspense fallback={<div className="min-h-screen pt-[var(--header-actual-height)] flex items-center justify-center"><div className="animate-pulse text-t-text-secondary">加载中...</div></div>}>
       <SearchResults />
     </Suspense>
   )

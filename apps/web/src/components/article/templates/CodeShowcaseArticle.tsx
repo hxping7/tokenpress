@@ -20,13 +20,13 @@ export function CodeShowcaseArticle({ article, section, sectionLabel, shareConfi
   const files = config.files || ['main.ts', 'utils.ts', 'README.md']
 
   return (
-    <article className="min-h-screen pt-16">
+    <article className="min-h-screen pt-[var(--header-actual-height)]">
       <ArticleViewTracker articleId={article.id} />
       <ArticleHeader article={article} section={section} sectionLabel={sectionLabel} shareConfig={shareConfig} />
 
       <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6">
         <aside className="hidden lg:block">
-          <div className="sticky top-20 rounded-xl border border-t-border bg-t-bg-secondary p-3">
+          <div className="sticky top-[var(--header-actual-height)] rounded-xl border border-t-border bg-t-bg-secondary p-3">
             <div className="flex items-center gap-2 text-sm text-t-text-secondary mb-3 px-1">
               <FolderTree size={14} /> 文件树
             </div>

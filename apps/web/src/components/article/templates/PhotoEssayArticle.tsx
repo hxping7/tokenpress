@@ -25,7 +25,7 @@ export function PhotoEssayArticle({ article, section, sectionLabel, shareConfig 
   const cols = Math.min(Math.max(Number(config.cols) || 3, 2), 4)
 
   return (
-    <article className="min-h-screen pt-16">
+    <article className="min-h-screen pt-[var(--header-actual-height)]">
       <ArticleViewTracker articleId={article.id} />
       <ArticleHeader article={article} section={section} sectionLabel={sectionLabel} shareConfig={shareConfig} />
 

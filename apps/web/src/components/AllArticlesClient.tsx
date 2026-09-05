@@ -30,7 +30,7 @@ export function AllArticlesClient() {
   }
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-[var(--header-actual-height)]">
       {/* Header */}
       <section className="relative py-16 px-4 border-b border-t-border">
         <div className="relative max-w-[var(--content-max-width)] mx-auto text-center">

@@ -17,7 +17,7 @@ interface Props {
 /** 沉浸长文：全宽大图 hero + 大字排版 + 滚动渐显，适合深度长文 */
 export function StoryArticle({ article, section, sectionLabel, shareConfig }: Props) {
   return (
-    <article className="min-h-screen pt-16">
+    <article className="min-h-screen pt-[var(--header-actual-height)]">
       <ArticleViewTracker articleId={article.id} />
       <ArticleHeader article={article} section={section} sectionLabel={sectionLabel} shareConfig={shareConfig} />
 

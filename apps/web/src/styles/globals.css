@@ -10,6 +10,10 @@
   :root {
     --content-max-width: 80rem; /* 站点级内容容器最大宽度，默认 1280px（兼容旧 max-w-7xl） */
     --reading-max-width: 48rem; /* 文章正文阅读列最大宽度，保证长文可读性 */
+    /* Header 实际渲染高度：JS 由 ResizeObserver 在运行时写入；SSR/JS 未就绪时回退 64px。
+       设计 token --header-height 仅表达 logo/actions 行高，split/center 等布局会让
+       header 实际高度 ≠ --header-height，所有「给 header 留位置」的占位符必须用这个变量。*/
+    --header-actual-height: 64px;
 
     /* 导航菜单颜色（可被风格包 header.nav.colors 逐实例覆盖） */
     --nav-text: var(--text-secondary);

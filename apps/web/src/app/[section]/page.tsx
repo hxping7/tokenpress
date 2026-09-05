@@ -49,7 +49,7 @@ export default async function DynamicSectionPage({ params }: Props) {
 
   if (!section) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-[var(--header-actual-height)] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl text-t-text-primary mb-2">板块未找到</h1>
           <p className="text-t-text-secondary">该板块不存在或已被删除</p>

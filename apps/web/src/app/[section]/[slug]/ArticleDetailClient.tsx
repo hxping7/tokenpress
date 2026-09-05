@@ -50,7 +50,7 @@ export function ArticleDetailClient({ params, sectionLayouts }: Props) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-[var(--header-actual-height)] flex items-center justify-center">
         <div className="text-t-text-secondary animate-pulse">加载中...</div>
       </div>
     )
@@ -58,7 +58,7 @@ export function ArticleDetailClient({ params, sectionLayouts }: Props) {
 
   if (error || !data?.data) {
     return (
-      <div className="min-h-screen pt-16 flex items-center justify-center">
+      <div className="min-h-screen pt-[var(--header-actual-height)] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl text-t-text-primary mb-2">文章未找到</h1>
           <Link href={`/${section}`} className="text-t-accent-blue hover:underline">

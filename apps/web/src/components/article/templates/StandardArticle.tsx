@@ -45,7 +45,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
   const useSingleColumn = isSingle || (!leftTOC && !rightSidebar)
 
   return (
-    <article className="min-h-screen pt-16">
+    <article className="min-h-screen pt-[var(--header-actual-height)]">
       <ArticleViewTracker articleId={article.id} />
       <ArticleHeader article={article} section={section} sectionLabel={sectionLabel} shareConfig={shareConfig} />
 
@@ -83,7 +83,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
             </main>
             {rightSidebar && (
               <aside className="hidden lg:block">
-                <div className="sticky top-20 space-y-4">
+                <div className="sticky top-[var(--header-actual-height)] space-y-4">
                   <ArticleSidebar articleId={article.id} articleTags={article.tags} sectionSlug={section} />
                   {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
                     <ArticleShare title={article.title} summary={article.excerpt} platforms={shareConfig.platforms} aside />
@@ -99,7 +99,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
           <div className={`grid grid-cols-1 ${gridColsClass} gap-6`}>
             {leftTOC && (
               <aside className="hidden lg:block">
-                <div className="sticky top-20">
+                <div className="sticky top-[var(--header-actual-height)]">
                   <TableOfContents content={article.content} />
                 </div>
               </aside>
@@ -123,7 +123,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
 
             {rightSidebar && (
               <aside className="hidden lg:block">
-                <div className="sticky top-20 space-y-4">
+                <div className="sticky top-[var(--header-actual-height)] space-y-4">
                   <ArticleSidebar articleId={article.id} articleTags={article.tags} sectionSlug={section} />
                   {shareConfig.enabled && shareConfig.positions.includes('float_right') && (
                     <ArticleShare title={article.title} summary={article.excerpt} platforms={shareConfig.platforms} aside />

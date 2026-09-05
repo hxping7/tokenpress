@@ -583,6 +583,24 @@ export function Header() {
     }
   }, [navPosition, navWidth])
 
+  // 把 Header 实际渲染高度写到 --header-actual-height，所有「给 Header 留位置」的
+  // 占位符（pt-* / sticky top-*）读这个变量。不同布局下 Header 高度差异大：
+  //   blog/enterprise 单行 ≈72px；design split/center 拆两行可达 ≈108px。
+  // 写死 pt-16 在两行布局下会让分类标签/hero 被 Header 遮挡。
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return
+    const write = (el: Element | null) => {
+      if (el) document.documentElement.style.setProperty('--header-actual-height', `${(el as HTMLElement).offsetHeight}px`)
+    }
+    // 当前实际渲染的顶部 Header（fixed/sticky top-0 的那个；其他 variant 由 CSS 自身计算）
+    const target = document.querySelector('header.fixed.top-0, header.sticky.top-0') as HTMLElement | null
+    write(target)
+    if (!target) return
+    const ro = new ResizeObserver(() => write(target))
+    ro.observe(target)
+    return () => ro.disconnect()
+  })
+
   function navItemCls(active: boolean): string {
     const r = navStyle === 'pill' ? 'pill' : navStyle === 'plain' ? 'plain' : ''
     return `nav-item ${active ? 'is-active' : ''} ${r}`.trim()

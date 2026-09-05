@@ -23,7 +23,7 @@ export function SplitMediaArticle({ article, section, sectionLabel, shareConfig 
   const sticky = [article.coverImage, ...media].filter(Boolean).slice(0, 4) as string[]
 
   return (
-    <article className="min-h-screen pt-16">
+    <article className="min-h-screen pt-[var(--header-actual-height)]">
       <ArticleViewTracker articleId={article.id} />
       <ArticleHeader article={article} section={section} sectionLabel={sectionLabel} shareConfig={shareConfig} />
 
@@ -33,7 +33,7 @@ export function SplitMediaArticle({ article, section, sectionLabel, shareConfig 
         </main>
 
         <aside className="hidden lg:block">
-          <div className="sticky top-20 space-y-3">
+          <div className="sticky top-[var(--header-actual-height)] space-y-3">
             {sticky.map((src: string, i: number) => (
               <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden border border-t-border">
                 <Image src={src} alt={`${article.title} ${i + 1}`} fill className="object-cover" unoptimized sizes="360px" />

@@ -46,7 +46,7 @@ export function TimelineArticle({ article, section, sectionLabel, shareConfig }:
     : parseEventsFromMarkdown(article.content || '')
 
   return (
-    <article className="min-h-screen pt-16">
+    <article className="min-h-screen pt-[var(--header-actual-height)]">
       <ArticleViewTracker articleId={article.id} />
       <ArticleHeader article={article} section={section} sectionLabel={sectionLabel} shareConfig={shareConfig} />
 

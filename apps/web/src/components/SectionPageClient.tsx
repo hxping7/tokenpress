@@ -423,7 +423,7 @@ export function SectionPageClient({
   const renderSidebar = () => {
     if (!sidebarEnabled) return null
     return (
-      <aside className={`${sidebarCfg.sticky !== false ? 'sticky top-20' : ''} h-fit`}>
+      <aside className={`${sidebarCfg.sticky !== false ? 'sticky top-[var(--header-actual-height)]' : ''} h-fit`}>
         <SectionSidebar
           sectionSlug={section}
           sectionPath={sectionPath}
@@ -437,7 +437,7 @@ export function SectionPageClient({
   }
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-[var(--header-actual-height)]">
       {/* Hero — 按模板包配置 */}
       {heroCfg.enabled && (
         <section className="relative py-16 px-4 border-b border-t-border">

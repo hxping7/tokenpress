@@ -13,7 +13,7 @@ export default function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
   }, [error])
 
   return (
-    <div className="min-h-screen pt-16 flex items-center justify-center px-4">
+    <div className="min-h-screen pt-[var(--header-actual-height)] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
         <div className="text-6xl mb-4">⚠️</div>
         <h1 className="text-2xl font-bold text-t-text-primary mb-2">页面出错了</h1>
