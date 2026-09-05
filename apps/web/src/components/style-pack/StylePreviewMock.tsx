@@ -54,7 +54,7 @@ export function StylePreviewMock({ draft }: { draft: StyleDraft }) {
         className="font-bold text-base"
         style={{ color: 'var(--nav-bar-text)' }}
       >
-        {header.logo?.text || 'Token00'}
+        {header.logo?.text || 'TokenPress'}
       </div>
       <div className={position === 'left' ? 'flex flex-col gap-1 mt-4' : 'flex items-center gap-1'}>
         {sampleNav.map((it, i) => (
@@ -83,7 +83,7 @@ export function StylePreviewMock({ draft }: { draft: StyleDraft }) {
     >
       {align !== 'center' && (
         <div className="font-bold text-base mr-6" style={{ color: 'var(--nav-bar-text)' }}>
-          {header.logo?.text || 'Token00'}
+          {header.logo?.text || 'TokenPress'}
         </div>
       )}
       <div className={align === 'center' ? 'flex items-center gap-1' : 'flex items-center gap-1 flex-1' + (align === 'right' ? ' justify-end' : '')}>
@@ -240,7 +240,7 @@ function MockFooter({ footer }: { footer: any }) {
             </span>
           ))}
         </div>
-        <div className="text-xs text-[var(--text-muted)]">{footer?.copyright || '© 2026 Token00'}</div>
+        <div className="text-xs text-[var(--text-muted)]">{footer?.bottom?.copyright || '© 2026 TokenPress'}</div>
       </div>
     </footer>
   )

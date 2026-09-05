@@ -54,7 +54,7 @@
     "height": 72,
     "logo": {
       "type": "text",
-      "text": "Token00",
+      "text": "TokenPress",
       "position": "left",
       "height": 32,
       "link": "/"
@@ -359,7 +359,6 @@
       "maxItems": 20
     },
     "bottom": {
-      "copyright": "© 2026 Token00 · 专注 AI 与 Token 科技",
       "social": [
         "github",
         "wechat"

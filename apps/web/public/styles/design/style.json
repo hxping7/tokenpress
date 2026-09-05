@@ -53,7 +53,7 @@
     "height": 72,
     "logo": {
       "type": "text",
-      "text": "STUDIO",
+      "text": "TokenPress",
       "position": "center",
       "height": 28,
       "link": "/"
@@ -247,7 +247,6 @@
       "maxItems": 20
     },
     "bottom": {
-      "copyright": "© 2026 STUDIO · Crafted with care",
       "social": [],
       "showBackToTop": true
     },

@@ -481,19 +481,21 @@ function navItemClass(style?: string): string {
   return `${base} rounded-lg text-t-text-secondary hover:text-t-text-primary hover:bg-t-hover`
 }
 
-function LogoBlock({ hc, theme }: { hc: any; theme?: string }) {
+function LogoBlock({ hc, theme, siteName }: { hc: any; theme?: string; siteName?: string }) {
   const logo = hc?.logo || {}
   const height: number = logo.height || 36
   // 亮色主题下使用深色调 logo 变体，避免发光白字在白底上隐形/发灰
   const isLight = theme === 'light'
   const logoSrc = isLight ? (logo.srcLight || '/logo-light.svg') : (logo.src || '/logo-dark.svg')
   if (logo.type === 'text' || (!logo.src && logo.text)) {
+    // 站点名称唯一来源是 site_settings（site.name）。风格包只决定「用文字形态展示 logo」
+    // 这一装修决策；logo.text 仅作站点名缺失时的兜底，不得覆盖站点设置。
     return (
       <span
         className="text-xl font-extrabold tracking-tight text-t-text-primary leading-none"
         style={{ height }}
       >
-        {logo.text || 'Token00'}
+        {siteName || logo.text || 'TokenPress'}
       </span>
     )
   }
@@ -606,7 +608,8 @@ export function Header() {
           externalUrl: s.externalUrl,
         }))
 
-  // Fetch site name from settings（风格包 site.name 覆盖优先）
+  // Fetch site name from settings（站点名称唯一来源：site_settings.site_name；
+  // 风格包只决定 logo 的展示形态（文字/图片/组件），不提供站点名称）
   const { data: siteSettingsData } = useQuery({
     queryKey: ['site-settings'],
     queryFn: () => api.get('/site-settings'),
@@ -694,7 +697,7 @@ export function Header() {
     </div>
   )
 
-  const logoEl = <LogoBlock hc={hc} theme={theme} />
+  const logoEl = <LogoBlock hc={hc} theme={theme} siteName={siteName} />
 
   // 左侧竖向导航：固定左侧栏，主内容由 body.paddingLeft 右移
   if (navPosition === 'left') {
@@ -713,7 +716,7 @@ export function Header() {
       >
         <div className="h-16 flex items-center justify-center px-3 border-b" style={{ borderColor: leftBorder }}>
           <Link href={hc.logo?.link || '/'} className="flex items-center">
-            <LogoBlock hc={hc} theme={theme} />
+            <LogoBlock hc={hc} theme={theme} siteName={siteName} />
           </Link>
         </div>
         <nav className="flex-1 flex flex-col gap-1 p-3 overflow-y-auto">

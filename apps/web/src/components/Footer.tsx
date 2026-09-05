@@ -194,7 +194,7 @@ export function Footer() {
       <footer className="border-t border-t-border" style={{ background: fc.background || 'transparent', ...footerVarStyle }}>
         <div className="max-w-[var(--content-max-width)] mx-auto py-10 px-4 flex flex-col items-center gap-4">
           <div style={footerLogoWrap}><FooterLogo /></div>
-          <span className="text-sm text-[var(--footer-fg)]">{fc.bottom?.copyright || copyrightText}</span>
+          <span className="text-sm text-[var(--footer-fg)]">{copyrightText || fc.bottom?.copyright}</span>
         </div>
       </footer>
     )

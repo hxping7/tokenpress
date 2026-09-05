@@ -105,7 +105,8 @@
               "type": "string"
             },
             "text": {
-              "type": "string"
+              "type": "string",
+              "description": "文字 Logo 的兜底文案。站点名称唯一来源是 site_settings.site_name，本字段仅在站点名为空时生效，禁止在此写死站点品牌名"
             },
             "position": {
               "type": "string",
@@ -469,7 +470,8 @@
               "type": [
                 "string",
                 "null"
-              ]
+              ],
+              "description": "版权文案的兜底值。唯一来源是 site_settings.copyright_text，本字段仅在站点未配置版权时生效，禁止在此写死站点版权"
             },
             "social": {
               "type": "array"
