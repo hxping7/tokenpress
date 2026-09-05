@@ -233,17 +233,22 @@ export default async function HomePage() {
   return (
     <>
       <WelcomeOverlay enabled={welcomePage.enabled} htmlPath={welcomePage.htmlPath} />
-      <HomeSections
-        heroSlides={heroSlides}
-        heroSize={finalHeroSize}
-        heroInterval={finalInterval}
-        ctaButtons={ctaButtons}
-        heroEnabled={heroEnabled}
-        heroAutoplay={heroAutoplay}
-        heroShowCTA={heroShowCTA}
-        recentArticles={recentArticles}
-        homeBanners={homeBanners}
-      />
+      {/* 首页内容从固定 Header 下方开始：Header 实际高度随风格包布局变化
+          （blog/enterprise 单行 ≈60px，design center/split 两行 ≈108px），
+          靠 --header-actual-height 动态避让，避免 Hero 顶部被遮挡 */}
+      <div className="pt-[var(--header-actual-height)]">
+        <HomeSections
+          heroSlides={heroSlides}
+          heroSize={finalHeroSize}
+          heroInterval={finalInterval}
+          ctaButtons={ctaButtons}
+          heroEnabled={heroEnabled}
+          heroAutoplay={heroAutoplay}
+          heroShowCTA={heroShowCTA}
+          recentArticles={recentArticles}
+          homeBanners={homeBanners}
+        />
+      </div>
     </>
   )
 }
