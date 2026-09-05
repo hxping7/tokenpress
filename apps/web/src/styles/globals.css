@@ -28,6 +28,15 @@
     --btn-radius: 0.5rem;
   }
 
+  /* ===== 标题排版（风格包 token 驱动，h3 及以下保持正文 sans） =====
+     --brand-font：标题字体族（design=衬线栈；blog/enterprise=Inter 系，与正文一致无视觉变化）
+     --heading-tracking：标题字距（design=-0.01em 收紧）
+     未定义时全部回退现状（inherit / normal），三包互不影响 */
+  h1, h2 {
+    font-family: var(--brand-font, inherit);
+    letter-spacing: var(--heading-tracking, inherit);
+  }
+
   /* ===== 导航菜单项（由风格包 header.nav.colors 驱动） ===== */
   .nav-item {
     display: inline-flex;

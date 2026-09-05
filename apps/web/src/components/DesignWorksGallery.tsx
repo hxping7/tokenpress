@@ -16,6 +16,8 @@ interface Props {
   mode?: 'standalone' | 'embedded'
   /** 风格包 templates.design-gallery 默认 + 用户覆盖（columns/aspect/gap） */
   config?: Record<string, unknown> | null
+  /** 外层已渲染筛选侧栏（page-sidebar-* 布局）时隐藏自带分类 pill，避免重复 */
+  hideFilters?: boolean
 }
 
 interface WorkItem {
@@ -28,7 +30,7 @@ interface WorkItem {
   meta?: any
 }
 
-export function DesignWorksGallery({ section, sectionPath, title, description, mode = 'standalone', config }: Props) {
+export function DesignWorksGallery({ section, sectionPath, title, description, mode = 'standalone', config, hideFilters = false }: Props) {
   const isEmbedded = mode === 'embedded'
   const { locale } = useLocaleStore()
   const cfg = config || {}
@@ -110,8 +112,8 @@ export function DesignWorksGallery({ section, sectionPath, title, description, m
         </div>
       )}
 
-      {/* embedded 模式：只保留分类筛选，紧凑顶部 */}
-      {isEmbedded && categories.length > 0 && (
+      {/* embedded 模式：只保留分类筛选，紧凑顶部（外层已有筛选侧栏时隐藏） */}
+      {isEmbedded && !hideFilters && categories.length > 0 && (
         <div className="max-w-[1200px] mx-auto px-4 pb-6">
           <div className="flex flex-wrap gap-2">
             <FilterPill active={activeCat === null} onClick={() => onSelectCat(null)}>

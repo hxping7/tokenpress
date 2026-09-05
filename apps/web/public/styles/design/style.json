@@ -2,7 +2,7 @@
   "$": {
     "id": "design",
     "name": "设计师作品集",
-    "description": "设计师作品集风格：衬线标题、超大圆角、居中 Split 导航、满屏大图 Hero、零边栏 + 瀑布流板块、沉浸式文章、极简单行页脚。",
+    "description": "手办原型师画廊风格：暖米白摄影棚背景、漆红点缀、衬线细字重标题、左分类栏 + 瀑布流作品网格、单列沉浸阅读、简洁页脚。",
     "version": "1.1.0",
     "author": "token00",
     "preview": "/styles/design/preview.png",
@@ -16,37 +16,39 @@
   },
   "design": {
     "tokens": {
-      "--bg-primary": "#ffffff",
-      "--bg-secondary": "#fafafa",
-      "--bg-tertiary": "#f0f0f0",
+      "--bg-primary": "#f5f3ee",
+      "--bg-secondary": "#ffffff",
+      "--bg-tertiary": "#efeae0",
       "--text-primary": "#1a1a1a",
-      "--text-secondary": "#555555",
-      "--text-muted": "#999999",
-      "--accent-blue": "#d71920",
-      "--accent-purple": "#0a0a0a",
-      "--accent-blue-dim": "#b01015",
-      "--border-color": "rgba(0,0,0,0.08)",
-      "--hover-bg": "rgba(215,25,32,0.06)",
-      "--gradient-from": "#d71920",
-      "--gradient-via": "#0a0a0a",
-      "--gradient-to": "#d71920",
+      "--text-secondary": "#4a4a48",
+      "--text-muted": "#8c8880",
+      "--accent-blue": "#a8311f",
+      "--accent-purple": "#7c2418",
+      "--accent-blue-dim": "#7c2418",
+      "--border-color": "rgba(163,153,133,0.4)",
+      "--hover-bg": "rgba(168,49,31,0.06)",
+      "--gradient-from": "#a8311f",
+      "--gradient-via": "#7c2418",
+      "--gradient-to": "#5c1810",
       "--grid-pattern": "transparent",
-      "--selection-bg": "rgba(215,25,32,0.18)",
-      "--scrollbar-thumb": "rgba(215,25,32,0.25)",
-      "--scrollbar-thumb-hover": "rgba(215,25,32,0.45)",
-      "--focus-ring": "rgba(215,25,32,0.5)",
-      "--card-border-hover": "rgba(215,25,32,0.3)",
-      "--section-divider": "rgba(215,25,32,0.15)",
+      "--selection-bg": "rgba(168,49,31,0.14)",
+      "--scrollbar-thumb": "rgba(168,49,31,0.25)",
+      "--scrollbar-thumb-hover": "rgba(168,49,31,0.45)",
+      "--focus-ring": "rgba(168,49,31,0.5)",
+      "--card-border-hover": "rgba(168,49,31,0.35)",
+      "--section-divider": "rgba(168,49,31,0.15)",
       "--btn-glow-from": "transparent",
       "--btn-glow-to": "transparent",
-      "--content-max-width": "1320px",
+      "--content-max-width": "1280px",
       "--reading-max-width": "760px",
       "--header-height": "72px",
-      "--brand-font": "Inter, Helvetica Neue, sans-serif",
-      "--radius-card": "20px",
-      "--shadow-card": "0 8px 30px rgba(0,0,0,0.06)"
+      "--brand-font": "\"Cormorant Garamond\", Georgia, \"Times New Roman\", \"Songti SC\", \"Noto Serif SC\", \"SimSun\", serif",
+      "--radius-card": "6px",
+      "--shadow-card": "0 1px 2px rgba(30,20,10,.04), 0 8px 32px rgba(30,20,10,.04)",
+      "--heading-weight": "400",
+      "--heading-tracking": "-0.01em"
     },
-    "theme": ":root{\n  --bg-primary:#ffffff;\n  --bg-secondary:#fafafa;\n  --bg-tertiary:#f0f0f0;\n  --text-primary:#1a1a1a;\n  --text-secondary:#555555;\n  --text-muted:#999999;\n  --accent-blue:#d71920;\n  --accent-purple:#0a0a0a;\n  --accent-blue-dim:#b01015;\n  --border-color:rgba(0,0,0,0.08);\n  --hover-bg:rgba(215,25,32,0.06);\n  --gradient-from:#d71920;\n  --gradient-via:#0a0a0a;\n  --gradient-to:#d71920;\n  --content-max-width:1320px;\n  --reading-max-width:760px;\n  --header-height:72px;\n  --brand-font:\"Inter\",\"Helvetica Neue\",sans-serif;\n  --radius-card:20px;\n  --shadow-card:0 8px 30px rgba(0,0,0,0.06);\n}"
+    "theme": ":root{--bg-primary:#f5f3ee;--bg-secondary:#ffffff;--bg-tertiary:#efeae0;--text-primary:#1a1a1a;--text-secondary:#4a4a48;--text-muted:#8c8880;--accent-blue:#a8311f;--accent-purple:#7c2418;--accent-blue-dim:#7c2418;--border-color:rgba(163,153,133,0.4);--hover-bg:rgba(168,49,31,0.06);--gradient-from:#a8311f;--gradient-via:#7c2418;--gradient-to:#5c1810;--grid-pattern:transparent;--selection-bg:rgba(168,49,31,0.14);--scrollbar-thumb:rgba(168,49,31,0.25);--scrollbar-thumb-hover:rgba(168,49,31,0.45);--focus-ring:rgba(168,49,31,0.5);--card-border-hover:rgba(168,49,31,0.35);--section-divider:rgba(168,49,31,0.15);--btn-glow-from:transparent;--btn-glow-to:transparent;--content-max-width:1280px;--reading-max-width:760px;--header-height:72px;--brand-font:\"Cormorant Garamond\", Georgia, \"Times New Roman\", \"Songti SC\", \"Noto Serif SC\", \"SimSun\", serif;--radius-card:6px;--shadow-card:0 1px 2px rgba(30,20,10,.04), 0 8px 32px rgba(30,20,10,.04);--heading-weight:400;--heading-tracking:-0.01em;}"
   },
   "header": {
     "variant": "sticky-glass",
@@ -54,22 +56,22 @@
     "logo": {
       "type": "text",
       "text": "TokenPress",
-      "position": "center",
+      "position": "left",
       "height": 28,
       "link": "/"
     },
     "nav": {
       "source": "sections",
       "align": "center",
-      "style": "split",
+      "style": "underline",
       "icons": {},
       "colors": {
-        "text": "#1a1a1a",
-        "hoverBg": "rgba(215,25,32,0.06)",
-        "hoverText": "#0a0a0a",
-        "activeBg": "#d71920",
+        "text": "#4a4a48",
+        "hoverBg": "rgba(168,49,31,0.06)",
+        "hoverText": "#1a1a1a",
+        "activeBg": "#a8311f",
         "activeText": "#ffffff",
-        "barBg": "rgba(255,255,255,0.7)",
+        "barBg": "rgba(245,243,238,0.85)",
         "barText": "#1a1a1a"
       }
     },
@@ -100,12 +102,12 @@
         "showWhen": "loggedIn"
       }
     ],
-    "background": "rgba(255,255,255,0.7)",
-    "borderBottom": "1px solid rgba(0,0,0,0.06)"
+    "background": "rgba(245,243,238,0.85)",
+    "borderBottom": "1px solid rgba(163,153,133,0.4)"
   },
   "hero": {
     "enabled": true,
-    "size": "fullscreen",
+    "size": "standard",
     "autoplay": true,
     "interval": 5,
     "showCTA": false,
@@ -131,48 +133,47 @@
       ]
     },
     "section": {
-      "layout": "none",
+      "layout": "page-sidebar-left",
       "hero": {
         "enabled": false
       },
       "sidebar": {
-        "enabled": false,
-        "sticky": false
+        "enabled": true,
+        "sticky": true
       },
       "list": {
         "layout": "masonry",
-        "columns": 2,
+        "columns": 3,
         "showThumbnail": true,
         "showExcerpt": false,
         "cardStyle": "clean"
       },
       "subcategory": {
         "enabled": true,
-        "position": "top",
-        "style": "pill",
-        "columns": 3,
+        "position": "sidebar",
+        "style": "list",
         "showCount": true
       }
     },
     "article": {
-      "layout": "immersive",
+      "layout": "single",
       "showTOC": false,
       "showAuthor": true,
       "sidebar": "none",
-      "maxWidth": 760,
-      "hero": "cover"
+      "maxWidth": 760
     },
     "list": {
       "layout": "masonry",
       "columns": 2
     },
     "category": {
-      "layout": "none",
+      "layout": "page-sidebar-left",
       "hero": {
         "enabled": false
       },
       "sidebar": {
-        "enabled": false
+        "enabled": true,
+        "sticky": true
       },
       "list": {
         "layout": "masonry",
@@ -183,8 +184,8 @@
       },
       "subcategory": {
         "enabled": true,
-        "position": "top",
-        "style": "pill",
+        "position": "sidebar",
+        "style": "list",
         "showCount": true
       }
     },
@@ -238,7 +239,7 @@
     }
   },
   "footer": {
-    "variant": "minimal",
+    "variant": "simple",
     "columns": [],
     "friendLinks": {
       "show": false,
@@ -250,8 +251,8 @@
       "social": [],
       "showBackToTop": true
     },
-    "background": "#ffffff",
-    "textColor": "#6b6b6b"
+    "background": "#f5f3ee",
+    "textColor": "#4a4a48"
   },
   "features": {
     "readingProgressBar": false,

@@ -22,8 +22,9 @@ module.exports = {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       fontSize: {
-        'heading-1': ['2.25rem', { lineHeight: '2.75rem', fontWeight: '700' }],
-        'heading-2': ['1.875rem', { lineHeight: '2.25rem', fontWeight: '700' }],
+        // 字重走 --heading-weight：风格包可覆盖（design 包 400 细字重），未定义回退 700
+        'heading-1': ['2.25rem', { lineHeight: '2.75rem', fontWeight: 'var(--heading-weight, 700)' }],
+        'heading-2': ['1.875rem', { lineHeight: '2.25rem', fontWeight: 'var(--heading-weight, 700)' }],
       },
     },
   },

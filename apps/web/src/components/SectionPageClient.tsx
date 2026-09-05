@@ -304,6 +304,7 @@ export function SectionPageClient({
             description={description}
             mode="embedded"
             config={tplCfg}
+            hideFilters={sidebarEnabled}
           />
         )
     }
