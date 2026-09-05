@@ -33,6 +33,16 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
   const rightSidebar = sidebarType === 'related'
   const isSingle = articleLayout === 'single'
   const isMagazine = articleLayout === 'magazine'
+  // 栅格列模板按**实际渲染**的列数生成：若 TOC/侧栏被关闭，仍用三列模板会让
+  // 唯一的 main 子元素落到第一列（本该是 TOC 的 200px 窄列），正文被挤到最左边。
+  const gridColsClass =
+    leftTOC && rightSidebar
+      ? 'lg:grid-cols-[200px_1fr_240px]'
+      : leftTOC
+        ? 'lg:grid-cols-[200px_1fr]'
+        : 'lg:grid-cols-[1fr_240px]'
+  // 无 TOC 也无侧栏（如 design 包的 immersive）→ 单列居中阅读
+  const useSingleColumn = isSingle || (!leftTOC && !rightSidebar)
 
   return (
     <article className="min-h-screen pt-16">
@@ -40,7 +50,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
       <ArticleHeader article={article} section={section} sectionLabel={sectionLabel} shareConfig={shareConfig} />
 
       <div className="max-w-[var(--content-max-width)] mx-auto px-4 py-12">
-        {isSingle ? (
+        {useSingleColumn ? (
           <div className="mx-auto" style={{ maxWidth: cfgMaxWidth }}>
             {article.coverImage && (
               <Image
@@ -86,7 +96,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr_240px] gap-6">
+          <div className={`grid grid-cols-1 ${gridColsClass} gap-6`}>
             {leftTOC && (
               <aside className="hidden lg:block">
                 <div className="sticky top-20">
