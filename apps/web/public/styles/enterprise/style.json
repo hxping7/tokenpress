@@ -8,7 +8,9 @@
     "preview": "/styles/enterprise/preview.png",
     "builtin": true,
     "defaultTheme": "light",
-    "compatibleThemes": ["light"],
+    "compatibleThemes": [
+      "light"
+    ],
     "tags": [
       "enterprise",
       "corporate",
@@ -88,12 +90,6 @@
         "type": "theme",
         "icon": "palette",
         "style": "icon"
-      },
-      {
-        "type": "admin",
-        "icon": "dashboard",
-        "style": "outline",
-        "showWhen": "loggedIn"
       },
       {
         "type": "logout",

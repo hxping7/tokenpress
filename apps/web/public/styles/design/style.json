@@ -97,12 +97,6 @@
           "zh": "中文",
           "en": "EN"
         }
-      },
-      {
-        "type": "admin",
-        "icon": "dashboard",
-        "style": "ghost",
-        "showWhen": "loggedIn"
       }
     ],
     "background": "rgba(245,243,238,0.85)",

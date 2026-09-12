@@ -215,10 +215,10 @@ function actionClass(style: ActionStyle, dark = false): string {
 }
 
 // 未配置 actions 时的经典回退（保持历史外观）
+// 注：不含 admin 入口——后台入口不对外展示，需要时直接访问 /admin（或由风格包显式配置 admin 动作）
 const CLASSIC_ACTIONS: HeaderAction[] = [
   { type: 'theme', icon: 'palette', style: 'icon' },
   { type: 'language', icon: 'globe', style: 'ghost', label: { zh: '中文', en: 'EN' } },
-  { type: 'admin', icon: 'dashboard', style: 'outline', showWhen: 'loggedIn' },
   { type: 'logout', icon: 'logout', style: 'ghost', showWhen: 'loggedIn' },
   { type: 'login', icon: 'user', style: 'outline', showWhen: 'loggedOut' },
 ]

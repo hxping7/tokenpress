@@ -99,12 +99,6 @@
         }
       },
       {
-        "type": "admin",
-        "icon": "dashboard",
-        "style": "outline",
-        "showWhen": "loggedIn"
-      },
-      {
         "type": "logout",
         "icon": "logout",
         "style": "ghost",
