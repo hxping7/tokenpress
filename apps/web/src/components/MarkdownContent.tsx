@@ -17,6 +17,8 @@ function generateHeadingId(text: string): string {
 
 interface MarkdownContentProps {
   content: string
+  /** 首字下沉（风格包 layouts.article.dropcap.enabled） */
+  dropcap?: boolean
 }
 
 function extractTextFromChildren(children: React.ReactNode): string {
@@ -91,7 +93,7 @@ function CodeBlock({ className, children }: { className?: string; children: Reac
   )
 }
 
-export function MarkdownContent({ content }: MarkdownContentProps) {
+export function MarkdownContent({ content, dropcap }: MarkdownContentProps) {
   const headingCounter = useMemo(() => ({} as Record<string, number>), [])
   const [isDark, setIsDark] = useState(true)
   const themeRef = useRef(isDark)
@@ -129,7 +131,7 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
   const proseClass = isDark ? 'prose-invert' : ''
 
   return (
-    <div className={`prose prose-lg max-w-none ${proseClass}
+    <div className={`prose prose-lg max-w-none ${proseClass} ${dropcap ? 'dropcap' : ''}
       prose-headings:text-t-text-primary prose-headings:font-semibold
       prose-h1:text-3xl prose-h1:mt-8 prose-h1:mb-4
       prose-h2:text-2xl prose-h2:mt-6 prose-h2:mb-3

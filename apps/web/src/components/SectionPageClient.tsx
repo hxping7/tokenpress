@@ -20,6 +20,9 @@ import { MagazineView } from './templates/MagazineView'
 import { CarouselView } from './templates/CarouselView'
 import { DesignWorksGallery } from './DesignWorksGallery'
 
+/** 文章列表视图形态：masonry 也是合法值（来自风格包 layouts.*.list.layout） */
+type ListView = 'grid' | 'list' | 'masonry'
+
 interface SectionPageClientProps {
   section: string
   sectionPath: string
@@ -40,7 +43,7 @@ function ArticleListView({
   articles: any[]
   listCfg: any
   category?: string
-  view?: 'grid' | 'list'
+  view?: ListView
 }) {
   // view 优先（来自文章列表的 grid/list 切换按钮），否则用风格包配置的 listCfg.layout
   const listLayout = view || listCfg?.layout || 'grid'
@@ -169,8 +172,7 @@ export function SectionPageClient({
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  // 文章列表视图偏好（grid/list）：仅 article-list 模板使用，默认「列表」(左缩略图+右标题描述)
-  const [view, setView] = useState<'grid' | 'list'>('list')
+  // 注意：view 的初始值依赖 listCfg（风格包 layouts.*.list.layout），必须在 listCfg 解析后声明
   const searchParams = useSearchParams()
   const category = searchParams.get('category') || undefined
 
@@ -219,6 +221,13 @@ export function SectionPageClient({
   const listCfg: any = pageCfg.list || {}
   // 二级分类配置（风格包 section.subcategory：位置 sidebar/top/tab/none，样式 pill/card/list/grid）
   const subcategoryCfg: any = pageCfg.subcategory || {}
+
+  // 视图初始值：尊重风格包 list.layout（masonry/grid/list），不再被代码写死的 'list' 覆盖。
+  // 用户点切换按钮后以用户选择为准（view 优先于 listCfg，见 listLayout 计算）。
+  const [view, setView] = useState<ListView>(() => {
+    const l = String(listCfg?.layout || '')
+    return l === 'masonry' || l === 'list' || l === 'grid' ? (l as ListView) : 'grid'
+  })
   const heroTitle = heroCfg.titleFrom === 'section'
     ? title
     : heroCfg.titleFrom === 'category'
@@ -432,6 +441,8 @@ export function SectionPageClient({
           onSearchInputChange={setSearchInput}
           onSearch={handleSearch}
           activeCategory={category}
+          label={sidebarCfg.label}
+          metaBlock={sidebarCfg.metaBlock}
         />
       </aside>
     )

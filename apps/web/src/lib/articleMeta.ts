@@ -9,6 +9,8 @@ export interface ArticleMeta {
   authorAvatar?: string | null
   category?: string | null
   tags?: string[]
+  /** 作品编号（可覆盖按序派生的 N° 编号），如 7 或 "07" */
+  number?: number | string | null
   externalUrl?: string | null
   galleryImages?: string[]
 }
@@ -49,6 +51,7 @@ export function parseArticleMeta(meta: unknown): ArticleMeta {
     authorAvatar: m.authorAvatar ?? null,
     category: m.category ?? null,
     tags: asStringArray(m.tags),
+    number: m.number ?? null,
     externalUrl: m.externalUrl ?? null,
     galleryImages: asStringArray(m.galleryImages),
   }

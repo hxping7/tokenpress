@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { HeroCarousel, type HeroCtaButton } from '@/components/HeroCarousel'
 import { ArticleCard } from '@/components/ArticleCard'
@@ -57,8 +57,8 @@ function FeaturesSection({ variant }: { variant?: string }) {
   )
 }
 
-function ArticleListSection({ articles, columns = 3, limit, showViewToggle = true, variant, source }: {
-  articles: Article[]; columns?: number; limit?: number; showViewToggle?: boolean; variant?: string; source?: string
+function ArticleListSection({ articles, columns = 3, limit, showViewToggle = true, variant, source, heading }: {
+  articles: Article[]; columns?: number; limit?: number; showViewToggle?: boolean; variant?: string; source?: string; heading?: any
 }) {
   const { locale } = useLocaleStore()
   // source:featured → 仅取精选；无精选时回退到全部，避免空白
@@ -71,7 +71,19 @@ function ArticleListSection({ articles, columns = 3, limit, showViewToggle = tru
   const isMasonry = variant === 'masonry'
   const colCount = variant === 'grid-2' ? 2 : variant === 'grid-4' ? 4 : columns
 
-  const heading = (
+  // 风格包配了 heading 就用区块标题（可自定义 label/title/more）；否则回退默认「最新文章」
+  const headingNode = heading ? (
+    <BlockHeading
+      cfg={heading}
+      locale={locale}
+      right={
+        <>
+          <SearchBar />
+          {showViewToggle && <ViewToggle />}
+        </>
+      }
+    />
+  ) : (
     <div className="flex items-center justify-between mb-8">
       <h2 className="text-2xl font-bold text-t-text-primary">{locale === 'en' ? 'Latest articles' : '最新文章'}</h2>
       <div className="flex items-center gap-4">
@@ -87,7 +99,7 @@ function ArticleListSection({ articles, columns = 3, limit, showViewToggle = tru
     return (
       <section className="py-8 px-4">
         <div className="max-w-[var(--content-max-width)] mx-auto">
-          {heading}
+          {headingNode}
           <div className="w-full" style={{ columnCount: colCount, columnGap: '1.5rem' }}>
             {shown.map((a) => (
               <div key={a.id} className="break-inside-avoid mb-6">
@@ -104,7 +116,7 @@ function ArticleListSection({ articles, columns = 3, limit, showViewToggle = tru
   return (
     <section className="py-8 px-4">
       <div className="max-w-[var(--content-max-width)] mx-auto">
-        {heading}
+        {headingNode}
         <div className={`grid grid-cols-1 ${colClass} gap-6`}>
           {shown.map((a) => <ArticleCard key={a.id} article={a} />)}
         </div>
@@ -169,7 +181,64 @@ function resolveLabel(label: any, locale: string): string {
   return ''
 }
 
-function CustomBlockSection({ block }: { block: any }) {
+/**
+ * 通用区块标题（风格包可配）：{ label, title, more:{ label, href } }
+ * 任何首页区块都可通过 sec.heading 声明；未配则各区块回退自身默认标题。
+ */
+function BlockHeading({ cfg, locale, right }: { cfg?: any; locale: string; right?: ReactNode }) {
+  if (!cfg) return null
+  const label = resolveLabel(cfg.label, locale)
+  const title = resolveLabel(cfg.title, locale)
+  const more = cfg.more && typeof cfg.more === 'object' ? cfg.more : null
+  if (!label && !title && !more && !right) return null
+  return (
+    <div className="mb-8 pb-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          {label && (
+            <div className="text-xs font-semibold tracking-[0.2em] uppercase text-t-accent-blue">{label}</div>
+          )}
+          {title && (
+            <h2
+              className="mt-1.5 text-2xl md:text-3xl text-t-text-primary"
+              style={{
+                fontFamily: 'var(--brand-font, inherit)',
+                fontWeight: 'var(--heading-weight, 700)',
+                letterSpacing: 'var(--heading-tracking, inherit)',
+              }}
+            >
+              {title}
+            </h2>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          {right}
+          {more && (
+            <Link href={sanitizeHref(more.href)} className="text-sm text-t-accent-blue hover:underline">
+              {resolveLabel(more.label, locale) || (locale === 'en' ? 'View all' : '查看全部')} →
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** 标题内斜体强调：把 titleAccent 命中的子串渲染为 accent 色斜体 */
+function renderTitle(title: string, accent?: string) {
+  const a = typeof accent === 'string' ? accent : ''
+  if (!a || !title.includes(a)) return <>{title}</>
+  const i = title.indexOf(a)
+  return (
+    <>
+      {title.slice(0, i)}
+      <em className="italic" style={{ color: 'var(--accent-blue)' }}>{a}</em>
+      {title.slice(i + a.length)}
+    </>
+  )
+}
+
+function CustomBlockSection({ block, ctx, heading }: { block: any; ctx?: HomeCtx; heading?: any }) {
   const { locale } = useLocaleStore()
   const p = block || {}
   const columns = Math.min(4, Math.max(2, Number(p.columns || 3)))
@@ -182,45 +251,162 @@ function CustomBlockSection({ block }: { block: any }) {
   // size:'hero' → 超大标题首屏（企业官网风，参考 Tezign 居中超大黑标题）
   const isHero = p.size === 'hero'
 
+  // ===== Showcase：左文右图首屏（手办设计师原型风格）=====
+  // split:  { enabled, ratio: "1/1.4", reverse }  → 左右分栏
+  // media:  { src|url, source:'latest', section, aspect, alt, badge, caption:{ over, title } }
+  // stats:  [{ value, label }]                    → 统计数字组
+  // titleAccent: 标题中需要斜体 accent 强调的子串
+  const split = p.split && typeof p.split === 'object' && p.split.enabled ? p.split : null
+  const media = p.media && typeof p.media === 'object' ? p.media : null
+  const stats: any[] = Array.isArray(p.stats) ? p.stats : []
+  const mediaSrc: string | null =
+    (typeof media?.src === 'string' && media.src) ||
+    (typeof media?.url === 'string' && media.url) ||
+    (media?.source === 'latest'
+      ? (ctx?.recentArticles?.find((a: any) => a.coverImage)?.coverImage as string) || null
+      : null)
+  const mediaAspect = typeof media?.aspect === 'string' ? media.aspect : '4/5'
+  const splitRatio = typeof split?.ratio === 'string' ? split.ratio : '1/1.4'
+  const [l, r] = splitRatio.split('/')
+  const splitCols = `${l || '1'}fr ${r || '1.4'}fr`
+
+  const titleNode = p.title ? (
+    <h2
+      className={`font-bold text-t-text-primary ${isHero ? 'text-4xl md:text-6xl' : 'text-2xl md:text-3xl'} tracking-tight leading-tight ${split ? '' : 'max-w-4xl mx-auto'}`}
+      style={{ fontFamily: 'var(--brand-font, inherit)', fontWeight: 'var(--heading-weight, 700)' }}
+    >
+      {renderTitle(p.title, p.titleAccent)}
+    </h2>
+  ) : null
+
+  const introNode = p.intro ? (
+    <p className={`text-t-text-secondary ${split ? '' : 'mx-auto'} ${isHero ? 'mt-6 text-base md:text-lg max-w-2xl' : 'mt-3 max-w-2xl'}`}>
+      {p.intro}
+    </p>
+  ) : null
+
+  const statsNode = stats.length > 0 ? (
+    <div
+      className={`flex flex-wrap gap-8 mt-8 pt-6 ${split ? '' : 'justify-center'}`}
+      style={{ borderTop: '1px solid var(--border-color)' }}
+    >
+      {stats.map((s: any, i: number) => (
+        <div key={i} className={split ? '' : 'text-center'}>
+          <div className="text-xl md:text-2xl text-t-text-primary" style={{ fontFamily: 'var(--brand-font, inherit)' }}>
+            {String(s.value ?? '')}
+          </div>
+          <div className="mt-1 text-xs tracking-wide text-t-text-muted">{resolveLabel(s.label, locale)}</div>
+        </div>
+      ))}
+    </div>
+  ) : null
+
+  const ctasNode = (cta || cta2) ? (
+    <div className={`flex gap-3 flex-wrap ${split ? '' : 'justify-center'} ${isHero ? 'mt-10' : 'mt-6'}`}>
+      {cta && (
+        <Link
+          href={sanitizeHref(cta.href)}
+          className={`px-6 py-3 ${cta.style === 'outline' ? 'btn-pack-outline' : 'btn-pack-primary'}`}
+        >
+          {resolveLabel(cta.label, locale)}
+        </Link>
+      )}
+      {cta2 && (
+        <Link
+          href={sanitizeHref(cta2.href)}
+          className={`px-6 py-3 ${cta2.style === 'primary' ? 'btn-pack-primary' : 'btn-pack-outline'}`}
+        >
+          {resolveLabel(cta2.label, locale)}
+        </Link>
+      )}
+    </div>
+  ) : null
+
+  const mediaNode = mediaSrc ? (
+    <div
+      className="relative overflow-hidden"
+      style={{ aspectRatio: mediaAspect, background: 'var(--bg-tertiary)', boxShadow: 'var(--shadow-card)' }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={mediaSrc} alt={resolveLabel(media?.alt, locale) || ''} className="w-full h-full object-cover" />
+      {media?.badge && (
+        <div
+          className="absolute top-4 left-4 px-3 py-1.5 text-[10px] font-semibold uppercase"
+          style={{ background: 'var(--bg-secondary)', color: 'var(--accent-blue)', letterSpacing: '0.2em' }}
+        >
+          {resolveLabel(media.badge, locale)}
+        </div>
+      )}
+      {(media?.caption?.over || media?.caption?.title) && (
+        <div
+          className="absolute bottom-0 left-0 right-0 p-6"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,0))', color: '#fff' }}
+        >
+          {media.caption.over && (
+            <div className="mb-1.5 text-[11px] uppercase opacity-80" style={{ letterSpacing: '0.2em' }}>
+              {resolveLabel(media.caption.over, locale)}
+            </div>
+          )}
+          {media.caption.title && (
+            <div className="text-lg md:text-xl" style={{ fontFamily: 'var(--brand-font, inherit)' }}>
+              {resolveLabel(media.caption.title, locale)}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  ) : null
+
+  // signature：斜体 accent 签名（设计师资历/个人站常用，如 "— HXP"）
+  const signatureNode = p.signature ? (
+    <div
+      className={`mt-8 italic text-xl md:text-2xl ${split ? '' : 'text-center'}`}
+      style={{ fontFamily: 'var(--brand-font, inherit)', color: 'var(--accent-blue)' }}
+    >
+      {resolveLabel(p.signature, locale)}
+    </div>
+  ) : null
+
+  const hasText = !!(p.eyebrow || p.title || p.intro || stats.length > 0 || cta || cta2)
+  const textInner = (
+    <div className={split ? '' : `text-center ${isHero ? 'mb-0' : 'mb-10'}`}>
+      {p.eyebrow && (
+        <div className="text-xs font-semibold tracking-widest uppercase text-t-accent-blue mb-2">{p.eyebrow}</div>
+      )}
+      {titleNode}
+      {introNode}
+      {statsNode}
+      {ctasNode}
+      {signatureNode}
+    </div>
+  )
+
   return (
     <section className={`${isHero ? 'pt-24 pb-20 md:pt-32 md:pb-28' : 'py-12'} px-4`} style={bg ? { background: bg } : undefined}>
       <div className="max-w-[var(--content-max-width)] mx-auto">
-        {(p.eyebrow || p.title || p.intro) && (
-          <div className={`text-center ${isHero ? 'mb-0' : 'mb-10'}`}>
-            {p.eyebrow && (
-              <div className="text-xs font-semibold tracking-widest uppercase text-t-accent-blue mb-2">{p.eyebrow}</div>
-            )}
-            {p.title && (
-              <h2 className={`font-bold text-t-text-primary ${isHero ? 'text-4xl md:text-6xl tracking-tight leading-tight max-w-4xl mx-auto' : 'text-2xl md:text-3xl'}`}>
-                {p.title}
-              </h2>
-            )}
-            {p.intro && (
-              <p className={`text-t-text-secondary mx-auto ${isHero ? 'mt-6 text-base md:text-lg max-w-2xl' : 'mt-3 max-w-2xl'}`}>
-                {p.intro}
-              </p>
-            )}
-            {(cta || cta2) && (
-              <div className={`flex justify-center gap-3 flex-wrap ${isHero ? 'mt-10' : 'mt-6'}`}>
-                {cta && (
-                  <Link
-                    href={sanitizeHref(cta.href)}
-                    className={`px-6 py-3 ${cta.style === 'outline' ? 'btn-pack-outline' : 'btn-pack-primary'}`}
-                  >
-                    {resolveLabel(cta.label, locale)}
-                  </Link>
-                )}
-                {cta2 && (
-                  <Link
-                    href={sanitizeHref(cta2.href)}
-                    className={`px-6 py-3 ${cta2.style === 'primary' ? 'btn-pack-primary' : 'btn-pack-outline'}`}
-                  >
-                    {resolveLabel(cta2.label, locale)}
-                  </Link>
-                )}
-              </div>
+        {heading && <BlockHeading cfg={heading} locale={locale} />}
+        {split ? (
+          <div
+            className="grid items-center gap-10 md:gap-16 md:grid-cols-[var(--split-cols)]"
+            style={{ ['--split-cols' as any]: splitCols }}
+          >
+            {split.reverse ? (
+              <>
+                {mediaNode}
+                {hasText ? textInner : null}
+              </>
+            ) : (
+              <>
+                {hasText ? textInner : null}
+                {mediaNode}
+              </>
             )}
           </div>
+        ) : (
+          <>
+            {hasText ? textInner : null}
+            {mediaNode}
+          </>
         )}
         {items.length > 0 && (
           <div className={`grid grid-cols-1 ${colClass} gap-6`}>
@@ -292,6 +478,7 @@ const HOMEPAGE_REGISTRY: Record<string, (sec: any, ctx: HomeCtx) => JSX.Element 
       showViewToggle={sec.props?.showViewToggle !== false}
       variant={sec.variant}
       source={sec.props?.source}
+      heading={sec.heading}
     />
   ),
   CTA: (sec) => <CtaSection variant={sec.variant} />,
@@ -302,7 +489,7 @@ const HOMEPAGE_REGISTRY: Record<string, (sec: any, ctx: HomeCtx) => JSX.Element 
       : ctx.homeBanners?.find((b) => b.enabled)
     return cfg ? <HomeBanner config={cfg} /> : null
   },
-  CustomBlock: (sec) => <CustomBlockSection block={sec.props || {}} />,
+  CustomBlock: (sec, ctx) => <CustomBlockSection block={sec.props || {}} ctx={ctx} heading={sec.heading} />,
 }
 
 export function HomeSections({

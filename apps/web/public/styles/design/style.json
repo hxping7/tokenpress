@@ -46,9 +46,12 @@
       "--radius-card": "6px",
       "--shadow-card": "0 1px 2px rgba(30,20,10,.04), 0 8px 32px rgba(30,20,10,.04)",
       "--heading-weight": "400",
-      "--heading-tracking": "-0.01em"
+      "--heading-tracking": "-0.01em",
+      "--dropcap-size": "3.6em",
+      "--dropcap-line-height": "0.9",
+      "--dropcap-margin": "8px 12px 0 0"
     },
-    "theme": ":root{--bg-primary:#f5f3ee;--bg-secondary:#ffffff;--bg-tertiary:#efeae0;--text-primary:#1a1a1a;--text-secondary:#4a4a48;--text-muted:#8c8880;--accent-blue:#a8311f;--accent-purple:#7c2418;--accent-blue-dim:#7c2418;--border-color:rgba(163,153,133,0.4);--hover-bg:rgba(168,49,31,0.06);--gradient-from:#a8311f;--gradient-via:#7c2418;--gradient-to:#5c1810;--grid-pattern:transparent;--selection-bg:rgba(168,49,31,0.14);--scrollbar-thumb:rgba(168,49,31,0.25);--scrollbar-thumb-hover:rgba(168,49,31,0.45);--focus-ring:rgba(168,49,31,0.5);--card-border-hover:rgba(168,49,31,0.35);--section-divider:rgba(168,49,31,0.15);--btn-glow-from:transparent;--btn-glow-to:transparent;--content-max-width:1280px;--reading-max-width:760px;--header-height:72px;--brand-font:\"Cormorant Garamond\", Georgia, \"Times New Roman\", \"Songti SC\", \"Noto Serif SC\", \"SimSun\", serif;--radius-card:6px;--shadow-card:0 1px 2px rgba(30,20,10,.04), 0 8px 32px rgba(30,20,10,.04);--heading-weight:400;--heading-tracking:-0.01em;}"
+    "theme": ":root{--bg-primary:#f5f3ee;--bg-secondary:#ffffff;--bg-tertiary:#efeae0;--text-primary:#1a1a1a;--text-secondary:#4a4a48;--text-muted:#8c8880;--accent-blue:#a8311f;--accent-purple:#7c2418;--accent-blue-dim:#7c2418;--border-color:rgba(163,153,133,0.4);--hover-bg:rgba(168,49,31,0.06);--gradient-from:#a8311f;--gradient-via:#7c2418;--gradient-to:#5c1810;--grid-pattern:transparent;--selection-bg:rgba(168,49,31,0.14);--scrollbar-thumb:rgba(168,49,31,0.25);--scrollbar-thumb-hover:rgba(168,49,31,0.45);--focus-ring:rgba(168,49,31,0.5);--card-border-hover:rgba(168,49,31,0.35);--section-divider:rgba(168,49,31,0.15);--btn-glow-from:transparent;--btn-glow-to:transparent;--content-max-width:1280px;--reading-max-width:760px;--header-height:72px;--brand-font:\"Cormorant Garamond\", Georgia, \"Times New Roman\", \"Songti SC\", \"Noto Serif SC\", \"SimSun\", serif;--radius-card:6px;--shadow-card:0 1px 2px rgba(30,20,10,.04), 0 8px 32px rgba(30,20,10,.04);--heading-weight:400;--heading-tracking:-0.01em;--dropcap-size:3.6em;--dropcap-line-height:0.9;--dropcap-margin:8px 12px 0 0;}"
   },
   "header": {
     "variant": "sticky-glass",
@@ -106,7 +109,7 @@
     "borderBottom": "1px solid rgba(163,153,133,0.4)"
   },
   "hero": {
-    "enabled": true,
+    "enabled": false,
     "size": "standard",
     "autoplay": true,
     "interval": 5,
@@ -118,16 +121,74 @@
       "container": "full",
       "sections": [
         {
-          "component": "Hero",
-          "variant": "fullscreen"
+          "component": "CustomBlock",
+          "props": {
+            "size": "hero",
+            "background": "#f5f3ee",
+            "split": {
+              "enabled": true,
+              "ratio": "1/1.4"
+            },
+            "eyebrow": "— FIGURE DESIGNER · 手办原型师",
+            "title": "把角色塑成收藏",
+            "titleAccent": "塑成收藏",
+            "intro": "我是一名原型设计师，专注于角色造型与限定手办的雕塑造物。在这里记录每一件作品从草图、翻模到涂装完成的全过程。",
+            "stats": [
+              {
+                "value": "12",
+                "label": "件完成作品"
+              },
+              {
+                "value": "4",
+                "label": "在制原型"
+              },
+              {
+                "value": "2024 —",
+                "label": ""
+              }
+            ],
+            "media": {
+              "source": "latest",
+              "aspect": "4/5",
+              "badge": "LATEST · 最新作品"
+            },
+            "cta": {
+              "label": "查看作品集",
+              "href": "/works",
+              "style": "primary"
+            },
+            "cta2": {
+              "label": "制作工艺",
+              "href": "/craft",
+              "style": "outline"
+            }
+          }
         },
         {
           "component": "ArticleList",
           "variant": "masonry",
+          "heading": {
+            "label": "Works · 作品",
+            "title": "近期作品",
+            "more": {
+              "label": "查看全部",
+              "href": "/works"
+            }
+          },
           "props": {
             "source": "latest",
             "limit": 12,
             "showViewToggle": false
+          }
+        },
+        {
+          "component": "CustomBlock",
+          "props": {
+            "eyebrow": "About · 关于",
+            "title": "关于",
+            "intro": "我以「原型师」自居 —— 像塑造一件收藏级手办一样对待每一个设计：起稿、打样、上色，直到它能被陈列、被注视、被带走。",
+            "background": "#efeae0",
+            "signature": "— HXP"
           }
         }
       ]
@@ -135,11 +196,22 @@
     "section": {
       "layout": "page-sidebar-left",
       "hero": {
-        "enabled": false
+        "enabled": true,
+        "title": "全部作品",
+        "description": true
       },
       "sidebar": {
         "enabled": true,
-        "sticky": true
+        "sticky": true,
+        "label": "Category · 分类",
+        "metaBlock": {
+          "title": "已收录",
+          "lines": [
+            "06 件完成作品",
+            "04 件原型制作中",
+            "自 2024 起"
+          ]
+        }
       },
       "list": {
         "layout": "masonry",
@@ -160,7 +232,10 @@
       "showTOC": false,
       "showAuthor": true,
       "sidebar": "none",
-      "maxWidth": 760
+      "maxWidth": 760,
+      "dropcap": {
+        "enabled": true
+      }
     },
     "list": {
       "layout": "masonry",
@@ -230,11 +305,15 @@
         "pill": true
       },
       "design-gallery": {
+        "layout": "masonry",
         "columns": 3,
-        "gap": "1.5rem",
-        "aspectRatio": "4/5",
-        "cardStyle": "clean",
-        "hover": "zoom"
+        "gap": "2rem",
+        "aspect": "4/5",
+        "numberPrefix": "N°",
+        "showMeta": true,
+        "showTags": true,
+        "showExcerpt": false,
+        "showAuthor": false
       }
     }
   },

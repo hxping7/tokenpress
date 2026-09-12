@@ -91,6 +91,19 @@ styles/<id>/
   - `list`：列表版式覆盖
 - `category` / `article` / `list`：分类页、文章页、列表页的结构覆盖。
 - 板块与分类另有 `template`（7 套：`article-list` / `article-grid` / `article-masonry` / `magazine` / `single-page` / `link-wall` / `design-gallery`）+ `template_config`，优先级高于风格包默认值，用于「同一站点内不同板块不同版式」。
+- `templates`：按模板 id 给出的出厂默认样式，板块可经 `template_config` 逐字段覆盖。`design-gallery` 字段：
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `layout` | `grid` | `grid` 等距网格 / `masonry` 瀑布流（CSS 多列，卡片高度可不等） |
+| `columns` | 3 | 列数 1–6 |
+| `gap` | `1.5rem` | 列间距 |
+| `aspect` | `4/3` | 封面比例；`auto` 用图片原始比例 |
+| `numberPrefix` | `N°` | 作品编号前缀（编号优先取 `meta.number`，否则按列表顺序派生 `01`/`02`…） |
+| `showMeta` | `true` | 编号 · 日期 元信息行（卡面 + 封面右上角标） |
+| `showTags` | `true` | `meta.tags` 胶囊 |
+| `showExcerpt` | `true` | 摘要 |
+| `showAuthor` | `true` | 作者行 |
 
 ### 3.5 `hero`
 

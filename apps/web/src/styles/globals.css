@@ -425,3 +425,14 @@
 @media (max-width: 639px) {
   .design-grid { grid-template-columns: 1fr; }
 }
+
+/* 首字下沉：风格包 layouts.article.dropcap.enabled 打开后给 .prose 加 dropcap 类。
+   字体/尺寸/颜色/浮动全部读 --dropcap-* token，模板可配；未配时用保守默认值。 */
+.prose.dropcap > p:first-of-type::first-letter {
+  font-family: var(--dropcap-font, var(--brand-font, inherit));
+  font-size: var(--dropcap-size, 3.4em);
+  float: var(--dropcap-float, left);
+  line-height: var(--dropcap-line-height, 0.9);
+  margin: var(--dropcap-margin, 8px 12px 0 0);
+  color: var(--dropcap-color, var(--accent-blue, inherit));
+}

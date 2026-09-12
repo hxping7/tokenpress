@@ -9,6 +9,7 @@ import { ArticleViewTracker } from '@/components/ArticleViewTracker'
 import { ArticleHeader, ArticleFooter } from '@/components/article/ArticleHeader'
 import Image from 'next/image'
 import type { ShareConfig } from '@/components/article/ArticleHeader'
+import { useStyleLayouts } from '@/components/StyleProvider'
 
 interface Props {
   article: any
@@ -43,6 +44,9 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
         : 'lg:grid-cols-[1fr_240px]'
   // 无 TOC 也无侧栏（如 design 包的 immersive）→ 单列居中阅读
   const useSingleColumn = isSingle || (!leftTOC && !rightSidebar)
+  // 首字下沉：风格包 layouts.article.dropcap.enabled
+  const styleLayouts = useStyleLayouts()
+  const dropcap = !!(styleLayouts as any)?.article?.dropcap?.enabled
 
   return (
     <article className="min-h-screen pt-[var(--header-actual-height)]">
@@ -62,7 +66,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
                 priority
               />
             )}
-            <MarkdownContent content={article.content} />
+            <MarkdownContent content={article.content} dropcap={dropcap} />
           </div>
         ) : isMagazine ? (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-6">
@@ -78,7 +82,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
                 />
               )}
               <div className="mx-auto" style={{ maxWidth: Math.max(cfgMaxWidth, 760) }}>
-                <MarkdownContent content={article.content} />
+                <MarkdownContent content={article.content} dropcap={dropcap} />
               </div>
             </main>
             {rightSidebar && (
@@ -117,7 +121,7 @@ export function StandardArticle({ article, section, sectionLabel, shareConfig, l
                 />
               )}
               <div className="max-w-[var(--reading-max-width)]">
-                <MarkdownContent content={article.content} />
+                <MarkdownContent content={article.content} dropcap={dropcap} />
               </div>
             </main>
 

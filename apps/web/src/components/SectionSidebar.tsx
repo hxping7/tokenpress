@@ -15,9 +15,13 @@ interface SectionSidebarProps {
   onSearchInputChange: (value: string) => void
   onSearch: (value: string) => void
   activeCategory?: string
+  /** 分类栏标题（风格包 layouts.section.sidebar.label），未配则用 i18n 默认 */
+  label?: string
+  /** 自定义信息块（风格包 layouts.section.sidebar.metaBlock）：{ title, lines[] } */
+  metaBlock?: any
 }
 
-export function SectionSidebar({ sectionSlug, sectionPath, search, onSearchInputChange, onSearch, activeCategory }: SectionSidebarProps) {
+export function SectionSidebar({ sectionSlug, sectionPath, search, onSearchInputChange, onSearch, activeCategory, label, metaBlock }: SectionSidebarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const { locale } = useLocaleStore()
 
@@ -66,7 +70,7 @@ export function SectionSidebar({ sectionSlug, sectionPath, search, onSearchInput
       {categories.length > 0 && (
         <div>
           <h3 className="text-xs font-semibold text-t-text-muted uppercase tracking-wider mb-3">
-            {t('sidebar.categories', locale)}
+            {label || t('sidebar.categories', locale)}
           </h3>
           <div className="space-y-1">
             <Link
@@ -120,6 +124,19 @@ export function SectionSidebar({ sectionSlug, sectionPath, search, onSearchInput
               </Link>
             ))}
           </div>
+        </div>
+      )}
+      {/* 自定义信息块（风格包 sidebar.metaBlock） */}
+      {metaBlock && (metaBlock.title || (Array.isArray(metaBlock.lines) && metaBlock.lines.length > 0)) && (
+        <div className="pt-6" style={{ borderTop: '1px solid var(--border-color)' }}>
+          {metaBlock.title && (
+            <div className="mb-2 text-sm font-medium text-t-text-primary">{metaBlock.title}</div>
+          )}
+          {(Array.isArray(metaBlock.lines) ? metaBlock.lines : []).map((line: string, i: number) => (
+            <div key={i} className="text-xs leading-relaxed text-t-text-muted">
+              {line}
+            </div>
+          ))}
         </div>
       )}
     </aside>
