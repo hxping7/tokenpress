@@ -73,7 +73,17 @@ curl -s -X PATCH -H "$AUTH" -A "$UA" -H "Content-Type: application/json" \
 curl -s -X PATCH ... -d '{"patch":[{"path":"features.welcomeOverlay","op":"delete"}]}' "$API/styles/blog"
 ```
 
-常用路径：`hero.enabled/size/interval/autoplay/showCTA/ctaButtons`、`features.readingProgressBar/backToTop/welcomeOverlay/languageSwitcher`、`footer.friendLinks.{show,source,maxItems,columns,items}`、`layouts.section.subcategory.{enabled,position,style,showCount,columns}`、`design.tokens.--accent-blue`。
+常用路径：`hero.enabled/size/interval/autoplay/showCTA/ctaButtons`、`features.readingProgressBar/backToTop/welcomeOverlay/languageSwitcher`、`footer.friendLinks.{show,source,maxItems,columns,items}`、`layouts.section.subcategory.{enabled,position,style,showCount,columns}`、`design.tokens.--accent-blue`、`header.nav.{align,style,colors.*}`。
+
+**`header.nav`**（顶部导航栏）：
+
+| 字段 | 取值 | 说明 |
+|---|---|---|
+| `align` | `left` / `center` / `right` | 水平对齐三档。`center` 用三栏 grid `1fr auto 1fr`（品牌 / 导航 / 动作），导航相对**整行**居中；`left` 品牌与导航同组靠左、动作独占右端；`right` 品牌独占左端、导航与动作同组靠右 |
+| `style` | `plain` / `pill` / `underline` | 当前项形态：`plain` 直角 / `pill` 全圆角 / `underline` 关闭填充改用 `--nav-active-text` 画底部 2px 强调线 |
+| `colors.*` | CSS 值 | 注入 `--nav-*`：`text` / `hoverBg` / `hoverText` / `activeBg` / `activeText` / `barBg` / `barText`。**填充与否由 `activeBg` 决定**（设 `transparent` 即无底色），圆角由 `style` 决定 |
+
+> 「只有强调色文字、无底色」= `activeBg: transparent` + `activeText: 强调色` + `style: plain`。`nav.dropdown` 无实现。
 
 **`layouts.templates.<模板 id>`**：按模板给出出厂默认样式（`article-list` / `article-grid` / `article-masonry` / `magazine` / `single-page` / `link-wall` / `design-gallery`），板块可经 `template_config` 逐字段覆盖。`design-gallery`（作品集瀑布流）字段：
 

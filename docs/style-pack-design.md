@@ -66,10 +66,12 @@ styles/<id>/
 | `variant` | `sticky-solid` / `sticky-glass` / `sticky-transparent` / `static` / `hidden` |
 | `height` | 数字（px） |
 | `logo` | `{ type: image\|text\|component, src, srcLight, text, position: left\|center\|right, height, link }` |
-| `nav` | `{ source: sections\|custom\|mixed, items, customItems, align: left\|center\|right, style: plain\|pill, position: top\|left, height, width, icons, showIcon, colors }` |
-| `nav.colors` | 经 `--nav-*` CSS 变量注入：`text` / `hoverBg` / `hoverText` / `activeBg` / `activeText` / `barBg` / `barText`。**当前项外观完全由 `activeBg` + `activeText` 决定**——要原型那种「只有强调色文字、无底色」就把 `activeBg` 设 `transparent`、`activeText` 设强调色；`style` 只影响圆角（`pill` 全圆 / `plain` 直角 / 缺省 8px），**不影响是否填充** |
+| `nav` | `{ source: sections\|custom\|mixed, items, customItems, align: left\|center\|right, style: plain\|pill\|underline, position: top\|left, height, width, icons, showIcon, colors }` |
+| `nav.align` | 水平对齐三档（顶部栏）：`left` 品牌与导航同组靠左、动作独占右端；`center` 三栏 grid `1fr auto 1fr`，**导航相对整行居中**（原型 `.site-header .inner` 同款）；`right` 品牌独占左端、导航与动作同组靠右 |
+| `nav.style` | 当前项形态，`plain` 直角 / `pill` 全圆角 / `underline` 关闭填充改用 `--nav-active-text` 画底部 2px 强调线 |
+| `nav.colors` | 经 `--nav-*` CSS 变量注入：`text` / `hoverBg` / `hoverText` / `activeBg` / `activeText` / `barBg` / `barText`。**填充与否由 `activeBg` 决定**：配透明即无底色；配色值则由 `style` 决定圆角（`pill` 全圆 / `plain` 直角 / 缺省 8px）。原型那种「只有强调色文字、无底色」= `activeBg: transparent` + `activeText: 强调色` + `style: plain` |
 
-> ⚠️ `nav.align` 目前**只在 nav 独立成栏时生效**：design / blog / enterprise 的 header 把 nav 与 logo 放在同一分组内，`flex-1` 无法跨栏，`center` 视觉上仍等同左对齐。`nav.dropdown` 与 `style: underline/split/minimal` **无实现**，写入不生效。
+> ⚠️ `nav.dropdown` 无实现，写入不生效。
 | `actions` | 右侧动作按钮数组 |
 | `background` / `borderBottom` | CSS 值 |
 

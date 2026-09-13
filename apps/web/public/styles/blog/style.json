@@ -63,7 +63,7 @@
     "nav": {
       "source": "sections",
       "align": "left",
-      "style": "underline",
+      "style": "pill",
       "icons": {
         "token_plan": "command",
         "githubhots": "github",

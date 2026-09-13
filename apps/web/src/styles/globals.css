@@ -69,6 +69,13 @@
   .nav-item.plain {
     border-radius: 0;
   }
+  /* underline：当前项不填充，改用 --nav-active-text 画底部强调线。
+     与 plain/pill 的区别是「是否填充」——填充仍由 colors.activeBg 决定，
+     underline 显式关掉它。用 box-shadow 而非 border 避免高度跳动。 */
+  .nav-item.underline.is-active {
+    background-color: transparent;
+    box-shadow: inset 0 -2px 0 0 var(--nav-active-text, currentColor);
+  }
 
   /* ===== 暗夜蓝紫（默认） ===== */
   :root,

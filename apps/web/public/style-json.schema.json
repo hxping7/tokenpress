@@ -159,10 +159,8 @@
               "type": "string",
               "enum": [
                 "plain",
-                "underline",
                 "pill",
-                "split",
-                "minimal"
+                "underline"
               ]
             },
             "position": {
