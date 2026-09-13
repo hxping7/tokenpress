@@ -216,8 +216,7 @@
         "layout": "masonry",
         "columns": 3,
         "showThumbnail": true,
-        "showExcerpt": false,
-        "cardStyle": "clean"
+        "showExcerpt": false
       },
       "subcategory": {
         "enabled": true,
@@ -253,8 +252,7 @@
         "layout": "masonry",
         "columns": 3,
         "showThumbnail": true,
-        "showExcerpt": false,
-        "cardStyle": "clean"
+        "showExcerpt": false
       },
       "subcategory": {
         "enabled": true,
@@ -268,31 +266,27 @@
         "columns": 1,
         "gap": "1.5rem",
         "showThumbnail": true,
-        "showExcerpt": false,
-        "cardStyle": "clean"
+        "showExcerpt": false
       },
       "article-grid": {
         "columns": 3,
         "gap": "1.5rem",
         "aspectRatio": "1/1",
         "showThumbnail": true,
-        "showExcerpt": false,
-        "cardStyle": "clean"
+        "showExcerpt": false
       },
       "article-masonry": {
         "columns": 2,
         "gap": "1.5rem",
         "aspectRatio": "auto",
         "showThumbnail": true,
-        "showExcerpt": false,
-        "cardStyle": "clean"
+        "showExcerpt": false
       },
       "magazine": {
         "columns": 2,
         "gap": "1.5rem",
         "showThumbnail": true,
-        "showExcerpt": false,
-        "cardStyle": "clean"
+        "showExcerpt": false
       },
       "single-page": {
         "maxWidth": 760,
