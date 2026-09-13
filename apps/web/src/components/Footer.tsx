@@ -7,7 +7,6 @@ import { FooterLogo } from '@/components/FooterLogo'
 import { api } from '@/lib/api'
 import { useLocaleStore } from '@/stores'
 import { useStyleFooter, useStyleSite } from '@/components/StyleProvider'
-import { t } from '@/lib/i18n'
 import { useSiteSettings } from '@/lib/useSiteSettings'
 
 // ===== Footer 前景色辅助：确保文字与 footer 背景对比度达标 =====
@@ -71,6 +70,13 @@ interface FooterNavGroup {
   html?: string
 }
 
+/**
+ * 页脚渲染约定：
+ * - **内容**（导航链接 / 版权 / 备案 / 友链数据 / 站点简介）唯一来源是 `site_settings`
+ *   与 `friend_links` 表，风格包**不得**提供任何内容。
+ * - **装修**（布局档位 / 网格列数与比例 / 间距 / 分隔线 / 字号字重字距 / 各区块显隐）
+ *   由风格包 `footer` 根键定义，全部经 `--footer-*` CSS 变量注入。
+ */
 export function Footer() {
   const pathname = usePathname()
   const { locale } = useLocaleStore()
@@ -86,8 +92,8 @@ export function Footer() {
   })
 
   // Style Pack 覆盖（必须在早期 return 前调用，遵守 Hooks 规则）
-  const fc = useStyleFooter()
-  // 站点信息覆盖（风格包 site + site_settings 全局默认合并结果）
+  const fc = useStyleFooter() || {}
+  // 站点信息（由 site_settings 解析出的全局值，只读）
   const site = useStyleSite() || {}
 
   // Footer 前景色：跟随 footer 背景明暗 + 包配置 textColor，避免黑底配深灰字看不见
@@ -105,210 +111,414 @@ export function Footer() {
       : 'rgba(255,255,255,0.62)'
     : 'var(--text-muted)'
   const footerFgHover = footerDark ? '#ffffff' : 'var(--text-primary)'
-  const footerVarStyle: React.CSSProperties = {
-    '--footer-fg': footerFg,
-    '--footer-fg-muted': footerFgMuted,
-    '--footer-fg-hover': footerFgHover,
-  } as React.CSSProperties
-  const footerLogoWrap = footerDark ? FOOTER_LOGO_DARK_VARS : undefined
 
   // Hide footer on admin and auth pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/auth')) {
     return null
   }
 
-  const friendLinks = (linksData?.data || []) as FriendLink[]
+  // ===== 风格包：只取「装修」配置 =====
+  const navCfg = (fc.nav || {}) as any
+  const brandCfg = (fc.brandBlock || {}) as any
+  const friendCfg = (fc.friendLinks || {}) as any
+  const bottomCfg = (fc.bottom || {}) as any
+  const logoCfg = (fc.logo || {}) as any
+
   const settings = settingsData?.data || {}
-  const footerNavStr = settings.footer_nav
-  const footerNavColumns = parseInt(settings.footer_nav_columns || '4', 10)
-  const poweredBy = site.poweredBy ?? settings.powered_by ?? ''
-  const copyrightText = site.copyright ?? settings.copyright_text ?? `© ${new Date().getFullYear()} TokenPress. All rights reserved.`
+
+  // ===== 内容：唯一来源 site_settings / friend_links 表（风格包不提供） =====
+  const copyrightText = site.copyright ?? settings.copyright_text ?? ''
   const icpNumber = site.icp ?? settings.icp_number
   const icpUrl = site.icpUrl ?? settings.icp_url ?? 'https://beian.miit.gov.cn/'
+  const poweredBy = site.poweredBy ?? settings.powered_by ?? ''
 
-  // Parse footer nav from settings (grouped format)
   let footerNav: FooterNavGroup[] = []
   try {
-    footerNav = footerNavStr ? JSON.parse(footerNavStr) : []
+    footerNav = settings.footer_nav ? JSON.parse(settings.footer_nav) : []
   } catch {
     footerNav = []
   }
-
-  // Backward compatibility: if old flat format (NavItem[] without 'links'), convert to grouped format
-  if (footerNav.length > 0 && !Array.isArray((footerNav as any)[0]?.links) && (footerNav as any)[0]?.html === undefined) {
+  // 兼容旧平铺格式（NavItem[] 无 links 且无 html）→ 归到单一「导航」分组
+  if (
+    footerNav.length > 0 &&
+    !Array.isArray((footerNav as any)[0]?.links) &&
+    (footerNav as any)[0]?.html === undefined
+  ) {
     const flatItems = footerNav as unknown as NavItem[]
     footerNav = [{ title: locale === 'en' ? 'Navigation' : '导航', links: flatItems }]
   }
 
-  // Style Pack 覆盖：若模板包 footer 配置了 columns，优先用它
-  if (fc?.columns && Array.isArray(fc.columns) && fc.columns.length > 0) {
-    footerNav = fc.columns.map((g: any) => ({
-      title: g.title || '',
-      links: (g.links || []).map((l: any) => ({ name: l.label, url: l.href })),
-      html: g.html,
-    }))
-  }
+  // 品牌块文案：风格包只决定「显不显示 / 取哪个站点字段」，不提供文案本身
+  const brandText =
+    brandCfg.show === true
+      ? brandCfg.source === 'siteName'
+        ? settings.site_name || site.name || ''
+        : settings.site_description || ''
+      : ''
 
-  // Default nav groups if empty
-  if (footerNav.length === 0) {
-    footerNav = [
-      {
-        title: locale === 'en' ? 'Navigation' : '导航',
-        links: locale === 'en'
-          ? [
-              { name: 'Token Plan', url: '/token-plan' },
-              { name: 'AI Coding', url: '/ai-coding' },
-              { name: 'AI Works', url: '/ai-works' },
-              { name: 'Blog', url: '/blog' },
-            ]
-          : [
-              { name: 'Token 计划', url: '/token-plan' },
-              { name: 'AI 编程', url: '/ai-coding' },
-              { name: 'AI 作品', url: '/ai-works' },
-              { name: '博客', url: '/blog' },
-            ],
-      },
-    ]
-  }
+  const activeFriendLinks =
+    friendCfg.show === false
+      ? []
+      : ((linksData?.data || []) as FriendLink[])
+          .filter((l) => l.isActive && l.name && l.url)
+          .slice(0, Number(friendCfg.maxItems) || 20)
+          .map((l) => ({ ...l, url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}` }))
 
-  const activeFriendLinks = (() => {
-    // 风格包 footer.friendLinks 控制是否展示/数据源/自定义
-    const fl = fc?.friendLinks || {}
-    if (fl.show === false) return []
-    if (fl.source === 'custom' && Array.isArray(fl.items)) {
-      return fl.items
-        .filter((l: any) => l && l.name && l.url)
-        .slice(0, fl.maxItems || 20)
-        .map((l: any) => ({ id: `custom-${l.url}`, name: l.name, url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}` }))
-    }
-    // 默认：读 friend_links 表
-    return friendLinks
-      .filter((l) => l.isActive && l.name && l.url)
-      .slice(0, fl.maxItems || 20)
-      .map((l) => ({ ...l, url: /^https?:\/\//i.test(l.url) ? l.url : `https://${l.url}` }))
-  })()
+  // logo.show 控制「版权区」的 logo；品牌块有自己的 showLogo，互不牵连
+  const logoBox = (vars?: React.CSSProperties) => (
+    <div
+      style={{ ...(footerDark ? FOOTER_LOGO_DARK_VARS : undefined), height: 'var(--footer-logo-height)', ...vars }}
+    >
+      <FooterLogo />
+    </div>
+  )
+  const logoSrc = logoCfg.show === false ? null : logoBox()
+  const brandLogoSrc = brandCfg.showLogo === false ? null : logoBox()
 
-  // 极简 Footer（设计师作品集包）
+  const navTitleSize = navCfg.title?.size || '0.875rem'
+  const navTitleWeight = Number(navCfg.title?.weight ?? 600)
+  const navTitleTransform = (navCfg.title?.transform || 'none') as React.CSSProperties['textTransform']
+  const navTitleSpacing = navCfg.title?.letterSpacing || 'normal'
+  const navTitleMb = navCfg.title?.marginBottom || '0.75rem'
+  const navTitleColor = navCfg.title?.color || 'var(--footer-fg)'
+
+  // ===== 装修变量：包未配置时用保守默认值，保证不配也好看 =====
+  const footerVars: React.CSSProperties = {
+    '--footer-fg': footerFg,
+    '--footer-fg-muted': footerFgMuted,
+    '--footer-fg-hover': footerFgHover,
+    '--footer-padding': fc.padding || '2rem 1rem',
+    '--footer-max-width': fc.maxWidth || 'var(--content-max-width)',
+    '--footer-border-top': fc.borderTop === false ? 'none' : fc.borderTop || '1px solid var(--border-color)',
+    // 导航网格
+    '--footer-nav-gap': navCfg.gap || '2rem 3rem',
+    '--footer-nav-title-size': navTitleSize,
+    '--footer-nav-title-weight': String(navTitleWeight),
+    '--footer-nav-title-transform': navTitleTransform || 'none',
+    '--footer-nav-title-spacing': navTitleSpacing,
+    '--footer-nav-title-mb': navTitleMb,
+    '--footer-nav-title-color': navTitleColor,
+    '--footer-nav-link-size': navCfg.link?.size || '0.875rem',
+    '--footer-nav-link-lh': navCfg.link?.lineHeight || '1.9',
+    '--footer-nav-link-gap': navCfg.link?.gap || '0.5rem',
+    '--footer-nav-cols-md': String(navCfg.responsive?.md ?? navCfg.responsive?.sm ?? 1),
+    '--footer-nav-cols-lg': String(navCfg.responsive?.lg ?? 2),
+    // 品牌块 / 友链 / 版权区
+    '--footer-brand-size': brandCfg.size || '0.8125rem',
+    '--footer-brand-lh': brandCfg.lineHeight || '1.7',
+    '--footer-fl-gap': friendCfg.gap || '1.5rem',
+    '--footer-fl-title-size': friendCfg.titleSize || '0.8125rem',
+    '--footer-bottom-size': bottomCfg.size || '0.75rem',
+    '--footer-bottom-gap': bottomCfg.gap || '1rem',
+    '--footer-logo-height': logoCfg.height || '1.5rem',
+  } as React.CSSProperties
+
+  const footerStyle: React.CSSProperties = { ...footerVars, borderTop: 'var(--footer-border-top)' }
+  if (fc?.background) footerStyle.background = fc.background
+  if (fc?.textColor) footerStyle.color = fc.textColor
+
+  const navDivider =
+    navCfg.divider === false ? 'none' : navCfg.divider || '1px solid var(--border-color)'
+  const bottomDivider =
+    bottomCfg.divider === false ? 'none' : bottomCfg.divider || '1px solid var(--border-color)'
+
+  const showNav = footerNav.length > 0 || !!brandText
+  const showFriend = activeFriendLinks.length > 0
+  const showBottom = bottomCfg.show !== false && !!(copyrightText || icpNumber || poweredBy)
+
+  const LinkRow = ({ children }: { children: React.ReactNode }) => (
+    <div
+      className="flex flex-wrap items-center"
+      style={{ gap: 'var(--footer-bottom-gap)', fontSize: 'var(--footer-bottom-size)' }}
+    >
+      {children}
+    </div>
+  )
+
+  const CopyrightLine = (
+    <>
+      {copyrightText && (
+        <span style={{ color: 'var(--footer-fg-muted)' }}>{copyrightText}</span>
+      )}
+    </>
+  )
+  const IcpLine =
+    bottomCfg.showIcp !== false && icpNumber ? (
+      <a
+        href={icpUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="transition-colors"
+        style={{ color: 'var(--footer-fg-muted)' }}
+      >
+        {icpNumber}
+      </a>
+    ) : null
+  const PoweredLine =
+    bottomCfg.showPoweredBy !== false && poweredBy ? (
+      <span style={{ color: 'var(--footer-fg-muted)' }}>{poweredBy}</span>
+    ) : null
+
+  // ===== 档位 1：minimal —— 居中 Logo + 版权 =====
   if (fc?.variant === 'minimal') {
     return (
-      <footer className="border-t border-t-border" style={{ background: fc.background || 'transparent', ...footerVarStyle }}>
-        <div className="max-w-[var(--content-max-width)] mx-auto py-10 px-4 flex flex-col items-center gap-4">
-          <div style={footerLogoWrap}><FooterLogo /></div>
-          <span className="text-sm text-[var(--footer-fg)]">{copyrightText || fc.bottom?.copyright}</span>
+      <footer style={footerStyle}>
+        <div
+          className="mx-auto flex flex-col items-center"
+          style={{
+            maxWidth: 'var(--footer-max-width)',
+            padding: 'var(--footer-padding)',
+            gap: 'var(--footer-bottom-gap)',
+          }}
+        >
+          {logoSrc}
+          <span style={{ fontSize: 'var(--footer-bottom-size)', color: 'var(--footer-fg)' }}>
+            {copyrightText}
+          </span>
         </div>
       </footer>
     )
   }
 
-  const footerStyle: React.CSSProperties = { ...footerVarStyle }
-  if (fc?.background) footerStyle.background = fc.background
-  if (fc?.textColor) footerStyle.color = fc.textColor
+  // ===== 档位 2：simple —— 单行（左 版权 / 右 备案 + Powered by） =====
+  if (fc?.variant === 'simple') {
+    return (
+      <footer style={footerStyle}>
+        <div
+          className="mx-auto flex flex-col md:flex-row items-center md:justify-between px-4"
+          style={{
+            maxWidth: 'var(--footer-max-width)',
+            padding: 'var(--footer-padding)',
+            gap: 'var(--footer-bottom-gap)',
+          }}
+        >
+          <div
+            className="flex flex-col md:flex-row items-center"
+            style={{ gap: 'var(--footer-bottom-gap)', fontSize: 'var(--footer-bottom-size)' }}
+          >
+            {logoSrc}
+            {CopyrightLine}
+          </div>
+          <LinkRow>
+            {IcpLine}
+            {PoweredLine}
+          </LinkRow>
+        </div>
+      </footer>
+    )
+  }
+
+  // ===== 档位 3（默认）：multi-column —— 导航网格 + 友链 + 版权区 =====
+  const navColumns = Number(navCfg.columns) || Number(settings.footer_nav_columns) || 4
+  const navTemplate =
+    typeof navCfg.template === 'string' && navCfg.template
+      ? navCfg.template
+      : `repeat(${navColumns}, minmax(0, 1fr))`
+  const responsiveGrid = navCfg.responsive === false ? '' : 'footer-nav-grid'
+  const navAlign = navCfg.align === 'center' ? 'center' : 'start'
+
+  const bottomLayout = bottomCfg.layout || 'columns'
 
   return (
-    <footer className="border-t border-t-border" style={footerStyle}>
-      <div className="max-w-[var(--content-max-width)] mx-auto">
-        {/* 竖向多段式导航 */}
-        <div className="py-8 px-4">
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${footerNavColumns}, 1fr)`,
-              gap: '2rem 3rem',
-            }}
-            className="max-md:!grid-cols-1 max-lg:!grid-cols-2"
-          >
-            {footerNav.map((group, gIdx) => (
-              <div key={gIdx} className="space-y-3">
-                {group.title && (
-                  <h3 className="text-sm font-semibold text-[var(--footer-fg)]">
-                    {group.title}
-                  </h3>
+    <footer style={footerStyle}>
+      <div className="mx-auto" style={{ maxWidth: 'var(--footer-max-width)' }}>
+        {(showNav || showFriend) && (
+          <div className="px-4" style={{ padding: 'var(--footer-padding)' }}>
+            {showNav && (
+              <div
+                className={responsiveGrid}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: navTemplate,
+                  gap: 'var(--footer-nav-gap)',
+                }}
+              >
+                {/* 品牌块：Logo + 站点简介（文案取自 site_settings，风格包只决定显隐与字号） */}
+                {brandText && (
+                  <div style={{ textAlign: navAlign === 'center' ? 'center' : 'left' }}>
+                    <div style={{ marginBottom: '0.75rem' }}>{brandLogoSrc}</div>
+                    <p
+                      style={{
+                        fontSize: 'var(--footer-brand-size)',
+                        lineHeight: 'var(--footer-brand-lh)',
+                        color: 'var(--footer-fg)',
+                      }}
+                    >
+                      {brandText}
+                    </p>
+                  </div>
                 )}
-                {group.html !== undefined ? (
-                  <div
-                    className="text-sm text-[var(--footer-fg)] [&_a]:text-[var(--footer-fg)] [&_a]:hover:text-[var(--footer-fg-hover)] [&_a]:transition-colors [&_img]:inline-block"
-                    dangerouslySetInnerHTML={{ __html: group.html || '' }}
-                  />
-                ) : (
-                  <ul className="space-y-2.5">
-                    {(group.links || []).map((item, lIdx) => (
-                      <li key={lIdx}>
-                        {item.url?.startsWith('/') || item.url?.startsWith('#') ? (
-                          <Link
-                            href={item.url}
-                            className="text-sm text-[var(--footer-fg)] hover:text-[var(--footer-fg-hover)] transition-colors"
-                          >
-                            {item.name}
-                          </Link>
-                        ) : (
-                          <a
-                            href={item.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-[var(--footer-fg)] hover:text-[var(--footer-fg-hover)] transition-colors"
-                          >
-                            {item.name}
-                          </a>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
 
-          {/* 友情链接行 - 水平展示在导航分组下方 */}
-          {activeFriendLinks.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-t-border">
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                {activeFriendLinks.map((link: { id: string; name: string; url: string }) => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-[var(--footer-fg)] hover:text-[var(--footer-fg-hover)] transition-colors whitespace-nowrap"
-                  >
-                    {link.name}
-                  </a>
+                {footerNav.map((group, gIdx) => (
+                  <div key={gIdx} style={{ textAlign: navAlign }}>
+                    {group.title && (
+                      <h3
+                        style={{
+                          fontSize: 'var(--footer-nav-title-size)',
+                          fontWeight: navTitleWeight,
+                          textTransform: navTitleTransform,
+                          letterSpacing: 'var(--footer-nav-title-spacing)',
+                          marginBottom: 'var(--footer-nav-title-mb)',
+                          color: 'var(--footer-nav-title-color)',
+                        }}
+                      >
+                        {group.title}
+                      </h3>
+                    )}
+                    {group.html !== undefined ? (
+                      <div
+                        className="[&_a]:transition-colors [&_img]:inline-block"
+                        style={{
+                          fontSize: 'var(--footer-nav-link-size)',
+                          color: 'var(--footer-fg)',
+                        }}
+                        dangerouslySetInnerHTML={{ __html: group.html || '' }}
+                      />
+                    ) : (
+                      <ul
+                        className="list-none"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 'var(--footer-nav-link-gap)',
+                          fontSize: 'var(--footer-nav-link-size)',
+                          lineHeight: 'var(--footer-nav-link-lh)',
+                          color: 'var(--footer-fg)',
+                        }}
+                      >
+                        {(group.links || []).map((item, lIdx) => (
+                          <li key={lIdx}>
+                            {item.url?.startsWith('/') || item.url?.startsWith('#') ? (
+                              <Link
+                                href={item.url}
+                                className="transition-colors hover:!text-[var(--footer-fg-hover)]"
+                                style={{ color: 'var(--footer-fg)' }}
+                              >
+                                {item.name}
+                              </Link>
+                            ) : (
+                              <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="transition-colors hover:!text-[var(--footer-fg-hover)]"
+                                style={{ color: 'var(--footer-fg)' }}
+                              >
+                                {item.name}
+                              </a>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* 版权信息区：三列布局 — Logo+版权 | ICP | Powered by */}
-        <div className="border-t border-t-border py-6 px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            {/* 左列：Logo + 版权文本 */}
-            <div className="flex flex-col items-center md:items-start gap-2">
-              <div style={footerLogoWrap}><FooterLogo /></div>
-              <span className="text-xs text-[var(--footer-fg-muted)]">{copyrightText}</span>
-            </div>
-
-            {/* 中列：ICP 备案 */}
-            <div className="flex justify-center">
-              {icpNumber && (
-                <a
-                  href={icpUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-[var(--footer-fg-muted)] hover:text-[var(--footer-fg-hover)] transition-colors"
+            {/* 友情链接：数据来自 friend_links 表，风格包只控制展示形态 */}
+            {showFriend && (
+              <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: navDivider }}>
+                {friendCfg.title && (
+                  <h4
+                    style={{
+                      fontSize: 'var(--footer-fl-title-size)',
+                      marginBottom: '0.75rem',
+                      color: 'var(--footer-fg)',
+                    }}
+                  >
+                    {friendCfg.title}
+                  </h4>
+                )}
+                <div
+                  style={
+                    friendCfg.layout === 'grid'
+                      ? {
+                          display: 'grid',
+                          gridTemplateColumns: `repeat(${Number(friendCfg.columns) || 6}, minmax(0, 1fr))`,
+                          gap: 'var(--footer-fl-gap)',
+                        }
+                      : {
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 'var(--footer-fl-gap)',
+                        }
+                  }
                 >
-                  {icpNumber}
-                </a>
-              )}
-            </div>
+                  {activeFriendLinks.map((link) => (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="whitespace-nowrap transition-colors hover:!text-[var(--footer-fg-hover)]"
+                      style={{ color: 'var(--footer-fg)', fontSize: 'var(--footer-nav-link-size)' }}
+                    >
+                      {link.name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
-            {/* 右列：Powered by / 技术栈 */}
-            <div className="flex justify-center md:justify-end">
-              {poweredBy && (
-                <span className="text-xs text-[var(--footer-fg-muted)]">{poweredBy}</span>
+        {/* 版权区：三列 / 两端对齐 / 居中 */}
+        {showBottom && (
+          <div style={{ borderTop: showNav || showFriend ? bottomDivider : 'none' }}>
+            <div
+              className="px-4"
+              style={{ padding: 'var(--footer-padding)', paddingTop: '1.25rem', paddingBottom: '1.25rem' }}
+            >
+              {bottomLayout === 'between' && (
+                <div
+                  className="flex flex-col md:flex-row items-center md:justify-between"
+                  style={{ gap: 'var(--footer-bottom-gap)', fontSize: 'var(--footer-bottom-size)' }}
+                >
+                  <div className="flex items-center" style={{ gap: 'var(--footer-bottom-gap)' }}>
+                    {logoSrc}
+                    {CopyrightLine}
+                  </div>
+                  <LinkRow>
+                    {IcpLine}
+                    {PoweredLine}
+                  </LinkRow>
+                </div>
+              )}
+
+              {bottomLayout === 'centered' && (
+                <div
+                  className="flex flex-col items-center text-center"
+                  style={{ gap: 'var(--footer-bottom-gap)', fontSize: 'var(--footer-bottom-size)' }}
+                >
+                  {logoSrc}
+                  {CopyrightLine}
+                  <LinkRow>
+                    {IcpLine}
+                    {PoweredLine}
+                  </LinkRow>
+                </div>
+              )}
+
+              {bottomLayout === 'columns' && (
+                <div
+                  className="grid grid-cols-1 md:grid-cols-3 items-center"
+                  style={{ gap: 'var(--footer-bottom-gap)', fontSize: 'var(--footer-bottom-size)' }}
+                >
+                  <div className="flex flex-col items-center md:items-start" style={{ gap: 'var(--footer-bottom-gap)' }}>
+                    {logoSrc}
+                    {CopyrightLine}
+                  </div>
+                  <div className="flex justify-center">{IcpLine}</div>
+                  <div className="flex justify-center md:justify-end">{PoweredLine}</div>
+                </div>
               )}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* 上方区块全空时（无导航、无友链、无版权），footer 只剩一条分隔线，不会塌陷 */}
+        {!showNav && !showFriend && !showBottom && <div style={{ height: '1px' }} />}
       </div>
     </footer>
   )

@@ -77,13 +77,25 @@ styles/<id>/
 
 ### 3.3 `footer`
 
+> **footer 根键只放「装修」，不放任何内容**：导航链接 / 版权 / 备案 / 友链数据 / 站点简介一律取自 `site_settings`（`footer_nav`、`copyright_text`、`icp_number`、`powered_by`、`site_description`）与 `friend_links` 表。包里出现这些内容即视为违规（历史上 `footer.columns[].links`、`friendLinks.items`、`bottom.copyright` 曾被用于在包内写死链接与版权，现已全部移除）。
+
 | 字段 | 说明 |
 |---|---|
-| `variant` | `multi-column` / `simple` / `minimal` / `mega` |
-| `columns[]` | `{ title, links[], html }` |
-| `friendLinks` | `{ show, source: table\|custom, items:[{name,url}], columns, maxItems }` |
-| `bottom` | `{ copyright, social[], showBackToTop }` |
-| `background` / `textColor` | CSS 值 |
+| `variant` | `multi-column`（导航网格 + 友链 + 版权区）/ `simple`（单行：版权 ǀ 备案 + Powered by）/ `minimal`（居中 Logo + 版权） |
+| `padding` | 区块内边距 CSS 值，默认 `2rem 1rem` |
+| `maxWidth` | 内容最大宽度，默认 `var(--content-max-width)` |
+| `borderTop` | 页脚顶部边线 CSS 值；`false` 关闭 |
+| `nav.columns` | 列数；缺省取 `site_settings.footer_nav_columns` |
+| `nav.template` | 直接给 `grid-template-columns`（如 `1.5fr 1fr 1fr 1fr`），优先于 `columns` |
+| `nav.gap` / `nav.align`(`start`\|`center`) / `nav.divider` | 网格间距 / 分组内对齐 / 友链区上分隔线（`false` 关闭） |
+| `nav.responsive` | `{ md, lg }` 断点列数（默认 `{md:1, lg:2}`）；`false` 关闭响应式 |
+| `nav.title` | 分组标题样式 `{ size, weight, transform, letterSpacing, marginBottom, color }` |
+| `nav.link` | 链接样式 `{ size, lineHeight, gap }` |
+| `brandBlock` | 首列品牌块：`{ show, source: siteDescription\|siteName, showLogo, size, lineHeight }`——**只决定显隐与取哪个站点字段** |
+| `logo` | `{ show, height }`，控制**版权区**的 Logo（品牌块 Logo 由 `brandBlock.showLogo` 单独控制） |
+| `friendLinks` | `{ show, maxItems, title, layout: inline\|grid, columns, gap, titleSize }`——数据仍来自 `friend_links` 表 |
+| `bottom` | `{ show, layout: columns\|between\|centered, size, gap, divider, showIcp, showPoweredBy }` |
+| `background` / `textColor` | CSS 值（前景色对比度由组件按背景明暗自动补偿） |
 
 ### 3.4 `layouts`
 

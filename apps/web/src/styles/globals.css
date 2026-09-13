@@ -443,3 +443,20 @@
   margin: var(--dropcap-margin, 8px 12px 0 0);
   color: var(--dropcap-color, var(--accent-blue, inherit));
 }
+
+/* ===== 页脚导航网格的响应式列数 =====
+   列模板由风格包 footer.nav.template / columns 决定（内联样式），断点列数经
+   --footer-nav-cols-md / -lg 变量可配。footer.nav.responsive:false 时不挂此类。 */
+.footer-nav-grid {
+  display: grid;
+}
+@media (max-width: 1023px) {
+  .footer-nav-grid {
+    grid-template-columns: repeat(var(--footer-nav-cols-lg, 2), minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 767px) {
+  .footer-nav-grid {
+    grid-template-columns: repeat(var(--footer-nav-cols-md, 1), minmax(0, 1fr)) !important;
+  }
+}

@@ -73,7 +73,21 @@ curl -s -X PATCH -H "$AUTH" -A "$UA" -H "Content-Type: application/json" \
 curl -s -X PATCH ... -d '{"patch":[{"path":"features.welcomeOverlay","op":"delete"}]}' "$API/styles/blog"
 ```
 
-常用路径：`hero.enabled/size/interval/autoplay/showCTA/ctaButtons`、`features.readingProgressBar/backToTop/welcomeOverlay/languageSwitcher`、`footer.friendLinks.{show,source,maxItems,columns,items}`、`layouts.section.subcategory.{enabled,position,style,showCount,columns}`、`design.tokens.--accent-blue`、`header.nav.{align,style,colors.*}`。
+常用路径：`hero.enabled/size/interval/autoplay/showCTA/ctaButtons`、`features.readingProgressBar/backToTop/welcomeOverlay/languageSwitcher`、`footer.{variant,padding,maxWidth,borderTop}`、`footer.nav.{columns,template,gap,align,divider,responsive,title,link}`、`footer.friendLinks.{show,maxItems,title,layout,columns,gap}`、`footer.bottom.{layout,size,gap,divider,showIcp,showPoweredBy}`、`layouts.section.subcategory.{enabled,position,style,showCount,columns}`、`design.tokens.--accent-blue`、`header.nav.{align,style,colors.*}`。
+
+**`footer` 只放装修，不放内容**：导航链接 / 版权 / 备案 / 站点简介来自 `site_settings`（`footer_nav`、`copyright_text`、`icp_number`、`powered_by`、`site_description`），友链数据来自 `friend_links` 表。已移除的内容字段（`footer.columns[].links`、`footer.friendLinks.items`、`footer.bottom.copyright`）写入不再生效。
+
+| 字段 | 说明 |
+|---|---|
+| `variant` | `multi-column`（导航网格+友链+版权区）/ `simple`（单行）/ `minimal`（居中 Logo+版权） |
+| `padding` / `maxWidth` / `borderTop` | 区块内边距 / 内容最大宽度 / 顶部边线（`false` 关闭） |
+| `nav.columns` / `nav.template` | 列数（缺省取 `site_settings.footer_nav_columns`）/ 直接给 `grid-template-columns`，优先 |
+| `nav.gap` / `align` / `divider` / `responsive` | 网格间距 / `start`\|`center` / 分隔线 / `{md,lg}` 断点列数，`false` 关响应式 |
+| `nav.title` / `nav.link` | `{size,weight,transform,letterSpacing,marginBottom,color}` / `{size,lineHeight,gap}` |
+| `brandBlock` | `{show, source: siteDescription\|siteName, showLogo, size, lineHeight}`——首列品牌块，文案取自站点设置 |
+| `logo` | `{show, height}`，只管**版权区** Logo（品牌块 Logo 由 `brandBlock.showLogo` 控制） |
+| `friendLinks` | `{show, maxItems, title, layout: inline\|grid, columns, gap, titleSize}` |
+| `bottom` | `{show, layout: columns\|between\|centered, size, gap, divider, showIcp, showPoweredBy}` |
 
 **`header.nav`**（顶部导航栏）：
 

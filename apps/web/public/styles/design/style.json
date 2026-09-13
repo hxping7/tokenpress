@@ -324,17 +324,50 @@
     }
   },
   "footer": {
-    "variant": "simple",
-    "columns": [],
+    "variant": "multi-column",
+    "padding": "56px 40px 40px",
+    "maxWidth": "1280px",
+    "borderTop": "1px solid #e3ddd0",
+    "nav": {
+      "template": "1.5fr 1fr 1fr 1fr",
+      "gap": "48px",
+      "align": "start",
+      "divider": "1px solid #e3ddd0",
+      "title": {
+        "size": "10px",
+        "weight": 500,
+        "transform": "uppercase",
+        "letterSpacing": "0.24em",
+        "marginBottom": "20px",
+        "color": "#8c8880"
+      },
+      "link": {
+        "size": "13px",
+        "lineHeight": "2",
+        "gap": "0"
+      }
+    },
+    "brandBlock": {
+      "show": true,
+      "source": "siteDescription",
+      "showLogo": true,
+      "size": "13px",
+      "lineHeight": "1.7"
+    },
+    "logo": {
+      "show": false
+    },
     "friendLinks": {
       "show": false,
-      "source": "table",
-      "items": [],
       "maxItems": 20
     },
     "bottom": {
-      "social": [],
-      "showBackToTop": true
+      "layout": "between",
+      "size": "12px",
+      "gap": "1rem",
+      "divider": "1px solid #e3ddd0",
+      "showIcp": true,
+      "showPoweredBy": true
     },
     "background": "#f5f3ee",
     "textColor": "#4a4a48"

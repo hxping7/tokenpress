@@ -262,79 +262,33 @@
   },
   "footer": {
     "variant": "multi-column",
-    "columns": [
-      {
-        "title": "导航",
-        "links": [
-          {
-            "label": "首页",
-            "href": "/"
-          },
-          {
-            "label": "博客",
-            "href": "/blog"
-          },
-          {
-            "label": "AI 编程",
-            "href": "/ai-coding"
-          },
-          {
-            "label": "设计师作品",
-            "href": "/design-works"
-          }
-        ]
+    "padding": "2.5rem 1.25rem",
+    "borderTop": "1px solid var(--border-color)",
+    "nav": {
+      "columns": 3,
+      "gap": "2rem 3rem",
+      "title": {
+        "size": "0.875rem",
+        "weight": 600,
+        "marginBottom": "0.75rem"
       },
-      {
-        "title": "资源",
-        "links": [
-          {
-            "label": "GitHub 热门",
-            "href": "/githubhots"
-          },
-          {
-            "label": "资源导航",
-            "href": "/resources"
-          },
-          {
-            "label": "灵感瀑布",
-            "href": "/inspiration"
-          },
-          {
-            "label": "科技杂志",
-            "href": "/tech-magazine"
-          }
-        ]
-      },
-      {
-        "title": "关于",
-        "links": [
-          {
-            "label": "关于我们",
-            "href": "/about"
-          },
-          {
-            "label": "友情链接",
-            "href": "/links"
-          },
-          {
-            "label": "Token 计划",
-            "href": "/token-plan"
-          }
-        ]
+      "link": {
+        "size": "0.875rem",
+        "lineHeight": "1.9",
+        "gap": "0.625rem"
       }
-    ],
+    },
     "friendLinks": {
       "show": true,
-      "source": "table",
-      "items": [],
+      "layout": "inline",
+      "gap": "1.5rem",
       "maxItems": 20
     },
     "bottom": {
-      "social": [
-        "github",
-        "wechat"
-      ],
-      "showBackToTop": true
+      "layout": "columns",
+      "size": "0.75rem",
+      "showIcp": true,
+      "showPoweredBy": true
     },
     "background": "var(--bg-secondary)",
     "textColor": "var(--text-secondary)"
