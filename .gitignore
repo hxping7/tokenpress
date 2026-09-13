@@ -109,3 +109,18 @@ token00-publisher.zip
 posts/
 .npmrc
 nginx.conf
+
+# 部署产物（旧命名，yourdomain-*）与校验文件
+yourdomain-*.tar.gz
+yourdomain-*.tar.gz.sha256
+
+# 工具缓存 / 本地诊断与备份产物
+.playwright-cli/
+_uploads_bak/
+_container_data_listing/
+preview-screenshot*.png
+
+# 本地临时脚本与验证截图（根目录下划线前缀的草稿文件）
+/_*.py
+/_*.png
+/_*.json
