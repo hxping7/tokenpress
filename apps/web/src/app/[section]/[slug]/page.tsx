@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { ArticleDetailClient } from './ArticleDetailClient'
 import { DesignWorkDetail } from './DesignWorkDetail'
 import { getSiteUrl } from '@/lib/site-url'
@@ -99,7 +100,11 @@ export default async function ArticleDetailPage({ params }: Props) {
     return <DesignWorkDetail article={article} />
   }
 
-  if (!article) return <div className="min-h-screen flex items-center justify-center text-t-text-muted">文章未找到</div>
+  // 文章不存在：走 Next 的 404（渲染 app/not-found.tsx 并返回 HTTP 404）。
+  // 此前返回 200 的软 404，会被爬虫当成有效页面收录。
+  if (!article) {
+    notFound()
+  }
 
   // 拉取板块级布局覆盖（供 ArticleDetailClient 解析文章页布局）
   let sectionLayouts: Record<string, unknown> | null = null
