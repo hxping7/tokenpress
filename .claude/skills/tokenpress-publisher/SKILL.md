@@ -8,9 +8,9 @@ agent_created: true
 
 通过 AI Publish API 远程发布和管理博客文章。支持 Markdown 文件发布、图片自动上传、智能板块/分类匹配、作者署名。域名和 Token 完全解耦，支持多站点复用。
 
-## 配置（`.yourdomain.conf`）
+## 配置（`.token00.conf`）
 
-在项目根目录创建 `.yourdomain.conf`（JSON 格式，建议加入 `.gitignore`）：
+在项目根目录创建 `.token00.conf`（JSON 格式，建议加入 `.gitignore`）：
 
 ```json
 {
@@ -37,7 +37,10 @@ agent_created: true
 | `default_section` | N | 默认板块，frontmatter 未指定时使用 |
 | `section_map` | N | 关键词→板块 slug 映射，用于智能匹配 |
 
-配置优先级：CLI 参数 > 环境变量 > `.yourdomain.conf` > `pub_token.txt`
+配置优先级：CLI 参数 > 环境变量 > `.token00.conf` > `pub_token.txt`
+
+> ⚠️ **配置文件位置就是 `.token00.conf`**（脚本从当前目录逐级向上查找，代码写死该文件名，不认别的名字）。
+> 若要发到**本地/测试站**，不要复用项目根那份指向生产的 `.token00.conf`——换到一个独立目录（或临时目录）放一份指向 `http://localhost:8081/api/v1` 的配置，并**同时**显式传 `--api-base` / `--token`（CLI 优先级最高，双保险）。否则会直接发到线上。
 
 ## 触发条件
 
@@ -91,7 +94,7 @@ status: published
 **命令：**
 
 ```bash
-# 发布单篇（自动读取 .yourdomain.conf）
+# 发布单篇（自动读取 .token00.conf）
 python scripts/publish.py article.md
 
 # 批量发布目录
@@ -118,9 +121,9 @@ python scripts/publish.py article.md --status draft
 | `--section <slug>` | 强制板块 | > 高于 frontmatter |
 | `--category <slug>` | 强制分类 | > 高于 frontmatter |
 | `--force-slug <slug>` | 强制 URL slug | > 高于 frontmatter（用于更新） |
-| `--author <name>` | 强制作者署名 | > 高于 `.yourdomain.conf` |
-| `--api-base <url>` | API 地址 | > 高于 `.yourdomain.conf` |
-| `--token <token>` | API Token | > 高于 `.yourdomain.conf` |
+| `--author <name>` | 强制作者署名 | > 高于 `.token00.conf` |
+| `--api-base <url>` | API 地址 | > 高于 `.token00.conf` |
+| `--token <token>` | API Token | > 高于 `.token00.conf` |
 
 ### 2. 编辑/更新文章（核心工作流）
 
@@ -209,7 +212,7 @@ python scripts/fetch_article.py --list
 
 匹配优先级：
 1. **Frontmatter** 中明确指定的 `section` / `category`
-2. **标题关键词** 匹配 `.yourdomain.conf` 中的 `section_map`
+2. **标题关键词** 匹配 `.token00.conf` 中的 `section_map`
 3. **正文关键词** 匹配 `section_map`
 4. **API 分类列表** 匹配分类名/描述
 5. **默认值** `default_section`
