@@ -208,7 +208,9 @@
             "04 件原型制作中",
             "自 2024 起"
           ]
-        }
+        },
+        "showSearch": true,
+        "showTags": true
       },
       "list": {
         "layout": "masonry",
