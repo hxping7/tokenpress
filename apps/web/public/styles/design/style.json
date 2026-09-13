@@ -66,14 +66,14 @@
     "nav": {
       "source": "sections",
       "align": "center",
-      "style": "underline",
+      "style": "plain",
       "icons": {},
       "colors": {
         "text": "#4a4a48",
-        "hoverBg": "rgba(168,49,31,0.06)",
+        "hoverBg": "transparent",
         "hoverText": "#1a1a1a",
-        "activeBg": "#a8311f",
-        "activeText": "#ffffff",
+        "activeBg": "transparent",
+        "activeText": "#a8311f",
         "barBg": "rgba(245,243,238,0.85)",
         "barText": "#1a1a1a"
       }

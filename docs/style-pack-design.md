@@ -66,7 +66,10 @@ styles/<id>/
 | `variant` | `sticky-solid` / `sticky-glass` / `sticky-transparent` / `static` / `hidden` |
 | `height` | 数字（px） |
 | `logo` | `{ type: image\|text\|component, src, srcLight, text, position: left\|center\|right, height, link }` |
-| `nav` | `{ source: sections\|custom\|mixed, items, customItems, align, style: plain\|underline\|pill\|split\|minimal, position: top\|left, icons, showIcon, dropdown: hover\|click, colors }` |
+| `nav` | `{ source: sections\|custom\|mixed, items, customItems, align: left\|center\|right, style: plain\|pill, position: top\|left, height, width, icons, showIcon, colors }` |
+| `nav.colors` | 经 `--nav-*` CSS 变量注入：`text` / `hoverBg` / `hoverText` / `activeBg` / `activeText` / `barBg` / `barText`。**当前项外观完全由 `activeBg` + `activeText` 决定**——要原型那种「只有强调色文字、无底色」就把 `activeBg` 设 `transparent`、`activeText` 设强调色；`style` 只影响圆角（`pill` 全圆 / `plain` 直角 / 缺省 8px），**不影响是否填充** |
+
+> ⚠️ `nav.align` 目前**只在 nav 独立成栏时生效**：design / blog / enterprise 的 header 把 nav 与 logo 放在同一分组内，`flex-1` 无法跨栏，`center` 视觉上仍等同左对齐。`nav.dropdown` 与 `style: underline/split/minimal` **无实现**，写入不生效。
 | `actions` | 右侧动作按钮数组 |
 | `background` / `borderBottom` | CSS 值 |
 
