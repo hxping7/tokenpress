@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import resolve_config
-from util import api_request, upload_local_file, SUPPORTED_TYPES
+from util import api_request, upload_local_image, SUPPORTED_TYPES
 
 
 def upload_url(url: str, filename: str, token: str, api_base: str, mime: str = None) -> dict:
@@ -56,7 +56,7 @@ def main():
     print("=" * 50)
 
     if args.file:
-        result = upload_local_file(args.file, token, api_base, args.section)
+        result = upload_local_image(args.file, token, api_base, args.section)
     else:
         if not args.filename:
             args.filename = args.url.split("/")[-1].split("?")[0] or "unknown"

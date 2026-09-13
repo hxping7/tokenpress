@@ -163,25 +163,6 @@ def upload_local_file(
 # ============================================================
 
 
-def resolve_local_media_path(src_path: str, md_file_dir: str) -> str | None:
-    """
-    把 Markdown / frontmatter 中的媒体路径解析为本地绝对路径。
-
-    返回 None 表示无需上传：空值、远程 URL、data: URI，或文件不存在。
-    用于封面（coverImageUrl）等不在正文里的媒体字段。
-    """
-    if not src_path or not isinstance(src_path, str):
-        return None
-    if src_path.startswith("data:"):
-        return None
-    if src_path.startswith("http://") or src_path.startswith("https://"):
-        return None
-
-    clean = src_path.lstrip("./")
-    abs_path = os.path.normpath(os.path.join(md_file_dir, clean))
-    return abs_path if os.path.isfile(abs_path) else None
-
-
 def process_media_in_content(
     content: str,
     md_file_dir: str,

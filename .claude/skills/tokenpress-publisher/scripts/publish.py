@@ -34,8 +34,6 @@ from util import (
     api_request,
     parse_frontmatter,
     process_media_in_content,
-    resolve_local_media_path,
-    upload_local_file,
 )
 
 
@@ -210,20 +208,6 @@ def publish_article(
         payload["content"], md_dir, token, api_base, payload["section"]
     )
     payload["content"] = processed_content
-
-    # --- 封面图片（coverImageUrl 为本地路径时自动上传并替换） ---
-    cover_local = resolve_local_media_path(payload.get("coverImageUrl", ""), md_dir)
-    if cover_local:
-        print(f"    [UPLOAD] cover {os.path.basename(cover_local)}")
-        cover_res = upload_local_file(cover_local, token, api_base, payload["section"])
-        cover_url = cover_res.get("data", {}).get("url", "") if cover_res.get("success") else ""
-        if cover_url:
-            payload["coverImageUrl"] = cover_url
-            media_stats["ok"] = media_stats.get("ok", 0) + 1
-            media_stats["images"] = media_stats.get("images", 0) + 1
-        else:
-            media_stats["fail"] = media_stats.get("fail", 0) + 1
-            print(f"    [SKIP] cover upload failed: {cover_res.get('error', 'Unknown')}")
 
     # --- 作者署名 ---
     if author:
