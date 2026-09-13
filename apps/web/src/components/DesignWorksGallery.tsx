@@ -18,6 +18,8 @@ interface Props {
   config?: Record<string, unknown> | null
   /** 外层已渲染筛选侧栏（page-sidebar-* 布局）时隐藏自带分类 pill，避免重复 */
   hideFilters?: boolean
+  /** 外层侧栏控制分类时传入的当前分类（URL `?category=`）；仅在 hideFilters 时生效 */
+  activeCategory?: string | null
 }
 
 interface WorkItem {
@@ -31,7 +33,7 @@ interface WorkItem {
   meta?: any
 }
 
-export function DesignWorksGallery({ section, sectionPath, title, description, mode = 'standalone', config, hideFilters = false }: Props) {
+export function DesignWorksGallery({ section, sectionPath, title, description, mode = 'standalone', config, hideFilters = false, activeCategory = null }: Props) {
   const isEmbedded = mode === 'embedded'
   const { locale } = useLocaleStore()
   const cfg = config || {}
@@ -49,6 +51,15 @@ export function DesignWorksGallery({ section, sectionPath, title, description, m
   const dShowExcerpt = cfg.showExcerpt !== false
   const dShowAuthor = cfg.showAuthor !== false
   const dNumberPrefix = typeof cfg.numberPrefix === 'string' && cfg.numberPrefix ? (cfg.numberPrefix as string) : 'N°'
+  /** 卡片形态：boxed（圆角描边卡片，默认） / flat（无边框无底色） */
+  const dCardStyle = cfg.cardStyle === 'flat' ? 'flat' : 'boxed'
+  /** 编号呈现：badge（封面右上角标，默认） / watermark（封面中央大字） */
+  const dNumberStyle = cfg.numberStyle === 'watermark' ? 'watermark' : 'badge'
+  const dShowCategoryBadge = cfg.showCategoryBadge !== false
+  /** 逐卡轮换的封面比例（如 ["3/4","1/1","4/5"]）营造瀑布节奏；未配则统一用 aspect */
+  const dAspectCycle = Array.isArray(cfg.aspectCycle)
+    ? (cfg.aspectCycle as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0)
+    : []
   const [works, setWorks] = useState<WorkItem[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [activeCat, setActiveCat] = useState<string | null>(null)
@@ -73,9 +84,12 @@ export function DesignWorksGallery({ section, sectionPath, title, description, m
     [section]
   )
 
+  /** 外层侧栏控制分类时以传入的 activeCategory 为准，否则用组件内 pill 的自身状态 */
+  const effectiveCat = hideFilters ? (activeCategory || null) : activeCat
+
   useEffect(() => {
-    load(null)
-  }, [load])
+    load(effectiveCat)
+  }, [load, effectiveCat])
 
   // 分类从作品 meta.category 推导
   useEffect(() => {
@@ -158,13 +172,16 @@ export function DesignWorksGallery({ section, sectionPath, title, description, m
                   <WorkCard
                     work={w}
                     sectionPath={sectionPath}
-                    aspect={dAspect}
+                    aspect={dAspectCycle.length ? dAspectCycle[i % dAspectCycle.length] : dAspect}
                     index={i}
                     numberPrefix={dNumberPrefix}
                     showMeta={dShowMeta}
                     showTags={dShowTags}
                     showExcerpt={dShowExcerpt}
                     showAuthor={dShowAuthor}
+                    cardStyle={dCardStyle}
+                    numberStyle={dNumberStyle}
+                    showCategoryBadge={dShowCategoryBadge}
                   />
                 </div>
               ))}
@@ -179,13 +196,16 @@ export function DesignWorksGallery({ section, sectionPath, title, description, m
                   key={w.id}
                   work={w}
                   sectionPath={sectionPath}
-                  aspect={dAspect}
+                  aspect={dAspectCycle.length ? dAspectCycle[i % dAspectCycle.length] : dAspect}
                   index={i}
                   numberPrefix={dNumberPrefix}
                   showMeta={dShowMeta}
                   showTags={dShowTags}
                   showExcerpt={dShowExcerpt}
                   showAuthor={dShowAuthor}
+                  cardStyle={dCardStyle}
+                  numberStyle={dNumberStyle}
+                  showCategoryBadge={dShowCategoryBadge}
                 />
               ))}
             </div>
@@ -222,6 +242,12 @@ interface WorkCardProps {
   showTags?: boolean
   showExcerpt?: boolean
   showAuthor?: boolean
+  /** 卡片形态：boxed = 圆角描边卡片；flat = 无边框无底色，直接落在页面上 */
+  cardStyle?: 'boxed' | 'flat'
+  /** 编号呈现：badge = 封面右上小角标；watermark = 封面中央大字水印 */
+  numberStyle?: 'badge' | 'watermark'
+  /** 封面上是否显示分类角标 */
+  showCategoryBadge?: boolean
 }
 
 /** 作品日期格式化为 2026.07.20（原型风格） */
@@ -243,6 +269,9 @@ function WorkCard({
   showTags = true,
   showExcerpt = true,
   showAuthor = true,
+  cardStyle = 'boxed',
+  numberStyle = 'badge',
+  showCategoryBadge = true,
 }: WorkCardProps) {
   const { locale } = useLocaleStore()
   const meta = parseArticleMeta(work.meta)
@@ -261,13 +290,23 @@ function WorkCard({
       ? ({ aspectRatio: '4/3' } as CSSProperties)
       : undefined
 
+  const isFlat = cardStyle === 'flat'
+  const isWatermark = numberStyle === 'watermark'
+
   return (
     <Link
       href={`${sectionPath}/${work.slug}`}
-      className="group block rounded-xl overflow-hidden bg-t-bg-secondary border border-t-border hover:border-t-accent-blue/50 hover:shadow-lg transition-all duration-200"
+      className={
+        isFlat
+          ? 'group block'
+          : 'group block rounded-xl overflow-hidden bg-t-bg-secondary border border-t-border hover:border-t-accent-blue/50 hover:shadow-lg transition-all duration-200'
+      }
     >
       {/* 封面：比例由风格包 templates.design-gallery.aspect 决定 */}
-      <div className="relative overflow-hidden bg-t-bg-primary" style={imgBoxStyle}>
+      <div
+        className={`relative overflow-hidden ${isFlat ? 'bg-t-bg-secondary' : 'bg-t-bg-primary'}`}
+        style={imgBoxStyle}
+      >
         {work.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -281,19 +320,31 @@ function WorkCard({
             无封面
           </div>
         )}
-        {meta.category && (
+        {showCategoryBadge && meta.category && (
           <span className="absolute top-3 left-3 px-2 py-0.5 text-xs rounded-md bg-black/55 text-white backdrop-blur-sm">
             {designCategoryLabel(meta.category, locale)}
           </span>
         )}
-        {showMeta && (
+        {/* 编号：badge = 右上角标；watermark = 封面中央大字 */}
+        {showMeta && !isWatermark && (
           <span className="absolute top-3 right-3 px-2 py-0.5 text-xs rounded-md bg-black/55 text-white backdrop-blur-sm tabular-nums">
+            {numberPrefix} {pieceNo}
+          </span>
+        )}
+        {showMeta && isWatermark && (
+          <span
+            className="absolute inset-0 flex items-center justify-center text-white/90 text-[clamp(2.5rem,6vw,4.5rem)] leading-none tracking-wide"
+            style={{
+              fontFamily: 'var(--brand-font, ui-serif, Georgia, "Songti SC", serif)',
+              textShadow: '0 1px 12px rgba(0,0,0,.45)',
+            }}
+          >
             {numberPrefix} {pieceNo}
           </span>
         )}
       </div>
 
-      <div className="p-4">
+      <div className={isFlat ? 'pt-3' : 'p-4'}>
         {/* N° 编号 · 日期 元信息行（风格包 showMeta 可关） */}
         {showMeta && (
           <div className="mb-1.5 text-[11px] uppercase tracking-[0.16em] text-t-text-muted tabular-nums">

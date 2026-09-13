@@ -85,8 +85,8 @@ styles/<id>/
 - `homepage`：`container`（`boxed` / `full` / `wide`）+ `sections[]`，按数组顺序渲染；每项 `{ component, variant, id, props }`，`component` 取值受白名单约束：`Hero` / `Features` / `ArticleList` / `CTA` / `Banner` / `CustomBlock`（`Banner` 用 `id` 引用 `home_banners` 中的命名横幅）。
 - `section`（板块页默认骨架）：
   - `layout`：`page-sidebar-left` / `page-sidebar-right` / `landing` / `none`
-  - `hero`：板块页顶部标题区
-  - `sidebar`：`{ enabled, sticky }`
+  - `hero`：板块页顶部标题区 —— `enabled` / `label`（小号大写强调色 eyebrow，如 `Works · 作品`）/ `title` / `description`（true 时用板块简介）/ `align`（`center` 默认 / `left`）/ `divider`（标题区下方通栏细分隔线）
+  - `sidebar`：`{ enabled, sticky, label, metaBlock, showSearch, showTags }`（`label` 覆盖分类栏标题；`metaBlock` 为 `{ title, lines[] }` 自定义信息块；`showSearch` / `showTags` 默认 `true`，可关掉侧栏搜索框与热门标签云）
   - `subcategory`：`{ enabled, position: sidebar\|top\|tab\|none, style: pill\|card\|list\|grid, columns, showCount }`
   - `list`：列表版式覆盖
 - `category` / `article` / `list`：分类页、文章页、列表页的结构覆盖。
@@ -99,11 +99,17 @@ styles/<id>/
 | `columns` | 3 | 列数 1–6 |
 | `gap` | `1.5rem` | 列间距 |
 | `aspect` | `4/3` | 封面比例；`auto` 用图片原始比例 |
+| `aspectCycle` | — | 逐卡轮换的比例数组（如 `["3/4","1/1","4/5"]`）营造瀑布节奏；配置后优先于 `aspect` |
+| `cardStyle` | `boxed` | `boxed` 圆角描边卡片 / `flat` 无边框无底色，直接落在页面上 |
+| `numberStyle` | `badge` | `badge` 封面右上角标 / `watermark` 封面中央大字编号 |
+| `showCategoryBadge` | `true` | 封面上是否显示分类角标 |
 | `numberPrefix` | `N°` | 作品编号前缀（编号优先取 `meta.number`，否则按列表顺序派生 `01`/`02`…） |
 | `showMeta` | `true` | 编号 · 日期 元信息行（卡面 + 封面右上角标） |
 | `showTags` | `true` | `meta.tags` 胶囊 |
 | `showExcerpt` | `true` | 摘要 |
 | `showAuthor` | `true` | 作者行 |
+
+> **作品集画廊同样走 `section` 布局**：`design-gallery` 模板会消费 `layouts.section` 的 `layout`（`page-sidebar-*`）、`hero`、`sidebar`、`subcategory`，与文章列表模板一致。侧栏分类由文章 `meta.category` 聚合（作品分类不在 `categories` 表）；侧栏链接的 `?category=` 会驱动画廊筛选。
 
 ### 3.5 `hero`
 

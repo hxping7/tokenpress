@@ -191,8 +191,11 @@
       "layout": "page-sidebar-left",
       "hero": {
         "enabled": true,
+        "label": "Works · 作品",
         "title": "全部作品",
-        "description": true
+        "description": true,
+        "align": "left",
+        "divider": true
       },
       "sidebar": {
         "enabled": true,
@@ -302,7 +305,14 @@
         "layout": "masonry",
         "columns": 3,
         "gap": "2rem",
-        "aspect": "4/5",
+        "aspectCycle": [
+          "3/4",
+          "1/1",
+          "4/5"
+        ],
+        "cardStyle": "flat",
+        "numberStyle": "watermark",
+        "showCategoryBadge": true,
         "numberPrefix": "N°",
         "showMeta": true,
         "showTags": true,
