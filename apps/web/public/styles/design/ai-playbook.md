@@ -41,7 +41,9 @@
 - 可选字段：`size` / `autoplay` / `interval` / `showCTA` / `ctaButtons[]`
 
 ### 首页内容块 `layouts.homepage.sections`
-1. **CustomBlock**（`size: hero`，`split: {enabled:true, ratio:'1/1.4'}`）—— 左文右图：`eyebrow`（— FIGURE DESIGNER · 手办原型师）、`title` + `titleAccent`（斜体强调）、`intro`、`stats[]`、`media`（`source` / `aspect` / `badge`）、`cta` + `cta2`
+1. **CustomBlock**（`size: hero`，`split: {enabled:true, ratio:'1/1.4'}`）—— 左文右图：`eyebrow`（— FIGURE DESIGNER · 手办原型师）、`title` + `titleAccent`（斜体强调）、`intro`、`stats[]`、`media`（`source:'latest'` / `aspect:'3/2'` / `fit:'contain'` / `badge`）、`cta` + `cta2`
+
+> `media.fit`：默认 `cover`（填满并裁切）。文章封面多为 1200×630 横版，若 `aspect` 配成竖版（如 `4/5`），`cover` 会把封面上的标题文字裁掉 —— design 包因此配 `aspect:'3/2'` + `fit:'contain'`（完整显示，留白由 `--bg-tertiary` 兜底）。
 2. **ArticleList** —— 作品流（`templates.design-gallery` 生效）
 3. **CustomBlock**（About）—— `eyebrow`、`title`、`signature`（斜体署名 `— HXP`）
 

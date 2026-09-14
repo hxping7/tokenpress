@@ -143,8 +143,9 @@
             ],
             "media": {
               "source": "latest",
-              "aspect": "4/5",
-              "badge": "LATEST · 最新作品"
+              "aspect": "3/2",
+              "badge": "LATEST · 最新作品",
+              "fit": "contain"
             },
             "cta": {
               "label": "查看作品集",

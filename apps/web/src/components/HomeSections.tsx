@@ -266,6 +266,10 @@ function CustomBlockSection({ block, ctx, heading }: { block: any; ctx?: HomeCtx
       ? (ctx?.recentArticles?.find((a: any) => a.coverImage)?.coverImage as string) || null
       : null)
   const mediaAspect = typeof media?.aspect === 'string' ? media.aspect : '4/5'
+  // fit：'cover'（默认，填满裁切）/ 'contain'（完整显示，留白由容器底色兜）。
+  // 文章封面多为 1200×630 横版，若媒体框配成竖版（如 4/5），cover 会把图上文字
+  // 裁掉——此时应改配 contain。
+  const mediaFit = media?.fit === 'contain' ? 'object-contain' : 'object-cover'
   const splitRatio = typeof split?.ratio === 'string' ? split.ratio : '1/1.4'
   const [l, r] = splitRatio.split('/')
   const splitCols = `${l || '1'}fr ${r || '1.4'}fr`
@@ -328,7 +332,7 @@ function CustomBlockSection({ block, ctx, heading }: { block: any; ctx?: HomeCtx
       style={{ aspectRatio: mediaAspect, background: 'var(--bg-tertiary)', boxShadow: 'var(--shadow-card)' }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={mediaSrc} alt={resolveLabel(media?.alt, locale) || ''} className="w-full h-full object-cover" />
+      <img src={mediaSrc} alt={resolveLabel(media?.alt, locale) || ''} className={`w-full h-full ${mediaFit}`} />
       {media?.badge && (
         <div
           className="absolute top-4 left-4 px-3 py-1.5 text-[10px] font-semibold uppercase"
