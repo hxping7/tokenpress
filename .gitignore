@@ -122,5 +122,6 @@ preview-screenshot*.png
 
 # 本地临时脚本与验证截图（根目录下划线前缀的草稿文件）
 /_*.py
+/_*.js
 /_*.png
 /_*.json
