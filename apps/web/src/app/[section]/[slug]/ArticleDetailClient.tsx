@@ -20,9 +20,11 @@ import { useSiteSettings } from '@/lib/useSiteSettings'
 interface Props {
   params: Promise<{ section: string; slug: string }>
   sectionLayouts?: SectionLayoutOverride
+  /** 服务端注入的板块中文名（首选；避免首屏/水化前退化显示 URL 段） */
+  sectionLabel?: string
 }
 
-export function ArticleDetailClient({ params, sectionLayouts }: Props) {
+export function ArticleDetailClient({ params, sectionLayouts, sectionLabel }: Props) {
   const resolvedParams = useParams()
   const slug = resolvedParams.slug as string
   const section = resolvedParams.section as string
@@ -42,12 +44,15 @@ export function ArticleDetailClient({ params, sectionLayouts }: Props) {
     enabled: !!slug,
   })
 
-  // 板块名（面包屑 / 返回链接）：与 Header 共用同一 query key，命中缓存不额外请求
+  // 板块名（面包屑 / 返回链接）：优先用服务端注入的值（首屏即为中文），
+  // 否则查 sections 列表（与 Header 共用 query key，命中缓存不额外请求），
+  // 最后才回退 URL 段。
   const { data: sectionsData } = useQuery({
     queryKey: ['sections'],
     queryFn: () => api.get('/sections'),
   })
   const sectionName: string =
+    sectionLabel ||
     ((sectionsData?.data || []) as any[]).find(
       (s) => s.path === `/${section}` || s.slug === section,
     )?.name || section
