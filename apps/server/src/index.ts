@@ -49,6 +49,7 @@ import adsPublicRoutes from './routes/ads-public.js'
 import carouselArticlesRoutes from './routes/carousel-articles.js'
 import adminAdsRoutes from './routes/admin-ads.js'
 import styleRoutes from './routes/styles.js'
+import setupRoutes from './routes/setup.js'
 import staticHtmlRoutes from './routes/statichtml.js'
 import { initProviders, loadProviderConfigFromEnv, reloadProviderFromDB } from './lib/contentReview/providers/index.js'
 import { initBuiltinStyles } from './utils/initStyles.js'
@@ -176,6 +177,7 @@ const aiPublishLimiter = rateLimit({
 // ===== Routes =====
 
 // Public routes
+app.use('/api/v1/setup', setupRoutes)
 app.use('/api/v1/auth', authRoutes)
 
 app.use('/api/v1/articles', articleRoutes)
