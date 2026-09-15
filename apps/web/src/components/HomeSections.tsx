@@ -368,8 +368,10 @@ function BlockHeading({ cfg, locale, right }: { cfg?: any; locale: string; right
 }
 
 /** 标题内斜体强调：把 titleAccent 命中的子串渲染为 accent 色斜体 */
-function renderTitle(title: string, accent?: string) {
-  const a = typeof accent === 'string' ? accent : ''
+function renderTitle(rawTitle: any, rawAccent?: any, locale = 'zh') {
+  // 双语安全：title / accent 既可能是字符串，也可能是 {zh, en} 对象
+  const title = resolveText(rawTitle, locale)
+  const a = resolveText(rawAccent, locale)
   if (!a || !title.includes(a)) return <>{title}</>
   const i = title.indexOf(a)
   return (
@@ -422,13 +424,14 @@ function CustomBlockSection({ block, ctx, heading }: { block: any; ctx?: HomeCtx
       className={`font-bold text-t-text-primary ${isHero ? 'text-4xl md:text-6xl' : 'text-2xl md:text-3xl'} tracking-tight leading-tight ${split ? '' : 'max-w-4xl mx-auto'}`}
       style={{ fontFamily: 'var(--brand-font, inherit)', fontWeight: 'var(--heading-weight, 700)' }}
     >
-      {renderTitle(p.title, p.titleAccent)}
+      {renderTitle(p.title, p.titleAccent, locale)}
     </h2>
   ) : null
 
-  const introNode = p.intro ? (
+  const introText = resolveLabel(p.intro, locale)
+  const introNode = introText ? (
     <p className={`text-t-text-secondary ${split ? '' : 'mx-auto'} ${isHero ? 'mt-6 text-base md:text-lg max-w-2xl' : 'mt-3 max-w-2xl'}`}>
-      {p.intro}
+      {introText}
     </p>
   ) : null
 
@@ -515,10 +518,11 @@ function CustomBlockSection({ block, ctx, heading }: { block: any; ctx?: HomeCtx
   ) : null
 
   const hasText = !!(p.eyebrow || p.title || p.intro || stats.length > 0 || cta || cta2)
+  const eyebrowText = resolveLabel(p.eyebrow, locale)
   const textInner = (
     <div className={split ? '' : `text-center ${isHero ? 'mb-0' : 'mb-10'}`}>
       {p.eyebrow && (
-        <div className="text-xs font-semibold tracking-widest uppercase text-t-accent-blue mb-2">{p.eyebrow}</div>
+        <div className="text-xs font-semibold tracking-widest uppercase text-t-accent-blue mb-2">{eyebrowText}</div>
       )}
       {titleNode}
       {introNode}
@@ -566,8 +570,8 @@ function CustomBlockSection({ block, ctx, heading }: { block: any; ctx?: HomeCtx
                       <Icon name={it.icon} size={28} />
                     </div>
                   )}
-                  {it.title && <div className="text-lg font-semibold text-t-text-primary mb-1">{it.title}</div>}
-                  {it.text && <div className="text-sm text-t-text-secondary">{it.text}</div>}
+                  {it.title && <div className="text-lg font-semibold text-t-text-primary mb-1">{resolveLabel(it.title, locale)}</div>}
+                  {it.text && <div className="text-sm text-t-text-secondary">{resolveLabel(it.text, locale)}</div>}
                 </>
               )
               return href === '#' ? (
