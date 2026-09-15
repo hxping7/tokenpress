@@ -112,22 +112,43 @@
           "variant": "split",
           "props": {
             "background": "#FFEDE0",
-            "eyebrow": "科技 · 创新 · 活力",
-            "title": "让增长跑起来",
-            "titleAccent": "跑起来",
-            "intro": "硬核底座、灵活编排与看得见的增长闭环。技术够稳，创意够野，结果够快——把复杂的交给平台，把创造与结果留给你。",
+            "eyebrow": {
+              "zh": "科技 · 创新 · 活力",
+              "en": "TECH · INNOVATION · ENERGY"
+            },
+            "title": {
+              "zh": "让增长跑起来",
+              "en": "Make growth run"
+            },
+            "titleAccent": {
+              "zh": "跑起来",
+              "en": "run"
+            },
+            "intro": {
+              "zh": "硬核底座、灵活编排与看得见的增长闭环。技术够稳，创意够野，结果够快——把复杂的交给平台，把创造与结果留给你。",
+              "en": "Hardened infrastructure, flexible orchestration, and a measurable growth loop. Complex parts stay on the platform — creation and results stay with you."
+            },
             "stats": [
               {
                 "value": "99.99%",
-                "label": "可用性 · 科技"
+                "label": {
+                  "zh": "可用性 · 科技",
+                  "en": "Uptime · Tech"
+                }
               },
               {
                 "value": "3.4×",
-                "label": "交付提速 · 创新"
+                "label": {
+                  "zh": "交付提速 · 创新",
+                  "en": "Faster delivery · Innovation"
+                }
               },
               {
                 "value": "+218%",
-                "label": "增长 · 活力"
+                "label": {
+                  "zh": "增长 · 活力",
+                  "en": "Growth · Energy"
+                }
               }
             ],
             "media": {
@@ -147,8 +168,14 @@
         {
           "component": "CTA",
           "props": {
-            "title": "想看看我们怎么落地？",
-            "buttonLabel": "查看解决方案",
+            "title": {
+              "zh": "想看看我们怎么落地？",
+              "en": "See how we deliver"
+            },
+            "buttonLabel": {
+              "zh": "查看解决方案",
+              "en": "View solutions"
+            },
             "href": "/solution"
           }
         },

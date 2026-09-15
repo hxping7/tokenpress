@@ -3,6 +3,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
+import { resolveText } from '@/lib/i18n-text'
+import { useLocaleStore } from '@/stores'
+
 export type HomeBannerType = 'cta' | 'cards' | 'image' | 'notice'
 export type HomeBannerPosition = 'after_hero' | 'after_articles'
 
@@ -80,6 +83,7 @@ export function HomeBanner({ config }: HomeBannerProps) {
 }
 
 function CtaBanner({ data }: { data?: HomeBannerCta }) {
+  const { locale } = useLocaleStore()
   if (!data || !data.title) return null
   const align = data.align || 'center'
   const isCenter = align === 'center'
@@ -98,9 +102,9 @@ function CtaBanner({ data }: { data?: HomeBannerCta }) {
         >
           {data.bgImage && <div className="absolute inset-0 bg-black/40" />}
           <div className={`relative z-10 ${isCenter ? 'flex flex-col items-center' : 'flex flex-col items-start'}`}>
-            <h3 className="text-2xl md:text-3xl font-bold text-white drop-shadow-sm">{data.title}</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-white drop-shadow-sm">{resolveText(data.title, locale)}</h3>
             {data.subtitle && (
-              <p className="mt-3 text-sm md:text-base text-white/80 max-w-2xl">{data.subtitle}</p>
+              <p className="mt-3 text-sm md:text-base text-white/80 max-w-2xl">{resolveText(data.subtitle, locale)}</p>
             )}
             {data.buttonText && (
               <Link
@@ -109,7 +113,7 @@ function CtaBanner({ data }: { data?: HomeBannerCta }) {
                 {...targetProps(data.buttonTarget)}
                 onClick={(e) => { if (!data.buttonLink) e.preventDefault() }}
               >
-                {data.buttonText}
+                {resolveText(data.buttonText, locale)}
               </Link>
             )}
           </div>
@@ -120,6 +124,7 @@ function CtaBanner({ data }: { data?: HomeBannerCta }) {
 }
 
 function CardsBanner({ data }: { data?: HomeBannerCard[] }) {
+  const { locale } = useLocaleStore()
   if (!data || data.length === 0) return null
   return (
     <section className="py-6 px-4">
@@ -138,7 +143,7 @@ function CardsBanner({ data }: { data?: HomeBannerCard[] }) {
               </div>
             )}
             <h4 className="font-semibold text-t-text-primary group-hover:text-t-accent-blue transition-colors">
-              {card.title}
+              {resolveText(card.title, locale)}
             </h4>
             {card.desc && <p className="mt-1.5 text-sm text-t-text-secondary">{card.desc}</p>}
           </Link>
@@ -181,10 +186,11 @@ function ImageBanner({ data }: { data?: HomeBannerImage }) {
 }
 
 function NoticeBanner({ data }: { data?: HomeBannerNotice }) {
+  const { locale } = useLocaleStore()
   if (!data || !data.text) return null
   const content = (
     <span className="text-sm text-t-text-primary">
-      {data.text}
+      {resolveText(data.text, locale)}
       {data.link && <span className="ml-2 text-t-accent-blue underline">→</span>}
     </span>
   )

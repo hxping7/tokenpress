@@ -123,22 +123,43 @@
               "enabled": true,
               "ratio": "1/1.4"
             },
-            "eyebrow": "— FIGURE DESIGNER · 手办原型师",
-            "title": "把角色塑成收藏",
-            "titleAccent": "塑成收藏",
-            "intro": "我是一名原型设计师，专注于角色造型与限定手办的雕塑造物。在这里记录每一件作品从草图、翻模到涂装完成的全过程。",
+            "eyebrow": {
+              "zh": "— FIGURE DESIGNER · 手办原型师",
+              "en": "— FIGURE DESIGNER · Prototype Artist"
+            },
+            "title": {
+              "zh": "把角色塑成收藏",
+              "en": "Sculpt characters into collectibles"
+            },
+            "titleAccent": {
+              "zh": "塑成收藏",
+              "en": "collectibles"
+            },
+            "intro": {
+              "zh": "我是一名原型设计师，专注于角色造型与限定手办的雕塑造物。在这里记录每一件作品从草图、翻模到涂装完成的全过程。",
+              "en": "I am a prototype designer focused on character sculpting and limited-edition figures. Here I document every piece — from sketch and moulding to the final paint job."
+            },
             "stats": [
               {
                 "value": "12",
-                "label": "件完成作品"
+                "label": {
+                  "zh": "件完成作品",
+                  "en": "Finished pieces"
+                }
               },
               {
                 "value": "4",
-                "label": "在制原型"
+                "label": {
+                  "zh": "在制原型",
+                  "en": "Work in progress"
+                }
               },
               {
                 "value": "2024 —",
-                "label": ""
+                "label": {
+                  "zh": "",
+                  "en": ""
+                }
               }
             ],
             "media": {
@@ -148,12 +169,18 @@
               "fit": "contain"
             },
             "cta": {
-              "label": "查看作品集",
+              "label": {
+                "zh": "查看作品集",
+                "en": "View portfolio"
+              },
               "href": "/works",
               "style": "primary"
             },
             "cta2": {
-              "label": "制作工艺",
+              "label": {
+                "zh": "制作工艺",
+                "en": "Craft process"
+              },
               "href": "/craft",
               "style": "outline"
             }

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "packId": "enterprise",
-  "generatedAt": "2026-09-15T10:59:45.594Z",
+  "generatedAt": "2026-09-15T11:21:30.225Z",
   "note": "演示示例内容。安装时按 slug / key 幂等跳过已存在项；媒体自 demo-media/ 复制到目标站 uploads。",
   "siteSettings": {
     "site_name": "NOVA VERTEX",
@@ -23,7 +23,7 @@
     "hero_carousel_interval": "3",
     "share_config": "{\"enabled\":true,\"platforms\":[\"wechat\",\"moments\",\"weibo\",\"qq\",\"qzone\",\"copy\"],\"positions\":[\"float_right\",\"article_bottom\"],\"likeEnabled\":true,\"likePositions\":[\"article_bottom\"]}",
     "content_max_width": "100%",
-    "hero_cta_buttons": "[{\"label\":\"了解产品\",\"href\":\"/product\",\"target\":\"_self\",\"variant\":\"primary\"},{\"label\":\"查看解决方案\",\"href\":\"/solution\",\"target\":\"_self\",\"variant\":\"secondary\"},{\"label\":\"联系我们\",\"href\":\"/about\",\"target\":\"_self\",\"variant\":\"secondary\"}]",
+    "hero_cta_buttons": "[{\"label\":{\"zh\":\"了解产品\",\"en\":\"Explore product\"},\"href\":\"/product\",\"target\":\"_self\",\"variant\":\"primary\"},{\"label\":{\"zh\":\"查看解决方案\",\"en\":\"View solutions\"},\"href\":\"/solution\",\"target\":\"_self\",\"variant\":\"secondary\"},{\"label\":{\"zh\":\"联系我们\",\"en\":\"Contact us\"},\"href\":\"/about\",\"target\":\"_self\",\"variant\":\"secondary\"}]",
     "home_banner_enabled": "true",
     "home_banner_type": "image",
     "home_banner_position": "after_hero",
@@ -31,7 +31,7 @@
     "home_banner_cards": "[]",
     "home_banner_image": "{\"url\":\"demo-media/202607/china-coding-plan-comparison-2026-cover-mr3en0ecstol.svg\",\"link\":\"/blog\",\"target\":\"_self\",\"alt\":\"测试单图横幅\"}",
     "home_banner_notice": "{\"text\":\"\",\"link\":\"\",\"target\":\"_self\",\"marquee\":false}",
-    "home_banners": "[{\"id\":\"home_main\",\"enabled\":true,\"type\":\"cta\",\"position\":\"after_hero\",\"cta\":{\"title\":\"把智能装进你的业务流程\",\"subtitle\":\"NOVA VERTEX · 云原生算力 · 推理网关 · 数据服务\",\"buttonText\":\"查看解决方案\",\"buttonLink\":\"/solution\"}}]",
+    "home_banners": "[{\"id\":\"home_main\",\"enabled\":true,\"type\":\"cta\",\"position\":\"after_hero\",\"cta\":{\"title\":{\"zh\":\"把智能装进你的业务流程\",\"en\":\"Embed intelligence into your workflow\"},\"subtitle\":{\"zh\":\"NOVA VERTEX · 云原生算力 · 推理网关 · 数据服务\",\"en\":\"NOVA VERTEX · Cloud compute · Inference gateway · Data services\"},\"buttonText\":{\"zh\":\"查看解决方案\",\"en\":\"View solutions\"},\"buttonLink\":\"/solution\"}}]",
     "welcome_page_enabled": "false",
     "welcome_page_html": "/statichtml/welcome.html"
   },

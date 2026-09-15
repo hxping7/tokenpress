@@ -12,6 +12,7 @@ import { Icon } from '@/components/Header'
 import { api } from '@/lib/api'
 import { t } from '@/lib/i18n'
 import { useLocaleStore } from '@/stores'
+import { resolveText } from '@/lib/i18n-text'
 import { useStyleLayouts } from '@/components/StyleProvider'
 
 interface HeroSlide { id: string; imageUrl: string; linkUrl: string; linkTarget: '_blank' | '_self' }
@@ -43,8 +44,11 @@ function HeroSplitSection({
   effect?: string
 }) {
   const { locale } = useLocaleStore()
-  const title = String(props?.title || '')
-  const accent = String(props?.titleAccent || '')
+  // 装修文案支持双语对象 {zh, en}（单语字符串原样返回）
+  const eyebrow = resolveLabel(props?.eyebrow, locale)
+  const intro = resolveLabel(props?.intro, locale)
+  const title = resolveLabel(props?.title, locale)
+  const accent = resolveLabel(props?.titleAccent, locale)
   const titleParts = accent && title.includes(accent) ? title.split(accent) : [title, '']
   const stats = Array.isArray(props?.stats) ? props.stats.slice(0, 3) : []
   const media = props?.media || {}
@@ -58,8 +62,8 @@ function HeroSplitSection({
       <div className="max-w-[var(--content-max-width)] mx-auto grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-12 items-center">
         {/* 左：门面文案（装修，来自风格包） */}
         <div>
-          {props?.eyebrow && (
-            <div className="text-xs tracking-[0.18em] uppercase text-t-accent-blue mb-4">{props.eyebrow}</div>
+          {eyebrow && (
+            <div className="text-xs tracking-[0.18em] uppercase text-t-accent-blue mb-4">{eyebrow}</div>
           )}
           {title && (
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-t-text-primary leading-[1.15]">
@@ -72,15 +76,15 @@ function HeroSplitSection({
               )}
             </h1>
           )}
-          {props?.intro && (
-            <p className="mt-5 text-base md:text-lg leading-relaxed text-t-text-secondary max-w-[34rem]">{props.intro}</p>
+          {intro && (
+            <p className="mt-5 text-base md:text-lg leading-relaxed text-t-text-secondary max-w-[34rem]">{intro}</p>
           )}
           {stats.length > 0 && (
             <div className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
               {stats.map((s: any, i: number) => (
                 <div key={i}>
                   <div className="text-2xl font-extrabold text-t-accent-blue tabular-nums">{s?.value}</div>
-                  <div className="text-xs text-t-text-muted mt-1">{s?.label}</div>
+                  <div className="text-xs text-t-text-muted mt-1">{resolveLabel(s?.label, locale)}</div>
                 </div>
               ))}
             </div>
@@ -268,8 +272,8 @@ function CtaSection({ variant, props }: { variant?: string; props?: any }) {
   // 落点与文案可由风格包区块 props 覆盖；默认指向全站文章列表 /articles
   // （历史上硬编码 /blog，与站点实际板块无关，切换风格包后会变成 404 死链）
   const ctaHref = String(props?.href || '/articles')
-  const ctaTitle = props?.title || (locale === 'en' ? 'Explore our latest' : '浏览最新内容')
-  const ctaLabel = props?.buttonLabel || (locale === 'en' ? 'View all' : '查看全部')
+  const ctaTitle = resolveLabel(props?.title, locale) || (locale === 'en' ? 'Explore our latest' : '浏览最新内容')
+  const ctaLabel = resolveLabel(props?.buttonLabel, locale) || (locale === 'en' ? 'View all' : '查看全部')
   // banner 变体：实色 accent 底（去渐变），白字 + 白底反色按钮
   if (variant === 'banner') {
     return (
@@ -317,12 +321,8 @@ function sanitizeHref(href?: string): string {
   return '#'
 }
 
-function resolveLabel(label: any, locale: string): string {
-  if (!label) return ''
-  if (typeof label === 'string') return label
-  if (typeof label === 'object') return locale === 'en' ? (label.en ?? label.zh ?? '') : (label.zh ?? label.en ?? '')
-  return ''
-}
+// 装修文案双语解析（共享实现，见 @/lib/i18n-text）
+const resolveLabel = resolveText
 
 /**
  * 通用区块标题（风格包可配）：{ label, title, more:{ label, href } }
