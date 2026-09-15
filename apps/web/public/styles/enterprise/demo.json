@@ -1,12 +1,12 @@
 {
   "version": 1,
   "packId": "enterprise",
-  "generatedAt": "2026-09-15T07:38:24.030Z",
-  "note": "企业风格演示示例内容。安装时按 slug 幂等跳过已存在项；媒体自 demo-media/ 复制到目标站 uploads。",
+  "generatedAt": "2026-09-15T07:52:32.731Z",
+  "note": "演示示例内容。安装时按 slug / key 幂等跳过已存在项；媒体自 demo-media/ 复制到目标站 uploads。",
   "siteSettings": {
     "site_name": "NOVA VERTEX",
     "site_description": "面向智能时代的云原生基础设施平台：算力调度、推理网关与数据服务，一次接入，随业务生长。",
-    "footer_nav": "[{\"title\":\"产品\",\"links\":[{\"name\":\"云平台\",\"url\":\"/product\"},{\"name\":\"智能体\",\"url\":\"/product\"},{\"name\":\"数据服务\",\"url\":\"/product\"}]},{\"title\":\"解决方案\",\"links\":[{\"name\":\"零售\",\"url\":\"/solution\"},{\"name\":\"制造\",\"url\":\"/solution\"},{\"name\":\"金融\",\"url\":\"/solution\"}]},{\"title\":\"公司\",\"links\":[{\"name\":\"企业动态\",\"url\":\"/insights\"},{\"name\":\"关于我们\",\"url\":\"/about\"}]}]",
+    "footer_nav": "[{\"title\":\"产品\",\"links\":[{\"name\":\"云平台\",\"url\":\"/product\"},{\"name\":\"智能体\",\"url\":\"/product\"},{\"name\":\"数据服务\",\"url\":\"/product\"}]},{\"title\":\"解决方案\",\"links\":[{\"name\":\"零售\",\"url\":\"/solution\"},{\"name\":\"制造\",\"url\":\"/solution\"},{\"name\":\"金融\",\"url\":\"/solution\"}]},{\"title\":\"公司\",\"links\":[{\"name\":\"企业动态\",\"url\":\"/insights\"},{\"name\":\"关于我们\",\"url\":\"/about\"}]},{\"title\":\"联系我们\",\"html\":\"<div style=\\\"display:flex;gap:14px\\\"><figure style=\\\"margin:0;text-align:center\\\">\\n<img src=\\\"demo-media/202609/enterprise/qr-wecom.png\\\" alt=\\\"企业微信\\\" width=\\\"104\\\" height=\\\"104\\\" style=\\\"display:block;border-radius:10px;background:#fff;padding:6px\\\" />\\n<figcaption style=\\\"margin-top:8px;font-size:12px;letter-spacing:.04em\\\">企业微信</figcaption>\\n</figure><figure style=\\\"margin:0;text-align:center\\\">\\n<img src=\\\"demo-media/202609/enterprise/qr-feishu.png\\\" alt=\\\"飞书\\\" width=\\\"104\\\" height=\\\"104\\\" style=\\\"display:block;border-radius:10px;background:#fff;padding:6px\\\" />\\n<figcaption style=\\\"margin-top:8px;font-size:12px;letter-spacing:.04em\\\">飞书</figcaption>\\n</figure></div>\\n<p style=\\\"margin:12px 0 0;font-size:12px;opacity:.72\\\">扫码添加咨询 / 加入飞书群</p>\"}]",
     "friend_links_columns": "2",
     "copyright_text": "© 2026 NOVA VERTEX · 云原生智能底座",
     "icp_number": "ICP备案",

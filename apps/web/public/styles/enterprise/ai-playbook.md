@@ -3,7 +3,7 @@
 > 本文件描述**当前生效**的企业风格包（方案 C ·「科技 + 创新 + 活力」融合，活力为骨的高对比演绎）。改包后请同步更新。
 
 ## 自带演示示例内容
-本包携带 `demo.json` + `demo-media/`（34 个 SVG 媒体），内容是一座完整的科技企业站：
+本包携带 `demo.json` + `demo-media/`（36 个媒体：34 张 SVG 封面与内文插图 + 2 张联系二维码 PNG），内容是一座完整的科技企业站：
 
 | 板块 | 路径 | 分类 | 文章 |
 | --- | --- | --- | --- |
@@ -60,6 +60,7 @@
 - `nav.columns: 4`，标题大写粗体、链接 0.9rem/行高2
 - `bottom`: `layout: between`、`showIcp: true`（**ICP 备案链接来自 site_settings 的 `icp_number` / `icp_url`**，默认指向 beian.miit.gov.cn）、`showPoweredBy: true`
 - `friendLinks.show: false`
+- **联系二维码**：`footer_nav` 第 4 列为 HTML 块，并排展示「企业微信」与「飞书」两张示例二维码（PNG 存于 uploads，示范用，真实站点请换成自家二维码）。footer 本身仍是装修，导航文案与二维码内容都来自 `site_settings.footer_nav`。
 
 ### `features`
 `readingProgressBar: true` / `backToTop: true` / `welcomeOverlay: true` / `languageSwitcher: icon`
