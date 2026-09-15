@@ -22,9 +22,13 @@ export interface HeroCtaButton {
   variant?: HeroCtaVariant
 }
 
+// 兜底按钮：仅在后台未配置 hero_cta_buttons 时使用。
+// 落点必须是**任何站点都存在**的通用路径（历史上写死 /token-plan、/ai-works，
+// 换站后即为 404 死链）。
+// 兜底按钮：仅在后台未配置 hero_cta_buttons 时使用。落点必须是任何站点都存在的
+// 通用路径（历史上写死 /token-plan、/ai-works，换站后即为 404 死链）。
 export const DEFAULT_HERO_CTA: HeroCtaButton[] = [
-  { label: 'Token 套餐', href: '/token-plan', target: '_self', variant: 'primary' },
-  { label: '查看 AI 作品', href: '/ai-works', target: '_self', variant: 'secondary' },
+  { label: '浏览内容', href: '/articles', target: '_self', variant: 'primary' },
 ]
 
 interface HeroCarouselProps {

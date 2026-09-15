@@ -263,21 +263,26 @@ function ArticleListSection({ articles, columns = 3, limit, showViewToggle = tru
   )
 }
 
-function CtaSection({ variant }: { variant?: string }) {
+function CtaSection({ variant, props }: { variant?: string; props?: any }) {
   const { locale } = useLocaleStore()
+  // 落点与文案可由风格包区块 props 覆盖；默认指向全站文章列表 /articles
+  // （历史上硬编码 /blog，与站点实际板块无关，切换风格包后会变成 404 死链）
+  const ctaHref = String(props?.href || '/articles')
+  const ctaTitle = props?.title || (locale === 'en' ? 'Explore our latest' : '浏览最新内容')
+  const ctaLabel = props?.buttonLabel || (locale === 'en' ? 'View all' : '查看全部')
   // banner 变体：实色 accent 底（去渐变），白字 + 白底反色按钮
   if (variant === 'banner') {
     return (
       <section className="py-10 px-4">
         <div className="max-w-[var(--content-max-width)] mx-auto">
           <div className="rounded-2xl p-10 text-center bg-t-accent-blue">
-            <h2 className="text-2xl font-bold text-white mb-4">{locale === 'en' ? 'Ready to start?' : '准备好了吗？'}</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">{ctaTitle}</h2>
             <Link
-              href="/blog"
+              href={ctaHref}
               className="inline-flex items-center px-6 py-3 bg-white text-t-accent-blue font-medium hover:opacity-90 transition-opacity"
               style={{ borderRadius: 'var(--btn-radius)' }}
             >
-              {locale === 'en' ? 'Read the blog' : '阅读博客'}
+              {ctaLabel}
             </Link>
           </div>
         </div>
@@ -288,9 +293,9 @@ function CtaSection({ variant }: { variant?: string }) {
     <section className="py-10 px-4">
       <div className="max-w-[var(--content-max-width)] mx-auto">
         <div className="card-surface rounded-2xl p-10 text-center">
-          <h2 className="text-2xl font-bold text-t-text-primary mb-4">{locale === 'en' ? 'Ready to start?' : '准备好了吗？'}</h2>
-          <Link href="/blog" className="btn-pack-primary px-6 py-3">
-            {locale === 'en' ? 'Read the blog' : '阅读博客'}
+          <h2 className="text-2xl font-bold text-t-text-primary mb-4">{ctaTitle}</h2>
+          <Link href={ctaHref} className="btn-pack-primary px-6 py-3">
+            {ctaLabel}
           </Link>
         </div>
       </div>
@@ -626,7 +631,7 @@ const HOMEPAGE_REGISTRY: Record<string, (sec: any, ctx: HomeCtx) => JSX.Element 
       heading={sec.heading}
     />
   ),
-  CTA: (sec) => <CtaSection variant={sec.variant} />,
+  CTA: (sec) => <CtaSection variant={sec.variant} props={sec.props} />,
   Banner: (sec, ctx) => {
     const id = sec.id as string | undefined
     const cfg = id

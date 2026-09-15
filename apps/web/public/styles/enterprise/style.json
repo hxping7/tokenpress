@@ -145,7 +145,12 @@
           "component": "Banner"
         },
         {
-          "component": "CTA"
+          "component": "CTA",
+          "props": {
+            "title": "想看看我们怎么落地？",
+            "buttonLabel": "查看解决方案",
+            "href": "/solution"
+          }
         },
         {
           "component": "ArticleList"

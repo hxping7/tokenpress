@@ -112,7 +112,7 @@ async function getHeroSlides(): Promise<HeroResult> {
         articleSlides = articles.map((article: any) => ({
           id: `article-${article.id}`,
           imageUrl: article.coverImage,
-          linkUrl: `${article.section?.path || '/blog'}/${article.slug}`,
+          linkUrl: `${article.section?.path || ''}/${article.slug}`,
           linkTarget: '_blank',
         }))
       }
