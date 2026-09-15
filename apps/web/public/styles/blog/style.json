@@ -2,7 +2,7 @@
   "$": {
     "id": "blog",
     "name": "科技博客（默认）",
-    "description": "经典科技博客布局：毛玻璃吸顶 Header、左文右图 Hero、文章网格 + 右侧栏板块、双栏文章页。",
+    "description": "经典科技博客布局：吸顶 Header、Hero 轮播、文章网格 + 右侧栏板块、双栏文章页。",
     "version": "1.1.0",
     "author": "token00",
     "preview": "/styles/blog/preview.png",
@@ -65,13 +65,12 @@
       "align": "left",
       "style": "pill",
       "icons": {
-        "token_plan": "command",
-        "githubhots": "github",
-        "ai_coding": "code",
-        "ai_works": "image",
-        "ai_info": "newspaper",
-        "blog": "book",
-        "design-works": "penTool"
+        "code": "code",
+        "ai": "sparkles",
+        "token": "zap",
+        "robotics": "bot",
+        "github": "github",
+        "about": "info"
       },
       "colors": {
         "text": "#3a3a3f",
@@ -97,18 +96,6 @@
           "zh": "中文",
           "en": "EN"
         }
-      },
-      {
-        "type": "logout",
-        "icon": "logout",
-        "style": "ghost",
-        "showWhen": "loggedIn"
-      },
-      {
-        "type": "login",
-        "icon": "user",
-        "style": "outline",
-        "showWhen": "loggedOut"
       }
     ],
     "background": "#ffffff",

@@ -80,11 +80,6 @@
     },
     "actions": [
       {
-        "type": "search",
-        "icon": "search",
-        "style": "icon"
-      },
-      {
         "type": "theme",
         "icon": "palette",
         "style": "icon"
