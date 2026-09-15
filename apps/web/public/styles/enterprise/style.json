@@ -100,42 +100,18 @@
   },
   "hero": {
     "enabled": true,
-    "size": "standard",
     "autoplay": true,
-    "interval": 5,
-    "showCTA": true,
-    "ctaButtons": [
-      {
-        "label": {
-          "zh": "立即开始",
-          "en": "Get Started"
-        },
-        "href": "/about",
-        "style": "primary"
-      },
-      {
-        "label": {
-          "zh": "看案例",
-          "en": "Case Studies"
-        },
-        "href": "/works",
-        "style": "outline"
-      }
-    ]
+    "showCTA": true
   },
   "layouts": {
     "homepage": {
       "container": "full",
       "sections": [
         {
-          "component": "CustomBlock",
+          "component": "Hero",
+          "variant": "split",
           "props": {
-            "size": "hero",
             "background": "#FFEDE0",
-            "split": {
-              "enabled": true,
-              "ratio": "1.08/0.92"
-            },
             "eyebrow": "科技 · 创新 · 活力",
             "title": "让增长跑起来",
             "titleAccent": "跑起来",
@@ -159,21 +135,14 @@
               "aspect": "3/2",
               "fit": "contain",
               "badge": "REALTIME · 实时增长"
-            },
-            "cta": {
-              "label": "立即开始",
-              "href": "/about",
-              "style": "primary"
-            },
-            "cta2": {
-              "label": "看案例",
-              "href": "/works",
-              "style": "outline"
             }
           }
         },
         {
           "component": "Features"
+        },
+        {
+          "component": "Banner"
         },
         {
           "component": "CTA"

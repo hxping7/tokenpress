@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a" />
+      <stop offset="50%" style="stop-color:#1e1b4b" />
+      <stop offset="100%" style="stop-color:#0f172a" />
+    </linearGradient>
+    <linearGradient id="accent1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7c3aed" />
+      <stop offset="100%" style="stop-color:#06b6d4" />
+    </linearGradient>
+    <linearGradient id="accent2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b" />
+      <stop offset="100%" style="stop-color:#ef4444" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Decorative grid lines -->
+  <g opacity="0.05" stroke="#fff" stroke-width="0.5">
+    <line x1="0" y1="100" x2="1200" y2="100" />
+    <line x1="0" y1="200" x2="1200" y2="200" />
+    <line x1="0" y1="300" x2="1200" y2="300" />
+    <line x1="0" y1="400" x2="1200" y2="400" />
+    <line x1="0" y1="500" x2="1200" y2="500" />
+    <line x1="200" y1="0" x2="200" y2="630" />
+    <line x1="400" y1="0" x2="400" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="800" y1="0" x2="800" y2="630" />
+    <line x1="1000" y1="0" x2="1000" y2="630" />
+  </g>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1200" height="6" fill="url(#accent1)" />
+
+  <!-- Left decorative circle -->
+  <circle cx="150" cy="400" r="300" fill="#7c3aed" opacity="0.08" />
+  <circle cx="150" cy="400" r="200" fill="#06b6d4" opacity="0.06" />
+
+  <!-- Right decorative circle -->
+  <circle cx="1050" cy="200" r="250" fill="#f59e0b" opacity="0.06" />
+  <circle cx="1050" cy="200" r="150" fill="#ef4444" opacity="0.04" />
+
+  <!-- Price tag icon area - left side -->
+  <g transform="translate(80, 200)">
+    <!-- Token icon -->
+    <rect x="0" y="0" width="80" height="80" rx="16" fill="url(#accent1)" opacity="0.9" />
+    <text x="40" y="52" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#fff" text-anchor="middle">T</text>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="140" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="#f1f5f9" text-anchor="middle" letter-spacing="2">中国大陆 AI Coding Plan</text>
+  <text x="600" y="200" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#accent1)" text-anchor="middle" letter-spacing="2">&amp; Token Plan 全面对比</text>
+
+  <!-- Subtitle / date -->
+  <text x="600" y="260" font-family="Arial, sans-serif" font-size="22" fill="#94a3b8" text-anchor="middle">2026年7月最新版 · 17家厂商 · 全面横评</text>
+
+  <!-- Divider -->
+  <line x1="400" y1="300" x2="800" y2="300" stroke="url(#accent1)" stroke-width="2" opacity="0.5" />
+
+  <!-- Key highlights -->
+  <g transform="translate(100, 370)">
+    <rect x="0" y="0" width="300" height="90" rx="12" fill="#1e293b" stroke="#7c3aed" stroke-width="1" opacity="0.8" />
+    <text x="150" y="35" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#a78bfa" text-anchor="middle">🔥 百度千帆停服</text>
+    <text x="150" y="65" font-family="Arial, sans-serif" font-size="15" fill="#cbd5e1" text-anchor="middle">Coding Plan 4个月短命终结</text>
+  </g>
+
+  <g transform="translate(450, 370)">
+    <rect x="0" y="0" width="300" height="90" rx="12" fill="#1e293b" stroke="#06b6d4" stroke-width="1" opacity="0.8" />
+    <text x="150" y="35" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#22d3ee" text-anchor="middle">🚀 Kimi ¥15/月</text>
+    <text x="150" y="65" font-family="Arial, sans-serif" font-size="15" fill="#cbd5e1" text-anchor="middle">入门价大幅下调70%</text>
+  </g>
+
+  <g transform="translate(800, 370)">
+    <rect x="0" y="0" width="300" height="90" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1" opacity="0.8" />
+    <text x="150" y="35" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#fbbf24" text-anchor="middle">💰 Token Plan 主旋律</text>
+    <text x="150" y="65" font-family="Arial, sans-serif" font-size="15" fill="#cbd5e1" text-anchor="middle">全面取代Coding Plan时代</text>
+  </g>
+
+  <!-- Bottom tags -->
+  <rect x="120" y="520" width="160" height="36" rx="18" fill="#7c3aed" opacity="0.3" />
+  <text x="200" y="544" font-family="Arial, sans-serif" font-size="14" fill="#a78bfa" text-anchor="middle">MiniMax M3</text>
+  <rect x="300" y="520" width="160" height="36" rx="18" fill="#06b6d4" opacity="0.3" />
+  <text x="380" y="544" font-family="Arial, sans-serif" font-size="14" fill="#22d3ee" text-anchor="middle">DeepSeek V4</text>
+  <rect x="480" y="520" width="160" height="36" rx="18" fill="#10b981" opacity="0.3" />
+  <text x="560" y="544" font-family="Arial, sans-serif" font-size="14" fill="#34d399" text-anchor="middle">GLM-5</text>
+  <rect x="660" y="520" width="160" height="36" rx="18" fill="#f59e0b" opacity="0.3" />
+  <text x="740" y="544" font-family="Arial, sans-serif" font-size="14" fill="#fbbf24" text-anchor="middle">字节豆包¥9.9</text>
+  <rect x="840" y="520" width="160" height="36" rx="18" fill="#ef4444" opacity="0.3" />
+  <text x="920" y="544" font-family="Arial, sans-serif" font-size="14" fill="#f87171" text-anchor="middle">MiMo V2.5</text>
+
+  <!-- Footer -->
+  <text x="600" y="600" font-family="Arial, sans-serif" font-size="14" fill="#475569" text-anchor="middle">token00.com · 持续追踪 Token Plan 市场动态</text>
+</svg>

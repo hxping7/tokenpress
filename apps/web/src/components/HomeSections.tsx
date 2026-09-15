@@ -18,10 +18,144 @@ interface HeroSlide { id: string; imageUrl: string; linkUrl: string; linkTarget:
 interface Article { id: number; title: string; slug: string; excerpt: string | null; coverImage: string | null; publishedAt: string; section: { name: string; path: string } }
 interface SectionItem { id: number; name: string; slug: string; path: string; externalUrl: string | null }
 
-function HeroSection({ slides, size, interval, ctaButtons, variant, autoplay, showCTA }: {
-  slides: HeroSlide[]; size: string; interval: number; ctaButtons: HeroCtaButton[]; variant?: string
-  autoplay?: boolean; showCTA?: boolean
+/**
+ * Hero 的「左文右图」形态（区块 variant: 'split'）。
+ *
+ * 关键约束：**后台的宣传页设置必须继续生效** —— 右侧就是后台配置的轮播
+ * （hero_slides 手动图 / 文章封面填补 / 轮播数量 / 间隔 / 尺寸），左侧是风格包
+ * 提供的门面文案。未配置任何轮播图时，右侧回退到包内媒体（props.media.src）。
+ */
+function HeroSplitSection({
+  props,
+  slides,
+  size,
+  interval,
+  ctaButtons,
+  autoplay,
+}: {
+  props: any
+  slides: HeroSlide[]
+  size: string
+  interval: number
+  ctaButtons: HeroCtaButton[]
+  autoplay?: boolean
 }) {
+  const { locale } = useLocaleStore()
+  const title = String(props?.title || '')
+  const accent = String(props?.titleAccent || '')
+  const titleParts = accent && title.includes(accent) ? title.split(accent) : [title, '']
+  const stats = Array.isArray(props?.stats) ? props.stats.slice(0, 3) : []
+  const media = props?.media || {}
+  const hasSlides = slides.length > 0
+
+  return (
+    <section
+      className="py-16 md:py-20 px-4"
+      style={props?.background ? { background: props.background } : undefined}
+    >
+      <div className="max-w-[var(--content-max-width)] mx-auto grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-10 lg:gap-12 items-center">
+        {/* 左：门面文案（装修，来自风格包） */}
+        <div>
+          {props?.eyebrow && (
+            <div className="text-xs tracking-[0.18em] uppercase text-t-accent-blue mb-4">{props.eyebrow}</div>
+          )}
+          {title && (
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-t-text-primary leading-[1.15]">
+              {titleParts[0]}
+              {accent && titleParts[1] !== undefined && (
+                <span className="text-t-accent-blue">
+                  {accent}
+                  {titleParts.slice(2).join(accent)}
+                </span>
+              )}
+            </h1>
+          )}
+          {props?.intro && (
+            <p className="mt-5 text-base md:text-lg leading-relaxed text-t-text-secondary max-w-[34rem]">{props.intro}</p>
+          )}
+          {stats.length > 0 && (
+            <div className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
+              {stats.map((s: any, i: number) => (
+                <div key={i}>
+                  <div className="text-2xl font-extrabold text-t-accent-blue tabular-nums">{s?.value}</div>
+                  <div className="text-xs text-t-text-muted mt-1">{s?.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {ctaButtons.length > 0 && (
+            <div className="mt-8 flex flex-wrap gap-3">
+              {ctaButtons.map((b, i) => {
+                const isSecondary = b.variant === 'ghost'
+                const primary = !isSecondary && (b.variant === 'primary' || i === 0)
+                return (
+                  <Link
+                    key={i}
+                    href={b.href || '#'}
+                    target={b.target === '_blank' ? '_blank' : undefined}
+                    rel={b.target === '_blank' ? 'noopener noreferrer' : undefined}
+                    className={
+                      primary
+                        ? 'inline-flex items-center px-6 py-3 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90'
+                        : 'inline-flex items-center px-6 py-3 rounded-full text-sm font-bold border-2 border-t-border text-t-text-primary hover:bg-t-hover transition-colors'
+                    }
+                    style={
+                      primary
+                        ? { background: 'linear-gradient(100deg, var(--accent-blue), var(--accent-purple))' }
+                        : undefined
+                    }
+                  >
+                    {typeof b.label === 'string' ? b.label : (b.label as any)?.[locale] || '按钮'}
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 右：后台配置的轮播（设置生效处）；无图时回退包内媒体 */}
+        <div>
+          {hasSlides ? (
+            <HeroCarousel
+              slides={slides}
+              size={size as any}
+              interval={interval}
+              ctaButtons={[]}
+              autoplay={autoplay}
+              showCTA={false}
+            />
+          ) : media?.src ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={media.src}
+              alt={props?.title || 'hero'}
+              className="w-full h-auto rounded-[var(--radius-card)]"
+              style={{ aspectRatio: String(media.aspect || '3/2').replace('/', ' / '), objectFit: media.fit === 'cover' ? 'cover' : 'contain' }}
+            />
+          ) : null}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function HeroSection({ slides, size, interval, ctaButtons, variant, autoplay, showCTA, props }: {
+  slides: HeroSlide[]; size: string; interval: number; ctaButtons: HeroCtaButton[]; variant?: string
+  autoplay?: boolean; showCTA?: boolean; props?: any
+}) {
+  // variant === 'split'：左文右图（右侧仍是后台配置的轮播）
+  if (variant === 'split') {
+    return (
+      <HeroSplitSection
+        props={props}
+        slides={slides}
+        size={size}
+        interval={interval}
+        ctaButtons={showCTA === false ? [] : ctaButtons}
+        autoplay={autoplay}
+      />
+    )
+  }
   // size 取自 siteSettings（p.size > heroSize 回退），variant 仅控制展示风格（如 split-image-right）
   const heroSize = size || 'standard'
   return (
@@ -470,6 +604,7 @@ const HOMEPAGE_REGISTRY: Record<string, (sec: any, ctx: HomeCtx) => JSX.Element 
         variant={sec.variant}
         autoplay={ctx.heroAutoplay}
         showCTA={ctx.heroShowCTA}
+        props={sec.props}
       />
     )
   },

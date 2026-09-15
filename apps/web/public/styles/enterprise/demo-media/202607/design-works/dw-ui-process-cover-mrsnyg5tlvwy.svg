@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f43f5e"/><stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0b1020"/>
+  <rect width="1200" height="630" fill="url(#g)" opacity="0.22"/>
+  <circle cx="980" cy="120" r="220" fill="url(#g)" opacity="0.35"/>
+  <circle cx="160" cy="560" r="160" fill="#f59e0b" opacity="0.25"/>
+  <text x="80" y="120" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="30" fill="#ffffff" opacity="0.85">设计师作品 · 测试</text>
+  <text x="80" y="250" font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="58" font-weight="700" fill="#ffffff"><tspan x="80" dy="0">设计流程公开：从草图到高保真原型</tspan></text>
+  <text x="80" y="560" font-family="sans-serif" font-size="26" fill="#ffffff" opacity="0.7">2026-07-20 · Token00 测试封面</text>
+</svg>

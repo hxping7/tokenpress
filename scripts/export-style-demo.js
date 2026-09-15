@@ -39,13 +39,23 @@ const UPLOADS_DIR = process.env.TP_UPLOADS || '/app/apps/server/data/uploads'
 const MEDIA_PREFIX = '/api/v1/media/files/uploads/'
 const DEMO_MEDIA = 'demo-media'
 
-// 站点设置白名单：只带演示站必需的信息，不含密钥 / 限流 / 环境相关
+// 站点设置白名单：只带演示站必需的信息，不含密钥 / 限流 / 环境相关。
+// 注意：**首页宣传位设置也属内容配置**（轮播图、Hero CTA 按钮、中部 banner、欢迎页），
+// 一并带出，否则新装环境装上演示内容后首页宣传位是空的。
 const SETTING_KEYS = [
   'site_name', 'site_description', 'copyright_text', 'icp_number', 'icp_url', 'powered_by',
   'footer_nav', 'footer_nav_columns', 'friend_links_columns',
   'home_feature_eyebrow', 'home_feature_title', 'home_feature_title_accent', 'home_feature_intro', 'home_feature_stats',
   'home_about_title', 'home_about_intro',
   'default_theme', 'content_max_width', 'share_config',
+  // 首页宣传页 / 轮播
+  'hero_slides', 'hero_effect', 'hero_size', 'hero_carousel_use_articles', 'hero_carousel_article_source',
+  'hero_carousel_max_items', 'hero_carousel_interval', 'hero_cta_buttons',
+  // 中部 banner 区
+  'home_banners', 'home_banner_enabled', 'home_banner_type', 'home_banner_position',
+  'home_banner_cta', 'home_banner_cards', 'home_banner_image', 'home_banner_notice',
+  // 欢迎页
+  'welcome_page_enabled', 'welcome_page_html',
 ]
 
 const db = new Database(DB_PATH, { readonly: true })

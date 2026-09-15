@@ -218,13 +218,15 @@ export default async function HomePage() {
     getStyleHero(),
   ])
 
-  // 风格包 hero 配置覆盖：CTA 卡片/尺寸/轮播间隔优先于 site_settings
+  // 风格包 hero 配置：**只作为兜底**。
+  // 后台「系统设置 → 首页宣传页」里的轮播尺寸/间隔/CTA 按钮是站点管理员的显式设置，
+  // 一旦配置就必须生效（包不能吞掉后台设置）；包内值仅在后台留空时使用。
   const heroCfg = styleHero || {}
-  const ctaButtons: HeroCtaButton[] = Array.isArray(heroCfg.ctaButtons) && heroCfg.ctaButtons.length > 0
-    ? heroCfg.ctaButtons
-    : settingsCta
-  const finalHeroSize = typeof heroCfg.size === 'string' && heroCfg.size ? heroCfg.size : heroSize
-  const finalInterval = Number(heroCfg.interval) || heroInterval
+  const ctaButtons: HeroCtaButton[] = settingsCta.length > 0
+    ? settingsCta
+    : (Array.isArray(heroCfg.ctaButtons) ? heroCfg.ctaButtons : [])
+  const finalHeroSize = heroSize || (typeof heroCfg.size === 'string' ? heroCfg.size : '') || 'standard'
+  const finalInterval = heroInterval || Number(heroCfg.interval) || 5
   // 包级开关：enabled=false 隐藏整个 Hero 区；autoplay=false 停止自动轮播；showCTA=false 隐藏 CTA 按钮区
   const heroEnabled = heroCfg.enabled !== false
   const heroAutoplay = heroCfg.autoplay !== false

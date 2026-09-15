@@ -42,12 +42,27 @@
 `sticky-glass` 吸顶 + `borderBottom: 2px solid #F1DCCB`；`nav.align: right`、`style: plain`、当前项橙色文字无底色；`actions`：language + theme（**无登录/后台入口**）。
 
 ### 首页 `layouts.homepage.sections`
-1. **CustomBlock**（`size: hero`，`background: #FFEDE0`，`split 1.08/0.92`）—— 左文右图：eyebrow「科技 · 创新 · 活力」、title「让增长**跑起来**」（accent 橙色）、intro、三色 `stats[]`（99.99% 可用性·科技 / 3.4× 提速·创新 / +218% 增长·活力）、`media.src = /styles/enterprise/media/hero-poster.svg`（包内深色科技海报：网格 + 三色柱状图 + 三指标）、双 CTA（立即开始 / 看案例）
+1. **Hero**（`variant: 'split'`）—— 左文右图：左侧是包的门面文案（eyebrow「科技 · 创新 · 活力」、title「让增长**跑起来**」、intro、三色 `stats[]`），**右侧渲染后台「首页宣传页」配置的轮播**（手动宣传图 + 文章封面填补 + 轮播数量/间隔/尺寸全部按后台设置）；后台一张图都没配时，右侧回退到包内媒体（`props.media.src` = `media/hero-poster.svg`，深色科技海报）
 2. **Features** —— 三张能力卡（20px 圆角 + 暖投影）
-3. **CTA** —— 行动召唤条
-4. **ArticleList** —— 案例/文章流
+3. **Banner** —— 后台「中部 banner 区设置」的横幅在此渲染
+4. **CTA** —— 行动召唤条
+5. **ArticleList** —— 案例/文章流
 
 > 首页门面文案（eyebrow/title/intro/stats）属装修随包走；业务文案（Features 标题等）来自 `site_settings`（`home_feature_*`），切换风格包后请自行调整。
+
+### 与后台设置的关系（重要）
+风格包只决定**区块的形态与位置**，**不吞掉后台设置**：
+
+| 后台设置 | 谁说了算 |
+| --- | --- |
+| 轮播图（`hero_slides`）、文章封面填补、轮播数量 | 后台 —— 在 Hero 区块内始终生效 |
+| Hero 行动按钮（`hero_cta_buttons`） | **后台优先**，包内 `hero.ctaButtons` 仅在后台未配置时兜底 |
+| 轮播尺寸 / 切换间隔 | **后台优先**（`hero_size` / `hero_carousel_interval`），包内值兜底 |
+| 中部 banner（`home_banners`） | 后台 —— 由 `Banner` 区块占位承载 |
+| 欢迎页（`welcome_page_enabled` + `welcome_page_html`） | 后台开关，与风格包无关 |
+| Hero 区是否出现 / 自动轮播 / CTA 区开关 | 包（`hero.enabled` / `autoplay` / `showCTA`） |
+
+一句话：**包管「长什么样、放哪儿」，后台管「内容是什么、开不开」。**
 
 ### 板块/文章页 `layouts`
 保持企业风结构：板块页 `page-sidebar-left` + 标签式二级分类；文章页单栏 + 顶部大图（`layouts.article`）。配色跟随 tokens。

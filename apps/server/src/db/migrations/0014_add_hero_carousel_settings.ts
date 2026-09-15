@@ -1,44 +1,17 @@
-import { createClient, type Client } from '@libsql/client'
-import { getDbPath } from '../config.js'
-
-export async function migrate() {
-  const DB_PATH = getDbPath()
-  const client: Client = createClient({
-    url: `file:${DB_PATH}`,
-  })
-
-  console.log('🔄 Running migration: add hero carousel settings...')
-
-  try {
-    // 插入新的设置项（如果不存在）
-    const settings = [
-      { key: 'hero_carousel_use_articles', value: 'false' },
-      { key: 'hero_carousel_article_source', value: 'latest' },
-      { key: 'hero_carousel_max_items', value: '5' },
-    ]
-
-    for (const setting of settings) {
-      // 检查设置项是否已存在
-      const result = await client.execute({
-        sql: 'SELECT COUNT(*) as count FROM site_settings WHERE key = ?',
-        args: [setting.key],
-      })
-
-      const count = (result.rows[0] as any).count
-
-      if (count === 0) {
-        await client.execute({
-          sql: 'INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, datetime(\'now\'))',
-          args: [setting.key, setting.value],
-        })
-        console.log(`  ✅ Added setting: ${setting.key} = ${setting.value}`)
-      } else {
-        console.log(`  ⏭️  Setting already exists: ${setting.key}, skipping`)
-      }
-    }
-
-    console.log('✅ Hero carousel settings migration completed')
-  } finally {
-    client.close()
-  }
+/**
+ * 0014: 早期版本在这里为轮播写入三个默认设置项
+ * （hero_carousel_use_articles / hero_carousel_article_source / hero_carousel_max_items）。
+ *
+ * 这些值现在**不再写库**，原因有二：
+ *  1. 它们是纯功能默认值，消费端已全部自带等价兜底（见 app/page.tsx：
+ *     `=== 'true'`、`|| 'latest'`、`|| 5`），写进 DB 属于冗余；
+ *  2. 写进 DB 后，全新库会带着这些键，导致安装向导安装风格包自带的演示内容时，
+ *     被「按 key 幂等跳过已存在项」挡住 —— 例如演示内容里的
+ *     `hero_carousel_use_articles = true` 会被这条默认的 false 顶掉，
+ *     新站点首页的「文章封面填补轮播」于是不生效。
+ *
+ * 注：已存在的部署不受影响（本迁移不再改动任何既有数据）。
+ */
+export async function migrate(): Promise<void> {
+  // 有意留空：仅保留迁移序号，避免与既有部署的迁移顺序错位。
 }
