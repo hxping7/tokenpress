@@ -33,14 +33,7 @@
     "home_banner_notice": "{\"text\":\"\",\"link\":\"\",\"target\":\"_self\",\"marquee\":false}",
     "home_banners": "[{\"id\":\"home_main\",\"enabled\":true,\"type\":\"cta\",\"position\":\"after_hero\",\"cta\":{\"title\":\"用 Token 放大你的创意\",\"subtitle\":\"Token00 — 设计师与创意人的内容平台\",\"buttonText\":\"浏览作品集\",\"buttonLink\":\"/design-works\",\"buttonTarget\":\"_self\",\"gradient\":\"linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%)\",\"align\":\"center\"}}]",
     "welcome_page_enabled": "false",
-    "welcome_page_html": "/statichtml/welcome.html",
-    "home_feature_eyebrow": "— CAPABILITIES · 核心能力",
-    "home_feature_title": "稳底座、快创意、真增长",
-    "home_feature_title_accent": "真增长",
-    "home_feature_intro": "不卖概念，只做能带来结果的事：从技术底座到智能编排再到转化复盘，环环相扣，一次打通。",
-    "home_feature_stats": "[{\"value\":\"99.99%\",\"label\":\"可用性 · 科技\"},{\"value\":\"3.4×\",\"label\":\"提速 · 创新\"},{\"value\":\"+218%\",\"label\":\"增长 · 活力\"}]",
-    "home_about_title": "关于 NOVA VERTEX",
-    "home_about_intro": "我们相信企业智能不该是昂贵的概念验证，而应是可预期、可回溯、可扩展的基础设施。八年来，我们服务了 1200+ 家企业，把算力、模型与数据的复杂度收进平台内部。"
+    "welcome_page_html": "/statichtml/welcome.html"
   },
   "sections": [
     {

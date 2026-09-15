@@ -45,8 +45,8 @@ const DEMO_MEDIA = 'demo-media'
 const SETTING_KEYS = [
   'site_name', 'site_description', 'copyright_text', 'icp_number', 'icp_url', 'powered_by',
   'footer_nav', 'footer_nav_columns', 'friend_links_columns',
-  'home_feature_eyebrow', 'home_feature_title', 'home_feature_title_accent', 'home_feature_intro', 'home_feature_stats',
-  'home_about_title', 'home_about_intro',
+  // 注：home_feature_* / home_about_* 已移除 —— 它们在后台无 UI、前台无消费端，
+  // 属死配置（如需「首页能力区/关于区」文案可配，须先补 admin UI 与组件消费端再纳入）。
   'default_theme', 'content_max_width', 'share_config',
   // 首页宣传页 / 轮播
   'hero_slides', 'hero_effect', 'hero_size', 'hero_carousel_use_articles', 'hero_carousel_article_source',

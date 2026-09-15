@@ -435,7 +435,8 @@ export function Footer() {
                     friendCfg.layout === 'grid'
                       ? {
                           display: 'grid',
-                          gridTemplateColumns: `repeat(${Number(friendCfg.columns) || 6}, minmax(0, 1fr))`,
+                          // 列数：后台「友链列数」(friend_links_columns) 优先，风格包字段兜底
+                          gridTemplateColumns: `repeat(${Number(settings.friend_links_columns) || Number(friendCfg.columns) || 6}, minmax(0, 1fr))`,
                           gap: 'var(--footer-fl-gap)',
                         }
                       : {

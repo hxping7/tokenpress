@@ -25,6 +25,7 @@ interface Article {
 }
 
 interface HeroResult {
+  effect: string
   slides: HeroSlide[]
   size: string
   interval: number
@@ -60,7 +61,7 @@ async function getHeroSlides(): Promise<HeroResult> {
 
     // 获取所有相关的设置项
     const settingsRes = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size,hero_carousel_use_articles,hero_carousel_article_source,hero_carousel_max_items,hero_carousel_interval,hero_cta_buttons`, { next: { revalidate: 60 } })
-    if (!settingsRes.ok) return { slides: [], size: 'default', interval: 5, ctaButtons: [] }
+    if (!settingsRes.ok) return { slides: [], size: 'default', interval: 5, ctaButtons: [], effect: 'fade' }
 
     const settingsJson = await settingsRes.json()
     const settings = settingsJson.data || {}
@@ -120,9 +121,9 @@ async function getHeroSlides(): Promise<HeroResult> {
     // 手动宣传图在前，文章封面填补剩余名额，总数不超过 maxItems
     const slides = [...manualSlides, ...articleSlides].slice(0, maxItems)
 
-    return { slides, size: heroSize, interval, ctaButtons }
+    return { slides, size: heroSize, interval, ctaButtons, effect: settings.hero_effect || 'fade' }
   } catch {
-    return { slides: [], size: 'default', interval: 5, ctaButtons: [] }
+    return { slides: [], size: 'default', interval: 5, ctaButtons: [], effect: 'fade' }
   }
 }
 
@@ -193,6 +194,11 @@ async function getWelcomePage(): Promise<{ enabled: boolean; htmlPath: string }>
   }
 }
 
+/** 包内 hero.effect 仅作后台未配置时的兜底 */
+function HeroPropsEffectFallback(heroCfg: any): string {
+  return typeof heroCfg?.effect === 'string' ? heroCfg.effect : 'fade'
+}
+
 function HeroFallback() {
   return (
     <section className="relative pt-8 pb-4 flex items-center justify-center overflow-hidden">
@@ -205,7 +211,7 @@ function HeroFallback() {
 
 export default async function HomePage() {
   const [
-    { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons: settingsCta },
+    { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons: settingsCta, effect: heroEffect },
     homeBanners,
     recentArticles,
     welcomePage,
@@ -247,6 +253,7 @@ export default async function HomePage() {
           heroEnabled={heroEnabled}
           heroAutoplay={heroAutoplay}
           heroShowCTA={heroShowCTA}
+          heroEffect={heroEffect || (HeroPropsEffectFallback(heroCfg))}
           recentArticles={recentArticles}
           homeBanners={homeBanners}
         />

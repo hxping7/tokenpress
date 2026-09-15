@@ -32,6 +32,7 @@ function HeroSplitSection({
   interval,
   ctaButtons,
   autoplay,
+  effect,
 }: {
   props: any
   slides: HeroSlide[]
@@ -39,6 +40,7 @@ function HeroSplitSection({
   interval: number
   ctaButtons: HeroCtaButton[]
   autoplay?: boolean
+  effect?: string
 }) {
   const { locale } = useLocaleStore()
   const title = String(props?.title || '')
@@ -123,6 +125,7 @@ function HeroSplitSection({
               ctaButtons={[]}
               autoplay={autoplay}
               showCTA={false}
+              effect={effect}
             />
           ) : media?.src ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -139,9 +142,9 @@ function HeroSplitSection({
   )
 }
 
-function HeroSection({ slides, size, interval, ctaButtons, variant, autoplay, showCTA, props }: {
+function HeroSection({ slides, size, interval, ctaButtons, variant, autoplay, showCTA, props, effect }: {
   slides: HeroSlide[]; size: string; interval: number; ctaButtons: HeroCtaButton[]; variant?: string
-  autoplay?: boolean; showCTA?: boolean; props?: any
+  autoplay?: boolean; showCTA?: boolean; props?: any; effect?: string
 }) {
   // variant === 'split'：左文右图（右侧仍是后台配置的轮播）
   if (variant === 'split') {
@@ -153,13 +156,14 @@ function HeroSection({ slides, size, interval, ctaButtons, variant, autoplay, sh
         interval={interval}
         ctaButtons={showCTA === false ? [] : ctaButtons}
         autoplay={autoplay}
+        effect={effect}
       />
     )
   }
   // size 取自 siteSettings（p.size > heroSize 回退），variant 仅控制展示风格（如 split-image-right）
   const heroSize = size || 'standard'
   return (
-    <HeroCarousel slides={slides} size={heroSize as any} interval={interval} ctaButtons={ctaButtons} autoplay={autoplay} showCTA={showCTA} />
+    <HeroCarousel slides={slides} size={heroSize as any} interval={interval} ctaButtons={ctaButtons} autoplay={autoplay} showCTA={showCTA} effect={effect} />
   )
 }
 
@@ -588,6 +592,7 @@ interface HomeCtx {
   heroEnabled?: boolean
   heroAutoplay?: boolean
   heroShowCTA?: boolean
+  heroEffect?: string
   recentArticles: Article[]
   homeBanners?: HomeBannerConfig[]
 }
@@ -605,6 +610,7 @@ const HOMEPAGE_REGISTRY: Record<string, (sec: any, ctx: HomeCtx) => JSX.Element 
         autoplay={ctx.heroAutoplay}
         showCTA={ctx.heroShowCTA}
         props={sec.props}
+        effect={ctx.heroEffect}
       />
     )
   },
@@ -639,6 +645,7 @@ export function HomeSections({
   heroEnabled,
   heroAutoplay,
   heroShowCTA,
+  heroEffect,
   recentArticles,
   homeBanners,
 }: {
@@ -649,6 +656,7 @@ export function HomeSections({
   heroEnabled?: boolean
   heroAutoplay?: boolean
   heroShowCTA?: boolean
+  heroEffect?: string
   recentArticles: Article[]
   homeBanners?: HomeBannerConfig[]
 }) {
@@ -658,14 +666,14 @@ export function HomeSections({
     | { component: string; variant?: string; props?: any; id?: string }[]
     | undefined
 
-  const ctx: HomeCtx = { heroSlides, heroSize, heroInterval, ctaButtons, heroEnabled, heroAutoplay, heroShowCTA, recentArticles, homeBanners }
+  const ctx: HomeCtx = { heroSlides, heroSize, heroInterval, ctaButtons, heroEnabled, heroAutoplay, heroShowCTA, heroEffect, recentArticles, homeBanners }
 
   // 无配置时回退到经典布局（保持向后兼容）
   if (!sections || sections.length === 0) {
     return (
       <>
         {heroEnabled !== false && (
-          <HeroSection slides={heroSlides} size={heroSize} interval={heroInterval} ctaButtons={ctaButtons} autoplay={heroAutoplay} showCTA={heroShowCTA} />
+          <HeroSection slides={heroSlides} size={heroSize} interval={heroInterval} ctaButtons={ctaButtons} autoplay={heroAutoplay} showCTA={heroShowCTA} effect={heroEffect} />
         )}
         <ArticleListSection articles={recentArticles} />
       </>

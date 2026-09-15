@@ -213,3 +213,53 @@ styles/<id>/
 ## 8. 字段设计原则
 
 `style.json` 中**每一个字段都必须已接入渲染**——不接受"预置/保留"类死配置（这类字段会让编辑者和 AI 误以为改动有效）。新增可配置项的顺序：先实现渲染消费，再加入 schema 与编辑器；字段一旦被证明无消费端，即从 schema、三包文件与编辑器中同步移除。
+
+## 9. Style Pack 与系统设置的边界
+
+### 9.1 一句话原则
+
+**风格包管「长什么样、放哪儿」，系统设置管「内容是什么、开不开」。**
+
+后台「系统设置」里能配置的一切内容与开关，**都必须生效**，不因切换风格包而改变；风格包只决定这些内容以什么形态、出现在什么位置。
+
+### 9.2 归属表
+
+| 类别 | 归谁 | 关键项 |
+| --- | --- | --- |
+| 颜色 / 字体 / 圆角 / 阴影 / 宽度 | 风格包 | `design.tokens` |
+| 头部形态（吸顶方式、导航对齐与当前项样式、头部按钮） | 风格包 | `header.*` |
+| 页脚装修（变体、列数模板、边线、背景、ICP 显隐） | 风格包 | `footer.*` |
+| 首页区块的**顺序与形态** | 风格包 | `layouts.homepage.sections` |
+| 板块页 / 文章页布局形态 | 风格包 | `layouts.section` / `layouts.article` |
+| 首页门面文案（hero 的 eyebrow / title / intro / stats） | 风格包 | 区块 `props` |
+| **站点信息**（站名、简介、版权、备案、Logo） | 系统设置 | `site_name`、`site_description`、`copyright_text`、`icp_number`、`header_logo`、`footer_logo` |
+| **首页宣传页**（轮播图、CTA 按钮、轮播数量 / 间隔 / 尺寸 / 效果、文章封面填补） | 系统设置 | `hero_slides`、`hero_cta_buttons`、`hero_effect`、`hero_size`、`hero_carousel_*` |
+| **中部 banner 区** | 系统设置 | `home_banners`、`home_banner_*` |
+| **欢迎页** | 系统设置 | `welcome_page_enabled`、`welcome_page_html` |
+| 分享渠道 / 内容宽度 / 默认主题 / 语言 | 系统设置 | `share_config`、`content_max_width`、`default_theme`、`frontend_locale` |
+| 友链数据 / 列数 | 数据表 + 系统设置 | `friend_links` 表、`friend_links_columns` |
+| 板块 / 分类 / 文章 / 标签 / 媒体 | 数据库（可由演示内容包装载） | — |
+
+### 9.3 冲突仲裁（三条硬约束）
+
+1. **包不得吞掉承载设置的区块** —— 凡后台有设置项的展示位，首页区块序列必须保留对应**占位**：`Hero`（首页宣传页 / 轮播）、`Banner`（中部横幅）。包想改变外观，用**形态（`variant`）**，不许删区块。
+2. **用户显式配置的值优先于包内值** —— 同一含义既有后台设置又有包字段时，**后台优先、包内兜底**。例：`hero_cta_buttons` > `hero.ctaButtons`；`hero_size` / `hero_carousel_interval` > 包内同名；`friend_links_columns` > `footer.friendLinks.columns`。**包字段的定位始终是「未配置时的默认值」。**
+3. **包级开关只控制「是否呈现」** —— 包可以决定区块是否出现、是否自动轮播（`hero.enabled` / `autoplay` / `showCTA`），但不能让**已配置的内容**凭空消失。
+
+### 9.4 强制流程
+
+- **新增系统设置项**：先实现消费端（组件 / 后端读取）→ 再加后台 UI → 最后按需纳入演示内容导出白名单。**后台有 UI 而前台无消费端 = 缺陷**，不允许合入。
+- **新增包字段**：先接入渲染 → 再入 schema 与编辑器 → 同步内置三包（同 §8）。
+- **新增首页区块类型**：必须在 `HOMEPAGE_REGISTRY` 注册，并在文档中说明它承载哪些后台设置。
+
+### 9.5 已修复的历史问题（防回归）
+
+| 问题 | 后果 | 现状 |
+| --- | --- | --- |
+| 企业包把首页首区块从 `Hero` 换成 `CustomBlock` | 轮播图 / 间隔 / 尺寸 / 文章封面填补全部失效 | Hero 支持 `variant: 'split'`（左文右图，右侧仍是后台轮播） |
+| 企业包删掉 `Banner` 占位 | 后台中部横幅无处渲染 | 恢复 `Banner` 占位 |
+| 包内 `hero.ctaButtons` / `size` / `interval` 优先于后台 | 后台按钮被包内兜底覆盖 | 改为后台优先 |
+| `hero_effect` 无消费端 | 「轮播效果（淡入/滑动/翻转）」设置无效 | HeroCarousel 支持 `fade` / `slide` / `flip` |
+| `friend_links_columns` 无消费端 | 「友链列数」设置无效 | Footer 接线，后台优先 |
+| `home_feature_*` / `home_about_*` | 后台无 UI、前台无消费端（死配置） | 已删除；如需「首页能力区/关于区」文案可配，须先补 UI 与消费端 |
+| 迁移 `0014` seed 轮播默认值 | 新库自带默认键，挡住演示内容安装（`use_articles` 恒为 false） | 不再写库，默认值由消费端兜底 |
