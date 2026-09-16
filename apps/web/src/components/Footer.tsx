@@ -126,11 +126,12 @@ export function Footer() {
 
   const settings = settingsData?.data || {}
 
-  // ===== 内容：唯一来源 site_settings / friend_links 表（风格包不提供） =====
-  const copyrightText = site.copyright ?? settings.copyright_text ?? ''
-  const icpNumber = site.icp ?? settings.icp_number
-  const icpUrl = site.icpUrl ?? settings.icp_url ?? 'https://beian.miit.gov.cn/'
-  const poweredBy = site.poweredBy ?? settings.powered_by ?? ''
+  // ===== 内容：唯一来源 site_settings / friend_links 表（风格包不提供，包内值仅兜底） =====
+  // 与 site_name / site_description 同一规则：**后台设置优先**，包内同名值只作兜底
+  const copyrightText = settings.copyright_text || site.copyright || ''
+  const icpNumber = settings.icp_number || site.icp
+  const icpUrl = settings.icp_url || site.icpUrl || 'https://beian.miit.gov.cn/'
+  const poweredBy = settings.powered_by || site.poweredBy || ''
 
   let footerNav: FooterNavGroup[] = []
   try {
@@ -309,7 +310,8 @@ export function Footer() {
   }
 
   // ===== 档位 3（默认）：multi-column —— 导航网格 + 友链 + 版权区 =====
-  const navColumns = Number(navCfg.columns) || Number(settings.footer_nav_columns) || 4
+  // 列数：**后台设置优先、包内兜底**（与 friend_links_columns 同一规则）
+  const navColumns = Number(settings.footer_nav_columns) || Number(navCfg.columns) || 4
   const navTemplate =
     typeof navCfg.template === 'string' && navCfg.template
       ? navCfg.template
