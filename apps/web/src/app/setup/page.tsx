@@ -6,7 +6,7 @@ import { CheckCircle2, ChevronRight, Database, Loader2, ShieldCheck, Sparkles } 
 
 /**
  * 首次安装向导：
- *   ① 创建管理员账号（替代旧的 admin/admin123 硬编码默认账号）
+ *   ① 创建管理员账号（弱口令在服务端被拒绝）
  *   ② 选择风格包并激活
  *   ③ 可选：安装该包自带的演示示例内容（板块/分类/文章/标签/友链/站点设置）
  * 不勾选示例内容时，站点就是一个干净的全空白站。
@@ -153,7 +153,7 @@ export default function SetupPage() {
                 <div>
                   <h2 className="text-lg font-semibold text-t-text-primary">创建管理员账号</h2>
                   <p className="text-sm text-t-text-secondary mt-1">
-                    这是站点的超级管理员。TokenPress <span className="text-red-500">不再内置 admin/admin123 默认账号</span>，请妥善保管。
+                    这是站点的超级管理员，请妥善保管。
                   </p>
                 </div>
               </div>

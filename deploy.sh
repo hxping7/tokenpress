@@ -257,5 +257,5 @@ echo "║  HTTPS:  https://<IP>:$HTTPS_PORT (需要 SSL 证书)"
 if [ -n "$DOMAIN" ]; then
     echo "║  SSL:    certbot certonly --webroot -w /var/www/certbot -d $DOMAIN"
 fi
-echo "║  账号:   admin / admin123 (首次登录后请修改密码!)           ║"
+echo "║  初始化: 访问站点 → 自动跳转 /setup 创建管理员账号         ║"
 echo "╚══════════════════════════════════════════════════════╝"

@@ -14,7 +14,7 @@ import { getDemoSummary, installDemo } from '../lib/styleDemo.js'
  *
  * 「是否已安装」沿用既有约定：users 表非空即视为已初始化。
  * 全新库的板块/分类/内容/站点设置**全部为空**，由向导决定：
- *   - 创建管理员（替代旧的 admin/admin123 硬编码默认账号）
+ *   - 创建管理员（弱口令 admin/admin123 在服务端被拒绝）
  *   - 选择并激活一个风格包
  *   - 可选：安装该包自带的演示示例内容（幂等，按 slug/key 跳过已存在项）
  *
