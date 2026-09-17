@@ -81,12 +81,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen flex bg-t-bg-secondary">
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col border-r border-t-border bg-t-bg-primary transition-all duration-300 ${
+        className={`hidden md:flex flex-col sticky top-0 self-start h-screen max-h-screen border-r border-t-border bg-t-bg-primary transition-all duration-300 ${
           sidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-center px-2 border-b border-t-border">
+        <div className="h-16 flex-shrink-0 flex items-center justify-center px-2 border-b border-t-border">
           {sidebarOpen ? (
             <>
               <Link href="/admin" className="flex items-center gap-2 flex-1">
@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = item.key === '/admin'
@@ -135,7 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* User Info */}
-        <div className="p-3 border-t border-t-border">
+        <div className="p-3 border-t border-t-border flex-shrink-0">
           <div className={`flex items-center gap-3 px-3 py-2 ${!sidebarOpen && 'justify-center'}`}>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-t-accent-blue to-t-accent-purple flex items-center justify-center text-white text-sm font-medium">
               {user.displayName?.[0] || user.username[0].toUpperCase()}
