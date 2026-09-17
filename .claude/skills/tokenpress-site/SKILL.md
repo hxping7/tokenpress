@@ -1,10 +1,10 @@
 ---
-name: tokenpress-site
+name: yourdomain-site
 description: 用一枚 API Token 幂等地搭建 / 重构 TokenPress 站点骨架——批量建板块与分类、写站点设置、配页脚导航与友链、对齐风格包导航图标，并对建好的站做一次自检（板块页可达 / 图标覆盖 / 设置形状 / 媒体引用 / 内部链接）。补齐 publisher（发内容）、style（改装修）、deploy（部署）都没覆盖的「建站动作」。当用户说"建一个站""新建站点""搭个博客""建板块/分类""配置站点信息""加友链""导航图标不对""建完自检""站点体检"时触发。需 Token 具备 sections:write / categories:write / settings:write / friendlinks:write / styles:write。
 agent_created: true
 ---
 
-# TokenPress 建站器（Site Builder）
+# TokenPress Site Builder（建站器）
 
 把一个空站建成「有骨架、有配置、能发内容」的站点，并给出可复现的自检结果。
 
@@ -12,20 +12,22 @@ agent_created: true
 
 | 技能 | 管什么 | 不管什么 |
 |---|---|---|
-| **tokenpress-site**（本技能） | **板块 / 分类 / 站点设置 / 页脚导航 / 友链 / 导航图标 / 建后自检** | 文章正文与配图 |
-| tokenpress-publisher | 文章（含媒体自动上传）/ 拉取 / 置顶 / 删除 / 分类增改 | 建板块、站点设置 |
-| tokenpress-style | 风格包字段（配色/布局/首页区块/激活/恢复） | 站点信息（属内容层） |
-| tokenpress-deploy | 镜像构建 / 上传 / 部署 / 健康检查 | 站内数据 |
+| **`yourdomain-site`**（本技能） | **板块 / 分类 / 站点设置 / 页脚导航 / 友链 / 导航图标 / 建后自检** | 文章正文与配图 |
+| `yourdomain-publisher` | 文章（含媒体自动上传）/ 拉取 / 置顶 / 删除 / 分类增改 | 建板块、站点设置 |
+| `yourdomain-style` | 风格包字段（配色 / 布局 / 首页区块 / 激活 / 恢复） | 站点信息（属内容层） |
+| `yourdomain-deploy` | 镜像构建 / 上传 / 部署 / 健康检查 | 站内数据 |
 
-> 为什么需要本技能：**「建板块」和「配站点设置」此前只能手写脚本调 API** —— `POST /ai/publish` 不会建板块（section 不存在直接 400），而 publisher 技能只覆盖分类。踩过的坑都沉淀在本文件 §4。
+> **命名约定**：本套技能目录名统一为 `tokenpress-*`，SKILL.md 的 `name` 与正文中的技能名统一为 `yourdomain-*`（部署时按实际域名替换）。若目标环境未安装 `yourdomain-style`，风格包字段用 `curl` 按 `docs/style-pack-design.md` 直接改，不影响本技能。
+>
+> **为什么需要本技能**：**「建板块」和「配站点设置」此前只能手写脚本调 API** —— `POST /ai/publish` 不会建板块（section 不存在直接 400），而 publisher 只覆盖分类。踩过的坑都沉淀在 §4。
 
-## 1. 配置
+## 1. 配置（`.token00.conf`）
 
-复用 publisher 的约定：工作目录放 **`.token00.conf`**（从 cwd 逐级向上查找），或走环境变量 / CLI。
+沿用 publisher 的约定：工作目录放 **`.token00.conf`**（脚本从 cwd 逐级向上查找），或走环境变量 / CLI。
 
 ```json
 {
-  "api_base": "http://localhost:8081/api/v1",
+  "api_base": "https://www.yourdomain.com/api/v1",
   "token": "t00_sk_xxxxx"
 }
 ```
@@ -44,7 +46,7 @@ agent_created: true
 node scripts/init-site.js --plan site.json --dry-run     # 先看会改什么（强烈建议）
 node scripts/init-site.js --plan site.json               # 执行
 node scripts/init-site.js --plan site.json --only sections,categories
-node scripts/init-site.js --plan site.json --api-base http://localhost:8081/api/v1 --token t00_sk_xxx
+node scripts/init-site.js --plan site.json --api-base https://www.yourdomain.com/api/v1 --token t00_sk_xxx
 ```
 
 **执行前会自动做鉴权预检**（这是 dry-run 可信的前提）：
@@ -69,21 +71,21 @@ node scripts/init-site.js --plan site.json --api-base http://localhost:8081/api/
     "footer_nav_columns": "3"
   },
   "sections": [
-    { "name": "造物日志", "slug": "lab", "path": "/lab", "template": "article-grid", "sortOrder": 1, "description": "…" }
+    { "name": "技术笔记", "slug": "notes", "path": "/notes", "template": "article-list", "sortOrder": 1, "description": "…" }
   ],
   "categories": [
-    { "section": "lab", "name": "硬件改装", "slug": "gear", "sortOrder": 1 }
+    { "section": "notes", "name": "前端", "slug": "frontend", "sortOrder": 1 }
   ],
   "footerNav": [
-    { "title": "板块", "links": [{ "name": "造物日志", "url": "/lab" }] }
+    { "title": "板块", "links": [{ "name": "技术笔记", "url": "/notes" }] }
   ],
   "friendLinks": [
-    { "name": "Ollama", "url": "https://ollama.com/", "description": "本地模型运行时", "sortOrder": 1 }
+    { "name": "示例站", "url": "https://example.com/", "description": "一句话描述", "sortOrder": 1 }
   ],
   "hero": {
     "useArticles": true, "maxItems": 5, "interval": 5, "effect": "fade", "size": "full",
     "ctaButtons": [
-      { "label": { "zh": "看日志", "en": "Lab notes" }, "href": "/lab", "variant": "primary" }
+      { "label": { "zh": "看文章", "en": "Articles" }, "href": "/notes", "variant": "primary" }
     ]
   },
   "navIcons": "auto"
@@ -97,7 +99,7 @@ node scripts/init-site.js --plan site.json --api-base http://localhost:8081/api/
 建完站、发完内容后跑一次，逐项 ✅/❌（有 ❌ 时退出码 1）：
 
 ```bash
-node scripts/audit-site.js --site http://localhost:8081
+node scripts/audit-site.js --site https://www.yourdomain.com
 ```
 
 | 检查项 | 判据 |
@@ -141,16 +143,18 @@ node scripts/init-site.js --plan site.json --dry-run
 node scripts/init-site.js --plan site.json
 
 # ② 发内容（用 publisher 技能；封面 + 内文图会被自动上传）
-python <publisher>/scripts/publish.py out/xxx.md      # 逐篇或传目录批量
+python ../tokenpress-publisher/scripts/publish.py out/xxx.md      # 逐篇或传目录批量
 
 # ③ 自检
-node scripts/audit-site.js --site http://localhost:8081
+node scripts/audit-site.js --site https://www.yourdomain.com
 
 # ④（可选）把这次内容导出成风格包自带的演示内容，供 /setup 勾选安装
-node <repo>/scripts/export-style-demo.js <packId> /tmp/demo-out
+#    该脚本在源码仓库内：<repo>/scripts/export-style-demo.js
+node scripts/export-style-demo.js <packId> /tmp/demo-out
 ```
 
 ## 6. 别忘了
 
 - **改完包内内容/演示数据要重建后端镜像**（`docker compose build backend`），否则新部署环境看不到。
 - **未安装的站点**前台会重定向到 `/setup`；`init-site.js` 走 API 不受影响，但页面可达性检查要等安装完成后再跑。
+- 建站动作**只碰数据**，不改仓库代码。若过程中发现代码缺陷（如卡片裁掉封面标题），按缺陷单独提交，不要塞进建站计划里。

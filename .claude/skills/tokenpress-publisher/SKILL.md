@@ -45,7 +45,8 @@ agent_created: true
 
 1. **板块必须先存在**：`POST /ai/publish` 不会自动建板块，section 不存在直接 400
    `Invalid section "xxx". Section not found.`。查用 `GET <api_base>/sections`；
-   建用 `POST <api_base>/sections`（需 `sections:write`）或后台「板块管理」。
+   建用 `POST <api_base>/sections`（需 `sections:write`）或后台「板块管理」，
+   **推荐用 `yourdomain-site` 技能的 `scripts/init-site.js` 批量建（幂等 + 可 dry-run）**。
    分类/标签会按需创建，不用先建。
 2. **媒体先传、文章后写**：失败时媒体已落盘 → 留下**孤儿媒体**，失败后记得清。
 3. **`coverImageUrl` 回填是相对路径**（`/api/v1/media/files/uploads/...`），非完整 https。
