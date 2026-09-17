@@ -144,8 +144,11 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
 
   return (
     <section
+      // 全宽 / 全屏时**不要再加顶部留白**：首页外层已用 `--header-actual-height`
+      // 让出固定头部的高度，这里再叠加 padding 会在头部与 Hero 之间留出一条空隙，
+      // 露出的是页面背景（深色主题下即一条黑带）。盒式 Hero 保留上下留白。
       className={`relative flex items-center justify-center overflow-hidden ${
-        isFull ? 'pt-16' : 'pt-20 pb-4'
+        isFull ? '' : 'pt-20 pb-4'
       }`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
