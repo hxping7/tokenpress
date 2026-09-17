@@ -331,24 +331,9 @@ const [homeSubTab, setHomeSubTab] = useState<HomeSubTab>('hero')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ===== 底部导航（分组式） =====
-  const [footerNav, setFooterNav] = useState<FooterNavGroup[]>([
-    {
-      title: '技术内容',
-      links: [
-        { name: 'Token 计划', url: '/token-plan' },
-        { name: 'AI 编程', url: '/ai-coding' },
-        { name: 'AI 作品', url: '/ai-works' },
-        { name: '博客', url: '/blog' },
-      ],
-    },
-    {
-      title: '关于我们',
-      links: [
-        { name: '关于项目', url: '/about' },
-        { name: '联系方式', url: '/contact' },
-      ],
-    },
-  ])
+  // 初始值保持为空分组：站点尚未配置时不应预置任何链接
+  // （此前预置的是旧 IA 的死链，用户直接保存就会带出一批 404）
+  const [footerNav, setFooterNav] = useState<FooterNavGroup[]>([{ title: '导航', links: [] }])
   const [footerNavColumns, setFooterNavColumns] = useState('4')
 
   // ===== 友链管理 =====

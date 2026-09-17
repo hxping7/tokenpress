@@ -210,7 +210,7 @@
       "article-grid": {
         "columns": 3,
         "gap": "1.5rem",
-        "aspectRatio": "16/10",
+        "aspectRatio": "40/21",
         "showThumbnail": true,
         "showExcerpt": true,
         "cardStyle": "bordered"
