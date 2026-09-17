@@ -125,3 +125,5 @@ preview-screenshot*.png
 /_*.js
 /_*.png
 /_*.json
+tokenpress-*.tar.gz.sha256
+token00-*.tar.gz.sha256

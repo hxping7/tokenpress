@@ -17,7 +17,10 @@ HTTPS_PORT=""
 # 读取配置
 if [ -f "$CONFIG_FILE" ]; then
     echo ">>> 读取配置..."
-    while IFS='=' read -r key value; do
+    # 注意 `|| [ -n "$key" ]`：read 遇到**没有结尾换行的最后一行**时返回非零，
+    # 只写 `while read` 会静默跳过该行（曾导致末行 SITE_URL 永远读不到，
+    # 于是回退成 http://$DOMAIN，所有生成的 URL 都带一次 301 跳转）。
+    while IFS='=' read -r key value || [ -n "$key" ]; do
         case "$key" in
             DOMAIN) DOMAIN="$value" ;;
             SITE_PATH) SITE_PATH="$value" ;;
