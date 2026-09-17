@@ -159,7 +159,7 @@ export default function SetupPage() {
               </div>
               <div>
                 <label className="block text-sm text-t-text-secondary mb-1.5">用户名（3-32 位字母/数字/下划线）</label>
-                <input className={inputCls} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" autoComplete="username" />
+                <input className={inputCls} value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
