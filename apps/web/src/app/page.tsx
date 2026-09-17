@@ -25,6 +25,7 @@ interface Article {
 }
 
 interface HeroResult {
+  effect: string
   slides: HeroSlide[]
   size: string
   interval: number
@@ -60,7 +61,7 @@ async function getHeroSlides(): Promise<HeroResult> {
 
     // 获取所有相关的设置项
     const settingsRes = await fetch(`${baseUrl}/api/v1/site-settings/keys/hero_slides,hero_effect,hero_size,hero_carousel_use_articles,hero_carousel_article_source,hero_carousel_max_items,hero_carousel_interval,hero_cta_buttons`, { next: { revalidate: 60 } })
-    if (!settingsRes.ok) return { slides: [], size: 'default', interval: 5, ctaButtons: [] }
+    if (!settingsRes.ok) return { slides: [], size: 'default', interval: 5, ctaButtons: [], effect: 'fade' }
 
     const settingsJson = await settingsRes.json()
     const settings = settingsJson.data || {}
@@ -111,7 +112,7 @@ async function getHeroSlides(): Promise<HeroResult> {
         articleSlides = articles.map((article: any) => ({
           id: `article-${article.id}`,
           imageUrl: article.coverImage,
-          linkUrl: `${article.section?.path || '/blog'}/${article.slug}`,
+          linkUrl: `${article.section?.path || ''}/${article.slug}`,
           linkTarget: '_blank',
         }))
       }
@@ -120,9 +121,9 @@ async function getHeroSlides(): Promise<HeroResult> {
     // 手动宣传图在前，文章封面填补剩余名额，总数不超过 maxItems
     const slides = [...manualSlides, ...articleSlides].slice(0, maxItems)
 
-    return { slides, size: heroSize, interval, ctaButtons }
+    return { slides, size: heroSize, interval, ctaButtons, effect: settings.hero_effect || 'fade' }
   } catch {
-    return { slides: [], size: 'default', interval: 5, ctaButtons: [] }
+    return { slides: [], size: 'default', interval: 5, ctaButtons: [], effect: 'fade' }
   }
 }
 
@@ -193,6 +194,11 @@ async function getWelcomePage(): Promise<{ enabled: boolean; htmlPath: string }>
   }
 }
 
+/** 包内 hero.effect 仅作后台未配置时的兜底 */
+function HeroPropsEffectFallback(heroCfg: any): string {
+  return typeof heroCfg?.effect === 'string' ? heroCfg.effect : 'fade'
+}
+
 function HeroFallback() {
   return (
     <section className="relative pt-8 pb-4 flex items-center justify-center overflow-hidden">
@@ -205,7 +211,7 @@ function HeroFallback() {
 
 export default async function HomePage() {
   const [
-    { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons: settingsCta },
+    { slides: heroSlides, size: heroSize, interval: heroInterval, ctaButtons: settingsCta, effect: heroEffect },
     homeBanners,
     recentArticles,
     welcomePage,
@@ -218,13 +224,15 @@ export default async function HomePage() {
     getStyleHero(),
   ])
 
-  // 风格包 hero 配置覆盖：CTA 卡片/尺寸/轮播间隔优先于 site_settings
+  // 风格包 hero 配置：**只作为兜底**。
+  // 后台「系统设置 → 首页宣传页」里的轮播尺寸/间隔/CTA 按钮是站点管理员的显式设置，
+  // 一旦配置就必须生效（包不能吞掉后台设置）；包内值仅在后台留空时使用。
   const heroCfg = styleHero || {}
-  const ctaButtons: HeroCtaButton[] = Array.isArray(heroCfg.ctaButtons) && heroCfg.ctaButtons.length > 0
-    ? heroCfg.ctaButtons
-    : settingsCta
-  const finalHeroSize = typeof heroCfg.size === 'string' && heroCfg.size ? heroCfg.size : heroSize
-  const finalInterval = Number(heroCfg.interval) || heroInterval
+  const ctaButtons: HeroCtaButton[] = settingsCta.length > 0
+    ? settingsCta
+    : (Array.isArray(heroCfg.ctaButtons) ? heroCfg.ctaButtons : [])
+  const finalHeroSize = heroSize || (typeof heroCfg.size === 'string' ? heroCfg.size : '') || 'standard'
+  const finalInterval = heroInterval || Number(heroCfg.interval) || 5
   // 包级开关：enabled=false 隐藏整个 Hero 区；autoplay=false 停止自动轮播；showCTA=false 隐藏 CTA 按钮区
   const heroEnabled = heroCfg.enabled !== false
   const heroAutoplay = heroCfg.autoplay !== false
@@ -245,6 +253,7 @@ export default async function HomePage() {
           heroEnabled={heroEnabled}
           heroAutoplay={heroAutoplay}
           heroShowCTA={heroShowCTA}
+          heroEffect={heroEffect || (HeroPropsEffectFallback(heroCfg))}
           recentArticles={recentArticles}
           homeBanners={homeBanners}
         />

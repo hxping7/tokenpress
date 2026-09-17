@@ -101,7 +101,7 @@ echo "========================================"
 echo
 echo "  HTTP:   http://localhost:$HTTP_PORT"
 echo "  HTTPS:  https://localhost:$HTTPS_PORT (need SSL)"
-echo "  Login:  admin / admin123 (CHANGE PASSWORD ON FIRST LOGIN!)"
+echo "  Setup:  open the site -> auto-redirected to /setup to create the admin"
 echo
 echo "  Stop:   docker compose down"
 echo "  Logs:   docker logs token00-backend"

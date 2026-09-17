@@ -66,31 +66,67 @@ styles/<id>/
 | `variant` | `sticky-solid` / `sticky-glass` / `sticky-transparent` / `static` / `hidden` |
 | `height` | 数字（px） |
 | `logo` | `{ type: image\|text\|component, src, srcLight, text, position: left\|center\|right, height, link }` |
-| `nav` | `{ source: sections\|custom\|mixed, items, customItems, align, style: plain\|underline\|pill\|split\|minimal, position: top\|left, icons, showIcon, dropdown: hover\|click, colors }` |
+| `nav` | `{ source: sections\|custom\|mixed, items, customItems, align: left\|center\|right, style: plain\|pill\|underline, position: top\|left, height, width, icons, showIcon, colors }` |
+| `nav.align` | 水平对齐三档（顶部栏）：`left` 品牌与导航同组靠左、动作独占右端；`center` 三栏 grid `1fr auto 1fr`，**导航相对整行居中**（原型 `.site-header .inner` 同款）；`right` 品牌独占左端、导航与动作同组靠右 |
+| `nav.style` | 当前项形态，`plain` 直角 / `pill` 全圆角 / `underline` 关闭填充改用 `--nav-active-text` 画底部 2px 强调线 |
+| `nav.colors` | 经 `--nav-*` CSS 变量注入：`text` / `hoverBg` / `hoverText` / `activeBg` / `activeText` / `barBg` / `barText`。**填充与否由 `activeBg` 决定**：配透明即无底色；配色值则由 `style` 决定圆角（`pill` 全圆 / `plain` 直角 / 缺省 8px）。原型那种「只有强调色文字、无底色」= `activeBg: transparent` + `activeText: 强调色` + `style: plain` |
+
+> ⚠️ `nav.dropdown` 无实现，写入不生效。
 | `actions` | 右侧动作按钮数组 |
 | `background` / `borderBottom` | CSS 值 |
 
 ### 3.3 `footer`
 
+> **footer 根键只放「装修」，不放任何内容**：导航链接 / 版权 / 备案 / 友链数据 / 站点简介一律取自 `site_settings`（`footer_nav`、`copyright_text`、`icp_number`、`powered_by`、`site_description`）与 `friend_links` 表。包里出现这些内容即视为违规（历史上 `footer.columns[].links`、`friendLinks.items`、`bottom.copyright` 曾被用于在包内写死链接与版权，现已全部移除）。
+
 | 字段 | 说明 |
 |---|---|
-| `variant` | `multi-column` / `simple` / `minimal` / `mega` |
-| `columns[]` | `{ title, links[], html }` |
-| `friendLinks` | `{ show, source: table\|custom, items:[{name,url}], columns, maxItems }` |
-| `bottom` | `{ copyright, social[], showBackToTop }` |
-| `background` / `textColor` | CSS 值 |
+| `variant` | `multi-column`（导航网格 + 友链 + 版权区）/ `simple`（单行：版权 ǀ 备案 + Powered by）/ `minimal`（居中 Logo + 版权） |
+| `padding` | 区块内边距 CSS 值，默认 `2rem 1rem` |
+| `maxWidth` | 内容最大宽度，默认 `var(--content-max-width)` |
+| `borderTop` | 页脚顶部边线 CSS 值；`false` 关闭 |
+| `nav.columns` | 列数；缺省取 `site_settings.footer_nav_columns` |
+| `nav.template` | 直接给 `grid-template-columns`（如 `1.5fr 1fr 1fr 1fr`），优先于 `columns` |
+| `nav.gap` / `nav.align`(`start`\|`center`) / `nav.divider` | 网格间距 / 分组内对齐 / 友链区上分隔线（`false` 关闭） |
+| `nav.responsive` | `{ md, lg }` 断点列数（默认 `{md:1, lg:2}`）；`false` 关闭响应式 |
+| `nav.title` | 分组标题样式 `{ size, weight, transform, letterSpacing, marginBottom, color }` |
+| `nav.link` | 链接样式 `{ size, lineHeight, gap }` |
+| `brandBlock` | 首列品牌块：`{ show, source: siteDescription\|siteName, showLogo, size, lineHeight }`——**只决定显隐与取哪个站点字段** |
+| `logo` | `{ show, height }`，控制**版权区**的 Logo（品牌块 Logo 由 `brandBlock.showLogo` 单独控制） |
+| `friendLinks` | `{ show, maxItems, title, layout: inline\|grid, columns, gap, titleSize }`——数据仍来自 `friend_links` 表 |
+| `bottom` | `{ show, layout: columns\|between\|centered, size, gap, divider, showIcp, showPoweredBy }` |
+| `background` / `textColor` | CSS 值（前景色对比度由组件按背景明暗自动补偿） |
 
 ### 3.4 `layouts`
 
 - `homepage`：`container`（`boxed` / `full` / `wide`）+ `sections[]`，按数组顺序渲染；每项 `{ component, variant, id, props }`，`component` 取值受白名单约束：`Hero` / `Features` / `ArticleList` / `CTA` / `Banner` / `CustomBlock`（`Banner` 用 `id` 引用 `home_banners` 中的命名横幅）。
 - `section`（板块页默认骨架）：
   - `layout`：`page-sidebar-left` / `page-sidebar-right` / `landing` / `none`
-  - `hero`：板块页顶部标题区
-  - `sidebar`：`{ enabled, sticky }`
+  - `hero`：板块页顶部标题区 —— `enabled` / `label`（小号大写强调色 eyebrow，如 `Works · 作品`）/ `title` / `description`（true 时用板块简介）/ `align`（`center` 默认 / `left`）/ `divider`（标题区下方通栏细分隔线）
+  - `sidebar`：`{ enabled, sticky, label, metaBlock, showSearch, showTags }`（`label` 覆盖分类栏标题；`metaBlock` 为 `{ title, lines[] }` 自定义信息块；`showSearch` / `showTags` 默认 `true`，可关掉侧栏搜索框与热门标签云）
   - `subcategory`：`{ enabled, position: sidebar\|top\|tab\|none, style: pill\|card\|list\|grid, columns, showCount }`
   - `list`：列表版式覆盖
 - `category` / `article` / `list`：分类页、文章页、列表页的结构覆盖。
 - 板块与分类另有 `template`（7 套：`article-list` / `article-grid` / `article-masonry` / `magazine` / `single-page` / `link-wall` / `design-gallery`）+ `template_config`，优先级高于风格包默认值，用于「同一站点内不同板块不同版式」。
+- `templates`：按模板 id 给出的出厂默认样式，板块可经 `template_config` 逐字段覆盖。`design-gallery` 字段：
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `layout` | `grid` | `grid` 等距网格 / `masonry` 瀑布流（CSS 多列，卡片高度可不等） |
+| `columns` | 3 | 列数 1–6 |
+| `gap` | `1.5rem` | 列间距 |
+| `aspect` | `4/3` | 封面比例；`auto` 用图片原始比例 |
+| `aspectCycle` | — | 逐卡轮换的比例数组（如 `["3/4","1/1","4/5"]`）营造瀑布节奏；配置后优先于 `aspect` |
+| `cardStyle` | `boxed` | `boxed` 圆角描边卡片 / `flat` 无边框无底色，直接落在页面上 |
+| `numberStyle` | `badge` | `badge` 封面右上角标 / `watermark` 封面中央大字编号 |
+| `showCategoryBadge` | `true` | 封面上是否显示分类角标 |
+| `numberPrefix` | `N°` | 作品编号前缀（编号优先取 `meta.number`，否则按列表顺序派生 `01`/`02`…） |
+| `showMeta` | `true` | 编号 · 日期 元信息行（卡面 + 封面右上角标） |
+| `showTags` | `true` | `meta.tags` 胶囊 |
+| `showExcerpt` | `true` | 摘要 |
+| `showAuthor` | `true` | 作者行 |
+
+> **作品集画廊同样走 `section` 布局**：`design-gallery` 模板会消费 `layouts.section` 的 `layout`（`page-sidebar-*`）、`hero`、`sidebar`、`subcategory`，与文章列表模板一致。侧栏分类由文章 `meta.category` 聚合（作品分类不在 `categories` 表）；侧栏链接的 `?category=` 会驱动画廊筛选。
 
 ### 3.5 `hero`
 
@@ -177,3 +213,53 @@ styles/<id>/
 ## 8. 字段设计原则
 
 `style.json` 中**每一个字段都必须已接入渲染**——不接受"预置/保留"类死配置（这类字段会让编辑者和 AI 误以为改动有效）。新增可配置项的顺序：先实现渲染消费，再加入 schema 与编辑器；字段一旦被证明无消费端，即从 schema、三包文件与编辑器中同步移除。
+
+## 9. Style Pack 与系统设置的边界
+
+### 9.1 一句话原则
+
+**风格包管「长什么样、放哪儿」，系统设置管「内容是什么、开不开」。**
+
+后台「系统设置」里能配置的一切内容与开关，**都必须生效**，不因切换风格包而改变；风格包只决定这些内容以什么形态、出现在什么位置。
+
+### 9.2 归属表
+
+| 类别 | 归谁 | 关键项 |
+| --- | --- | --- |
+| 颜色 / 字体 / 圆角 / 阴影 / 宽度 | 风格包 | `design.tokens` |
+| 头部形态（吸顶方式、导航对齐与当前项样式、头部按钮） | 风格包 | `header.*` |
+| 页脚装修（变体、列数模板、边线、背景、ICP 显隐） | 风格包 | `footer.*` |
+| 首页区块的**顺序与形态** | 风格包 | `layouts.homepage.sections` |
+| 板块页 / 文章页布局形态 | 风格包 | `layouts.section` / `layouts.article` |
+| 首页门面文案（hero 的 eyebrow / title / intro / stats） | 风格包 | 区块 `props` |
+| **站点信息**（站名、简介、版权、备案、Logo） | 系统设置 | `site_name`、`site_description`、`copyright_text`、`icp_number`、`header_logo`、`footer_logo` |
+| **首页宣传页**（轮播图、CTA 按钮、轮播数量 / 间隔 / 尺寸 / 效果、文章封面填补） | 系统设置 | `hero_slides`、`hero_cta_buttons`、`hero_effect`、`hero_size`、`hero_carousel_*` |
+| **中部 banner 区** | 系统设置 | `home_banners`、`home_banner_*` |
+| **欢迎页** | 系统设置 | `welcome_page_enabled`、`welcome_page_html` |
+| 分享渠道 / 内容宽度 / 默认主题 / 语言 | 系统设置 | `share_config`、`content_max_width`、`default_theme`、`frontend_locale` |
+| 友链数据 / 列数 | 数据表 + 系统设置 | `friend_links` 表、`friend_links_columns` |
+| 板块 / 分类 / 文章 / 标签 / 媒体 | 数据库（可由演示内容包装载） | — |
+
+### 9.3 冲突仲裁（三条硬约束）
+
+1. **包不得吞掉承载设置的区块** —— 凡后台有设置项的展示位，首页区块序列必须保留对应**占位**：`Hero`（首页宣传页 / 轮播）、`Banner`（中部横幅）。包想改变外观，用**形态（`variant`）**，不许删区块。
+2. **用户显式配置的值优先于包内值** —— 同一含义既有后台设置又有包字段时，**后台优先、包内兜底**。例：`hero_cta_buttons` > `hero.ctaButtons`；`hero_size` / `hero_carousel_interval` > 包内同名；`friend_links_columns` > `footer.friendLinks.columns`。**包字段的定位始终是「未配置时的默认值」。**
+3. **包级开关只控制「是否呈现」** —— 包可以决定区块是否出现、是否自动轮播（`hero.enabled` / `autoplay` / `showCTA`），但不能让**已配置的内容**凭空消失。
+
+### 9.4 强制流程
+
+- **新增系统设置项**：先实现消费端（组件 / 后端读取）→ 再加后台 UI → 最后按需纳入演示内容导出白名单。**后台有 UI 而前台无消费端 = 缺陷**，不允许合入。
+- **新增包字段**：先接入渲染 → 再入 schema 与编辑器 → 同步内置三包（同 §8）。
+- **新增首页区块类型**：必须在 `HOMEPAGE_REGISTRY` 注册，并在文档中说明它承载哪些后台设置。
+
+### 9.5 已修复的历史问题（防回归）
+
+| 问题 | 后果 | 现状 |
+| --- | --- | --- |
+| 企业包把首页首区块从 `Hero` 换成 `CustomBlock` | 轮播图 / 间隔 / 尺寸 / 文章封面填补全部失效 | Hero 支持 `variant: 'split'`（左文右图，右侧仍是后台轮播） |
+| 企业包删掉 `Banner` 占位 | 后台中部横幅无处渲染 | 恢复 `Banner` 占位 |
+| 包内 `hero.ctaButtons` / `size` / `interval` 优先于后台 | 后台按钮被包内兜底覆盖 | 改为后台优先 |
+| `hero_effect` 无消费端 | 「轮播效果（淡入/滑动/翻转）」设置无效 | HeroCarousel 支持 `fade` / `slide` / `flip` |
+| `friend_links_columns` 无消费端 | 「友链列数」设置无效 | Footer 接线，后台优先 |
+| `home_feature_*` / `home_about_*` | 后台无 UI、前台无消费端（死配置） | 已删除；如需「首页能力区/关于区」文案可配，须先补 UI 与消费端 |
+| 迁移 `0014` seed 轮播默认值 | 新库自带默认键，挡住演示内容安装（`use_articles` 恒为 false） | 不再写库，默认值由消费端兜底 |

@@ -1,8 +1,4 @@
 import { createClient, type Client } from '@libsql/client'
-import bcrypt from 'bcryptjs'
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { getDbPath } from '../config.js'
 
 export async function migrate() {
@@ -403,156 +399,21 @@ async function createFts5(client: Client) {
   console.log('✅ FTS5 index created')
 }
 
-async function initializeDefaultData(client: Client, dbPath: string) {
-  console.log('🔄 Checking default data...')
-
-  // 检查是否有用户
-  const usersResult = await client.execute('SELECT COUNT(*) as count FROM users')
+/**
+ * 全新数据库的初始数据：**有意留空**。
+ *
+ * 站点内容一律由用户决定 —— 默认弱口令账号与预置板块既不安全、也与站点定位无关。
+ *
+ * 首次安装改由 **安装向导 /setup** 完成：创建管理员账号、选择并激活风格包、
+ * 可选安装该包自带的演示示例内容（见 apps/server/src/lib/styleDemo.ts）。
+ * 用户什么都不选时，站点就是一个干净的全空白站。
+ */
+async function initializeDefaultData(_client: Client, _dbPath: string) {
+  const usersResult = await _client.execute('SELECT COUNT(*) as count FROM users')
   const userCount = usersResult.rows[0]?.count as number
-
   if (userCount > 0) {
     console.log('✅ Database already has data, skipping initialization')
     return
   }
-
-  console.log('📦 Initializing default data...')
-
-  // 创建默认管理员 (admin / admin123)
-  const passwordHash = await bcrypt.hash('admin123', 10)
-  await client.execute({
-    sql: 'INSERT INTO users (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)',
-    args: ['admin', passwordHash, 'Admin', 'superadmin']
-  })
-  console.log('  ✓ Default admin created: admin / admin123 (CHANGE YOUR PASSWORD ON FIRST LOGIN!)')
-
-  // 创建默认板块
-  const defaultSections = [
-    { name: 'Token 计划', slug: 'token_plan', path: '/token-plan', description: 'Token 计划相关内容', sortOrder: 0 },
-    { name: 'AI 编程', slug: 'ai_coding', path: '/ai-coding', description: 'AI 编程教程与项目', sortOrder: 1 },
-    { name: 'AI 作品', slug: 'ai_works', path: '/ai-works', description: 'AI 生成作品展示', sortOrder: 2 },
-    { name: '博客', slug: 'blog', path: '/blog', description: '博客文章', sortOrder: 3 },
-  ]
-
-  const sectionIds: Record<string, number> = {}
-  for (const section of defaultSections) {
-    const result = await client.execute({
-      sql: 'INSERT INTO sections (name, slug, path, description, sort_order) VALUES (?, ?, ?, ?, ?)',
-      args: [section.name, section.slug, section.path, section.description || '', section.sortOrder]
-    })
-    sectionIds[section.slug] = Number(result.lastInsertRowid)
-  }
-  console.log('  ✓ Default sections created')
-
-  // 创建默认分类
-  const categories = [
-    { name: '未分类', slug: 'uncategorized', sectionId: sectionIds['blog'], sortOrder: 0 },
-    { name: 'AI 教程', slug: 'ai-tutorials', sectionId: sectionIds['ai_coding'], sortOrder: 1 },
-    { name: '项目展示', slug: 'project-showcase', sectionId: sectionIds['ai_coding'], sortOrder: 2 },
-    { name: '技术解析', slug: 'tech-analysis', sectionId: sectionIds['ai_coding'], sortOrder: 3 },
-    { name: 'AI 绘画', slug: 'ai-painting', sectionId: sectionIds['ai_works'], sortOrder: 1 },
-    { name: 'AI 视频', slug: 'ai-video', sectionId: sectionIds['ai_works'], sortOrder: 2 },
-    { name: '计划公告', slug: 'announcements', sectionId: sectionIds['token_plan'], sortOrder: 1 },
-    { name: '进度更新', slug: 'progress-updates', sectionId: sectionIds['token_plan'], sortOrder: 2 },
-  ]
-
-  for (const cat of categories) {
-    if (!cat.sectionId) continue
-    await client.execute({
-      sql: 'INSERT INTO categories (name, slug, section_id, sort_order) VALUES (?, ?, ?, ?)',
-      args: [cat.name, cat.slug, cat.sectionId, cat.sortOrder]
-    })
-  }
-  console.log('  ✓ Default categories created')
-
-  // 创建默认标签
-  const tags = ['AI', '编程', 'Next.js', 'TypeScript', '教程', '作品', 'Token', '全栈']
-  for (const tag of tags) {
-    await client.execute({
-      sql: 'INSERT INTO tags (name) VALUES (?)',
-      args: [tag]
-    })
-  }
-  console.log('  ✓ Default tags created')
-
-  // 创建默认站点设置
-  const defaultSettings = [
-    { key: 'site_name', value: 'TokenPress' },
-    { key: 'site_description', value: 'Token 力量无限放大 | AI 赋能综合内容平台' },
-    { key: 'header_logo', value: '' },
-    { key: 'footer_logo', value: '' },
-    { key: 'footer_nav', value: JSON.stringify([
-      { name: 'Token 计划', url: '/token-plan' },
-      { name: 'AI 编程', url: '/ai-coding' },
-      { name: 'AI 作品', url: '/ai-works' },
-      { name: '博客', url: '/blog' },
-    ]) },
-    { key: 'friend_links_columns', value: '2' },
-    { key: 'copyright_text', value: '© 2026 TokenPress. All rights reserved.' },
-    { key: 'icp_number', value: '' },
-    { key: 'frontend_locale', value: 'zh' },
-    { key: 'backend_locale', value: 'zh' },
-    { key: 'hero_slides', value: JSON.stringify([
-      { id: '1', imageUrl: '/uploads/hero-slide-1.svg', linkUrl: '/token-plan', linkTarget: '_self' },
-      { id: '2', imageUrl: '/uploads/hero-slide-2.svg', linkUrl: '/ai-coding', linkTarget: '_self' },
-      { id: '3', imageUrl: '/uploads/hero-slide-3.svg', linkUrl: '/ai-works', linkTarget: '_self' },
-    ]) },
-    { key: 'content_review_enabled', value: 'false' },
-    { key: 'review_cloud_provider', value: 'none' },
-    { key: 'review_tencent_secret_id', value: '' },
-    { key: 'review_tencent_secret_key', value: '' },
-    { key: 'review_tencent_region', value: 'ap-guangzhou' },
-    { key: 'review_aliyun_access_key_id', value: '' },
-    { key: 'review_aliyun_access_key_secret', value: '' },
-    { key: 'review_aliyun_region', value: 'cn-shanghai' },
-    { key: 'review_baidu_app_id', value: '' },
-    { key: 'review_baidu_api_key', value: '' },
-    { key: 'review_baidu_secret_key', value: '' },
-    { key: 'review_builtin_ai_api_url', value: '' },
-    { key: 'review_builtin_ai_api_key', value: '' },
-  ]
-
-  for (const setting of defaultSettings) {
-    await client.execute({
-      sql: 'INSERT INTO site_settings (key, value) VALUES (?, ?)',
-      args: [setting.key, setting.value]
-    })
-  }
-  console.log('  ✓ Default site settings created')
-
-  // 创建默认友情链接
-  await client.execute({
-    sql: 'INSERT INTO friend_links (name, url, description, sort_order, is_active) VALUES (?, ?, ?, ?, ?)',
-    args: ['词元笔记', 'https://www.token00.com', '词元笔记', 0, 1]
-  })
-  console.log('  ✓ Default friend links created')
-
-  // 创建默认 Hero Slide SVG 文件 + media 记录
-  const UPLOADS_DIR = path.resolve(path.dirname(dbPath), 'uploads')
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true })
-
-  const DEFAULTS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../defaults')
-  const heroSlides = [
-    { id: '1', filename: 'hero-slide-1.svg', linkUrl: '/token-plan' },
-    { id: '2', filename: 'hero-slide-2.svg', linkUrl: '/ai-coding' },
-    { id: '3', filename: 'hero-slide-3.svg', linkUrl: '/ai-works' },
-  ]
-
-  for (const slide of heroSlides) {
-    const srcPath = path.join(DEFAULTS_DIR, slide.filename)
-    const destPath = path.join(UPLOADS_DIR, slide.filename)
-    const svgData = fs.readFileSync(srcPath, 'utf-8')
-    fs.writeFileSync(destPath, svgData, 'utf-8')
-
-    const stat = fs.statSync(destPath)
-    const publicUrl = `/uploads/${slide.filename}`
-
-    await client.execute({
-      sql: `INSERT INTO media (filename, original_name, mime_type, size, url, uploaded_by, is_reviewed, created_at)
-            VALUES (?, ?, ?, ?, ?, 1, 1, CURRENT_TIMESTAMP)`,
-      args: [slide.filename, slide.filename, 'image/svg+xml', stat.size, publicUrl]
-    })
-  }
-  console.log('  ✓ Default hero slides created')
-
-  console.log('✅ Default data initialized')
+  console.log('⏭️  全新数据库：跳过默认内容初始化（请访问 /setup 完成安装向导）')
 }

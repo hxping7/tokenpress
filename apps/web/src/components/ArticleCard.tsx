@@ -56,7 +56,7 @@ export function ArticleCard({ article, showThumbnail = true, showExcerpt = true,
   ) : null
 
   // 文章详情路径：section 缺失时降级到 /blog 前缀，避免出现 undefined 路径
-  const articleHref = `${article.section?.path ?? '/blog'}/${article.slug}`
+  const articleHref = `${article.section?.path || ''}/${article.slug}` || '/articles'
 
   // 列表视图
   if (effectiveView === 'list') {

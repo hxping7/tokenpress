@@ -1,0 +1,712 @@
+{
+  "version": 1,
+  "packId": "design",
+  "generatedAt": "2026-09-14T08:19:16.398Z",
+  "note": "演示示例内容。安装时按 slug 幂等跳过已存在项；媒体自 demo-media/ 复制到目标站 uploads。",
+  "siteSettings": {
+    "site_name": "TokenPress",
+    "site_description": "手办原型设计师作品集 · 角色造型、原型制作、涂装与拍摄的全流程记录",
+    "footer_nav": "[{\"title\":\"作品\",\"links\":[{\"name\":\"作品集\",\"url\":\"/works\"},{\"name\":\"制作工艺\",\"url\":\"/craft\"},{\"name\":\"手记\",\"url\":\"/journal\"}]},{\"title\":\"关于\",\"links\":[{\"name\":\"关于本站\",\"url\":\"/about\"},{\"name\":\"友链\",\"url\":\"/links\"}]},{\"title\":\"\",\"html\":\"<div style=\\\"text-align:center\\\"><img src=\\\"demo-media/202607/qr-test-mrir9ch5hcgl.png\\\" alt=\\\"微信公众号\\\" width=\\\"120\\\" height=\\\"120\\\" /><p style=\\\"margin-top:6px\\\">扫码关注公众号</p></div>\"}]",
+    "friend_links_columns": "2",
+    "copyright_text": "© 2026 HXP · 原型师作品集，作品与图文版权归作者所有。",
+    "icp_number": "ICP备案",
+    "footer_nav_columns": "4",
+    "default_theme": "night",
+    "icp_url": "https://beian.miit.gov.cn/",
+    "powered_by": "Power By AI",
+    "share_config": "{\"enabled\":true,\"platforms\":[\"wechat\",\"moments\",\"weibo\",\"qq\",\"qzone\",\"copy\"],\"positions\":[\"float_right\",\"article_bottom\"],\"likeEnabled\":true,\"likePositions\":[\"article_bottom\"]}",
+    "content_max_width": "100%",
+    "home_feature_eyebrow": "FIGURE DESIGNER · 手办原型师",
+    "home_feature_title": "把角色",
+    "home_feature_title_accent": "塑成收藏",
+    "home_feature_intro": "我是一名原型设计师，专注于角色造型与限定手办的雕塑造物。在这里记录每一件作品从草图、翻模到涂装完成的全过程。",
+    "home_feature_stats": "[{\"label\":\"件完成作品\",\"value\":\"12\"},{\"label\":\"在制原型\",\"value\":\"04\"},{\"label\":\"自\",\"value\":\"2024 —\"}]",
+    "home_about_title": "关于",
+    "home_about_intro": "我以「原型师」自居 —— 像塑造一件收藏级手办一样对待每一个设计：起稿、打样、上色，直到它能被陈列、被注视、被带走。"
+  },
+  "sections": [
+    {
+      "slug": "works",
+      "name": "作品集",
+      "path": "/works",
+      "description": "",
+      "kind": "articles",
+      "template": "design-gallery",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 1,
+      "isActive": true
+    },
+    {
+      "slug": "craft",
+      "name": "制作工艺",
+      "path": "/craft",
+      "description": "",
+      "kind": "articles",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 2,
+      "isActive": true
+    },
+    {
+      "slug": "journal",
+      "name": "手记",
+      "path": "/journal",
+      "description": "",
+      "kind": "articles",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 3,
+      "isActive": true
+    }
+  ],
+  "categories": [
+    {
+      "slug": "character",
+      "name": "角色原型",
+      "sectionSlug": "works",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 1
+    },
+    {
+      "slug": "limited",
+      "name": "限定涂装",
+      "sectionSlug": "works",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 2
+    },
+    {
+      "slug": "diorama",
+      "name": "场景模型",
+      "sectionSlug": "works",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 3
+    },
+    {
+      "slug": "prototype",
+      "name": "原型打样",
+      "sectionSlug": "works",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 4
+    },
+    {
+      "slug": "sculpt",
+      "name": "造型",
+      "sectionSlug": "craft",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 1
+    },
+    {
+      "slug": "casting",
+      "name": "翻模",
+      "sectionSlug": "craft",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 2
+    },
+    {
+      "slug": "painting",
+      "name": "涂装",
+      "sectionSlug": "craft",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 3
+    },
+    {
+      "slug": "photography",
+      "name": "拍摄",
+      "sectionSlug": "craft",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 4
+    },
+    {
+      "slug": "exhibition",
+      "name": "参展",
+      "sectionSlug": "journal",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 1
+    },
+    {
+      "slug": "notes",
+      "name": "随笔",
+      "sectionSlug": "journal",
+      "description": "",
+      "template": "article-list",
+      "templateConfig": null,
+      "layouts": null,
+      "sortOrder": 2
+    }
+  ],
+  "tags": [
+    "造型",
+    "油泥",
+    "原型制作",
+    "工作流",
+    "拍摄",
+    "布光",
+    "摄影",
+    "色温",
+    "参展",
+    "申报",
+    "流程",
+    "清单",
+    "翻模",
+    "PU 树脂",
+    "灌注",
+    "参数",
+    "比例",
+    "重心",
+    "结构",
+    "硅胶",
+    "分件",
+    "模具",
+    "涂装",
+    "肤色",
+    "叠涂",
+    "丙烯",
+    "随笔",
+    "复盘",
+    "成长",
+    "展会",
+    "手记",
+    "WF",
+    "工具台",
+    "效率",
+    "收纳"
+  ],
+  "articles": [
+    {
+      "slug": "aurora-brand-visual",
+      "title": "Aurora — 极光品牌视觉系统",
+      "excerpt": "为极光科技打造的完整品牌视觉识别，涵盖 Logo、色彩、字体与应用规范。",
+      "content": "为极光科技打造的完整品牌视觉识别，涵盖 Logo、色彩、字体与应用规范。",
+      "coverImage": "https://picsum.photos/seed/aurora/800/600",
+      "sectionSlug": "works",
+      "categorySlug": null,
+      "status": "published",
+      "meta": {
+        "kind": "design_work",
+        "summary": "为极光科技打造的完整品牌视觉识别，涵盖 Logo、色彩、字体与应用规范。",
+        "authorName": "林清",
+        "authorAvatar": "https://i.pravatar.cc/100?img=12",
+        "category": "品牌设计",
+        "tags": [
+          "Branding",
+          "VI"
+        ],
+        "externalUrl": "https://example.com/aurora",
+        "galleryImages": [
+          "https://picsum.photos/seed/aurora1/1200/800",
+          "https://picsum.photos/seed/aurora2/1200/800"
+        ]
+      },
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-07 12:02:04",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": []
+    },
+    {
+      "slug": "tide-meditation-app",
+      "title": "潮汐 App — 冥想产品界面",
+      "excerpt": "以 ocean 节律为核心的冥想应用，柔和渐变与呼吸式动效。",
+      "content": "以 ocean 节律为核心的冥想应用，柔和渐变与呼吸式动效。",
+      "coverImage": "https://picsum.photos/seed/tide/800/600",
+      "sectionSlug": "works",
+      "categorySlug": null,
+      "status": "published",
+      "meta": {
+        "kind": "design_work",
+        "summary": "以 ocean 节律为核心的冥想应用，柔和渐变与呼吸式动效。",
+        "authorName": "苏晚",
+        "authorAvatar": "https://i.pravatar.cc/100?img=32",
+        "category": "UI/UX",
+        "tags": [
+          "App",
+          "Mobile"
+        ],
+        "externalUrl": "https://example.com/tide",
+        "galleryImages": [
+          "https://picsum.photos/seed/tide1/1200/800",
+          "https://picsum.photos/seed/tide2/1200/800"
+        ]
+      },
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 1,
+      "publishedAt": "2026-09-07 12:02:04",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": []
+    },
+    {
+      "slug": "classic-myth-illustration",
+      "title": "山海经 — 插画海报系列",
+      "excerpt": "以《山海经》异兽为题的东方插画海报，传统笔墨与现代构成。",
+      "content": "以《山海经》异兽为题的东方插画海报，传统笔墨与现代构成。",
+      "coverImage": "https://picsum.photos/seed/myth/800/600",
+      "sectionSlug": "works",
+      "categorySlug": null,
+      "status": "published",
+      "meta": {
+        "kind": "design_work",
+        "summary": "以《山海经》异兽为题的东方插画海报，传统笔墨与现代构成。",
+        "authorName": "陈墨",
+        "authorAvatar": "https://i.pravatar.cc/100?img=51",
+        "category": "插画",
+        "tags": [
+          "Illustration",
+          "Poster"
+        ],
+        "externalUrl": "",
+        "galleryImages": [
+          "https://picsum.photos/seed/myth1/1200/800",
+          "https://picsum.photos/seed/myth2/1200/800"
+        ]
+      },
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 2,
+      "publishedAt": "2026-09-07 12:02:04",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": []
+    },
+    {
+      "slug": "nova-ecommerce-web",
+      "title": "Nova 电商官网改版",
+      "excerpt": "面向年轻群体的电商首页重构，强化商品叙事与转化路径。",
+      "content": "面向年轻群体的电商首页重构，强化商品叙事与转化路径。",
+      "coverImage": "https://picsum.photos/seed/nova/800/600",
+      "sectionSlug": "works",
+      "categorySlug": null,
+      "status": "published",
+      "meta": {
+        "kind": "design_work",
+        "summary": "面向年轻群体的电商首页重构，强化商品叙事与转化路径。",
+        "authorName": "周野",
+        "authorAvatar": "https://i.pravatar.cc/100?img=68",
+        "category": "网页设计",
+        "tags": [
+          "Web",
+          "E-commerce"
+        ],
+        "externalUrl": "https://example.com/nova",
+        "galleryImages": [
+          "https://picsum.photos/seed/nova1/1200/800",
+          "https://picsum.photos/seed/nova2/1200/800"
+        ]
+      },
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 3,
+      "publishedAt": "2026-09-07 12:02:04",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": []
+    },
+    {
+      "slug": "light-photography-zine",
+      "title": "拾光 — 独立摄影集",
+      "excerpt": "城市光影的独立摄影 zine，胶片质感与留白排版。",
+      "content": "城市光影的独立摄影 zine，胶片质感与留白排版。",
+      "coverImage": "https://picsum.photos/seed/light/800/600",
+      "sectionSlug": "works",
+      "categorySlug": null,
+      "status": "published",
+      "meta": {
+        "kind": "design_work",
+        "summary": "城市光影的独立摄影 zine，胶片质感与留白排版。",
+        "authorName": "阿光",
+        "authorAvatar": "https://i.pravatar.cc/100?img=15",
+        "category": "摄影",
+        "tags": [
+          "Photography",
+          "Zine"
+        ],
+        "externalUrl": "",
+        "galleryImages": [
+          "https://picsum.photos/seed/light1/1200/800",
+          "https://picsum.photos/seed/light2/1200/800"
+        ]
+      },
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 4,
+      "publishedAt": "2026-09-07 12:02:04",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": []
+    },
+    {
+      "slug": "pixel-display-font",
+      "title": "Pixel 字体 — 实验显示字",
+      "excerpt": "一款像素风实验显示字体，兼容屏幕与印刷。",
+      "content": "一款像素风实验显示字体，兼容屏幕与印刷。",
+      "coverImage": "https://picsum.photos/seed/pixel/800/600",
+      "sectionSlug": "works",
+      "categorySlug": null,
+      "status": "published",
+      "meta": {
+        "kind": "design_work",
+        "summary": "一款像素风实验显示字体，兼容屏幕与印刷。",
+        "authorName": "何夕",
+        "authorAvatar": "https://i.pravatar.cc/100?img=45",
+        "category": "字体设计",
+        "tags": [
+          "Typeface",
+          "Pixel"
+        ],
+        "externalUrl": "https://example.com/pixel",
+        "galleryImages": [
+          "https://picsum.photos/seed/pixel1/1200/800",
+          "https://picsum.photos/seed/pixel2/1200/800"
+        ]
+      },
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 5,
+      "publishedAt": "2026-09-07 12:02:04",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": []
+    },
+    {
+      "slug": "sculpting-five-stages",
+      "title": "从设定图到原型：油泥堆塑的五个阶段",
+      "excerpt": "拿到一张设定图，到这块泥能进硅胶，中间隔着五个阶段。跳过任何一环，后面都要用两倍的时间还回去——这是我返工三次之后才愿意承认的事。 一、起大形：油泥只做「壳」 很多人一上来就堆实心油泥，结果做到一半发现手举不动、烤箱放不进、翻模也压不出细节。正确顺序是先做内芯：铝箔团出体积、泡沫切出趋势，外面再包 8–12mm 的油泥壳。 内芯决定**重心**，而重心错了后面全错。有个粗暴的检验法：把坯体放在桌沿...",
+      "content": "拿到一张设定图，到这块泥能进硅胶，中间隔着五个阶段。跳过任何一环，后面都要用两倍的时间还回去——这是我返工三次之后才愿意承认的事。\n\n## 一、起大形：油泥只做「壳」\n\n很多人一上来就堆实心油泥，结果做到一半发现手举不动、烤箱放不进、翻模也压不出细节。正确顺序是先做内芯：铝箔团出体积、泡沫切出趋势，外面再包 8–12mm 的油泥壳。\n\n内芯决定**重心**，而重心错了后面全错。有个粗暴的检验法：把坯体放在桌沿，能在你预期的支撑点附近稳住，才算合格。\n\n## 二、立骨架：先把「站姿」钉死\n\n按 1/7 换算关键点位——头顶、下巴、肩线、腰线、膝、踝。我的做法是用卡尺在坯体上直接刻线，而不是靠眼睛比对，因为**眼睛会被大块面骗**。\n\n这一步只做两件事：钉高度、钉姿态。姿态一旦定下，后面所有体积都围绕它生长。\n\n## 三、大块面：只做体积，不做细节\n\n用刮片大面积推，目标是「远看已经像」，不是「近看已经对」。这个阶段最反直觉的地方在于——**细节是体积的敌人**。提前抠脸，等于给自己制造一堆凸起，后面每推一次刀都要绕开它们。\n\n## 四、刻细节：手指永远最后做\n\n褶皱、发丝、甲缘、衣领。顺序原则是「越容易碰坏的越晚做」。手指排在最后，因为它是全件最脆弱、也最容易被手心的温度软化的部位。\n\n## 五、收表面：溶平与对称检查\n\n用溶剂棉签统一表面质感，然后拍一张正面照，水平翻转——**镜像看图是发现不对称最快的方式**，比来回摇头快十倍。\n\n![堆塑五阶段](demo-media/202609/craft/sculpting-five-stages-fig1-mtyfrzuo7qbr.svg)\n\n## 两点私见\n\n第一，阶段三偷懒的人最多，也最不容易被自己发现，因为坯体「看起来已经挺像了」。等你抠完脸才发现比例不对，那时候已经晚了。\n\n第二，别把五个阶段理解成严格串行。二和三之间可以来回一两次；但**一绝不能回头**——内芯一旦被油泥包死，重心就只能靠配重去补，那是下策。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/craft/sculpting-five-stages-cover-mtyfsg3iwdp3.svg",
+      "sectionSlug": "craft",
+      "categorySlug": "sculpt",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "造型",
+        "油泥",
+        "原型制作",
+        "工作流"
+      ]
+    },
+    {
+      "slug": "figure-studio-lighting",
+      "title": "手办棚拍布光：三灯位、背景纸与色温",
+      "excerpt": "三盏灯就能拍好一件手办。多一盏不是更亮，是更难控——每多一个光源，就多一组需要管理的阴影。 主光：45° 高位，决定「这是谁」 主光放左前 45°、高度略高于件顶，配 60cm 以上柔光箱。它决定整体的明暗关系，也决定观众第一眼看到的性格：**主光偏硬 ⇒ 凌厉；主光偏软 ⇒ 柔和**。 判断主光是否合适，看一处就够——鼻梁的投影是否落在脸颊上而不是嘴唇上。落在嘴唇上说明位置太低。 辅光：只做减法...",
+      "content": "三盏灯就能拍好一件手办。多一盏不是更亮，是更难控——每多一个光源，就多一组需要管理的阴影。\n\n## 主光：45° 高位，决定「这是谁」\n\n主光放左前 45°、高度略高于件顶，配 60cm 以上柔光箱。它决定整体的明暗关系，也决定观众第一眼看到的性格：**主光偏硬 ⇒ 凌厉；主光偏软 ⇒ 柔和**。\n\n判断主光是否合适，看一处就够——鼻梁的投影是否落在脸颊上而不是嘴唇上。落在嘴唇上说明位置太低。\n\n## 辅光：只做减法，不做加法\n\n辅光放主光对侧，亮度是主光的 1/4 到 1/3。它的唯一任务是**把暗部提亮到能看见细节**，而不是「让画面变亮」。\n\n常见的错误是把辅光开到和主光接近，结果两侧都有阴影，件就「平」了，看起来像贴图而不是体积。\n\n## 轮廓光：把边缘从背景里拉出来\n\n轮廓光从正后方打，位置压在件的肩线和发缘上。它的作用是**在主体和背景之间做一道亮边**，让轮廓从背景里浮出来。\n\n这盏灯对深色件尤其重要——没有它，深色手办会和深色背景糊成一团。\n\n## 背景纸与色温\n\n| 项目 | 建议 | 原因 |\n|---|---|---|\n| 背景纸色 | 浅灰或暖白 | 中性，不抢主体颜色 |\n| 材质 | 哑光，避免亮面 | 亮面会反射主光形成光斑 |\n| 距离 | 距件 ≥ 60cm | 避免主光把背景打亮形成渐变 |\n| 色温 | 全部 5500K | 混色温会导致白平衡无法统一 |\n\n色温这条最容易被忽视：一盏 3200K 的台灯混进 5500K 的灯具里，肤色必然偏黄，且**后期无法完全校正**，因为不同色温照到的部位偏色程度不同。\n\n## 最后一步：先拍白平衡卡\n\n拍之前在主体位置放一张灰卡拍一张，后期以此为基准统一白平衡。这一步花三十秒，能省掉半小时的调色。\n\n![三灯位](demo-media/202609/craft/figure-studio-lighting-fig1-mtyfmkkm8qmp.svg)\n\n## 我的固定流程\n\n架灯 → 放灰卡 → 拍基准 → 移开灰卡 → 拍正面/侧面/细节各一张。**顺序固定下来之后，出片率会明显上升**，因为你排除了「灯位每次都不一样」这个最大的变量。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/craft/figure-studio-lighting-cover-mtyfn0tsz66p.svg",
+      "sectionSlug": "craft",
+      "categorySlug": "photography",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "拍摄",
+        "布光",
+        "摄影",
+        "色温"
+      ]
+    },
+    {
+      "slug": "first-booth-application",
+      "title": "第一次申报展位：材料清单与踩坑记录",
+      "excerpt": "第一次申报展位，我以为准备材料是最简单的一步。实际提交了两次才通过，问题全出在「我以为」上。 材料清单（照着准备即可） 申报要交的东西并不多，但每一项都有隐含要求： - **身份材料**：身份证正反面扫描件。手机拍照通常不通过——边缘裁切不齐、有阴影，审核方会判为「不清晰」。 - **作品资料**：6–10 张成品图。关键要求是**背景统一**。我第一次交了五张不同背景的照片，被要求重交。白底或统...",
+      "content": "第一次申报展位，我以为准备材料是最简单的一步。实际提交了两次才通过，问题全出在「我以为」上。\n\n## 材料清单（照着准备即可）\n\n申报要交的东西并不多，但每一项都有隐含要求：\n\n- **身份材料**：身份证正反面扫描件。手机拍照通常不通过——边缘裁切不齐、有阴影，审核方会判为「不清晰」。\n- **作品资料**：6–10 张成品图。关键要求是**背景统一**。我第一次交了五张不同背景的照片，被要求重交。白底或统一灰底是最省事的方案。\n- **作品说明**：逐件填写名称、尺寸、材质、工时。工时这一栏很多人留空，但它是审核判断「是否原创量产」的重要依据，建议如实填。\n- **工艺说明**：原创声明或授权声明，需要手写签字。\n- **展位需求**：尺寸、是否需要电源、桌子数量。电源不是默认提供的。\n\n## 踩坑一：作品图和实物必须对得上\n\n我第一次交的图里，有两张是旧版配色，和最终实物差别明显。审核方会拿图对照你的其他公开渠道（社交账号、店铺），不一致会被要求补充说明。\n\n**建议：交申报图之前，先把社交账号里的旧图处理掉，或者干脆统一重拍一批。**\n\n## 踩坑二：工时不要「取整」\n\n我一开始把每件的工时都填成「约 40 小时」这种整数。审核反馈是「描述过于笼统」。\n\n后来改成按阶段拆：造型 22h / 翻模 6h / 涂装 14h / 拍摄 2h。**拆开之后不仅通过了，还能看出你自己是否真的做过**——没做过的人拆不出这个比例。\n\n## 踩坑三：缴费凭证的命名\n\n这听起来是小事，但我因为文件名是「微信图片_2026xxxx.jpg」被退回一次。改成 `姓名_展位申报_缴费凭证.pdf` 之后立刻通过。\n\n审核方一天要处理几百份材料，**命名规范 = 降低对方的处理成本 = 提高你的通过率**。\n\n![申报材料清单](demo-media/202609/journal/first-booth-application-fig1-mtyfnxdzhl7z.svg)\n\n## 时间线建议\n\n| 节点 | 提前量 |\n|---|---|\n| 拍申报作品图 | 开申前 2 周 |\n| 准备材料 | 开申前 1 周 |\n| 提交申报 | 开放当天（名额先到先得） |\n| 缴费 | 通过后 48 小时内 |\n| 打印展位证 | 开展前 3 天 |\n\n最后一条经验：**申报开放当天就交**。这不是玄学，位置好的展位确实是先到先得的。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/journal/first-booth-application-cover-mtyfodnngjrq.svg",
+      "sectionSlug": "journal",
+      "categorySlug": "exhibition",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "参展",
+        "申报",
+        "流程",
+        "清单"
+      ]
+    },
+    {
+      "slug": "pu-resin-pouring-log",
+      "title": "PU 树脂灌注实录：温度、配比与收缩补偿",
+      "excerpt": "PU 树脂的脾气比硅胶大得多。同一批料，25℃ 和 15℃ 下的凝胶时间能差一倍，而凝胶时间一变，气泡、流痕、收缩全都跟着变。所以温度不是环境变量，它是配方的一部分。 温度：被低估的第一参数 树脂和模具的温度差会直接改变表面质量。冬天最常见的翻车是**表面出现细密纹路**，看起来像模具脏了，实际是低温树脂流经冷模具时提前凝胶，把流动前沿「冻」在了表面上。 我的做法： - 模具先放进 30℃ 的保温...",
+      "content": "PU 树脂的脾气比硅胶大得多。同一批料，25℃ 和 15℃ 下的凝胶时间能差一倍，而凝胶时间一变，气泡、流痕、收缩全都跟着变。所以温度不是环境变量，它是配方的一部分。\n\n## 温度：被低估的第一参数\n\n树脂和模具的温度差会直接改变表面质量。冬天最常见的翻车是**表面出现细密纹路**，看起来像模具脏了，实际是低温树脂流经冷模具时提前凝胶，把流动前沿「冻」在了表面上。\n\n我的做法：\n\n- 模具先放进 30℃ 的保温箱预热 15 分钟；\n- A 组分（树脂）水浴预热到 30℃，B 组分（固化剂）保持室温；\n- 室温低于 18℃ 时，不接单、不灌注。\n\n## 配比：体积比不等于重量比\n\n1:1 标的是**体积比**。如果按重量配，A、B 密度不同会导致固化剂过量或不足——过量会发脆，不足会永远发粘。\n\n小批量用两支一次性注射器最稳，大批量上电子秤时务必先查该品牌的密度换算系数。\n\n## 脱泡：真空还是压力\n\n| 方式 | 作用 | 局限 |\n|---|---|---|\n| 真空脱泡 | 抽出混合时卷入的气体 | 对模具死角的气体无效 |\n| 压力罐 | 把残留气泡压到肉眼不可见 | 需要 0.4MPa 以上，设备成本高 |\n| 两者结合 | 先真空后加压 | 流程长，适合高价值件 |\n\n我目前是单真空：-0.09MPa 抽 60 秒。剩下进不了真空的角落，靠**排气道设计**解决，而不是靠设备。\n\n## 收缩补偿：把原型放大 2%\n\nPU 的线性收缩率通常在 1.5%–3%。如果不补偿，230mm 的件灌出来会短 4–7mm，而且**不同厚度部位收缩量不同**，厚的地方缩得更多，结果就是整体变矮加轻微变形。\n\n我的处理是把原型按 1.02 倍放大后再翻模。这个系数需要按品牌实测一次：灌一根 100mm 的直条，24 小时后量长度，反推出来的数才是你自己的数字，别照抄网上的。\n\n![PU 灌注参数记录](demo-media/202609/craft/pu-resin-pouring-log-fig1-mtyfpa8jc9nd.svg)\n\n## 记录表比经验可靠\n\n每次灌注我都记四行：环境温度、树脂温度、配比方式、脱泡时长。做够二十次之后回头翻，会发现翻车几乎都集中在某两三个组合上——这份记录比任何教程都有用。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/craft/pu-resin-pouring-log-cover-mtyfpqhltjuz.svg",
+      "sectionSlug": "craft",
+      "categorySlug": "casting",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "翻模",
+        "PU 树脂",
+        "灌注",
+        "参数"
+      ]
+    },
+    {
+      "slug": "scale-and-balance-1-7",
+      "title": "比例与重心：1/7 站姿为什么最难调",
+      "excerpt": "「看起来在站」和「真的能站」是两件事。前者靠视觉，后者靠力学，而 1/7 恰好是这两者最容易打架的尺度。 为什么是 230mm 1/7 手办的实际总高通常在 225–235mm 之间（含底座）。这个尺寸的两个约束同时存在： - **上限来自树脂与重量**：实心树脂件超过 250mm 后，自重会让脚踝在运输中反复受剪，断裂几乎只是时间问题。 - **下限来自细节预算**：低于 200mm，脸部的可用...",
+      "content": "「看起来在站」和「真的能站」是两件事。前者靠视觉，后者靠力学，而 1/7 恰好是这两者最容易打架的尺度。\n\n## 为什么是 230mm\n\n1/7 手办的实际总高通常在 225–235mm 之间（含底座）。这个尺寸的两个约束同时存在：\n\n- **上限来自树脂与重量**：实心树脂件超过 250mm 后，自重会让脚踝在运输中反复受剪，断裂几乎只是时间问题。\n- **下限来自细节预算**：低于 200mm，脸部的可用高度不足 26mm，眼距、鼻梁这些特征开始互相挤压，涂装师会直接拒绝接单。\n\n## 重心落在哪，脚踝就得有多粗\n\n站姿件的重心高度一般落在自脚底起 120–135mm。这个数字不是猜的：把坯体水平架在一根棱上，左右微调直到平衡，量出支点高度即可。\n\n得到重心高度后，脚踝直径就有了下限。经验公式是**受力侧脚踝直径 ≈ 重心高度 ÷ 11**，230mm 的站姿件算下来约 11mm。低于这个值，即使静态能站住，搬动和运输时也会疲劳开裂。\n\n## 支撑面的三种做法\n\n| 做法 | 优点 | 代价 |\n|---|---|---|\n| 双脚自然站立 | 视觉最干净 | 支撑面最窄，重心容错低 |\n| 加配重底座 | 稳定，可做夸张姿态 | 底座视觉存在感强 |\n| 隐藏支点（披风/道具触地） | 兼顾稳定与造型 | 支点必须被造型合理包裹 |\n\n我个人偏向第三种，但它有个硬前提：**支点必须能被造型解释**。如果观众第一反应是「这根棍子为什么在这儿」，那它就不是隐藏支点，是穿帮。\n\n![1/7 站姿参数参考](demo-media/202609/craft/scale-and-balance-1-7-fig1-mtyfqn1he3bt.svg)\n\n## 一个自查清单\n\n摆好姿态后，别急着细化，先做三件事：\n\n1. 从正面、侧面各拍一张**剪影照**，只看外轮廓。站姿是否「说得通」，剪影会直接告诉你。\n2. 把重心投影画在底板上，确认它落在双脚连线围成的区域内，而不是压线。\n3. 用手指轻推肩部三下。如果晃动后回不到原位，说明重心偏高，需要加厚脚踝或前移躯干。\n\n这三步花不到十分钟，能省掉一次重做腿的返工。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/craft/scale-and-balance-1-7-cover-mtyfr3ap4k1x.svg",
+      "sectionSlug": "craft",
+      "categorySlug": "sculpt",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "造型",
+        "比例",
+        "重心",
+        "结构"
+      ]
+    },
+    {
+      "slug": "silicone-parting-strategy",
+      "title": "硅胶分件思路：避开倒扣与气泡的六个决定",
+      "excerpt": "同一个原型，不同的分件思路，模具的寿命可以差十倍以上。下面六个决定按顺序做，顺序本身比内容更重要。 决定一：分模面放在最大截面上 分模面不是「画起来顺手的地方」，而是**零件的最大截面**。放在这里，两瓣模才能沿着一条直线拔出来，而不需要横向拉扯。 如果最大截面处正好有细节（比如面部），宁可把分模线挪到发际线内侧，也不要为了保细节去赌硅胶的弹性。 决定二：逐角度查倒扣 把原型固定，从 0° 到 9...",
+      "content": "同一个原型，不同的分件思路，模具的寿命可以差十倍以上。下面六个决定按顺序做，顺序本身比内容更重要。\n\n## 决定一：分模面放在最大截面上\n\n分模面不是「画起来顺手的地方」，而是**零件的最大截面**。放在这里，两瓣模才能沿着一条直线拔出来，而不需要横向拉扯。\n\n如果最大截面处正好有细节（比如面部），宁可把分模线挪到发际线内侧，也不要为了保细节去赌硅胶的弹性。\n\n## 决定二：逐角度查倒扣\n\n把原型固定，从 0° 到 90° 每 15° 观察一次。任何在某个角度下「越往上越宽」的部位，都是倒扣。\n\n倒扣的处理优先级是：**能改原型就改原型 → 能挪分模面就挪 → 都不行才交给硅胶弹性去扛**。靠弹性扛的代价是脱模时被反复拉伸，第三次开始就出现细裂纹。\n\n## 决定三：包模泥要留边\n\n包模泥的边界应比分模面外扩 20mm 以上，并用刮片压出垂直的边墙。边墙不垂直，两瓣模闭合时就会错位，灌出来的件就有一条错线。\n\n## 决定四：注入口高、排气口更高\n\n注入口选在最低处或最厚处，排气口放在**几何最高点**。很多人把排气口放在注入口正上方，结果气体顶在上面出不去——因为气体走的是最高点，不是最远端。\n\n细长部位（手指、发丝）必须单独拉排气道，否则那一段几乎一定是空的。\n\n## 决定五：硬度跟着倒扣走\n\n| 硅胶硬度 | 适用 | 备注 |\n|---|---|---|\n| 20 度 | 倒扣多、细节细 | 易变形，需外套硬模 |\n| 25 度 | 通用件 | 大多数原型的默认选择 |\n| 30 度以上 | 大块面、少倒扣 | 细节还原下降 |\n\n我自己的默认值是 25 度，倒扣明显的部位局部加固，而不是整模换硬。\n\n## 决定六：开模先试灌一次\n\n第一灌不要用正式树脂，用便宜的浇筑料走一遍。看三件事：气泡集中在哪、哪一段没灌满、分模线是不是干净。这一灌的价值，相当于给模具做了一次体检。\n\n![分件六决定](demo-media/202609/craft/silicone-parting-strategy-fig1-mtyftcn87ux4.svg)\n\n## 一句话总结\n\n分件思路的目标不是「能脱模」，而是**每一次脱模都不消耗模具寿命**。如果你在脱模时需要用力拽，那这个模具从设计上就已经亏了。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/craft/silicone-parting-strategy-cover-mtyftswe8ate.svg",
+      "sectionSlug": "craft",
+      "categorySlug": "casting",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "翻模",
+        "硅胶",
+        "分件",
+        "模具"
+      ]
+    },
+    {
+      "slug": "skin-tone-layering",
+      "title": "肤色叠涂：底色、阴影、高光的顺序与阈值",
+      "excerpt": "新手最常犯的错，是拿一管「肌肤色」直接上。结果要么发黄发土，要么怎么加白都发灰。原因很简单：**肤色不是一种颜色，是一组冷暖交替的叠加**。 第一层：底色用暖灰，不用肉色 底色决定整块皮肤的「底色温度」。我习惯用「暖灰 + 一点点洋红」打底，而不是直接用肉色——因为肉色本身饱和度已经偏高，后面再加阴影只会越来越脏。 这一层要薄，薄到能看见下面的白色，才有透感。 第二层：中间调只做「极淡的一层」 中...",
+      "content": "新手最常犯的错，是拿一管「肌肤色」直接上。结果要么发黄发土，要么怎么加白都发灰。原因很简单：**肤色不是一种颜色，是一组冷暖交替的叠加**。\n\n## 第一层：底色用暖灰，不用肉色\n\n底色决定整块皮肤的「底色温度」。我习惯用「暖灰 + 一点点洋红」打底，而不是直接用肉色——因为肉色本身饱和度已经偏高，后面再加阴影只会越来越脏。\n\n这一层要薄，薄到能看见下面的白色，才有透感。\n\n## 第二层：中间调只做「极淡的一层」\n\n中间调的目标不是「把颜色涂满」，而是**在底色上建立肤色倾向**。用大量稀释的肉色（稀释比约 1:6）薄薄罩一层，等干后再判断是否要第二层。\n\n判断标准：把件拿到窗边自然光下看。如果肤色已经「说得过去」，就停手。**中间调做过头，是整个流程最常见的不可逆错误**。\n\n## 第三层：阴影用冷色，别用黑\n\n阴影如果用黑色去调，肤色立刻发灰。正确做法是用**冷色系**——偏紫的暗红或偏蓝的深褐。\n\n部位优先级：眼窝 → 鼻翼侧 → 下颌线 → 锁骨 → 手指缝隙。每一处都用极薄的一层，宁可叠两次也不要一次涂厚。\n\n## 第四层：高光不用纯白\n\n纯白会把皮肤拍成塑料。高光用「米白 + 一点暖黄」，点在：眉骨、鼻尖、唇峰、颧骨上沿、指关节。\n\n范围和强度都要克制。高光的价值在于**让观者的眼睛自己补出体积**，点多了反而把体积压平。\n\n![肤色四层](demo-media/202609/craft/skin-tone-layering-fig1-mtyfuphhxdjz.svg)\n\n## 干燥间隔：不算涂装时间，算等待时间\n\n| 涂层 | 表干 | 可上下一层 |\n|---|---|---|\n| 底色 | 15 分钟 | 2 小时 |\n| 中间调 | 20 分钟 | 4 小时 |\n| 阴影 | 10 分钟 | 2 小时 |\n| 高光 | 10 分钟 | 12 小时（上保护漆前） |\n\n很多人翻车不是因为调色，而是因为**没等干透就上下一层**，把底下半干的漆带起来，形成一块突兀的色斑。等待本身就是工序的一部分。\n\n## 一句总结\n\n肤色的成败不在调色盘上，在**顺序和厚度**上。四层里任何一层涂厚了，后面三层都救不回来。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/craft/skin-tone-layering-cover-mtyfv5qwklyq.svg",
+      "sectionSlug": "craft",
+      "categorySlug": "painting",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "涂装",
+        "肤色",
+        "叠涂",
+        "丙烯"
+      ]
+    },
+    {
+      "slug": "third-year-notes",
+      "title": "做原型第三年：关于耐心、返工与手感",
+      "excerpt": "第三年最大的变化，不是做得更好了，而是**知道自己什么时候该停手**。 第一年：把细节当成全部 第一年我痴迷于把每一根头发都刻出分叉，把甲缘做成能刮手的锐边。作品在照片里确实惊艳，但翻模之后全是麻烦——锐边一灌就缺，发丝一脱模就断。 那一年我学会的第一件事是：**原型不是最终产品，模具才是**。任何「做得很爽但脱不了模」的细节，都是负债。 第二年：结构开始压倒技巧 第二年把大量时间花在了结构上——...",
+      "content": "第三年最大的变化，不是做得更好了，而是**知道自己什么时候该停手**。\n\n## 第一年：把细节当成全部\n\n第一年我痴迷于把每一根头发都刻出分叉，把甲缘做成能刮手的锐边。作品在照片里确实惊艳，但翻模之后全是麻烦——锐边一灌就缺，发丝一脱模就断。\n\n那一年我学会的第一件事是：**原型不是最终产品，模具才是**。任何「做得很爽但脱不了模」的细节，都是负债。\n\n## 第二年：结构开始压倒技巧\n\n第二年把大量时间花在了结构上——重心、分件、收缩补偿。这一年作品看起来「变朴素了」，但返工次数从平均 3 次降到 1 次以内。\n\n有意思的是，**这一年拍照发出去的反馈反而更好**。后来想明白了：结构对了，形体的分量感就对了，观众不一定说得清，但能感觉到。\n\n## 第三年：节奏\n\n第三年最重要的一课，是承认自己有状态曲线。同一只手，上午十点和凌晨两点做出来的东西，差距大得离谱。\n\n于是我把工作拆成两类：\n\n- **需要手感的活**（刻脸、涂五官）只放在上午做；\n- **不需要手感的活**（配比、称重、清理、拍记录照）放在晚上。\n\n结果是总工时没变，但废件率明显下降。这就是「节奏」——**不是你多努力，而是你有没有把对的事放在对的时间做**。\n\n## 关于返工\n\n以前我害怕返工，觉得那是失败的证据。现在我的判断变了：**返工本身不丢人，返工时间点太晚才丢人**。\n\n同样是重做一条腿，在阶段三（大块面）发现，成本是 20 分钟；在阶段五（收表面）发现，成本是 3 小时加一次心理重建。所以我现在每隔一小时就拍一张正面剪影照——不是为了留档，是为了**尽早发现自己错了**。\n\n![三年三个阶段](demo-media/202609/journal/third-year-notes-fig1-mtyfw2deprio.svg)\n\n## 写在第三年末尾\n\n手艺这件事，前两年涨的是「能做什么」，第三年开始涨的是「不做什么」。\n\n技术决定你的上限，判断力决定你的下限。而作品的质量，其实是由下限决定的。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/journal/third-year-notes-cover-mtyfwimxvluw.svg",
+      "sectionSlug": "journal",
+      "categorySlug": "notes",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "随笔",
+        "复盘",
+        "成长"
+      ]
+    },
+    {
+      "slug": "wf2026-summer-booth-log",
+      "title": "WF2026 夏参展记：摊位、人流与三个意外",
+      "excerpt": "第三次参展，依然被三件事教育了。写下来，免得下次再犯。 布展：比想象中耗时间 7:30 进场，本以为 9:00 前能全部搞定，实际布到 9:40 才勉强收尾。时间都去哪了： - 展架的螺丝少带了两颗，来回找五金店跑了 15 分钟； - 灯带插排位置和隔壁摊位打架，重新绕线； - 价签是前一晚临时写的，字迹太潦草，现场重写了三分之二。 **结论：布展时间按「计划 × 1.5」预留**，并且把「配件清...",
+      "content": "第三次参展，依然被三件事教育了。写下来，免得下次再犯。\n\n## 布展：比想象中耗时间\n\n7:30 进场，本以为 9:00 前能全部搞定，实际布到 9:40 才勉强收尾。时间都去哪了：\n\n- 展架的螺丝少带了两颗，来回找五金店跑了 15 分钟；\n- 灯带插排位置和隔壁摊位打架，重新绕线；\n- 价签是前一晚临时写的，字迹太潦草，现场重写了三分之二。\n\n**结论：布展时间按「计划 × 1.5」预留**，并且把「配件清点」做成一张打印清单，进场前逐项打勾，而不是凭记忆。\n\n## 第一个意外：卖得好的不是主打款\n\n带了四款，原本押注 A 款（尺寸最大、工时最长）。结果一天下来，走量最多的是 C 款——一个只有 80mm 的小比例件。\n\n原因后来想明白了：**展会的成交场景是「冲动 + 手提」**。观众逛了一天，看到喜欢的会算两件事——能不能拎得动、愿不愿意当场掏钱。大件在这两条上都不占优。\n\n下次我会把「小比例、低单价、易携带」的款放在台面最外侧，主打款放里侧做形象。\n\n## 第二个意外：样品比照片有用十倍\n\n带了 A 款的半成品坯体放在台面，本来只是为了装饰。结果它成了最好的沟通工具——观众会主动问「这是怎么做的」，然后站在那儿听你讲五分钟。\n\n**一件摸得到的半成品，胜过一沓印刷品。** 它把「作品展示」变成了「工艺对话」，而后者几乎必然带来成交。\n\n## 第三个意外：二维码的位置决定加粉量\n\n二维码一开始放在展台角落，一天下来加粉不到二十。第二天挪到**收款码正下方、同一张卡纸**上，加粉翻了将近三倍。\n\n逻辑很直白：观众掏手机的瞬间是唯一的注意力窗口，二维码必须出现在那个动作的路径上，而不是需要他「再找一个」。\n\n![一天的节奏](demo-media/202609/journal/wf2026-summer-booth-log-fig1-mtyfxf8667gt.svg)\n\n## 下次的清单\n\n1. 配件清点表，进场前打勾；\n2. 小件放最外、主打款做形象、半成品必带；\n3. 二维码和收款码同一张卡纸；\n4. 布展时间按 1.5 倍预留。\n\n展会真正的价值不是当天卖了多少，而是**你终于能直接看到别人在你的作品前停留多久**。这个反馈在网上永远拿不到。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/journal/wf2026-summer-booth-log-cover-mtyfxvi4i5ut.svg",
+      "sectionSlug": "journal",
+      "categorySlug": "exhibition",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "参展",
+        "展会",
+        "手记",
+        "WF"
+      ]
+    },
+    {
+      "slug": "workbench-rework",
+      "title": "工具台重构：把 80% 的动作放进伸手可及的范围",
+      "excerpt": "重构工具台之后，单件工时少了大概两小时。有意思的是，我什么新工具都没买，唯一做的事是**把取用距离缩短了半米**。 先记录，再整理 动手之前先做了一件事：连续三天，每拿一次工具就在纸上画一道。三天之后统计出来，结果有点反直觉—— 前十名的工具，占了全部取用次数的 80% 以上。而其中有三件（镊子、溶剂量杯、刮片）原本被放在台下柜子里。 **结论很直接：整理不是按「类别」分，而是按「频次」分。** ...",
+      "content": "重构工具台之后，单件工时少了大概两小时。有意思的是，我什么新工具都没买，唯一做的事是**把取用距离缩短了半米**。\n\n## 先记录，再整理\n\n动手之前先做了一件事：连续三天，每拿一次工具就在纸上画一道。三天之后统计出来，结果有点反直觉——\n\n前十名的工具，占了全部取用次数的 80% 以上。而其中有三件（镊子、溶剂量杯、刮片）原本被放在台下柜子里。\n\n**结论很直接：整理不是按「类别」分，而是按「频次」分。**\n\n## 五个分区\n\n| 分区 | 半径 | 放什么 |\n|---|---|---|\n| 核心区 | 30cm | 刻刀、刮片、镊子、溶剂量杯 |\n| 次核心 | 60cm | 油泥、手套、砂纸、补土 |\n| 储备区 | 台下 | 硅胶、树脂、备用刀头、包装材料 |\n| 清洁区 | 侧桌 | 水盆、废料盒、纸巾 |\n| 拍摄区 | 独立台面 | 背景纸、灯架、灰卡 |\n\n核心区的判定标准是「**坐着不动就能够到**」。如果拿一件工具需要起身或者转身，它就不该待在核心区——不管它在逻辑上属于哪一类。\n\n## 三个改动最值\n\n1. **把溶剂量杯从柜子里挪到台面右侧**。这一步单独就省了不少时间，因为它原本的取用需要「起身 + 开柜 + 关柜 + 坐下」四个动作，而它一天要用几十次。\n2. **废料盒从地面挪到台面边缘**。以前削下来的碎屑会顺手堆在台面上，等堆满了再清理；现在直接扫进边缘的盒子，台面始终保持可用。\n3. **做了一个「常用刀具立架」**。五把刀竖插，刀尖朝下固定。比起并排平放，**竖插的取用动作只需要一个方向**，而且不会互相磕碰。\n\n## 一个反面教材\n\n我一度买了一个很漂亮的整面工具墙，把所有工具都挂上去。用了两周就拆了。\n\n原因很简单：工具墙的取用半径是站着才好用的，而**我的大部分工作其实是坐着的**。工具挂在墙上，看起来整齐，实际每一次都要起身。\n\n**整洁和顺手是两件事，工具台应该优先顺手。**\n\n![工具台分区](demo-media/202609/journal/workbench-rework-fig1-mtyfys3hqktn.svg)\n\n## 重构后的效果\n\n- 单件工时减少约 2 小时（主要省在取用和找东西上）；\n- 台面清理频率从「做完一件清一次」变成「随手清」；\n- 废件率没有变化——这一项靠流程，不靠收纳。\n\n如果你也想动手整理，我的建议是：**先用三天记录真实的取用频次，再决定放哪里**。凭感觉整理，大概率会把好看的摆在手边，把常用的留在柜子。\n\n---\n\n> 本文由 **HXP** 发布\n",
+      "coverImage": "demo-media/202609/journal/workbench-rework-cover-mtyfz8dehvc0.svg",
+      "sectionSlug": "journal",
+      "categorySlug": "notes",
+      "status": "published",
+      "meta": null,
+      "articleTemplate": "standard",
+      "templateConfig": null,
+      "sortOrder": 0,
+      "publishedAt": "2026-09-12T10:00:00+08:00",
+      "pinnedAt": null,
+      "pinnedScope": null,
+      "tags": [
+        "随笔",
+        "工具台",
+        "效率",
+        "收纳"
+      ]
+    }
+  ],
+  "friendLinks": [
+    {
+      "name": "词元笔记",
+      "url": "http://127.0.0.1:8081",
+      "description": "词元笔记",
+      "sortOrder": 0,
+      "isActive": true
+    },
+    {
+      "name": "Vercel",
+      "url": "https://vercel.com",
+      "description": "前端云平台，Next.js 母公司",
+      "sortOrder": 0,
+      "isActive": true
+    },
+    {
+      "name": "OpenAI",
+      "url": "https://openai.com",
+      "description": "GPT 系列大模型开发商",
+      "sortOrder": 1,
+      "isActive": true
+    },
+    {
+      "name": "Anthropic",
+      "url": "https://anthropic.com",
+      "description": "Claude 系列大模型开发商",
+      "sortOrder": 2,
+      "isActive": true
+    },
+    {
+      "name": "Hugging Face",
+      "url": "https://huggingface.co",
+      "description": "开源模型社区与 ML 工具平台",
+      "sortOrder": 3,
+      "isActive": true
+    },
+    {
+      "name": "GitHub",
+      "url": "https://github.com",
+      "description": "全球最大代码托管平台",
+      "sortOrder": 4,
+      "isActive": true
+    },
+    {
+      "name": "Next.js",
+      "url": "https://nextjs.org",
+      "description": "React 全栈框架",
+      "sortOrder": 5,
+      "isActive": true
+    },
+    {
+      "name": "Tailwind CSS",
+      "url": "https://tailwindcss.com",
+      "description": "原子化 CSS 框架",
+      "sortOrder": 6,
+      "isActive": true
+    },
+    {
+      "name": "Drizzle ORM",
+      "url": "https://orm.drizzle.team",
+      "description": "TypeScript SQL ORM",
+      "sortOrder": 7,
+      "isActive": true
+    },
+    {
+      "name": "Excalidraw",
+      "url": "https://excalidraw.com",
+      "description": "手绘风格白板工具",
+      "sortOrder": 8,
+      "isActive": true
+    },
+    {
+      "name": "Shiki",
+      "url": "https://shiki.style",
+      "description": "语法高亮引擎",
+      "sortOrder": 9,
+      "isActive": true
+    }
+  ]
+}

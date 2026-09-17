@@ -19,6 +19,10 @@ import { LinkWall } from './templates/LinkWall'
 import { MagazineView } from './templates/MagazineView'
 import { CarouselView } from './templates/CarouselView'
 import { DesignWorksGallery } from './DesignWorksGallery'
+import { parseArticleMeta } from '@/lib/articleMeta'
+
+/** 文章列表视图形态：masonry 也是合法值（来自风格包 layouts.*.list.layout） */
+type ListView = 'grid' | 'list' | 'masonry'
 
 interface SectionPageClientProps {
   section: string
@@ -40,7 +44,7 @@ function ArticleListView({
   articles: any[]
   listCfg: any
   category?: string
-  view?: 'grid' | 'list'
+  view?: ListView
 }) {
   // view 优先（来自文章列表的 grid/list 切换按钮），否则用风格包配置的 listCfg.layout
   const listLayout = view || listCfg?.layout || 'grid'
@@ -169,8 +173,7 @@ export function SectionPageClient({
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  // 文章列表视图偏好（grid/list）：仅 article-list 模板使用，默认「列表」(左缩略图+右标题描述)
-  const [view, setView] = useState<'grid' | 'list'>('list')
+  // 注意：view 的初始值依赖 listCfg（风格包 layouts.*.list.layout），必须在 listCfg 解析后声明
   const searchParams = useSearchParams()
   const category = searchParams.get('category') || undefined
 
@@ -200,6 +203,8 @@ export function SectionPageClient({
   const isMasonryTpl = templateKey === 'article-masonry'
   const isMagazine = templateKey === 'magazine'
   const isCarousel = templateKey === 'carousel'
+  // 作品集画廊模板：同样参与 section 布局（sidebar / hero / subcategory），不再自成一套
+  const isGalleryTpl = isDesignGallerySection({ template: templateKey, kind: sectionKind })
 
   const globalLayouts = useStyleLayouts()
   const packTemplates: Record<string, Record<string, unknown>> =
@@ -219,6 +224,13 @@ export function SectionPageClient({
   const listCfg: any = pageCfg.list || {}
   // 二级分类配置（风格包 section.subcategory：位置 sidebar/top/tab/none，样式 pill/card/list/grid）
   const subcategoryCfg: any = pageCfg.subcategory || {}
+
+  // 视图初始值：尊重风格包 list.layout（masonry/grid/list），不再被代码写死的 'list' 覆盖。
+  // 用户点切换按钮后以用户选择为准（view 优先于 listCfg，见 listLayout 计算）。
+  const [view, setView] = useState<ListView>(() => {
+    const l = String(listCfg?.layout || '')
+    return l === 'masonry' || l === 'list' || l === 'grid' ? (l as ListView) : 'grid'
+  })
   const heroTitle = heroCfg.titleFrom === 'section'
     ? title
     : heroCfg.titleFrom === 'category'
@@ -249,7 +261,7 @@ export function SectionPageClient({
   const { data, isLoading, error } = useQuery({
     queryKey: ['articles', section, page, search, category],
     queryFn: () => api.getArticles({ section, page, limit: 12, search: search || undefined, category }),
-    enabled: articleFamily || templateKey === 'single-page',
+    enabled: articleFamily || templateKey === 'single-page' || isGalleryTpl,
   })
 
   const { data: featuredData } = useQuery({
@@ -271,6 +283,23 @@ export function SectionPageClient({
   }
 
   const articles = data?.data || []
+
+  /**
+   * 作品集画廊的分类来自文章 `meta.category`（不在 categories 表里），
+   * 这里聚合出 { name, slug, count } 供侧栏渲染。非画廊模板返回 null（侧栏走接口拉取）。
+   */
+  const galleryCategories = useMemo(() => {
+    if (!isGalleryTpl) return null
+    const map = new Map<string, { name: string; slug: string; count: number }>()
+    for (const a of articles as any[]) {
+      const cat = parseArticleMeta(a.meta).category
+      if (!cat) continue
+      const cur = map.get(cat)
+      if (cur) cur.count += 1
+      else map.set(cat, { name: cat, slug: cat, count: 1 })
+    }
+    return Array.from(map.values())
+  }, [articles, isGalleryTpl])
 
   const emptyState = (
     <div className="text-center py-20 text-t-text-secondary">
@@ -305,6 +334,7 @@ export function SectionPageClient({
             mode="embedded"
             config={tplCfg}
             hideFilters={sidebarEnabled}
+            activeCategory={category}
           />
         )
     }
@@ -417,8 +447,8 @@ export function SectionPageClient({
     )
   }
 
-  // ===== 侧栏（仅 article-list 模板的 sidebar / landing 模式） =====
-  const sidebarEnabled = isArticleListTpl && (
+  // ===== 侧栏（article-list / 作品集画廊 的 sidebar / landing 模式） =====
+  const sidebarEnabled = (isArticleListTpl || isGalleryTpl) && (
     (isSidebarLayout && sidebarCfg.enabled !== false) || (sidebarCfg.enabled === true)
   )
   const renderSidebar = () => {
@@ -432,6 +462,12 @@ export function SectionPageClient({
           onSearchInputChange={setSearchInput}
           onSearch={handleSearch}
           activeCategory={category}
+          label={sidebarCfg.label}
+          metaBlock={sidebarCfg.metaBlock}
+          categories={galleryCategories}
+          showCount={subcategoryCfg.showCount === true}
+          showSearch={sidebarCfg.showSearch !== false}
+          showTags={sidebarCfg.showTags !== false}
         />
       </aside>
     )
@@ -439,15 +475,35 @@ export function SectionPageClient({
 
   return (
     <div className="min-h-screen pt-[var(--header-actual-height)]">
-      {/* Hero — 按模板包配置 */}
+      {/* Hero — 按模板包配置（enabled / label / align / description / divider） */}
       {heroCfg.enabled && (
-        <section className="relative py-16 px-4 border-b border-t-border">
-          <div className="relative max-w-[var(--content-max-width)] mx-auto text-center">
+        <section className={`relative px-4 ${heroCfg.align === 'left' ? 'pt-16 pb-4' : 'py-16 border-b border-t-border'}`}>
+          <div
+            className={`relative max-w-[var(--content-max-width)] mx-auto ${
+              heroCfg.align === 'left' ? 'text-left' : 'text-center'
+            }`}
+          >
+            {/* eyebrow：小号大写强调色标签（如 WORKS · 作品） */}
+            {heroCfg.label && (
+              <div className="text-xs font-medium tracking-[0.24em] uppercase text-t-accent-blue mb-2">
+                {heroCfg.label}
+              </div>
+            )}
             <h1 className="text-heading-1 text-t-text-primary mb-4">{heroTitle}</h1>
             {heroCfg.description && heroDescription ? (
-              <p className="text-t-text-secondary text-lg max-w-2xl mx-auto">{heroDescription}</p>
+              <p
+                className={`text-t-text-secondary text-lg max-w-2xl ${
+                  heroCfg.align === 'left' ? '' : 'mx-auto'
+                }`}
+              >
+                {heroDescription}
+              </p>
             ) : null}
           </div>
+          {/* divider：标题区下方的通栏细分隔线 */}
+          {heroCfg.divider && (
+            <div className="max-w-[var(--content-max-width)] mx-auto mt-6 border-b border-t-border" />
+          )}
         </section>
       )}
 

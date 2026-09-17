@@ -159,10 +159,8 @@
               "type": "string",
               "enum": [
                 "plain",
-                "underline",
                 "pill",
-                "split",
-                "minimal"
+                "underline"
               ]
             },
             "position": {
@@ -388,48 +386,128 @@
     },
     "footer": {
       "type": "object",
-      "description": "页脚配置（含站点信息链接与友链展示控制）",
+      "description": "页脚装修配置。只定义布局/网格/间距/字号/显隐；导航链接、版权、备案、友链数据等内容一律来自 site_settings 与 friend_links 表，本根键下不得出现任何内容",
       "properties": {
         "variant": {
           "type": "string",
           "enum": [
             "multi-column",
             "simple",
-            "minimal",
-            "mega"
-          ]
+            "minimal"
+          ],
+          "description": "multi-column 导航网格+友链+版权区；simple 单行（版权 | 备案+Powered by）；minimal 居中 Logo+版权"
         },
-        "columns": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "title": {
-                "type": "string"
-              },
-              "links": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "label": {
-                      "type": "string"
-                    },
-                    "href": {
-                      "type": "string"
-                    }
-                  }
+        "padding": {
+          "type": "string",
+          "description": "区块内边距 CSS 值，默认 2rem 1rem"
+        },
+        "maxWidth": {
+          "type": "string",
+          "description": "内容最大宽度，默认 var(--content-max-width)"
+        },
+        "borderTop": {
+          "type": [
+            "string",
+            "boolean"
+          ],
+          "description": "页脚顶部边线 CSS 值；false 关闭"
+        },
+        "nav": {
+          "type": "object",
+          "description": "导航网格区（内容来自 site_settings.footer_nav）",
+          "properties": {
+            "columns": {
+              "type": "number",
+              "description": "列数；缺省时取 site_settings.footer_nav_columns"
+            },
+            "template": {
+              "type": "string",
+              "description": "直接给 grid-template-columns（如 1.5fr 1fr 1fr 1fr），优先于 columns"
+            },
+            "gap": {
+              "type": "string"
+            },
+            "align": {
+              "type": "string",
+              "enum": [
+                "start",
+                "center"
+              ]
+            },
+            "divider": {
+              "type": [
+                "string",
+                "boolean"
+              ],
+              "description": "友链区上分隔线 CSS 值；false 关闭"
+            },
+            "responsive": {
+              "type": [
+                "object",
+                "boolean"
+              ],
+              "description": "断点列数 {md,lg}；false 关闭响应式，始终使用 template/columns",
+              "properties": {
+                "md": {
+                  "type": "number"
+                },
+                "lg": {
+                  "type": "number"
                 }
-              },
-              "html": {
-                "type": "string"
+              }
+            },
+            "title": {
+              "type": "object",
+              "description": "分组标题样式",
+              "properties": {
+                "size": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "transform": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "uppercase",
+                    "capitalize"
+                  ]
+                },
+                "letterSpacing": {
+                  "type": "string"
+                },
+                "marginBottom": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": "string"
+                }
+              }
+            },
+            "link": {
+              "type": "object",
+              "description": "链接样式",
+              "properties": {
+                "size": {
+                  "type": "string"
+                },
+                "lineHeight": {
+                  "type": "string"
+                },
+                "gap": {
+                  "type": "string"
+                }
               }
             }
           }
         },
-        "friendLinks": {
+        "brandBlock": {
           "type": "object",
-          "description": "友链展示控制（不存数据，只控制如何展示）",
+          "description": "首列品牌块：Logo + 站点简介。文案取自 site_settings，包只决定显隐/来源/字号",
           "properties": {
             "show": {
               "type": "boolean"
@@ -437,46 +515,91 @@
             "source": {
               "type": "string",
               "enum": [
-                "table",
-                "custom"
+                "siteDescription",
+                "siteName"
               ]
             },
-            "items": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "url": {
-                    "type": "string"
-                  }
-                }
-              }
+            "size": {
+              "type": "string"
+            },
+            "lineHeight": {
+              "type": "string"
+            }
+          }
+        },
+        "logo": {
+          "type": "object",
+          "properties": {
+            "show": {
+              "type": "boolean"
+            },
+            "height": {
+              "type": "string"
+            }
+          }
+        },
+        "friendLinks": {
+          "type": "object",
+          "description": "友链展示控制（数据来自 friend_links 表，不含任何链接数据）",
+          "properties": {
+            "show": {
+              "type": "boolean"
+            },
+            "maxItems": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "layout": {
+              "type": "string",
+              "enum": [
+                "inline",
+                "grid"
+              ]
             },
             "columns": {
               "type": "number"
             },
-            "maxItems": {
-              "type": "number"
+            "gap": {
+              "type": "string"
+            },
+            "titleSize": {
+              "type": "string"
             }
           }
         },
         "bottom": {
           "type": "object",
+          "description": "版权区（版权/备案/Powered by 文案全部来自 site_settings）",
           "properties": {
-            "copyright": {
+            "show": {
+              "type": "boolean"
+            },
+            "layout": {
+              "type": "string",
+              "enum": [
+                "columns",
+                "between",
+                "centered"
+              ]
+            },
+            "size": {
+              "type": "string"
+            },
+            "gap": {
+              "type": "string"
+            },
+            "divider": {
               "type": [
                 "string",
-                "null"
-              ],
-              "description": "版权文案的兜底值。唯一来源是 site_settings.copyright_text，本字段仅在站点未配置版权时生效，禁止在此写死站点版权"
+                "boolean"
+              ]
             },
-            "social": {
-              "type": "array"
+            "showIcp": {
+              "type": "boolean"
             },
-            "showBackToTop": {
+            "showPoweredBy": {
               "type": "boolean"
             }
           }

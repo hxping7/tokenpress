@@ -69,6 +69,13 @@
   .nav-item.plain {
     border-radius: 0;
   }
+  /* underline：当前项不填充，改用 --nav-active-text 画底部强调线。
+     与 plain/pill 的区别是「是否填充」——填充仍由 colors.activeBg 决定，
+     underline 显式关掉它。用 box-shadow 而非 border 避免高度跳动。 */
+  .nav-item.underline.is-active {
+    background-color: transparent;
+    box-shadow: inset 0 -2px 0 0 var(--nav-active-text, currentColor);
+  }
 
   /* ===== 暗夜蓝紫（默认） ===== */
   :root,
@@ -424,4 +431,32 @@
 }
 @media (max-width: 639px) {
   .design-grid { grid-template-columns: 1fr; }
+}
+
+/* 首字下沉：风格包 layouts.article.dropcap.enabled 打开后给 .prose 加 dropcap 类。
+   字体/尺寸/颜色/浮动全部读 --dropcap-* token，模板可配；未配时用保守默认值。 */
+.prose.dropcap > p:first-of-type::first-letter {
+  font-family: var(--dropcap-font, var(--brand-font, inherit));
+  font-size: var(--dropcap-size, 3.4em);
+  float: var(--dropcap-float, left);
+  line-height: var(--dropcap-line-height, 0.9);
+  margin: var(--dropcap-margin, 8px 12px 0 0);
+  color: var(--dropcap-color, var(--accent-blue, inherit));
+}
+
+/* ===== 页脚导航网格的响应式列数 =====
+   列模板由风格包 footer.nav.template / columns 决定（内联样式），断点列数经
+   --footer-nav-cols-md / -lg 变量可配。footer.nav.responsive:false 时不挂此类。 */
+.footer-nav-grid {
+  display: grid;
+}
+@media (max-width: 1023px) {
+  .footer-nav-grid {
+    grid-template-columns: repeat(var(--footer-nav-cols-lg, 2), minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 767px) {
+  .footer-nav-grid {
+    grid-template-columns: repeat(var(--footer-nav-cols-md, 1), minmax(0, 1fr)) !important;
+  }
 }

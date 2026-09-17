@@ -22,9 +22,13 @@ export interface HeroCtaButton {
   variant?: HeroCtaVariant
 }
 
+// 兜底按钮：仅在后台未配置 hero_cta_buttons 时使用。
+// 落点必须是**任何站点都存在**的通用路径（历史上写死 /token-plan、/ai-works，
+// 换站后即为 404 死链）。
+// 兜底按钮：仅在后台未配置 hero_cta_buttons 时使用。落点必须是任何站点都存在的
+// 通用路径（历史上写死 /token-plan、/ai-works，换站后即为 404 死链）。
 export const DEFAULT_HERO_CTA: HeroCtaButton[] = [
-  { label: 'Token 套餐', href: '/token-plan', target: '_self', variant: 'primary' },
-  { label: '查看 AI 作品', href: '/ai-works', target: '_self', variant: 'secondary' },
+  { label: '浏览内容', href: '/articles', target: '_self', variant: 'primary' },
 ]
 
 interface HeroCarouselProps {
@@ -34,6 +38,7 @@ interface HeroCarouselProps {
   ctaButtons?: HeroCtaButton[] // 可后台配置的 CTA 按钮，未配置时回退到默认值
   autoplay?: boolean // 自动轮播开关（默认 true）；false 时仅手动切换
   showCTA?: boolean // CTA 按钮区开关（默认 true）
+  effect?: string // 轮播切换效果（后台 hero_effect）：fade 淡入 / slide 滑动 / flip 翻转
 }
 
 // 轮播尺寸 → 容器最大宽度 / 圆角 / 比例 / 图片 sizes。
@@ -67,7 +72,27 @@ function isHardLink(url: string): boolean {
   )
 }
 
-export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons, autoplay = true, showCTA = true }: HeroCarouselProps) {
+/**
+ * 轮播切换效果 —— 后台「系统设置 → 首页宣传页 → 轮播效果」的消费端。
+ * fade 淡入淡出（默认）/ slide 水平滑动 / flip 3D 翻转。
+ */
+function slideStyle(effect: string, isActive: boolean) {
+  if (effect === 'slide') {
+    return { transform: isActive ? 'translateX(0)' : 'translateX(100%)', zIndex: isActive ? 10 : 0 }
+  }
+  if (effect === 'flip') {
+    return {
+      opacity: isActive ? 1 : 0,
+      transform: isActive ? 'rotateY(0deg)' : 'rotateY(90deg)',
+      transformStyle: 'preserve-3d' as const,
+      zIndex: isActive ? 10 : 0,
+    }
+  }
+  // fade（默认）
+  return { opacity: isActive ? 1 : 0, zIndex: isActive ? 10 : 0 }
+}
+
+export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButtons, autoplay = true, showCTA = true, effect = 'fade' }: HeroCarouselProps) {
   const { locale } = useLocaleStore()
   // 归一化 CTA：兼容编辑器/风格包写入的 {label:{zh,en}, style:'outline'} 形状（样式包 schema），
   // 也兼容原有 {label:string, variant:'secondary'}；label 对象按当前语言解析，style 映射到渲染形态。
@@ -119,8 +144,11 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
 
   return (
     <section
+      // 全宽 / 全屏时**不要再加顶部留白**：首页外层已用 `--header-actual-height`
+      // 让出固定头部的高度，这里再叠加 padding 会在头部与 Hero 之间留出一条空隙，
+      // 露出的是页面背景（深色主题下即一条黑带）。盒式 Hero 保留上下留白。
       className={`relative flex items-center justify-center overflow-hidden ${
-        isFull ? 'pt-16' : 'pt-20 pb-4'
+        isFull ? '' : 'pt-20 pb-4'
       }`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -133,7 +161,7 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
           // 轮播图
           <div className={`relative overflow-hidden bg-t-bg-secondary ${isFull ? '' : 'border border-t-border'} ${resolved.inner}`}>
             {/* Slides */}
-            <div className={`relative ${resolved.aspect}`}>
+            <div className={`relative ${resolved.aspect}`} style={effect === 'flip' ? { perspective: '1200px' } : undefined}>
               {slides.map((slide, index) => {
                 const isActive = index === currentSlide
                 const isSvg = slide.imageUrl?.toLowerCase().endsWith('.svg')
@@ -159,9 +187,8 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
                     href={slideHref}
                     target={linkTarget}
                     rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
-                    className={`absolute inset-0 transition-opacity duration-700 ${
-                      isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                    }`}
+                    className="absolute inset-0 transition-all duration-700"
+                    style={slideStyle(effect, isActive)}
                     onClick={(e) => {
                       if (!slide.linkUrl) e.preventDefault()
                     }}
@@ -174,9 +201,8 @@ export function HeroCarousel({ slides, size = 'default', interval = 5, ctaButton
                     href={slideHref}
                     target={linkTarget}
                     rel={linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
-                    className={`absolute inset-0 transition-opacity duration-700 ${
-                      isActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                    }`}
+                    className="absolute inset-0 transition-all duration-700"
+                    style={slideStyle(effect, isActive)}
                     onClick={(e) => {
                       if (!slide.linkUrl) e.preventDefault()
                     }}

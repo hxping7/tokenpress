@@ -263,3 +263,19 @@ helmet(CSP report-only) → cors → antiScraping(UA黑名单) → imageHotlinkP
 - VPS: `./deploy-local-to-vps.bat all`
 - VPS部署流程: build(docker save|gzip) → split(50MB分块) → SCP逐块上传(断点续传:VPS检测已上传块跳过) → VPS合并 → deploy.sh导入启动
 - Docker Compose: backend + frontend + nginx 三服务
+
+## 风格包（Style Pack）与系统设置的边界 —— 硬规则
+
+**一句话：风格包管「长什么样、放哪儿」，系统设置管「内容是什么、开不开」。**
+
+后台 `http://localhost:8081/admin/settings` 里能配置的一切，**原则上都必须生效**，
+不因切换风格包而改变。完整规范见 `docs/style-pack-design.md` §9。
+
+三条硬约束（改首页区块编排时必须遵守）：
+
+1. **包不得吞掉承载设置的区块**：首页区块序列里必须保留 `Hero`（承载「首页宣传页」的轮播图 / CTA 按钮 / 轮播数量·间隔·尺寸·效果）与 `Banner`（承载「中部 banner 区」）的**占位**。包要改外观就用 `variant`（如 Hero 的 `'split'` 左文右图），**不许删区块**。
+2. **后台优先、包内兜底**：同一含义既有后台设置又有包字段时，以**用户显式配置**为准。已接线：`hero_cta_buttons` / `hero_size` / `hero_carousel_interval` / `hero_effect` / `friend_links_columns` 均 > 包内同名。包字段永远是「未配置时的默认值」。
+3. **包级开关只控制「是否呈现」**：`hero.enabled` / `autoplay` / `showCTA` 这类开关可以关掉区块，但不能让已配置的内容消失。
+
+**新增设置项的强制顺序**：先实现消费端 → 再加后台 UI →（如需）纳入演示内容导出白名单。
+**后台有 UI 而前台无消费端 = 缺陷，不允许合入**。反之，无消费端的键一律删除（如同 `home_feature_*` / `home_about_*` 已删）。

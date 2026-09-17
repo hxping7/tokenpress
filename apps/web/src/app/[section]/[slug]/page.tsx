@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { ArticleDetailClient } from './ArticleDetailClient'
 import { DesignWorkDetail } from './DesignWorkDetail'
 import { getSiteUrl } from '@/lib/site-url'
@@ -99,20 +100,35 @@ export default async function ArticleDetailPage({ params }: Props) {
     return <DesignWorkDetail article={article} />
   }
 
-  if (!article) return <div className="min-h-screen flex items-center justify-center text-t-text-muted">文章未找到</div>
+  // 文章不存在：走 Next 的 404（渲染 app/not-found.tsx 并返回 HTTP 404）。
+  // 此前返回 200 的软 404，会被爬虫当成有效页面收录。
+  if (!article) {
+    notFound()
+  }
 
-  // 拉取板块级布局覆盖（供 ArticleDetailClient 解析文章页布局）
+  // 板块级布局覆盖 + 板块名。
+  // 注意：文章详情 API **不返回 section 对象**（article.section 恒为 undefined），
+  // 此前这里判断 `article?.section?.id` 才去取板块 → 该分支从未执行，板块级布局
+  // 覆盖一直是失效的，JSON-LD 的文章 URL 也少了板块段。改用文章的 sectionId
+  // （顶层字段，等价于 category.sectionId）反查。
   let sectionLayouts: Record<string, unknown> | null = null
-  if (article?.section?.id) {
-    const sectionData = await fetchSection(article.section.id)
-    if (sectionData?.layouts) {
-      sectionLayouts = sectionData.layouts as Record<string, unknown> | null
+  let sectionName: string | null = null
+  let sectionPath: string | null = null
+  const sectionId = article?.sectionId ?? article?.category?.sectionId
+  if (sectionId) {
+    const sectionData = await fetchSection(Number(sectionId))
+    if (sectionData) {
+      sectionLayouts = (sectionData.layouts as Record<string, unknown> | null) || null
+      sectionName = (sectionData.name as string) || null
+      sectionPath = (sectionData.path as string) || null
     }
   }
+  // 兜底：用 URL 段拼板块路径
+  const resolvedSectionPath = sectionPath || `/${section}`
 
   let jsonLd: Record<string, unknown> | null = null
   if (article) {
-    const articleUrl = SITE_URL + (article.section?.path || '') + '/' + article.slug
+    const articleUrl = SITE_URL + resolvedSectionPath + '/' + article.slug
     const coverAbsolute = buildCoverAbsolute(article.coverImage)
     jsonLd = {
       '@context': 'https://schema.org',
@@ -135,7 +151,11 @@ export default async function ArticleDetailPage({ params }: Props) {
   return (
     <>
       {jsonLd && <JsonLd data={jsonLd} />}
-      <ArticleDetailClient params={params} sectionLayouts={sectionLayouts} />
+      <ArticleDetailClient
+        params={params}
+        sectionLayouts={sectionLayouts}
+        sectionLabel={sectionName || undefined}
+      />
     </>
   )
 }

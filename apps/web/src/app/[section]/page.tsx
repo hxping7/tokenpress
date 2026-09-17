@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { SectionPageClient } from '@/components/SectionPageClient'
 
 interface Section {
@@ -47,15 +48,10 @@ export default async function DynamicSectionPage({ params }: Props) {
     // 降级处理
   }
 
+  // 未知板块：走 Next 的 404（渲染 app/not-found.tsx 并返回 HTTP 404）。
+  // 此前这里只渲染一段「板块未找到」UI 却返回 200（软 404），对 SEO 与爬虫是错的。
   if (!section) {
-    return (
-      <div className="min-h-screen pt-[var(--header-actual-height)] flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl text-t-text-primary mb-2">板块未找到</h1>
-          <p className="text-t-text-secondary">该板块不存在或已被删除</p>
-        </div>
-      </div>
-    )
+    notFound()
   }
 
   // 模板驱动渲染：板块/分类模板（含 design-gallery）统一交由 SectionPageClient 处理

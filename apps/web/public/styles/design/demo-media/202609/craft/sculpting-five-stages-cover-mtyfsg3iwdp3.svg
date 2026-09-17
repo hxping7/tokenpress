@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f5f3ee"/>
+  <circle cx="930" cy="300" r="170" fill="none" stroke="#a8311f" stroke-width="2" opacity="0.55"/><circle cx="1000" cy="392" r="74" fill="#a8311f" opacity="0.16"/><circle cx="862" cy="212" r="34" fill="#a8311f" opacity="0.30"/>
+  <rect x="80" y="96" width="46" height="3" fill="#a8311f"/>
+  <text x="142" y="104" font-family="Inter,Noto Sans SC,Microsoft YaHei,sans-serif" font-size="22" fill="#a8311f" letter-spacing="3">制作工艺 · 造型</text>
+  <text x="80" y="288" font-family="Noto Serif SC,Songti SC,SimSun,serif" font-size="72" font-weight="500" fill="#1a1a1a" letter-spacing="1"><tspan x="80" dy="0">从设定图到原型</tspan><tspan x="80" dy="84">油泥堆塑的五个阶段</tspan></text>
+  <rect x="80" y="520" width="1040" height="1" fill="#e3ddd0"/>
+  <text x="80" y="566" font-family="Inter,Noto Sans SC,Microsoft YaHei,sans-serif" font-size="22" fill="#8c8880" letter-spacing="1">2026-09-12 · 手办原型工作室</text>
+  <text x="1120" y="566" text-anchor="end" font-family="Inter,Noto Sans SC,Microsoft YaHei,sans-serif" font-size="22" fill="#8c8880" letter-spacing="4">HXP</text>
+</svg>

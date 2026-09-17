@@ -215,10 +215,10 @@ function actionClass(style: ActionStyle, dark = false): string {
 }
 
 // 未配置 actions 时的经典回退（保持历史外观）
+// 注：不含 admin 入口——后台入口不对外展示，需要时直接访问 /admin（或由风格包显式配置 admin 动作）
 const CLASSIC_ACTIONS: HeaderAction[] = [
   { type: 'theme', icon: 'palette', style: 'icon' },
   { type: 'language', icon: 'globe', style: 'ghost', label: { zh: '中文', en: 'EN' } },
-  { type: 'admin', icon: 'dashboard', style: 'outline', showWhen: 'loggedIn' },
   { type: 'logout', icon: 'logout', style: 'ghost', showWhen: 'loggedIn' },
   { type: 'login', icon: 'user', style: 'outline', showWhen: 'loggedOut' },
 ]
@@ -601,9 +601,12 @@ export function Header() {
     return () => ro.disconnect()
   })
 
+  // 已实现的导航形态，与 globals.css 里的 .nav-item.* 一一对应；
+  // schema 的 nav.style 枚举只放行这三项，未实现的值不再出现在文档/schema 中
+  const NAV_STYLES = ['plain', 'pill', 'underline']
+  const navShape = NAV_STYLES.includes(navStyle) ? navStyle : ''
   function navItemCls(active: boolean): string {
-    const r = navStyle === 'pill' ? 'pill' : navStyle === 'plain' ? 'plain' : ''
-    return `nav-item ${active ? 'is-active' : ''} ${r}`.trim()
+    return `nav-item ${active ? 'is-active' : ''} ${navShape}`.trim()
   }
   const isActiveNav = (path: string) =>
     pathname === path || (path !== '/' && pathname?.startsWith(path))
@@ -676,7 +679,7 @@ export function Header() {
   const headerStyle: React.CSSProperties = { ...navVarStyle, background: barBackground, borderBottom: barBorder, borderTop: headerTopAccent }
 
   const DesktopNav = (
-    <nav className={`hidden md:flex items-center gap-1.5 ${navAlign === 'left' ? 'justify-start' : navAlign === 'center' ? 'justify-center flex-1' : 'justify-end'}`}>
+    <nav className={`hidden md:flex items-center gap-1.5 ${navAlign === 'left' ? 'justify-start' : navAlign === 'center' ? 'justify-center' : 'justify-end'}`}>
       {sectionItems.map((item) => (
         <NavItemLink
           key={item.path + item.name}
@@ -806,23 +809,44 @@ export function Header() {
 
   // 左 / 右布局
   const logoOnRight = logoPosition === 'right'
+  const logoLink = <Link href={hc.logo?.link || '/'} className="flex items-center">{logoEl}</Link>
+
+  // 水平对齐三档（风格包 header.nav.align），对应原型 .site-header .inner 的
+  // grid-template-columns: 1fr auto 1fr ——
+  //   left   品牌与导航同组靠左，动作按钮独占右端
+  //   center 三栏 grid：品牌 / 导航 / 动作，导航相对**整行**居中（不再受品牌宽度挤压）
+  //   right  品牌独占左端，导航与动作同组靠右
+  const centerNav = navAlign === 'center' && !logoOnRight
+  const navOnRight = !logoOnRight && navAlign === 'right'
+
   return (
     <header
       className={`${isFixed ? 'fixed top-0 left-0 right-0 z-50' : 'relative'} border-b border-t-border ${isTransparent ? 'bg-transparent' : 'bg-t-bg-primary'}`}
       style={{ ...headerStyle, backdropFilter: isTransparent ? 'none' : 'blur(20px)' }}
     >
       <div className="max-w-[var(--content-max-width)] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16" style={{ height: navHeight }}>
-          <div className="flex items-center gap-8">
-            {!logoOnRight && <Link href={hc.logo?.link || '/'} className="flex items-center">{logoEl}</Link>}
-            {!logoOnRight && DesktopNav}
-            {logoOnRight && DesktopNav}
+        {centerNav ? (
+          <div
+            className="flex items-center justify-between h-16 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8"
+            style={{ height: navHeight }}
+          >
+            <div className="flex items-center min-w-0">{logoLink}</div>
+            <div className="hidden md:flex items-center justify-center min-w-0">{DesktopNav}</div>
+            <div className="flex items-center justify-end gap-2">{RightMenus}</div>
           </div>
-          <div className="flex items-center gap-2">
-            {logoOnRight && <Link href={hc.logo?.link || '/'} className="flex items-center">{logoEl}</Link>}
-            {RightMenus}
+        ) : (
+          <div className="flex items-center justify-between h-16" style={{ height: navHeight }}>
+            <div className="flex items-center gap-8">
+              {!logoOnRight && logoLink}
+              {!navOnRight && DesktopNav}
+            </div>
+            <div className="flex items-center gap-2">
+              {logoOnRight && logoLink}
+              {navOnRight && DesktopNav}
+              {RightMenus}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {mobileOpen && (
         <MobileNav
