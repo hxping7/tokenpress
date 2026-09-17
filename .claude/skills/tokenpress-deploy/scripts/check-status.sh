@@ -20,6 +20,8 @@ fi
 
 : ${HTTP_PORT:=8080}
 : ${SITE_PATH:=/root/yourdomain}
+# 镜像名与容器名前缀（compose 里 container_name/image 均以它开头）
+: ${PROJECT_PREFIX:=tokenpress}
 
 echo "[STATUS] ========================================"
 echo "[STATUS]  TokenPress Deployment Status Check"
@@ -27,15 +29,24 @@ echo "[STATUS]  Mode: $MODE"
 echo "[STATUS]  Time: $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 
-STATUS_FILE="$PROJECT_DIR/.deploy-state/status-${MODE}-$(date '+%Y%m%d').json"
-
 # Helper: prints JSON-compatible status
 report() {
     local category="$1"
     local key="$2"
     local value="$3"
-    local status="$4"
     printf '  %-20s %-25s %s\n' "[$category]" "$key:" "$value"
+}
+
+# Helper: HTTP status code of a URL（curl 失败/无输出时返回 000）
+# 注意：带 -A UA（反爬中间件会拦空 UA）；本机 Git Bash 下 `-o /dev/null -w`
+# 可能以 exit 23（write error）结束但仍打印了状态码，故不能用 `|| echo 000`
+# 追加回退值，只能按「输出是否为空」判定。
+http_code() {
+    local url="$1"
+    local code
+    code=$(curl -s -o /dev/null -w "%{http_code}" -A 'Mozilla/5.0' --max-time 10 "$url" 2>/dev/null) || true
+    [ -z "$code" ] && code="000"
+    printf '%s' "$code"
 }
 
 report "SYSTEM" "Platform" "$(uname -s 2>/dev/null || echo Windows)"
@@ -62,9 +73,9 @@ if [ "$MODE" = "local" ]; then
     echo ""
 
     # Images
-    for img in yourdomain-backend:latest yourdomain-frontend:latest; do
-        if docker images -q "$img" >/dev/null 2>&1; then
-            SIZE=$(docker images "$img" --format '{{.Size}}')
+    for img in ${PROJECT_PREFIX}-backend:latest ${PROJECT_PREFIX}-frontend:latest; do
+        SIZE=$(docker images "$img" --format '{{.Size}}' 2>/dev/null | head -1)
+        if [ -n "$SIZE" ]; then
             report "IMAGES" "$img" "$SIZE"
         else
             report "IMAGES" "$img" "NOT FOUND"
@@ -73,7 +84,7 @@ if [ "$MODE" = "local" ]; then
     echo ""
 
     # Containers
-    for svc in yourdomain-backend yourdomain-frontend yourdomain-nginx; do
+    for svc in ${PROJECT_PREFIX}-backend ${PROJECT_PREFIX}-frontend ${PROJECT_PREFIX}-nginx; do
         STATUS=$(docker ps -a --filter "name=$svc" --format '{{.Status}}' 2>/dev/null | head -1)
         if [ -z "$STATUS" ]; then
             report "CONTAINERS" "$svc" "Not deployed"
@@ -84,17 +95,16 @@ if [ "$MODE" = "local" ]; then
     echo ""
 
     # Health check
-    report "HEALTH" "API" "Testing..."
-    HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$HTTP_PORT/api/v1/health" 2>/dev/null || echo "000")
+    HEALTH=$(http_code "http://localhost:$HTTP_PORT/api/v1/health")
     if [ "$HEALTH" = "200" ]; then
-        report "HEALTH" "API" "OK (HTTP $HEALTH)"
+        report "HEALTH" "API" "OK (HTTP $HEALTH @ :$HTTP_PORT)"
     else
-        report "HEALTH" "API" "FAIL (HTTP $HEALTH)"
+        report "HEALTH" "API" "FAIL (HTTP $HEALTH @ :$HTTP_PORT)"
     fi
 
 elif [ "$MODE" = "vps" ]; then
     # === VPS Status ===
-    if [ -z "$VPS_HOST" ]; then
+    if [ -z "${VPS_HOST:-}" ]; then
         report "VPS" "Host" "NOT CONFIGURED"
         echo "[STATUS] [ERROR] VPS_HOST not defined in $HOST_FILE"
         exit 1
@@ -126,16 +136,17 @@ elif [ "$MODE" = "vps" ]; then
     echo ""
 
     # Images on VPS
-    for img in yourdomain-backend:latest yourdomain-frontend:latest; do
-        IMG_INFO=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST 'docker images $img --format \"{{.Size}}\"'" 2>/dev/null || echo "NOT FOUND")
+    for img in ${PROJECT_PREFIX}-backend:latest ${PROJECT_PREFIX}-frontend:latest; do
+        IMG_INFO=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST 'docker images $img --format \"{{.Size}}\"'" 2>/dev/null || echo "")
+        [ -z "$IMG_INFO" ] && IMG_INFO="NOT FOUND"
         report "IMAGES" "$img" "$IMG_INFO"
     done
     echo ""
 
     # Containers on VPS
-    for svc in yourdomain-backend yourdomain-frontend yourdomain-nginx; do
-        CSTATUS=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST 'docker ps -a --filter name=$svc --format \"{{.Status}}\"'" 2>/dev/null || echo "N/A")
-        if [ -z "$CSTATUS" ] || [ "$CSTATUS" = "N/A" ]; then
+    for svc in ${PROJECT_PREFIX}-backend ${PROJECT_PREFIX}-frontend ${PROJECT_PREFIX}-nginx; do
+        CSTATUS=$(eval "$SSH_CMD $VPS_USER@$VPS_HOST 'docker ps -a --filter name=$svc --format \"{{.Status}}\"'" 2>/dev/null || echo "")
+        if [ -z "$CSTATUS" ]; then
             report "CONTAINERS" "$svc" "Not deployed"
         else
             report "CONTAINERS" "$svc" "$CSTATUS"
@@ -145,12 +156,11 @@ elif [ "$MODE" = "vps" ]; then
 
     # Health check
     PUBLIC_URL="http://$VPS_HOST:$HTTP_PORT"
-    report "HEALTH" "API" "Testing ($PUBLIC_URL)..."
-    HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$PUBLIC_URL/api/v1/health" 2>/dev/null || echo "000")
+    HEALTH=$(http_code "$PUBLIC_URL/api/v1/health")
     if [ "$HEALTH" = "200" ]; then
-        report "HEALTH" "API" "OK (HTTP $HEALTH)"
+        report "HEALTH" "API" "OK (HTTP $HEALTH @ $PUBLIC_URL)"
     else
-        report "HEALTH" "API" "FAIL (HTTP $HEALTH)"
+        report "HEALTH" "API" "FAIL (HTTP $HEALTH @ $PUBLIC_URL)"
     fi
 fi
 

@@ -17,14 +17,13 @@ agent_created: true
   "api_base": "https://www.yourdomain.com/api/v1",
   "token": "t00_sk_xxxxx",
   "author": "HXP",
-  "default_section": "blog",
+  "default_section": "code",
   "section_map": {
-    "编程": "ai_coding",
-    "代码": "ai_coding",
-    "AI作品": "ai_works",
-    "作品": "ai_works",
-    "Token计划": "token_plan",
-    "区块链": "token_plan"
+    "编程": "code",
+    "AI": "ai",
+    "Token": "token",
+    "机器人": "robotics",
+    "开源": "github"
   }
 }
 ```
@@ -41,6 +40,18 @@ agent_created: true
 
 > ⚠️ **配置文件位置就是 `.token00.conf`**（脚本从当前目录逐级向上查找，代码写死该文件名，不认别的名字）。
 > 若要发到**本地/测试站**，不要复用项目根那份指向生产的 `.token00.conf`——换到一个独立目录（或临时目录）放一份指向 `http://localhost:8081/api/v1` 的配置，并**同时**显式传 `--api-base` / `--token`（CLI 优先级最高，双保险）。否则会直接发到线上。
+
+## 前置条件与常见坑（发布前先过一遍）
+
+1. **板块必须先存在**：`POST /ai/publish` 不会自动建板块，section 不存在直接 400
+   `Invalid section "xxx". Section not found.`。查用 `GET <api_base>/sections`；
+   建用 `POST <api_base>/sections`（需 `sections:write`）或后台「板块管理」。
+   分类/标签会按需创建，不用先建。
+2. **媒体先传、文章后写**：失败时媒体已落盘 → 留下**孤儿媒体**，失败后记得清。
+3. **`coverImageUrl` 回填是相对路径**（`/api/v1/media/files/uploads/...`），非完整 https。
+4. **返回的 URL 字段来自后端 `SITE_URL`**，与 `api_base` 无关；给本地站发布时它显示生产域名，别拿它验证。
+5. **删除文章不回收标签**（`tags` 表行会留下）。
+6. 发布/更新/建分类/置顶共用同一限流额度。
 
 ## 触发条件
 
@@ -104,7 +115,7 @@ python scripts/publish.py posts/
 python scripts/publish.py article.md --status draft
 
 # 覆盖作者和板块
-  python scripts/publish.py article.md --author "Name" --section ai_coding --category tools
+  python scripts/publish.py article.md --author "Name" --section code --category frontend
   
   # 强制更新到指定 slug（即使文件内改了 slug 也能更新原文章）
   python scripts/publish.py article.md --force-slug my-article
@@ -178,7 +189,11 @@ python scripts/publish.py posts/my-article.md
 python scripts/fetch_article.py --list
 ```
 
-### 4. 全媒体处理规则
+### 4. 置顶 / 取消置顶
+
+`POST /ai/articles/:slug/pin`（需 `article:write`），body `{"pinnedScope":"none"|"global"|"section"}`。发布时也可直接带 `pinnedScope`。普通用户 token 只能置顶自己发布的文章，否则 403。
+
+### 5. 全媒体处理规则
 
 包含两阶段自动上传：
 
@@ -208,7 +223,7 @@ python scripts/fetch_article.py --list
 - 同一文件不重复上传（正文和封面引用同一文件也不会重复上传）
 - 上传失败保留原始引用并打印警告
 
-### 5. 板块+分类智能匹配
+### 6. 板块+分类智能匹配
 
 匹配优先级：
 1. **Frontmatter** 中明确指定的 `section` / `category`
@@ -217,7 +232,7 @@ python scripts/fetch_article.py --list
 4. **API 分类列表** 匹配分类名/描述
 5. **默认值** `default_section`
 
-### 6. 作者署名 + 智能免责声明
+### 7. 作者署名 + 智能免责声明
 
 **作者署名：**
 配置 `author` 后，发布时自动在文章末尾追加：
@@ -244,7 +259,7 @@ python scripts/fetch_article.py --list
 2. **正则检测**：内容末尾已存在 `> **免责声明**：` 或 `> **风险提示**：` 格式文本时跳过
 3. **自动去重**：两阶段检查确保无论哪种方式都不会追加重复声明
 
-### 7. 上传媒体文件
+### 8. 上传媒体文件
 
 ```bash
 # 上传本地文件
@@ -254,7 +269,7 @@ python scripts/upload_media.py path/to/image.png --section blog
 python scripts/upload_media.py --url https://example.com/img.png --filename img.png
 ```
 
-### 8. 本地备份
+### 9. 本地备份
 
 发布成功后自动在源文件同级的 `published/` 目录留存备份。
 
@@ -290,6 +305,7 @@ python scripts/upload_media.py --url https://example.com/img.png --filename img.
 
 1. **编码**：Windows 下必须用 Python 发送请求，curl 会导致中文乱码
 2. **slug 冲突**：相同 slug 会更新而非创建新文章
-3. **限流**：10 次/分钟
-4. **标题格式化**：支持 `<strong>`、`<span style="color:#60c0ff">`
-5. **可配置颜色**：`#60c0ff`(蓝) `#7c3aed`(紫) `#10b981`(绿) `#f59e0b`(橙) `#ef4444`(红) `#ec4899`(粉)
+3. **限流**：`/api/v1/ai` 默认 **30 次/分钟**（后台 `rate_limit_ai_publish` 可调）
+4. **UA 头**：请求需带 `User-Agent`（如 `Mozilla/5.0`），否则被反爬中间件拦截
+5. **标题格式化**：支持 `<strong>`、`<span style="color:#60c0ff">`
+6. **可配置颜色**：`#60c0ff`(蓝) `#7c3aed`(紫) `#10b981`(绿) `#f59e0b`(橙) `#ef4444`(红) `#ec4899`(粉)

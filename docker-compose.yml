@@ -17,7 +17,8 @@ services:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET}
       - SITE_URL=${SITE_URL}
-      - FRONTEND_URL=http://localhost:3001
+      - FRONTEND_URL=${FRONTEND_URL}
+      - FRONTEND_INTERNAL_URL=http://frontend:4000
       - STYLES_DIR=/app/apps/server/data/styles
       - REVALIDATE_SECRET=${REVALIDATE_SECRET}
     healthcheck:
