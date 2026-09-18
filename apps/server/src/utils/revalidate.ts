@@ -1,3 +1,5 @@
+import { getRevalidateSecret } from '../lib/secrets.js'
+
 /**
  * 后端 → 前端 的**容器内**地址。
  *
@@ -8,7 +10,11 @@
  */
 const FRONTEND_INTERNAL_URL =
   process.env.FRONTEND_INTERNAL_URL || process.env.FRONTEND_URL || 'http://localhost:4000'
-const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET || 'token00-revalidate'
+
+// 保持惰性读取：模块加载时环境变量可能尚未注入完成
+function revalidateSecret(): string {
+  return getRevalidateSecret()
+}
 
 /** 规范化前端路径：补前导斜杠、去重（避免 `//xxx` 这类永不匹配的路径） */
 function normalizePath(p: string): string {
@@ -22,7 +28,7 @@ export async function revalidateTag(tag: string): Promise<void> {
     const res = await fetch(`${FRONTEND_INTERNAL_URL}/api/revalidate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ secret: REVALIDATE_SECRET, tag }),
+      body: JSON.stringify({ secret: revalidateSecret(), tag }),
     })
     if (!res.ok) {
       console.warn(`Revalidate tag "${tag}" failed: ${res.status}`)
@@ -38,7 +44,7 @@ export async function revalidatePath(path: string): Promise<void> {
     const res = await fetch(`${FRONTEND_INTERNAL_URL}/api/revalidate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ secret: REVALIDATE_SECRET, path: normalized }),
+      body: JSON.stringify({ secret: revalidateSecret(), path: normalized }),
     })
     if (!res.ok) {
       console.warn(`Revalidate path "${normalized}" failed: ${res.status}`)

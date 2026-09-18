@@ -5,13 +5,21 @@ import logger from '../../utils/logger.js'
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 const DOWNLOAD_TIMEOUT = 10_000
 
-const PRIVATE_IP_RANGES = [
+const PRIVATE_IPV4_RANGES = [
   /^10\./,
   /^172\.(1[6-9]|2\d|3[01])\./,
   /^192\.168\./,
   /^127\./,
   /^0\./,
   /^169\.254\./,
+]
+
+// SEC-02：IPv6 侧的等价内网范围，旧实现只覆盖 IPv4，`http://[::1]:4001/` 可以直连本机
+const PRIVATE_IPV6_RANGES = [
+  /^::1$/, // 环回
+  /^::$/, // 未指定地址
+  /^f[cd][0-9a-f]{2}:/, // fc00::/7 唯一本地地址
+  /^fe[89ab][0-9a-f]:/, // fe80::/10 链路本地
 ]
 
 const ALLOWED_PROTOCOLS = ['https:', 'http:']
@@ -23,8 +31,25 @@ export interface DownloadResult {
   error?: string
 }
 
-function isPrivateIp(ip: string): boolean {
-  return PRIVATE_IP_RANGES.some(regex => regex.test(ip))
+function isPrivateIpv4(ip: string): boolean {
+  return PRIVATE_IPV4_RANGES.some(regex => regex.test(ip))
+}
+
+export function isPrivateIp(ip: string): boolean {
+  if (!ip) return false
+
+  // IPv4-mapped（::ffff:127.0.0.1）与 IPv4 兼容（::127.0.0.1）都按其内嵌 v4 判定
+  const mapped = ip.match(/^::(?:ffff:)?(\d+\.\d+\.\d+\.\d+)$/i)
+  if (mapped) return isPrivateIpv4(mapped[1])
+
+  if (net.isIPv4(ip)) return isPrivateIpv4(ip)
+
+  const v6 = ip.toLowerCase()
+  if (v6 === '::1' || v6 === '::') return true
+  if (PRIVATE_IPV6_RANGES.some(regex => regex.test(v6))) return true
+
+  // ::ffff:0:0/96 之外的内嵌 v4 写法（如 64:ff9b::10.0.0.1 这类过渡地址）一律拒绝
+  return /:\d+\.\d+\.\d+\.\d+$/.test(v6)
 }
 
 export async function downloadImageForReview(imageUrl: string): Promise<DownloadResult> {

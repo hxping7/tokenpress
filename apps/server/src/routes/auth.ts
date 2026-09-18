@@ -6,16 +6,17 @@ import { db } from '../db/index.js'
 import { users, loginLogs, loginProtect } from '../db/schema.js'
 import { eq, and, lt, isNotNull } from 'drizzle-orm'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
+import { getJwtSecret } from '../lib/secrets.js'
 
 const router = Router()
-
-const JWT_SECRET = process.env.JWT_SECRET || 'token00-dev-secret-change-in-production'
 
 // 配置
 const MAX_FAIL_COUNT = 5 // 5次失败后锁定
 const LOCK_DURATION = 15 * 60 * 1000 // 15分钟
 const CAPTCHA_THRESHOLD = 3 // 3次失败后需要验证码
 const LOG_RETENTION_DAYS = 90 // 日志保留90天
+const CAPTCHA_MAX_ENTRIES = 500 // 验证码表容量上限（SEC-10）
+const CAPTCHA_TTL = 5 * 60 * 1000 // 与签发时一致：5分钟
 
 // 验证码存储
 interface CaptchaStore {
@@ -24,12 +25,33 @@ interface CaptchaStore {
 }
 const captchaStore = new Map<string, CaptchaStore>()
 
+/**
+ * 清理过期验证码，并在超过容量上限时淘汰最旧的条目（SEC-10）。
+ * 旧实现只在「校验成功」或「命中过期」时删除，未校验的验证码会一直堆积。
+ */
+function cleanupCaptchaStore(): void {
+  const now = Date.now()
+  for (const [id, entry] of captchaStore) {
+    if (entry.expiresAt < now) captchaStore.delete(id)
+  }
+  if (captchaStore.size > CAPTCHA_MAX_ENTRIES) {
+    const overflow = captchaStore.size - CAPTCHA_MAX_ENTRIES
+    let removed = 0
+    for (const id of captchaStore.keys()) {
+      if (removed++ >= overflow) break
+      captchaStore.delete(id)
+    }
+  }
+}
+
 // 获取客户端IP
 function getClientIp(req: Request): string {
-  return (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
-    || req.headers['x-real-ip'] as string
-    || req.socket.remoteAddress
-    || 'unknown'
+  // SEC-08：X-Forwarded-For 由客户端可控，取首段等于把锁定开关交给攻击者。
+  // 应用已设置 `trust proxy = 1`，Express 的 req.ip 会从 XFF 链中剔除最右侧可信代理跳，
+  // 取到 nginx 追加的真实客户端地址；伪造的前缀不会入选。
+  const forwarded = req.ip || req.socket.remoteAddress || ''
+  const ip = forwarded.replace(/^::ffff:/, '').trim()
+  return ip || 'unknown'
 }
 
 // 清理过期数据（登录失败记录和日志）
@@ -59,7 +81,23 @@ async function cleanupExpiredData() {
 // 初始化定时清理任务
 export function initLoginCleanup() {
   cleanupExpiredData()
+  cleanupCaptchaStore()
   setInterval(cleanupExpiredData, 60 * 60 * 1000)
+  // 验证码 5 分钟过期，按 10 分钟扫一次即可把堆积收住（SEC-10）
+  setInterval(cleanupCaptchaStore, 10 * 60 * 1000)
+}
+
+/** 测试钩子（SEC-10 回归断言）：读取规模、灌入条目、手动触发清理 */
+export const __captchaTestHooks = {
+  size: () => captchaStore.size,
+  max: CAPTCHA_MAX_ENTRIES,
+  prime: (n: number) => {
+      for (let i = 0; i < n; i++) {
+        captchaStore.set(`probe-${i}`, { code: '0000', expiresAt: Date.now() + CAPTCHA_TTL })
+      }
+    },
+  cleanup: cleanupCaptchaStore,
+  clear: () => captchaStore.clear(),
 }
 
 // GET /api/v1/auth/captcha - 获取验证码（独立端点）
@@ -76,7 +114,9 @@ router.get('/captcha', (_req, res) => {
   })
 
   const captchaId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-  const expiresAt = Date.now() + 5 * 60 * 1000 // 5分钟
+  const expiresAt = Date.now() + CAPTCHA_TTL
+
+  cleanupCaptchaStore()
 
   // 存储验证码
   captchaStore.set(captchaId, {
@@ -269,8 +309,8 @@ router.post('/login', async (req, res) => {
     await clearIpFailCount(ip)
 
     const payload = { userId: user.id, username: user.username, role: user.role }
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
-    const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' })
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' })
+    const refreshToken = jwt.sign(payload, getJwtSecret(), { expiresIn: '30d' })
 
     await db.update(users)
       .set({ updatedAt: new Date().toISOString() })
@@ -289,7 +329,7 @@ router.post('/login', async (req, res) => {
 // POST /api/v1/auth/refresh
 router.post('/refresh', authMiddleware, (req: AuthRequest, res) => {
   const payload = { userId: req.user!.userId, username: req.user!.username, role: req.user!.role }
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
+  const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' })
   res.json({ success: true, data: { token } })
 })
 

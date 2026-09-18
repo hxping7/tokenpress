@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'token00-dev-secret-change-in-production'
+import { getJwtSecret } from '../lib/secrets.js'
 
 export interface AuthRequest extends Request {
   user?: {
@@ -27,7 +26,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   const token = authHeader.slice(7)
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as {
+    const payload = jwt.verify(token, getJwtSecret()) as {
       userId: number
       username: string
       role: string
