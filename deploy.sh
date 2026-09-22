@@ -10,6 +10,7 @@ CONFIG_FILE="/root/token00/deploy.conf"
 DOMAIN=""
 SITE_PATH="/root/token00"
 JWT_SECRET=""
+REVALIDATE_SECRET=""
 SITE_URL=""
 HTTP_PORT=""
 HTTPS_PORT=""
@@ -25,6 +26,7 @@ if [ -f "$CONFIG_FILE" ]; then
             DOMAIN) DOMAIN="$value" ;;
             SITE_PATH) SITE_PATH="$value" ;;
             JWT_SECRET) JWT_SECRET="$value" ;;
+            REVALIDATE_SECRET) REVALIDATE_SECRET="$value" ;;
             SITE_URL) SITE_URL="$value" ;;
             HTTP_PORT) HTTP_PORT="$value" ;;
             HTTPS_PORT) HTTPS_PORT="$value" ;;
@@ -36,8 +38,15 @@ else
 fi
 
 # 验证必要配置
+# 两枚密钥都不能为空：apps/server/src/lib/secrets.ts 在生产环境会对缺失或
+# 长度不足 32 位的密钥直接抛错终止启动（SEC-05），缺一个后端就起不来。
 if [ -z "$JWT_SECRET" ]; then
     echo "错误: JWT_SECRET 未配置"
+    exit 1
+fi
+if [ -z "$REVALIDATE_SECRET" ]; then
+    echo "错误: REVALIDATE_SECRET 未配置"
+    echo "生成: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
     exit 1
 fi
 
@@ -161,10 +170,12 @@ cat > $SITE_PATH/.env << EOF
 HTTP_PORT=$HTTP_PORT
 HTTPS_PORT=$HTTPS_PORT
 JWT_SECRET=$JWT_SECRET
+REVALIDATE_SECRET=$REVALIDATE_SECRET
 SITE_URL=$SITE_URL
 FRONTEND_URL=$SITE_URL
 NEXT_PUBLIC_API_URL=/api/v1
 NEXT_PUBLIC_SITE_URL=$SITE_URL
+IMAGES_UNOPTIMIZED=true
 EOF
 
 # 更新 nginx.conf 中的域名
