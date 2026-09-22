@@ -74,14 +74,21 @@ fi
 # 检查镜像 (支持 .tar, .tar.gz, .zip)
 BACKEND_IMG=""
 FRONTEND_IMG=""
+# 优先取部署目录下的镜像包，避免因 /root 残留旧包而加载错误版本
 for ext in .tar .tar.gz .zip; do
-    if [ -f "/root/tokenpress-backend$ext" ]; then
+    if [ -f "$SITE_PATH/tokenpress-backend$ext" ]; then
+        BACKEND_IMG="$SITE_PATH/tokenpress-backend$ext"
+        break
+    elif [ -f "/root/tokenpress-backend$ext" ]; then
         BACKEND_IMG="/root/tokenpress-backend$ext"
         break
     fi
 done
 for ext in .tar .tar.gz .zip; do
-    if [ -f "/root/tokenpress-frontend$ext" ]; then
+    if [ -f "$SITE_PATH/tokenpress-frontend$ext" ]; then
+        FRONTEND_IMG="$SITE_PATH/tokenpress-frontend$ext"
+        break
+    elif [ -f "/root/tokenpress-frontend$ext" ]; then
         FRONTEND_IMG="/root/tokenpress-frontend$ext"
         break
     fi
@@ -122,10 +129,10 @@ load_image() {
     img_name=${img_name%.tar.gz}
     img_name=${img_name%.zip}
 
-    # 检查镜像是否已存在
-    if docker images -q "$img_name:latest" &>/dev/null; then
+    # 移除旧镜像（必须确认确实存在，否则 rmi 静默失败会让 compose 沿用旧镜像）
+    if docker images -q "$img_name:latest" 2>/dev/null | grep -q .; then
         echo "  镜像 $img_name:latest 已存在，先移除..."
-        docker rmi "$img_name:latest" 2>/dev/null || true
+        docker rmi -f "$img_name:latest" 2>/dev/null || true
     fi
 
     if [[ "$img" == *.tar ]]; then
@@ -141,6 +148,13 @@ load_image() {
             exit 1
         fi
     fi
+
+    # 导入后必须能查到该镜像，否则 compose 会静默沿用旧镜像或直接失败
+    if ! docker images -q "$img_name:latest" 2>/dev/null | grep -q .; then
+        echo "错误: 镜像 $img_name:latest 导入失败，终止部署"
+        exit 1
+    fi
+    echo "  镜像 $img_name:latest 导入完成: $(docker images --format '{{.ID}} {{.CreatedSince}}' "$img_name:latest" | head -1)"
 }
 load_image "$BACKEND_IMG"
 load_image "$FRONTEND_IMG"
