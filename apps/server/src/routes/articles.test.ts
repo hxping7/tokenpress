@@ -49,17 +49,23 @@ beforeAll(async () => {
   }
 }, 30000)
 
+// 只清理自己这份库。`data-test` 是三个集成测试文件共享的目录：整目录 rmtree 会把并行
+// 运行的 security-test.db / publish-test.db 一起删掉，导致它们的后续用例查不到
+// token（401）、甚至表不存在（500）。
+function removeDbFiles(dbPath: string) {
+  for (const suffix of ['', '-wal', '-shm']) {
+    try {
+      fs.rmSync(dbPath + suffix, { force: true })
+    } catch {
+      // Ignore cleanup errors on Windows (file may still be locked)
+    }
+  }
+}
+
 afterAll(async () => {
   // Wait for any pending operations
   await new Promise(resolve => setTimeout(resolve, 500))
-  // Try to clean up, but don't fail if locked
-  try {
-    if (fs.existsSync(TEST_DATA_DIR)) {
-      fs.rmSync(TEST_DATA_DIR, { recursive: true, force: true })
-    }
-  } catch {
-    // Ignore cleanup errors on Windows
-  }
+  removeDbFiles(path.resolve(TEST_DATA_DIR, 'test.db'))
 })
 
 describe('Articles API', () => {

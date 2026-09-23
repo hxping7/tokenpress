@@ -9,5 +9,7 @@ export default defineConfig({
     environment: 'node',
     include: ['apps/server/src/**/*.test.ts'],
     testTimeout: 30000,
+    // 集成测试的 beforeAll 要跑完整迁移链并复制内置风格包，冷启动常超过默认 10s
+    hookTimeout: 60000,
   },
 })

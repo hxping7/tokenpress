@@ -35,18 +35,36 @@ function isPrivateIpv4(ip: string): boolean {
   return PRIVATE_IPV4_RANGES.some(regex => regex.test(ip))
 }
 
+// 内嵌 IPv4 的 IPv6 写法有两种：点分（::ffff:127.0.0.1）与 16 进制双组
+// （URL 规范化后 ::ffff:127.0.0.1 会变成 ::ffff:7f00:1）。两种都要换算回 v4 判定，
+// 否则 `http://[::ffff:127.0.0.1]/` 会被当成普通 IPv6 放行。
+function embeddedIpv4(v6: string): string | null {
+  const dotted = v6.match(/(?:^|:)(\d+\.\d+\.\d+\.\d+)$/)
+  if (dotted) return dotted[1]
+
+  const hex = v6.match(/^::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i)
+  if (!hex) return null
+  const hi = parseInt(hex[1], 16)
+  const lo = parseInt(hex[2], 16)
+  if (!Number.isFinite(hi) || !Number.isFinite(lo)) return null
+  return [(hi >> 8) & 0xff, hi & 0xff, (lo >> 8) & 0xff, lo & 0xff].join('.')
+}
+
 export function isPrivateIp(ip: string): boolean {
   if (!ip) return false
 
-  // IPv4-mapped（::ffff:127.0.0.1）与 IPv4 兼容（::127.0.0.1）都按其内嵌 v4 判定
-  const mapped = ip.match(/^::(?:ffff:)?(\d+\.\d+\.\d+\.\d+)$/i)
-  if (mapped) return isPrivateIpv4(mapped[1])
+  // URL.hostname 对 IPv6 字面量保留方括号（'[::1]'），先剥离再判定
+  const raw = ip.trim().replace(/^\[|\]$/g, '')
 
-  if (net.isIPv4(ip)) return isPrivateIpv4(ip)
+  if (net.isIPv4(raw)) return isPrivateIpv4(raw)
 
-  const v6 = ip.toLowerCase()
+  const v6 = raw.toLowerCase()
   if (v6 === '::1' || v6 === '::') return true
   if (PRIVATE_IPV6_RANGES.some(regex => regex.test(v6))) return true
+
+  // IPv4-mapped（::ffff:127.0.0.1）与 IPv4 兼容（::127.0.0.1）都按其内嵌 v4 判定
+  const embedded = embeddedIpv4(v6)
+  if (embedded) return isPrivateIpv4(embedded)
 
   // ::ffff:0:0/96 之外的内嵌 v4 写法（如 64:ff9b::10.0.0.1 这类过渡地址）一律拒绝
   return /:\d+\.\d+\.\d+\.\d+$/.test(v6)
@@ -70,16 +88,26 @@ export async function downloadImageForReview(imageUrl: string): Promise<Download
 
   // Resolve DNS and verify IP is not private
   let resolvedIp: string
-  try {
-    const dns = await import('node:dns/promises')
-    const result = await dns.lookup(hostname)
-    resolvedIp = result.address
+  // IPv6 字面量的 hostname 带方括号（'[::1]'），直接丢给 dns.lookup 会解析失败，
+  // 把「内网地址」降级成「DNS 解析失败」——拦截仍然成立，但语义错误且掩盖了真实原因。
+  if (net.isIP(hostname.replace(/^\[|\]$/g, ''))) {
+    resolvedIp = hostname.replace(/^\[|\]$/g, '')
     if (isPrivateIp(resolvedIp)) {
       logger.warn({ imageUrl, ip: resolvedIp }, 'SSRF attempt blocked: private IP')
       return { success: false, error: 'URL resolves to private IP address' }
     }
-  } catch {
-    return { success: false, error: 'DNS resolution failed' }
+  } else {
+    try {
+      const dns = await import('node:dns/promises')
+      const result = await dns.lookup(hostname)
+      resolvedIp = result.address
+      if (isPrivateIp(resolvedIp)) {
+        logger.warn({ imageUrl, ip: resolvedIp }, 'SSRF attempt blocked: private IP')
+        return { success: false, error: 'URL resolves to private IP address' }
+      }
+    } catch {
+      return { success: false, error: 'DNS resolution failed' }
+    }
   }
 
   // Connect directly to the resolved IP to prevent DNS rebinding (TOCTOU)
