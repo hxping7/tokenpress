@@ -13,6 +13,8 @@ import request from 'supertest'
 import type { Express } from 'express'
 
 let app: Express
+/** 带 sections:write 的 API Token，供板块写入用例使用 */
+let sectionsToken = ''
 
 const TEST_DATA_DIR = path.resolve(process.cwd(), 'data-test')
 
@@ -27,9 +29,10 @@ beforeAll(async () => {
   const mod = await import('../index.js')
   app = mod.app
 
-  // Run the FULL migration chain (0000 → 0022) to mirror the production schema.
-  // Columns added after 0016 (sections.layouts, categories.layouts, article_template)
-  // are referenced by the live schema, so the test DB must include them too.
+  // Run the FULL migration chain (0000 → 0023) to mirror the production schema.
+  // Columns added after 0016 (sections.layouts, categories.layouts, article_template,
+  // sections.external_url_target) are referenced by the live schema, so the test DB
+  // must include them too.
   const migrations = [
     '../db/migrations/0000_initial.js',
     '../db/migrations/0013_media_article_id.js',
@@ -42,11 +45,33 @@ beforeAll(async () => {
     '../db/migrations/0020_merge_design_works_into_articles.js',
     '../db/migrations/0021_add_article_template.js',
     '../db/migrations/0022_add_category_layouts.js',
+    '../db/migrations/0023_add_sections_external_url_target.js',
   ]
   for (const m of migrations) {
     const { migrate } = await import(m)
     await migrate()
   }
+
+  // 建一个 superadmin + 全权限 API Token，供板块写入用例（PUT /sections/:id）使用
+  const [{ db }, { users, apiTokens }, shared] = await Promise.all([
+    import('../db/index.js'),
+    import('../db/schema.js'),
+    import('@tokenpress/shared'),
+  ])
+  const adminRow = await db
+    .insert(users)
+    .values({ username: 'smoke_admin', passwordHash: 'x', displayName: 'smoke_admin', role: 'superadmin', isActive: 1 })
+    .run()
+  sectionsToken = 't00_sk_smoke_sections_token'
+  await db
+    .insert(apiTokens)
+    .values({
+      userId: Number(adminRow.lastInsertRowid),
+      name: 'smoke-sections',
+      token: sectionsToken,
+      permissions: JSON.stringify((shared as any).ALL_API_PERMISSIONS),
+    })
+    .run()
 }, 30000)
 
 // 只清理自己这份库。`data-test` 是三个集成测试文件共享的目录：整目录 rmtree 会把并行
@@ -111,6 +136,51 @@ describe('Sections API', () => {
 
     expect(res.body.success).toBe(true)
     expect(Array.isArray(res.body.data)).toBe(true)
+  })
+
+  it('板块外部链接的打开方式可配置（默认新窗口，可切当前窗口）', async () => {
+    const authed = () => `Bearer ${sectionsToken}`
+
+    const create = await request(app)
+      .post('/api/v1/sections')
+      .set('Authorization', authed())
+      .send({ name: '外链测试', path: '/ext-target-test', externalUrl: '/statichtml/x.html' })
+      .expect(201)
+
+    const id = create.body.data.id
+    expect(create.body.data.externalUrl).toBe('/statichtml/x.html')
+    // 未显式指定时默认新窗口
+    expect(create.body.data.externalUrlTarget).toBe('_blank')
+
+    // 切成当前窗口
+    const toSelf = await request(app)
+      .put(`/api/v1/sections/${id}`)
+      .set('Authorization', authed())
+      .send({ externalUrlTarget: '_self' })
+      .expect(200)
+    expect(toSelf.body.data.externalUrlTarget).toBe('_self')
+
+    // 非法值一律回落到默认 _blank
+    const bogus = await request(app)
+      .put(`/api/v1/sections/${id}`)
+      .set('Authorization', authed())
+      .send({ externalUrlTarget: 'evil' })
+      .expect(200)
+    expect(bogus.body.data.externalUrlTarget).toBe('_blank')
+
+    // 局部更新：不传该字段时保留原值（不会被清空）
+    await request(app)
+      .put(`/api/v1/sections/${id}`)
+      .set('Authorization', authed())
+      .send({ externalUrlTarget: '_self' })
+      .expect(200)
+    const keep = await request(app)
+      .put(`/api/v1/sections/${id}`)
+      .set('Authorization', authed())
+      .send({ name: '外链测试改名' })
+      .expect(200)
+    expect(keep.body.data.externalUrlTarget).toBe('_self')
+    expect(keep.body.data.name).toBe('外链测试改名')
   })
 })
 

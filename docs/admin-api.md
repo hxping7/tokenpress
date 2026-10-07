@@ -335,11 +335,12 @@ PUT /api/v1/site-settings
 **新增请求体：**
 
 ```json
-{ "name": "新板块", "path": "/new", "slug": "new", "description": "描述", "externalUrl": "", "sortOrder": 0, "isActive": true }
+{ "name": "新板块", "path": "/new", "slug": "new", "description": "描述", "externalUrl": "", "externalUrlTarget": "_blank", "sortOrder": 0, "isActive": true }
 ```
 
 - `path` 会自动补前缀 `/`；`slug` 缺省由 name 生成。
 - `externalUrl` 非空时，`path` 可重复（外链板块，如指向 `/statichtml/...` 静态页）。
+- `externalUrlTarget` 控制外链的打开方式：`'_blank'` 新窗口（**默认**）/ `'_self'` 当前窗口。传其他值一律回落到 `'_blank'`；不传则保持原值（PUT 为局部更新）。仅 `externalUrl` 非空时有意义。
 - **错误响应：** `400 {"success":false,"error":"Name and path are required"}`；`409 {"success":false,"error":"Section with this slug already exists"}`
 
 ---

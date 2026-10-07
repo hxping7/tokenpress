@@ -17,7 +17,7 @@ import { useStyleLayouts } from '@/components/StyleProvider'
 
 interface HeroSlide { id: string; imageUrl: string; linkUrl: string; linkTarget: '_blank' | '_self' }
 interface Article { id: number; title: string; slug: string; excerpt: string | null; coverImage: string | null; publishedAt: string; section: { name: string; path: string } }
-interface SectionItem { id: number; name: string; slug: string; path: string; externalUrl: string | null }
+interface SectionItem { id: number; name: string; slug: string; path: string; externalUrl: string | null; externalUrlTarget?: '_blank' | '_self' | null }
 
 /**
  * Hero 的「左文右图」形态（区块 variant: 'split'）。
@@ -183,16 +183,35 @@ function FeaturesSection({ variant }: { variant?: string }) {
           {locale === 'en' ? 'What we offer' : '我们的能力'}
         </h2>
         <div className={`grid grid-cols-1 ${cols} gap-6`}>
-          {sections.slice(0, 6).map((s) => (
-            <Link
-              key={s.id}
-              href={s.externalUrl || s.path}
-              className="card-surface card-surface-hover rounded-2xl p-6 block transition-all"
-            >
-              <div className="text-lg font-semibold text-t-text-primary mb-2">{s.name}</div>
-              <div className="text-sm text-t-text-muted">{locale === 'en' ? 'Explore' : '了解更多'} →</div>
-            </Link>
-          ))}
+          {sections.slice(0, 6).map((s) => {
+            const cls = 'card-surface card-surface-hover rounded-2xl p-6 block transition-all'
+            const inner = (
+              <>
+                <div className="text-lg font-semibold text-t-text-primary mb-2">{s.name}</div>
+                <div className="text-sm text-t-text-muted">{locale === 'en' ? 'Explore' : '了解更多'} →</div>
+              </>
+            )
+            // 外链板块按板块配置的打开方式渲染，未配置时默认新窗口
+            if (s.externalUrl) {
+              const newTab = s.externalUrlTarget !== '_self'
+              return (
+                <a
+                  key={s.id}
+                  href={s.externalUrl}
+                  target={newTab ? '_blank' : undefined}
+                  rel={newTab ? 'noopener noreferrer' : undefined}
+                  className={cls}
+                >
+                  {inner}
+                </a>
+              )
+            }
+            return (
+              <Link key={s.id} href={s.path} className={cls}>
+                {inner}
+              </Link>
+            )
+          })}
         </div>
       </div>
     </section>

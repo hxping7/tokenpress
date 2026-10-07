@@ -16,6 +16,7 @@ import { migrate as migrateTemplate } from './db/migrations/0019_add_template.js
 import { migrate as migrateMergeDesignWorks } from './db/migrations/0020_merge_design_works_into_articles.js'
 import { migrate as migrateArticleTemplate } from './db/migrations/0021_add_article_template.js'
 import { migrate as migrateCategoryLayouts } from './db/migrations/0022_add_category_layouts.js'
+import { migrate as migrateSectionExternalUrlTarget } from './db/migrations/0023_add_sections_external_url_target.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import { STYLES_DIR } from './utils/paths.js'
 import { systemEvent } from './utils/auditLogger.js'
@@ -255,6 +256,7 @@ async function start() {
   await migrateMergeDesignWorks()
   await migrateArticleTemplate()
   await migrateCategoryLayouts()
+  await migrateSectionExternalUrlTarget()
   logger.info('✅ Database ready')
 
   // 初始化限流阈值缓存（后台可在「安全 → 限流保护」中实时调整，无需重启）

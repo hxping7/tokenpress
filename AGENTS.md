@@ -155,7 +155,7 @@ token00/
 ### 数据库表 (18张)
 | 表名 | 说明 |
 |------|------|
-| `sections` | 板块 (name, slug, path, externalUrl, sortOrder, isActive) |
+| `sections` | 板块 (name, slug, path, externalUrl, externalUrlTarget: _blank/_self, sortOrder, isActive) |
 | `users` | 用户 (username, passwordHash, displayName, role: superadmin/admin/user, isActive) |
 | `apiTokens` | API Token (userId, token, name, permissions:JSON, expiresAt, isActive) |
 | `categories` | 分类 (name, slug, sectionId, sortOrder) |

@@ -19,6 +19,7 @@ interface Section {
   path: string
   description: string | null
   externalUrl: string | null
+  externalUrlTarget?: '_blank' | '_self' | null
   sortOrder: number
   isActive: boolean
   kind?: string
@@ -59,6 +60,8 @@ export default function CategoriesPage() {
   const [sectionPath, setSectionPath] = useState('')
   const [sectionDescription, setSectionDescription] = useState('')
   const [sectionExternalUrl, setSectionExternalUrl] = useState('')
+  // 外链打开方式：默认新窗口
+  const [sectionExternalUrlTarget, setSectionExternalUrlTarget] = useState<'_blank' | '_self'>('_blank')
   const [sectionIsActive, setSectionIsActive] = useState(true)
 
   // Category form state
@@ -165,6 +168,7 @@ export default function CategoriesPage() {
       setSectionPath(section.path)
       setSectionDescription(section.description || '')
       setSectionExternalUrl(section.externalUrl || '')
+      setSectionExternalUrlTarget(section.externalUrlTarget === '_self' ? '_self' : '_blank')
       setSectionIsActive(section.isActive)
       setSectionTemplate(section.template || 'article-list')
       setSectionTemplateConfig(section.templateConfig || null)
@@ -175,6 +179,7 @@ export default function CategoriesPage() {
       setSectionPath('')
       setSectionDescription('')
       setSectionExternalUrl('')
+      setSectionExternalUrlTarget('_blank')
       setSectionIsActive(true)
       setSectionTemplate('article-list')
       setSectionTemplateConfig(null)
@@ -221,6 +226,7 @@ export default function CategoriesPage() {
       path: sectionPath,
       description: sectionDescription || null,
       externalUrl: sectionExternalUrl || null,
+      externalUrlTarget: sectionExternalUrlTarget,
       isActive: sectionIsActive,
       template: sectionTemplate,
       templateConfig: sectionTemplateConfig,
@@ -503,6 +509,21 @@ export default function CategoriesPage() {
                     onSelect={(url) => setSectionExternalUrl(url)}
                     label={t('admin.staticHtmlPage.selectStaticPage', backendLocale)}
                   />
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <span className="text-xs text-t-text-secondary">打开方式</span>
+                  <select
+                    value={sectionExternalUrlTarget}
+                    onChange={(e) => setSectionExternalUrlTarget(e.target.value === '_self' ? '_self' : '_blank')}
+                    disabled={!sectionExternalUrl}
+                    className="px-3 py-2 text-sm bg-t-bg-secondary border border-t-border rounded-lg focus:outline-none focus:border-t-accent-blue disabled:opacity-50"
+                  >
+                    <option value="_blank">新窗口打开（默认）</option>
+                    <option value="_self">当前窗口打开</option>
+                  </select>
+                  {!sectionExternalUrl && (
+                    <span className="text-xs text-t-text-secondary">填写外部链接后生效</span>
+                  )}
                 </div>
               </div>
               <TemplateField

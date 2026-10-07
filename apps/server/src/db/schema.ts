@@ -9,6 +9,7 @@ export const sections = sqliteTable('sections', {
   path: text('path').notNull().unique(), // URL path like /token-plan
   description: text('description'),
   externalUrl: text('external_url'), // 外部链接URL，设置后点击菜单直接跳转
+  externalUrlTarget: text('external_url_target', { enum: ['_blank', '_self'] }).notNull().default('_blank'), // 外链打开方式：_blank 新窗口（默认）/ _self 当前窗口
   sortOrder: integer('sort_order').notNull().default(0),
   isActive: integer('is_active').notNull().default(1),
   layouts: text('layouts'), // JSON — per-section layout override (section/article/list), nullable

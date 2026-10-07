@@ -127,7 +127,7 @@ router.use(apiTokenOrAdmin('sections:write'))
 // POST /api/v1/sections — create section
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const { name, slug, path, description, externalUrl, sortOrder = 0, isActive = true, layouts, template, templateConfig } = req.body
+    const { name, slug, path, description, externalUrl, externalUrlTarget, sortOrder = 0, isActive = true, layouts, template, templateConfig } = req.body
 
     if (!name || !path) {
       return res.status(400).json({ success: false, error: 'Name and path are required' })
@@ -162,6 +162,7 @@ router.post('/', async (req: AuthRequest, res) => {
       path: sectionPath,
       description: description || null,
       externalUrl: externalUrl || null,
+      externalUrlTarget: externalUrlTarget === '_self' ? '_self' : '_blank',
       sortOrder,
       isActive: isActive ? 1 : 0,
       template: isTemplateValid(template) ? template : 'article-list',
@@ -194,7 +195,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, error: 'Invalid ID' })
     }
 
-    const { name, slug, path, description, externalUrl, sortOrder, isActive, layouts, template, templateConfig } = req.body
+    const { name, slug, path, description, externalUrl, externalUrlTarget, sortOrder, isActive, layouts, template, templateConfig } = req.body
 
     const existing = await db.select().from(sections).where(eq(sections.id, sectionId)).get()
     if (!existing) {
@@ -230,6 +231,10 @@ router.put('/:id', async (req: AuthRequest, res) => {
     if (path !== undefined) updates.path = path.startsWith('/') ? path : `/${path}`
     if (description !== undefined) updates.description = description
     if (externalUrl !== undefined) updates.externalUrl = externalUrl || null
+    // 外链打开方式：仅接受 '_self'，其余（含未传之外的值）一律回落到默认 '_blank'
+    if (externalUrlTarget !== undefined) {
+      updates.externalUrlTarget = externalUrlTarget === '_self' ? '_self' : '_blank'
+    }
     if (sortOrder !== undefined) updates.sortOrder = sortOrder
     if (isActive !== undefined) updates.isActive = isActive ? 1 : 0
     // template：仅接受白名单值

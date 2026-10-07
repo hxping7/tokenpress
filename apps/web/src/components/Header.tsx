@@ -25,6 +25,7 @@ interface Section {
   slug: string
   path: string
   externalUrl: string | null
+  externalUrlTarget?: '_blank' | '_self' | null
   isActive: boolean
 }
 
@@ -33,6 +34,7 @@ interface HeaderNavItem {
   slug?: string
   path: string
   externalUrl?: string | null
+  externalUrlTarget?: '_blank' | '_self' | null
 }
 
 // ===== 模板包 header.actions 类型 =====
@@ -446,8 +448,16 @@ function NavItemLink({
 }) {
   const iconEl = icon ? <Icon name={icon} size={16} className="shrink-0" /> : null
   if (item.externalUrl) {
+    // 外链板块的打开方式由板块配置决定，未配置时默认新窗口
+    const newTab = item.externalUrlTarget !== '_self'
     return (
-      <a href={item.externalUrl} onClick={onClick} className={className}>
+      <a
+        href={item.externalUrl}
+        target={newTab ? '_blank' : undefined}
+        rel={newTab ? 'noopener noreferrer' : undefined}
+        onClick={onClick}
+        className={className}
+      >
         {iconEl}
         <span>{item.name}</span>
       </a>
@@ -627,6 +637,7 @@ export function Header() {
           slug: s.slug,
           path: s.path,
           externalUrl: s.externalUrl,
+          externalUrlTarget: s.externalUrlTarget,
         }))
 
   // Fetch site name from settings（站点名称唯一来源：site_settings.site_name；

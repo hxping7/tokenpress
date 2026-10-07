@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { SectionPageClient } from '@/components/SectionPageClient'
 
 interface Section {
@@ -7,6 +7,7 @@ interface Section {
   slug: string
   path: string
   description: string | null
+  externalUrl: string | null
   kind: string
   layouts: Record<string, unknown> | null
   template?: string
@@ -52,6 +53,13 @@ export default async function DynamicSectionPage({ params }: Props) {
   // 此前这里只渲染一段「板块未找到」UI 却返回 200（软 404），对 SEO 与爬虫是错的。
   if (!section) {
     notFound()
+  }
+
+  // 外链板块（externalUrl 非空）：路径本身也直接跳转过去。
+  // 否则「导航点着能跳」但直接输 /aboutme 只会看到空的板块列表页。
+  // 清空 externalUrl 即恢复列表页，无需改代码。
+  if (section.externalUrl) {
+    redirect(section.externalUrl)
   }
 
   // 模板驱动渲染：板块/分类模板（含 design-gallery）统一交由 SectionPageClient 处理

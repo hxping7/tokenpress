@@ -80,6 +80,7 @@ beforeAll(async () => {
     '../db/migrations/0020_merge_design_works_into_articles.js',
     '../db/migrations/0021_add_article_template.js',
     '../db/migrations/0022_add_category_layouts.js',
+    '../db/migrations/0023_add_sections_external_url_target.js',
   ]
   for (const m of migrations) {
     const { migrate } = await import(m)
